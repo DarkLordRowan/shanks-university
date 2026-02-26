@@ -508,6 +508,9 @@ pub struct SeriesResult {
     /// Analytical sum (if known)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sum: Option<SeriesPoint>,
+    /// Deviations |Sn - S| for each partial sum (if the true limit is known)
+    #[serde(default)]
+    pub deviations: ScientificArray,
 }
 
 /// Profiling trace for operation counting per point.

@@ -341,7 +341,7 @@ impl Cache {
         let sum_val = sum_json.and_then(|s| serde_json::from_str(&s).ok());
 
         let mut stmt = self.conn.prepare(
-            "SELECT n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp
+            "SELECT n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, deviation
              FROM series_points WHERE series_id = ?1 ORDER BY n ASC",
         )?;
 
@@ -353,14 +353,17 @@ impl Cache {
             let an_real: Option<String> = row.get(4)?;
             let an_imag: Option<String> = row.get(5)?;
             let an_exp: Option<i64> = row.get(6)?;
-            Ok((n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp))
+            let dev_str: Option<String> = row.get(7)?;
+            Ok((n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, dev_str))
         })?;
 
         let mut sn = Vec::new();
         let mut an = Vec::new();
+        let mut dev_mantissa: Vec<f64> = Vec::new();
+        let mut dev_exponent: Vec<i64> = Vec::new();
 
         for row in rows {
-            let (_n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp) = row?;
+            let (_n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, dev_str) = row?;
 
             // Build Sn point
             if let (Some(real_str), Some(exp)) = (sn_real, sn_exp) {
@@ -437,6 +440,30 @@ impl Cache {
                     an.push(crate::ffi::SeriesPoint::Real(real_sci));
                 }
             }
+            // Parse deviation (same format as accel: "mantissaEexp" or plain float)
+            if let Some(dev) = dev_str {
+                if let Some(e_pos) = dev.find('e') {
+                    if let (Ok(m), Ok(e)) = (
+                        dev[..e_pos].parse::<f64>(),
+                        dev[e_pos + 1..].parse::<i64>(),
+                    ) {
+                        dev_mantissa.push(m);
+                        dev_exponent.push(e);
+                    } else {
+                        dev_mantissa.push(0.0);
+                        dev_exponent.push(0);
+                    }
+                } else if let Ok(v) = dev.parse::<f64>() {
+                    dev_mantissa.push(v);
+                    dev_exponent.push(0);
+                } else {
+                    dev_mantissa.push(0.0);
+                    dev_exponent.push(0);
+                }
+            } else {
+                dev_mantissa.push(0.0);
+                dev_exponent.push(0);
+            }
         }
 
         if sn.is_empty() {
@@ -447,6 +474,10 @@ impl Cache {
             sn: crate::ffi::SeriesPointArray::from_vec(&sn),
             an: crate::ffi::SeriesPointArray::from_vec(&an),
             sum: sum_val,
+            deviations: crate::ffi::ScientificArray {
+                mantissa: dev_mantissa,
+                exponent: dev_exponent,
+            },
         }))
     }
 

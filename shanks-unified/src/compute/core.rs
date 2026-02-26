@@ -411,6 +411,7 @@ impl ComputeCore {
                             (serde_json::to_string(ci).unwrap(), String::new(), 0)
                         }
                     };
+                    let dev_str = series_result.deviations.get(i).format();
                     db_points.push((
                         n,
                         sn_real,
@@ -419,7 +420,7 @@ impl ComputeCore {
                         an_real,
                         an_imag,
                         an_exp,
-                        String::new(),
+                        dev_str,
                     ));
                 }
                 if !db_points.is_empty() {

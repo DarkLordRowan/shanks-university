@@ -93,20 +93,27 @@ struct SeriesHandleReal : public SeriesHandleBaseExt {
         
         shanks::ffi::RealSerializer<T> sn_ser;
         shanks::ffi::RealSerializer<T> an_ser;
-        
-        for (const auto& val : result.Sn) sn_ser.push(val);
+        shanks::ffi::RealSerializer<T> dev_ser;
+
+        T sum = T(0);
+        bool has_sum = !series->is_invalid();
+        if (has_sum) {
+            try { sum = series->get_sum(); } catch (...) { has_sum = false; }
+        }
+
+        for (const auto& val : result.Sn) {
+            sn_ser.push(val);
+            dev_ser.push(has_sum ? utils::math<T>::abs(val - sum) : T(0));
+        }
         for (const auto& val : result.an) an_ser.push(val);
         
         std::ostringstream oss;
-        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json();
+        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json()
+            << ", \"deviations\": " << dev_ser.to_json();
         
         // Add sum if available
-        if (!series->is_invalid()) {
-            try {
-                T sum = series->get_sum();
-                oss << ", \"sum\": " << shanks::ffi::to_scientific(sum).to_json();
-            } catch (...) {
-            }
+        if (has_sum) {
+            oss << ", \"sum\": " << shanks::ffi::to_scientific(sum).to_json();
         }
 
 #ifdef SHANKS_ENABLE_PROFILING
@@ -202,12 +209,23 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
         
         shanks::ffi::ComplexSerializer<T> sn_ser;
         shanks::ffi::ComplexSerializer<T> an_ser;
-        
-        for (const auto& val : result.Sn) sn_ser.push(val);
+        shanks::ffi::RealSerializer<T> dev_ser;
+
+        std::complex<T> sum(0, 0);
+        bool has_sum = !series->is_invalid();
+        if (has_sum) {
+            try { sum = series->get_sum(); } catch (...) { has_sum = false; }
+        }
+
+        for (const auto& val : result.Sn) {
+            sn_ser.push(val);
+            dev_ser.push(has_sum ? utils::math<std::complex<T>>::abs(val - sum) : T(0));
+        }
         for (const auto& val : result.an) an_ser.push(val);
         
         std::ostringstream oss;
-        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json();
+        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json()
+            << ", \"deviations\": " << dev_ser.to_json();
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
@@ -308,12 +326,23 @@ struct SeriesHandleInterval : public SeriesHandleBaseExt {
         
         shanks::ffi::IntervalSerializer<T> sn_ser;
         shanks::ffi::IntervalSerializer<T> an_ser;
-        
-        for (const auto& val : result.Sn) sn_ser.push(val);
+        shanks::ffi::RealSerializer<T> dev_ser;
+
+        intprec::interval<T> sum(0);
+        bool has_sum = !series->is_invalid();
+        if (has_sum) {
+            try { sum = series->get_sum(); } catch (...) { has_sum = false; }
+        }
+
+        for (const auto& val : result.Sn) {
+            sn_ser.push(val);
+            dev_ser.push(has_sum ? utils::math<intprec::interval<T>>::abs(val - sum).mag() : T(0));
+        }
         for (const auto& val : result.an) an_ser.push(val);
         
         std::ostringstream oss;
-        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json();
+        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json()
+            << ", \"deviations\": " << dev_ser.to_json();
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
@@ -403,12 +432,23 @@ struct SeriesHandleCInterval : public SeriesHandleBaseExt {
         
         shanks::ffi::CIntervalSerializer<T> sn_ser;
         shanks::ffi::CIntervalSerializer<T> an_ser;
-        
-        for (const auto& val : result.Sn) sn_ser.push(val);
+        shanks::ffi::RealSerializer<T> dev_ser;
+
+        std::complex<intprec::interval<T>> sum(0);
+        bool has_sum = !series->is_invalid();
+        if (has_sum) {
+            try { sum = series->get_sum(); } catch (...) { has_sum = false; }
+        }
+
+        for (const auto& val : result.Sn) {
+            sn_ser.push(val);
+            dev_ser.push(has_sum ? utils::math<std::complex<intprec::interval<T>>>::abs(val - sum).mag() : T(0));
+        }
         for (const auto& val : result.an) an_ser.push(val);
         
         std::ostringstream oss;
-        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json();
+        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json()
+            << ", \"deviations\": " << dev_ser.to_json();
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {

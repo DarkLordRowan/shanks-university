@@ -202,7 +202,12 @@ struct PlotCache {
     limits: Vec<(String, f64, Option<(f64, f64)>)>,
     smoothed_estimates: Vec<CachedPlotLine>,
     max_n: f64,
-    deviations: Vec<CachedPlotLine>,
+    /// Series partial-sum deviations |Sn - S| (shown with show_partial_sums).
+    deviations_sn: Vec<CachedPlotLine>,
+    /// Acceleration algorithm deviations (shown with show_accel_values).
+    deviations_accel: Vec<CachedPlotLine>,
+    /// Smoothed-estimate deviations (shown with show_smoothed_estimates).
+    deviations_smoothed: Vec<CachedPlotLine>,
     /// Filled bounds for the real axis (or 1-D interval).
     intervals_re: Vec<CachedIntervalData>,
     /// Filled bounds for the imaginary axis (CInterval only).
@@ -713,7 +718,9 @@ impl ShanksApp {
         self.plot_cache.main_accel.clear();
         self.plot_cache.limits.clear();
         self.plot_cache.smoothed_estimates.clear();
-        self.plot_cache.deviations.clear();
+        self.plot_cache.deviations_sn.clear();
+        self.plot_cache.deviations_accel.clear();
+        self.plot_cache.deviations_smoothed.clear();
         self.plot_cache.intervals_re.clear();
         self.plot_cache.intervals_im.clear();
         self.plot_cache.prof_add.clear();
@@ -859,6 +866,30 @@ impl ShanksApp {
                     name: format!("inf (Im) Sn - {}", series_name),
                     color: colors_sn[i % colors_sn.len()].gamma_multiply(0.6),
                     points: inf_pts_im,
+                });
+            }
+        }
+
+        // Series partial-sum deviations (same pattern as accel deviations)
+        for (i, (series_name, results)) in self.current_results.iter().enumerate() {
+            let mut dev_pts: Vec<egui_plot::PlotPoint> =
+                Vec::with_capacity(results.deviations.len());
+            for j in 0..results.deviations.len() {
+                let d = results.deviations.get(j);
+                let mut val = d.to_f64();
+                if use_symlog {
+                    val = crate::plot::Scientific(d.mantissa, d.exponent as i32)
+                        .symlog(log_linthresh);
+                }
+                if val.is_finite() {
+                    dev_pts.push([j as f64 + 1.0, val].into());
+                }
+            }
+            if !dev_pts.is_empty() {
+                self.plot_cache.deviations_sn.push(CachedPlotLine {
+                    name: format!("{} Sn Dev", series_name),
+                    color: colors_sn[i % colors_sn.len()],
+                    points: dev_pts,
                 });
             }
         }
@@ -1032,9 +1063,8 @@ impl ShanksApp {
             }
 
             // Smoothed Estimates Deviations
-            // name format is "SeriesName - AccelName"
-            let series_name = name.split(" - ").next().unwrap_or(name);
-            let true_limit = self.current_results.get(series_name).and_then(|r| r.sum.as_ref());
+            let series_name_for_lim = name.split(" - ").next().unwrap_or(name);
+            let true_limit = self.current_results.get(series_name_for_lim).and_then(|r| r.sum.as_ref());
             
             if let Some(limit_pt) = true_limit {
                 if let Some((lim_re, lim_im_opt)) = self.point_to_f64_parts(limit_pt, false, log_linthresh) {
@@ -1048,16 +1078,12 @@ impl ShanksApp {
                             let current_x = start_idx + idx as f64;
                             if let Some((pt_re, pt_im_opt)) = self.point_to_f64_parts(point, false, log_linthresh) {
                                 let pt_im = pt_im_opt.unwrap_or(0.0);
-                                
-                                // Calculate distance to true limit
                                 let d_re = pt_re - lim_re;
                                 let d_im = pt_im - lim_im;
                                 let mut error = (d_re * d_re + d_im * d_im).sqrt();
-                                
                                 if use_symlog {
                                     error = crate::plot::Scientific::from_f64(error).symlog(log_linthresh);
                                 }
-                                
                                 if error.is_finite() && error > 0.0 {
                                     dev_pts.push([current_x, error].into());
                                 }
@@ -1065,9 +1091,9 @@ impl ShanksApp {
                         }
                         
                         if !dev_pts.is_empty() {
-                            self.plot_cache.deviations.push(CachedPlotLine {
+                            self.plot_cache.deviations_smoothed.push(CachedPlotLine {
                                 name: format!("{} Dev - {}", est.filter, name),
-                                color: egui::Color32::KHAKI, // Matching the layout color
+                                color: egui::Color32::KHAKI,
                                 points: dev_pts,
                             });
                         }
@@ -1075,7 +1101,7 @@ impl ShanksApp {
                 }
             }
 
-            // Deviations
+            // Acceleration deviations
             let mut dev_pts: Vec<egui_plot::PlotPoint> =
                 Vec::with_capacity(results.deviations.len());
             for j in 0..results.deviations.len() {
@@ -1089,7 +1115,7 @@ impl ShanksApp {
                     dev_pts.push([j as f64 + 1.0, val].into());
                 }
             }
-            self.plot_cache.deviations.push(CachedPlotLine {
+            self.plot_cache.deviations_accel.push(CachedPlotLine {
                 name: format!("{} Dev", name),
                 color: colors_accel[i % colors_accel.len()],
                 points: dev_pts,
@@ -1604,12 +1630,36 @@ impl eframe::App for ShanksApp {
                             plot_ui.line(l);
                         }
                     } else if self.selected_tab == PlotTab::Deviation {
-                        for line in &self.plot_cache.deviations {
-                            plot_ui.line(
-                                egui_plot::Line::new(&*line.points)
-                                    .name(&line.name)
-                                    .color(line.color),
-                            );
+                        // Series partial-sum deviations
+                        if self.show_partial_sums {
+                            for line in &self.plot_cache.deviations_sn {
+                                plot_ui.line(
+                                    egui_plot::Line::new(&*line.points)
+                                        .name(&line.name)
+                                        .color(line.color),
+                                );
+                            }
+                        }
+
+                        if self.show_accel_values {
+                            for line in &self.plot_cache.deviations_accel {
+                                plot_ui.line(
+                                    egui_plot::Line::new(&*line.points)
+                                        .name(&line.name)
+                                        .color(line.color),
+                                );
+                            }
+                        }
+
+                        // Smoothed-estimate deviations
+                        if self.show_smoothed_estimates {
+                            for line in &self.plot_cache.deviations_smoothed {
+                                plot_ui.line(
+                                    egui_plot::Line::new(&*line.points)
+                                        .name(&line.name)
+                                        .color(line.color),
+                                );
+                            }
                         }
                     }
                 });
