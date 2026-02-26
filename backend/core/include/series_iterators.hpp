@@ -32,15 +32,6 @@ enum class series_iterator_id_t {
     series_iterator_id_t_count
 };
 
-inline bool is_seq(shanks::series::series_iterator_id_t id){
-    return id == shanks::series::series_iterator_id_t::rump_seq1_iterator_id ||
-           id == shanks::series::series_iterator_id_t::rump_seq2_iterator_id || 
-           id == shanks::series::series_iterator_id_t::rump_seq3_iterator_id || 
-           id == shanks::series::series_iterator_id_t::rump_seq4_iterator_id || 
-           id == shanks::series::series_iterator_id_t::rump_seq5_iterator_id || 
-           id == shanks::series::series_iterator_id_t::rump_seq6_iterator_id;
-}
-
 }  // namespace series
 }  // namespace shanks
 // Include all specific iterator definitions
@@ -97,6 +88,7 @@ inline bool is_seq(shanks::series::series_iterator_id_t id){
 #include "series_iterators/minus_one_quarter_iterator.hpp"
 #include "series_iterators/minus_three_plus_ln3_three_devided_two_plus_two_ln2_iterator.hpp"
 #include "series_iterators/minus_x_minus_pi_4_or_minus_pi_4_iterator.hpp"
+#include "series_iterators/natural_series_iterator.hpp"
 #include "series_iterators/one_div_sqrt2_sin_xdivsqrt2_iterator.hpp"
 #include "series_iterators/one_div_two_minus_x_multi_three_plus_x_iterator.hpp"
 #include "series_iterators/one_iterator.hpp"

@@ -8,6 +8,15 @@
 namespace shanks {
 namespace series {
 
+inline bool is_seq(shanks::series::series_iterator_id_t id){
+    return id == shanks::series::series_iterator_id_t::rump_seq1_iterator_id ||
+           id == shanks::series::series_iterator_id_t::rump_seq2_iterator_id ||
+           id == shanks::series::series_iterator_id_t::rump_seq3_iterator_id ||
+           id == shanks::series::series_iterator_id_t::rump_seq4_iterator_id ||
+           id == shanks::series::series_iterator_id_t::rump_seq5_iterator_id ||
+           id == shanks::series::series_iterator_id_t::rump_seq6_iterator_id;
+}
+
 /**
  * @brief Type-safe index for series in the registry.
  * Generated automatically from series_registry.def.

@@ -44,6 +44,7 @@ enum class transformation_id_t {
 #include "transformations/brezinski_theta_algorithm.hpp"
 #include "transformations/chang_wynn_algorithm.hpp"
 #include "transformations/drummond_d_algorithm.hpp"
+#include "transformations/f_algorithm.hpp"
 #include "transformations/ford_sidi_2_algorithm.hpp"
 #include "transformations/ford_sidi_3_algorithm.hpp"
 #include "transformations/j_transformation_algorithm.hpp"
