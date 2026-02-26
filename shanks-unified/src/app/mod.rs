@@ -200,6 +200,7 @@ struct PlotCache {
     main_sn: Vec<CachedPlotLine>,
     main_an: Vec<CachedPlotLine>,
     main_accel: Vec<CachedPlotLine>,
+    main_accel_an: Vec<CachedPlotLine>,
     limits: Vec<(String, f64, Option<(f64, f64)>)>,
     smoothed_estimates: Vec<CachedPlotLine>,
     max_n: f64,
@@ -760,6 +761,7 @@ impl ShanksApp {
         self.plot_cache.main_sn.clear();
         self.plot_cache.main_an.clear();
         self.plot_cache.main_accel.clear();
+        self.plot_cache.main_accel_an.clear();
         self.plot_cache.limits.clear();
         self.plot_cache.smoothed_estimates.clear();
         self.plot_cache.deviations_sn.clear();
@@ -906,8 +908,16 @@ impl ShanksApp {
                 }
             }
 
+            // Guard against sub-display-precision (e.g. IntervalArb) where inf==sup at f64.
+            let is_degenerate = |infs: &[egui_plot::PlotPoint], sups: &[egui_plot::PlotPoint]| {
+                infs.len() == sups.len()
+                    && infs.iter().zip(sups.iter()).all(|(a, b)| (a.y - b.y).abs() < 1e-300)
+            };
+            let inf_pts_re_degenerate = is_degenerate(&inf_pts_re, &sup_pts_re);
+            let inf_pts_im_degenerate = is_degenerate(&inf_pts_im, &sup_pts_im);
+
             // Real / 1-D bounds
-            if !inf_pts_re.is_empty() {
+            if !inf_pts_re.is_empty() && !inf_pts_re_degenerate {
                 let mut poly_pts = sup_pts_re.clone();
                 for pt in inf_pts_re.iter().rev() {
                     poly_pts.push(*pt);
@@ -930,7 +940,7 @@ impl ShanksApp {
             }
 
             // Imaginary bounds (CInterval only)
-            if !inf_pts_im.is_empty() {
+            if !inf_pts_im.is_empty() && !inf_pts_im_degenerate {
                 let mut poly_pts = sup_pts_im.clone();
                 for pt in inf_pts_im.iter().rev() {
                     poly_pts.push(*pt);
@@ -1028,6 +1038,65 @@ impl ShanksApp {
                     name: format!("{} (Im)", name),
                     color: colors_accel[i % colors_accel.len()].gamma_multiply(0.6),
                     points: pts_accel_im,
+                });
+            }
+
+            // Compute accel An = consecutive differences of accelerated values.
+            // an_accel[n] = values[n] - values[n-1] for valid pairs.
+            let colors_an = [
+                egui::Color32::from_rgb(255, 140, 0),
+                egui::Color32::from_rgb(255, 200, 0),
+                egui::Color32::from_rgb(200, 80, 0),
+                egui::Color32::from_rgb(255, 100, 100),
+            ];
+            let mut accel_an_re: Vec<egui_plot::PlotPoint> = Vec::new();
+            let mut accel_an_im: Vec<egui_plot::PlotPoint> = Vec::new();
+            let mut prev_re: Option<f64> = None;
+            let mut prev_im: Option<f64> = None;
+            for j in 0..results.values.len() {
+                let valid = results.valid.get(j).copied().unwrap_or(false);
+                if valid {
+                    let p = results.values.get(j);
+                    match self.point_to_f64_parts(&p, use_symlog, log_linthresh) {
+                        Some((re, im_opt)) => {
+                            if let Some(pr) = prev_re {
+                                let diff_re = re - pr;
+                                if diff_re.is_finite() {
+                                    accel_an_re.push([j as f64, diff_re].into());
+                                }
+                            }
+                            if let (Some(pi), Some(im)) = (prev_im, im_opt) {
+                                let diff_im = im - pi;
+                                if diff_im.is_finite() {
+                                    accel_an_im.push([j as f64, diff_im].into());
+                                }
+                            }
+                            prev_re = Some(re);
+                            prev_im = im_opt;
+                        }
+                        None => { prev_re = None; prev_im = None; }
+                    }
+                } else {
+                    prev_re = None;
+                    prev_im = None;
+                }
+            }
+            if !accel_an_re.is_empty() {
+                self.plot_cache.main_accel_an.push(CachedPlotLine {
+                    name: if accel_an_im.is_empty() {
+                        format!("An {}", name)
+                    } else {
+                        format!("An (Re) {}", name)
+                    },
+                    color: colors_an[i % colors_an.len()],
+                    points: accel_an_re,
+                });
+            }
+            if !accel_an_im.is_empty() {
+                self.plot_cache.main_accel_an.push(CachedPlotLine {
+                    name: format!("An (Im) {}", name),
+                    color: colors_an[i % colors_an.len()].gamma_multiply(0.65),
+                    points: accel_an_im,
                 });
             }
 
@@ -1343,6 +1412,12 @@ impl eframe::App for ShanksApp {
                     ui.checkbox(&mut self.show_interval_sup, "Show Interval Sup");
                     ui.checkbox(&mut self.show_interval_inf, "Show Interval Inf");
                     ui.checkbox(&mut self.show_interval_shade, "Shade Interval Bounds");
+                    ui.add(egui::Label::new(
+                        egui::RichText::new("Note: Arb interval bounds may be invisible if width < f64 precision")
+                            .small()
+                            .italics()
+                            .color(egui::Color32::GRAY),
+                    ));
                     ui.separator();
                 });
             });
@@ -1651,6 +1726,13 @@ impl eframe::App for ShanksApp {
                                     .style(egui_plot::LineStyle::Dashed { length: 2.0 });
                                 plot_ui.line(l);
                             }
+                            for line in &self.plot_cache.main_accel_an {
+                                let l = egui_plot::Line::new(&*line.points)
+                                    .name(&line.name)
+                                    .color(line.color)
+                                    .style(egui_plot::LineStyle::Dotted { spacing: 4.0 });
+                                plot_ui.line(l);
+                            }
                         }
 
                         // Plot interval polygons (real axis / 1-D)
@@ -1776,6 +1858,7 @@ impl ShanksApp {
                 "name": series_name,
                 "params": {},
                 "partial_sums": [],
+                "terms": [],
                 "limit": null,
                 "accelerations": []
             });
@@ -1796,6 +1879,15 @@ impl ShanksApp {
             series_entry["partial_sums"] =
                 serde_json::Value::Array(partial_sums.into_iter().map(serde_json::Value::String).collect());
 
+            // Export an (individual series terms)
+            let an_len = series_res.an.len();
+            let mut terms = Vec::with_capacity(an_len);
+            for i in 0..an_len {
+                terms.push(series_res.an.get(i).format_high_precision());
+            }
+            series_entry["terms"] =
+                serde_json::Value::Array(terms.into_iter().map(serde_json::Value::String).collect());
+
             let mut accelerations = Vec::new();
             for (accel_name, accel_res) in &self.current_accel_results {
                 if accel_name.starts_with(series_name) {
@@ -1811,13 +1903,18 @@ impl ShanksApp {
                     }
 
                     let mut points_map = serde_json::Map::new();
+                    let mut prev_val_fmt: Option<crate::ffi::SeriesPoint> = None;
                     for i in 0..accel_res.values.len() {
                         let n = i + 1;
-                        // Build using a Map to ensure field order if preserve_order is enabled
                         let mut point_map = serde_json::Map::new();
-                        
+
                         point_map.insert("unaccelerated".to_string(), serde_json::json!({
                             "value": series_res.sn.get(i).format_high_precision(),
+                            "an": if i < series_res.an.len() {
+                                series_res.an.get(i).format_high_precision()
+                            } else {
+                                "null".to_string()
+                            },
                             "deviation": if i < series_res.deviations.len() {
                                 series_res.deviations.get(i).format_high_precision()
                             } else {
@@ -1825,12 +1922,39 @@ impl ShanksApp {
                             }
                         }));
 
+                        let accel_val = accel_res.values.get(i);
+                        let valid = accel_res.valid.get(i).copied().unwrap_or(false);
+
+                        // Compute accel an as diff from previous valid value
+                        let accel_an_str = if valid {
+                            if let Some(ref prev) = prev_val_fmt {
+                                let diff = accel_val.sub_approx(prev);
+                                if let Some(d) = diff {
+                                    d.format_high_precision()
+                                } else {
+                                    "null".to_string()
+                                }
+                            } else {
+                                "null".to_string()
+                            }
+                        } else {
+                            "null".to_string()
+                        };
+
                         point_map.insert("accelerated".to_string(), serde_json::json!({
-                            "value": accel_res.values.get(i).format_high_precision(),
-                            "deviation": accel_res.deviations.get(i).format_high_precision()
+                            "value": if valid { accel_val.format_high_precision() } else { "invalid".to_string() },
+                            "an": accel_an_str,
+                            "deviation": accel_res.deviations.get(i).format_high_precision(),
+                            "valid": valid
                         }));
 
-                        // Filter events for this point n
+                        if valid {
+                            prev_val_fmt = Some(accel_val);
+                        } else {
+                            prev_val_fmt = None;
+                        }
+
+                        // Events
                         let mut pt_events = Vec::new();
                         for event in &accel_res.events {
                             if event.n == n as u64 {

@@ -402,10 +402,12 @@ impl Cache {
                                     imag: imag_sci,
                                 },
                             ));
-                            continue;
+                        } else {
+                            sn.push(crate::ffi::SeriesPoint::Real(real_sci));
                         }
+                    } else {
+                        sn.push(crate::ffi::SeriesPoint::Real(real_sci));
                     }
-                    sn.push(crate::ffi::SeriesPoint::Real(real_sci));
                 }
             }
 
@@ -446,10 +448,12 @@ impl Cache {
                                     imag: imag_sci,
                                 },
                             ));
-                            continue;
+                        } else {
+                            an.push(crate::ffi::SeriesPoint::Real(real_sci));
                         }
+                    } else {
+                        an.push(crate::ffi::SeriesPoint::Real(real_sci));
                     }
-                    an.push(crate::ffi::SeriesPoint::Real(real_sci));
                 }
             }
             // Parse deviation (same format as accel: "mantissaEexp" or plain float)

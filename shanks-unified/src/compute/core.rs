@@ -653,14 +653,20 @@ impl ComputeCore {
                         }
                     }
                     if !db_points.is_empty() {
-                        let _ = cache.insert_accel_points(accel_id, &db_points);
+                        if let Err(e) = cache.insert_accel_points(accel_id, &db_points) {
+                             log::error!("Failed to insert accel points into cache for id={}: {}", accel_id, e);
+                        }
                     }
 
                     if !parsed_accel.events.is_empty() {
-                        let _ = cache.insert_accel_events(accel_id, &parsed_accel.events);
+                        if let Err(e) = cache.insert_accel_events(accel_id, &parsed_accel.events) {
+                             log::error!("Failed to insert accel events into cache for id={}: {}", accel_id, e);
+                        }
                     }
                     if !parsed_accel.filtered_estimates.is_empty() {
-                        let _ = cache.insert_filtered_estimates(accel_id, &parsed_accel.filtered_estimates);
+                        if let Err(e) = cache.insert_filtered_estimates(accel_id, &parsed_accel.filtered_estimates) {
+                             log::error!("Failed to insert filtered estimates into cache for id={}: {}", accel_id, e);
+                        }
                     }
                 }
             }

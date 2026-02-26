@@ -175,9 +175,12 @@ impl ScientificValue {
         ScientificValue { mantissa, exponent }
     }
 
-    /// Format as a high-precision scientific notation string (e.g., "1.2345678901234567e-5").
     pub fn format_high_precision(&self) -> String {
-        format!("{:.17e}", self.mantissa * 10f64.powi(self.exponent as i32))
+        format!("{:.17e}", self.to_f64())
+    }
+
+    pub fn sub_approx(&self, other: &Self) -> Self {
+        Self::from_f64(self.to_f64() - other.to_f64())
     }
 }
 
@@ -212,6 +215,13 @@ impl ComplexValue {
             )
         }
     }
+
+    pub fn sub_approx(&self, other: &Self) -> Self {
+        Self {
+            real: self.real.sub_approx(&other.real),
+            imag: self.imag.sub_approx(&other.imag),
+        }
+    }
 }
 
 /// Interval value bounds
@@ -236,6 +246,13 @@ impl IntervalValue {
             self.inf.format_high_precision(),
             self.sup.format_high_precision()
         )
+    }
+
+    pub fn sub_approx(&self, other: &Self) -> Self {
+        Self {
+            inf: self.inf.sub_approx(&other.inf),
+            sup: self.sup.sub_approx(&other.sup),
+        }
     }
 }
 
@@ -262,6 +279,12 @@ impl CIntervalValue {
             self.imag.format_high_precision()
         )
     }
+    pub fn sub_approx(&self, other: &Self) -> Self {
+        Self {
+            real: self.real.sub_approx(&other.real),
+            imag: self.imag.sub_approx(&other.imag),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -283,13 +306,38 @@ impl SeriesPoint {
         }
     }
 
-    /// Format as a high-precision scientific notation string.
     pub fn format_high_precision(&self) -> String {
         match self {
             SeriesPoint::Real(v) => v.format_high_precision(),
             SeriesPoint::Complex(v) => v.format_high_precision(),
             SeriesPoint::Interval(v) => v.format_high_precision(),
             SeriesPoint::CInterval(v) => v.format_high_precision(),
+        }
+    }
+
+    pub fn sub_approx(&self, other: &Self) -> Option<Self> {
+        match (self, other) {
+            (SeriesPoint::Real(a), SeriesPoint::Real(b)) => Some(SeriesPoint::Real(a.sub_approx(b))),
+            (SeriesPoint::Complex(a), SeriesPoint::Complex(b)) => {
+                Some(SeriesPoint::Complex(a.sub_approx(b)))
+            }
+            (SeriesPoint::Interval(a), SeriesPoint::Interval(b)) => {
+                // Approximate difference as difference of midpoints
+                let mid_a = (a.inf.to_f64() + a.sup.to_f64()) / 2.0;
+                let mid_b = (b.inf.to_f64() + b.sup.to_f64()) / 2.0;
+                Some(SeriesPoint::Real(ScientificValue::from_f64(mid_a - mid_b)))
+            }
+            (SeriesPoint::CInterval(a), SeriesPoint::CInterval(b)) => {
+                let mid_re_a = (a.real.inf.to_f64() + a.real.sup.to_f64()) / 2.0;
+                let mid_im_a = (a.imag.inf.to_f64() + a.imag.sup.to_f64()) / 2.0;
+                let mid_re_b = (b.real.inf.to_f64() + b.real.sup.to_f64()) / 2.0;
+                let mid_im_b = (b.imag.inf.to_f64() + b.imag.sup.to_f64()) / 2.0;
+                Some(SeriesPoint::Complex(ComplexValue {
+                    real: ScientificValue::from_f64(mid_re_a - mid_re_b),
+                    imag: ScientificValue::from_f64(mid_im_a - mid_im_b),
+                }))
+            }
+            _ => None,
         }
     }
 }
