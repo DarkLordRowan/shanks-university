@@ -17,7 +17,7 @@ use uuid::Uuid;
 
 use super::task::{AccelParams, SeriesParams};
 use crate::cache::Cache;
-use crate::config::NoiseDef;
+use crate::experiment::NoiseDef;
 use crate::ffi::{AccelResult, ComputeEvent, ComputeEventBody, SeriesResult, ShanksLibrary};
 
 /// Deterministic serialization of parameters to ensure caching consistency.
@@ -124,7 +124,7 @@ impl ComputeCore {
         algorithms: &[AccelParams],
         n_points: u64,
         noise: Option<&NoiseDef>,
-        filters: &[crate::config::FilterDef],
+        filters: &[crate::experiment::FilterDef],
         event_tx: Option<std_mpsc::Sender<ComputeEvent>>,
         cancel_flags: Option<Arc<Mutex<std::collections::HashSet<Uuid>>>>,
     ) -> Result<(bool, Vec<String>)> {

@@ -10,7 +10,7 @@
 pub mod app;
 pub mod cache;
 pub mod compute;
-pub mod config;
+pub mod experiment;
 pub mod ffi;
 pub mod headless;
 pub mod plot;

@@ -150,15 +150,14 @@ fn run_gui(
     // Load experiment config if provided
     let experiment_config = if let Some(path) = config_path {
         log::info!("Loading experiment config from {:?}", path);
-        Some(shanks_unified::config::ExperimentConfig::load(&path)?)
+        Some(shanks_unified::experiment::ExperimentConfig::load(&path)?)
     } else {
         None
     };
 
     // Create application state
-    let app_config = shanks_unified::config::AppConfig::default();
     let app_state =
-        shanks_unified::app::AppState::new(app_config, experiment_config, cache, Some(library));
+        shanks_unified::app::AppState::new(experiment_config, cache, Some(library));
 
     // Run GUI
     let native_options = eframe::NativeOptions {
@@ -200,7 +199,7 @@ fn run_headless(
     log::info!("Running in headless mode");
 
     // Load experiment config
-    let mut config = shanks_unified::config::ExperimentConfig::load(&config_path)?;
+    let mut config = shanks_unified::experiment::ExperimentConfig::load(&config_path)?;
 
     // Override precisions if specified
     if let Some(p) = precisions {

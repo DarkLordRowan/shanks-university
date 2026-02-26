@@ -6,7 +6,7 @@ mod ui;
 
 use crate::cache::Cache;
 use crate::compute::ComputeEngine;
-use crate::config::{AppConfig, ExperimentConfig, MethodInstance, NoiseDef, SeriesInstance};
+use crate::experiment::{ExperimentConfig, MethodInstance, NoiseDef, SeriesInstance};
 use crate::ffi::{
     AccelResult, ComputeEvent, ComputeEventBody, SeriesPoint, SeriesResult, ShanksLibrary,
 };
@@ -39,8 +39,6 @@ struct ComputeInputState {
 
 /// Application state shared across the UI.
 pub struct AppState {
-    /// Application configuration
-    pub config: Arc<RwLock<AppConfig>>,
     /// Experiment configuration (from config file)
     pub experiment: Option<Arc<RwLock<ExperimentConfig>>>,
     /// Database cache
@@ -62,7 +60,6 @@ pub struct AppState {
 impl AppState {
     /// Create new application state.
     pub fn new(
-        config: AppConfig,
         experiment: Option<ExperimentConfig>,
         cache: Cache,
         library: Option<Arc<ShanksLibrary>>,
@@ -92,7 +89,6 @@ impl AppState {
             };
 
         Self {
-            config: Arc::new(RwLock::new(config)),
             experiment: experiment.map(|e| Arc::new(RwLock::new(e))),
             cache: Arc::new(Mutex::new(cache)),
             library,
@@ -150,7 +146,7 @@ impl AppState {
     }
 
     /// Get filter definitions from experiment config.
-    pub fn get_filters(&self) -> Vec<crate::config::FilterDef> {
+    pub fn get_filters(&self) -> Vec<crate::experiment::FilterDef> {
         if let Some(ref exp) = self.experiment {
             exp.read().unwrap().filters.clone()
         } else {
@@ -299,10 +295,8 @@ enum PlotTab {
 impl ShanksApp {
     /// Create a new application instance.
     pub fn new(state: AppState) -> Self {
-        let config = state.config.read().unwrap();
-        let show_partial_sums = config.ui.show_partial_sums;
-        let use_symlog = config.ui.use_symlog;
-        drop(config);
+        let show_partial_sums = true;
+        let use_symlog = false;
 
         // Build selection trees if experiment config is loaded
         let series_instances = state.get_series_instances();
@@ -1034,6 +1028,50 @@ impl ShanksApp {
                         color: egui::Color32::KHAKI,
                         points: pts_im,
                     });
+                }
+            }
+
+            // Smoothed Estimates Deviations
+            // name format is "SeriesName - AccelName"
+            let series_name = name.split(" - ").next().unwrap_or(name);
+            let true_limit = self.current_results.get(series_name).and_then(|r| r.sum.as_ref());
+            
+            if let Some(limit_pt) = true_limit {
+                if let Some((lim_re, lim_im_opt)) = self.point_to_f64_parts(limit_pt, false, log_linthresh) {
+                    let lim_im = lim_im_opt.unwrap_or(0.0);
+                    
+                    for est in &results.filtered_estimates {
+                        let start_idx = est.start_n as f64 - 1.0;
+                        let mut dev_pts = Vec::with_capacity(est.limit.len());
+                        
+                        for (idx, point) in est.limit.iter().enumerate() {
+                            let current_x = start_idx + idx as f64;
+                            if let Some((pt_re, pt_im_opt)) = self.point_to_f64_parts(point, false, log_linthresh) {
+                                let pt_im = pt_im_opt.unwrap_or(0.0);
+                                
+                                // Calculate distance to true limit
+                                let d_re = pt_re - lim_re;
+                                let d_im = pt_im - lim_im;
+                                let mut error = (d_re * d_re + d_im * d_im).sqrt();
+                                
+                                if use_symlog {
+                                    error = crate::plot::Scientific::from_f64(error).symlog(log_linthresh);
+                                }
+                                
+                                if error.is_finite() && error > 0.0 {
+                                    dev_pts.push([current_x, error].into());
+                                }
+                            }
+                        }
+                        
+                        if !dev_pts.is_empty() {
+                            self.plot_cache.deviations.push(CachedPlotLine {
+                                name: format!("{} Dev - {}", est.filter, name),
+                                color: egui::Color32::KHAKI, // Matching the layout color
+                                points: dev_pts,
+                            });
+                        }
+                    }
                 }
             }
 

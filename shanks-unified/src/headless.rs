@@ -10,7 +10,7 @@ use std::time::Instant;
 use crate::cache::Cache;
 use crate::compute::engine::ComputeEngine;
 use crate::compute::task::{AccelParams, ComputeTask, SeriesParams};
-use crate::config::{ExperimentConfig, NoiseDef};
+use crate::experiment::{ExperimentConfig, NoiseDef};
 use crate::ffi::{ComputeEventBody, ShanksLibrary};
 
 /// Progress information for headless runs.

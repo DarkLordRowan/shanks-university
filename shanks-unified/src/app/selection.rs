@@ -170,13 +170,13 @@ fn propagate_to_children(state: &SelectionState, children: &mut [SelectionNode])
 
 /// Build a series selection tree from experiment config.
 pub fn build_series_tree(
-    series_instances: &[super::super::config::SeriesInstance],
+    series_instances: &[super::super::experiment::SeriesInstance],
 ) -> SelectionNode {
     let mut root = SelectionNode::new("series_root", "ALL SERIES").with_expandable(true);
     root.expanded = true;
 
     // Group series by name
-    let mut series_by_name: HashMap<String, Vec<&super::super::config::SeriesInstance>> =
+    let mut series_by_name: HashMap<String, Vec<&super::super::experiment::SeriesInstance>> =
         HashMap::new();
     for instance in series_instances {
         series_by_name
@@ -199,10 +199,8 @@ pub fn build_series_tree(
                     serde_json::Value::String(s) => s.clone(),
                     _ => value.to_string(),
                 };
-                params
-                    .entry(param_name.clone())
-                    .or_default()
-                    .insert(value_str);
+                let entry = params.entry(param_name.clone()).or_insert_with(HashSet::new);
+                entry.insert(value_str);
             }
         }
 
@@ -234,13 +232,13 @@ pub fn build_series_tree(
 
 /// Build an acceleration selection tree from experiment config.
 pub fn build_accel_tree(
-    method_instances: &[super::super::config::MethodInstance],
+    method_instances: &[super::super::experiment::MethodInstance],
 ) -> SelectionNode {
     let mut root = SelectionNode::new("accel_root", "ALL ACCELERATIONS").with_expandable(true);
     root.expanded = true;
 
     // Group methods by name
-    let mut methods_by_name: HashMap<String, Vec<&super::super::config::MethodInstance>> =
+    let mut methods_by_name: HashMap<String, Vec<&super::super::experiment::MethodInstance>> =
         HashMap::new();
     for instance in method_instances {
         methods_by_name
@@ -258,7 +256,7 @@ pub fn build_accel_tree(
         let n_values: HashSet<i64> = instances.iter().map(|i| i.n).collect();
         let mut n_node =
             SelectionNode::new(format!("method_{}_n", name), "n").with_expandable(true);
-        let mut sorted_n: Vec<_> = n_values.into_iter().collect();
+        let mut sorted_n: Vec<i64> = n_values.into_iter().collect();
         sorted_n.sort();
         for n in sorted_n {
             n_node.children.push(SelectionNode::new(
@@ -272,7 +270,7 @@ pub fn build_accel_tree(
         let m_values: HashSet<i64> = instances.iter().map(|i| i.m).collect();
         let mut m_node =
             SelectionNode::new(format!("method_{}_m", name), "m").with_expandable(true);
-        let mut sorted_m: Vec<_> = m_values.into_iter().collect();
+        let mut sorted_m: Vec<i64> = m_values.into_iter().collect();
         sorted_m.sort();
         for m in sorted_m {
             m_node.children.push(SelectionNode::new(
@@ -321,7 +319,7 @@ pub fn build_accel_tree(
 }
 
 /// Build a noise selection tree from experiment config.
-pub fn build_noise_tree(noises: &[super::super::config::NoiseDef]) -> SelectionNode {
+pub fn build_noise_tree(noises: &[super::super::experiment::NoiseDef]) -> SelectionNode {
     let mut root = SelectionNode::new("noise_root", "ALL NOISES").with_expandable(true);
     root.expanded = true;
 
