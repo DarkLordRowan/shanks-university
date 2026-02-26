@@ -1,11 +1,5 @@
-//! Hierarchical tree selection for filtering series and accelerations.
-//!
-//! This module provides a tree-like selection UI where users can:
-//! - Select entire categories with one click
-//! - Drill down to specific parameter values
-//! - See cross-product of selected items
-
-use std::collections::{HashMap, HashSet};
+use indexmap::IndexMap;
+use std::collections::HashMap;
 
 /// Selection state for a tree node.
 #[derive(Debug, Clone, PartialEq)]
@@ -175,58 +169,56 @@ pub fn build_series_tree(
     let mut root = SelectionNode::new("series_root", "ALL SERIES").with_expandable(true);
     root.expanded = true;
 
-    // Group series by name
-    let mut series_by_name: HashMap<String, Vec<&super::super::experiment::SeriesInstance>> =
-        HashMap::new();
+    // Use IndexMap to preserve order of series and their parameters
+    let mut series_nodes: IndexMap<String, SelectionNode> = IndexMap::new();
+
     for instance in series_instances {
-        series_by_name
+        let series_node = series_nodes
             .entry(instance.name.clone())
-            .or_default()
-            .push(instance);
-    }
+            .or_insert_with(|| {
+                SelectionNode::new(format!("series_{}", instance.name), instance.name.clone())
+                    .with_expandable(true)
+            });
 
-    // Build tree for each series
-    for (name, instances) in series_by_name {
-        let mut series_node =
-            SelectionNode::new(format!("series_{}", name), &name).with_expandable(true);
+        // Use a temporary IndexMap for parameters to handle values consistently
+        // Note: instance.args is still HashMap, but we'll collect values in discovery order
+        for (param_name, value) in &instance.args {
+            let value_str = match value {
+                serde_json::Value::Number(n) => n.to_string(),
+                serde_json::Value::String(s) => s.clone(),
+                _ => value.to_string(),
+            };
 
-        // Collect all parameters and their values
-        let mut params: HashMap<String, HashSet<String>> = HashMap::new();
-        for inst in &instances {
-            for (param_name, value) in &inst.args {
-                let value_str = match value {
-                    serde_json::Value::Number(n) => n.to_string(),
-                    serde_json::Value::String(s) => s.clone(),
-                    _ => value.to_string(),
-                };
-                let entry = params.entry(param_name.clone()).or_insert_with(HashSet::new);
-                entry.insert(value_str);
+            // Find or create param node using standard Vec position for simplicity as it's already there
+            // or we could use another IndexMap if nested depth was high.
+            let param_node = if let Some(node) = series_node
+                .children
+                .iter_mut()
+                .find(|c| c.label == *param_name)
+            {
+                node
+            } else {
+                series_node.children.push(
+                    SelectionNode::new(
+                        format!("{}_{}", series_node.id, param_name),
+                        param_name.clone(),
+                    )
+                    .with_expandable(true),
+                );
+                series_node.children.last_mut().unwrap()
+            };
+
+            // Add value if not present
+            if !param_node.children.iter().any(|c| c.label == value_str) {
+                param_node.children.push(SelectionNode::new(
+                    format!("{}_{}", param_node.id, value_str),
+                    value_str,
+                ));
             }
         }
-
-        // Build parameter nodes
-        for (param_name, values) in params {
-            let mut param_node =
-                SelectionNode::new(format!("series_{}_{}", name, param_name), &param_name)
-                    .with_expandable(true);
-
-            // Sort values for consistent display
-            let mut sorted_values: Vec<_> = values.into_iter().collect();
-            sorted_values.sort();
-
-            // Build value nodes
-            for value in sorted_values {
-                let value_node =
-                    SelectionNode::new(format!("series_{}_{}_{}", name, param_name, value), &value);
-                param_node.children.push(value_node);
-            }
-
-            series_node.children.push(param_node);
-        }
-
-        root.children.push(series_node);
     }
 
+    root.children = series_nodes.into_values().collect();
     root
 }
 
@@ -237,84 +229,87 @@ pub fn build_accel_tree(
     let mut root = SelectionNode::new("accel_root", "ALL ACCELERATIONS").with_expandable(true);
     root.expanded = true;
 
-    // Group methods by name
-    let mut methods_by_name: HashMap<String, Vec<&super::super::experiment::MethodInstance>> =
-        HashMap::new();
+    let mut method_nodes: IndexMap<String, SelectionNode> = IndexMap::new();
+
     for instance in method_instances {
-        methods_by_name
+        let method_node = method_nodes
             .entry(instance.name.clone())
-            .or_default()
-            .push(instance);
-    }
+            .or_insert_with(|| {
+                SelectionNode::new(format!("method_{}", instance.name), instance.name.clone())
+                    .with_expandable(true)
+            });
 
-    // Build tree for each method
-    for (name, instances) in methods_by_name {
-        let mut method_node =
-            SelectionNode::new(format!("method_{}", name), &name).with_expandable(true);
-
-        // Add n values
-        let n_values: HashSet<i64> = instances.iter().map(|i| i.n).collect();
-        let mut n_node =
-            SelectionNode::new(format!("method_{}_n", name), "n").with_expandable(true);
-        let mut sorted_n: Vec<i64> = n_values.into_iter().collect();
-        sorted_n.sort();
-        for n in sorted_n {
-            n_node.children.push(SelectionNode::new(
-                format!("method_{}_n_{}", name, n),
-                n.to_string(),
-            ));
+        // Ensure "n" node exists
+        if !method_node.children.iter().any(|c| c.label == "n") {
+            method_node.children.push(
+                SelectionNode::new(format!("{}_n", method_node.id), "n").with_expandable(true),
+            );
         }
-        method_node.children.push(n_node);
-
-        // Add m values
-        let m_values: HashSet<i64> = instances.iter().map(|i| i.m).collect();
-        let mut m_node =
-            SelectionNode::new(format!("method_{}_m", name), "m").with_expandable(true);
-        let mut sorted_m: Vec<i64> = m_values.into_iter().collect();
-        sorted_m.sort();
-        for m in sorted_m {
-            m_node.children.push(SelectionNode::new(
-                format!("method_{}_m_{}", name, m),
-                m.to_string(),
-            ));
-        }
-        method_node.children.push(m_node);
-
-        // Collect additional args
-        let mut args: HashMap<String, HashSet<String>> = HashMap::new();
-        for inst in &instances {
-            for (arg_name, value) in &inst.args {
-                let value_str = match value {
-                    serde_json::Value::Number(n) => n.to_string(),
-                    serde_json::Value::String(s) => s.clone(),
-                    _ => value.to_string(),
-                };
-                args.entry(arg_name.clone()).or_default().insert(value_str);
-            }
+        let n_node = method_node
+            .children
+            .iter_mut()
+            .find(|c| c.label == "n")
+            .unwrap();
+        let n_str = instance.n.to_string();
+        if !n_node.children.iter().any(|c| c.label == n_str) {
+            n_node
+                .children
+                .push(SelectionNode::new(format!("{}_{}", n_node.id, n_str), n_str));
         }
 
-        // Build arg nodes
-        for (arg_name, values) in args {
-            let mut arg_node =
-                SelectionNode::new(format!("method_{}_{}", name, arg_name), &arg_name)
-                    .with_expandable(true);
+        // Ensure "m" node exists
+        if !method_node.children.iter().any(|c| c.label == "m") {
+            method_node.children.push(
+                SelectionNode::new(format!("{}_m", method_node.id), "m").with_expandable(true),
+            );
+        }
+        let m_node = method_node
+            .children
+            .iter_mut()
+            .find(|c| c.label == "m")
+            .unwrap();
+        let m_str = instance.m.to_string();
+        if !m_node.children.iter().any(|c| c.label == m_str) {
+            m_node
+                .children
+                .push(SelectionNode::new(format!("{}_{}", m_node.id, m_str), m_str));
+        }
 
-            let mut sorted_values: Vec<_> = values.into_iter().collect();
-            sorted_values.sort();
+        // Process additional args
+        for (arg_name, value) in &instance.args {
+            let value_str = match value {
+                serde_json::Value::Number(n) => n.to_string(),
+                serde_json::Value::String(s) => s.clone(),
+                _ => value.to_string(),
+            };
 
-            for value in sorted_values {
+            let arg_node = if let Some(node) = method_node
+                .children
+                .iter_mut()
+                .find(|c| c.label == *arg_name)
+            {
+                node
+            } else {
+                method_node.children.push(
+                    SelectionNode::new(
+                        format!("{}_{}", method_node.id, arg_name),
+                        arg_name.clone(),
+                    )
+                    .with_expandable(true),
+                );
+                method_node.children.last_mut().unwrap()
+            };
+
+            if !arg_node.children.iter().any(|c| c.label == value_str) {
                 arg_node.children.push(SelectionNode::new(
-                    format!("method_{}_{}_{}", name, arg_name, value),
-                    &value,
+                    format!("{}_{}", arg_node.id, value_str),
+                    value_str,
                 ));
             }
-
-            method_node.children.push(arg_node);
         }
-
-        root.children.push(method_node);
     }
 
+    root.children = method_nodes.into_values().collect();
     root
 }
 
@@ -325,7 +320,7 @@ pub fn build_noise_tree(noises: &[super::super::experiment::NoiseDef]) -> Select
 
     for (idx, noise) in noises.iter().enumerate() {
         let label = format!("{} ({})", noise.noise_type, noise.method);
-        let noise_node = SelectionNode::new(format!("noise_{}", idx), &label);
+        let noise_node = SelectionNode::new(format!("noise_{}", idx), label);
         root.children.push(noise_node);
     }
 
@@ -344,7 +339,7 @@ pub fn build_precision_tree(precisions: &[String]) -> SelectionNode {
     for precision in precisions {
         root.children.push(SelectionNode::new(
             format!("precision_{}", precision),
-            precision,
+            precision.clone(),
         ));
     }
 
