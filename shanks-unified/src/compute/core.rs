@@ -358,6 +358,10 @@ impl ComputeCore {
                         None,
                         sum_json.as_deref(),
                     )
+                    .map_err(|e| {
+                        log::error!("Failed to insert series into cache: {}", e);
+                        e
+                    })
                     .unwrap_or(-1)
             };
 
@@ -419,7 +423,9 @@ impl ComputeCore {
                     ));
                 }
                 if !db_points.is_empty() {
-                    let _ = cache.insert_series_points(id, &db_points);
+                    if let Err(e) = cache.insert_series_points(id, &db_points) {
+                        log::error!("Failed to insert series points into cache for id={}: {}", id, e);
+                    }
                 }
             }
             id
@@ -585,6 +591,10 @@ impl ComputeCore {
                             &method_args_json,
                             profiling_json.as_deref(),
                         )
+                        .map_err(|e| {
+                            log::error!("Failed to insert acceleration into cache: {}", e);
+                            e
+                        })
                         .unwrap_or(-1)
                 };
 

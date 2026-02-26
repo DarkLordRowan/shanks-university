@@ -32,7 +32,8 @@ impl Cache {
                 arguments JSON,
                 noise_config JSON,
                 profiling JSON,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                sum TEXT
             );
             CREATE UNIQUE INDEX IF NOT EXISTS idx_series_unique ON series(name, precision, x_value, arguments, IFNULL(noise_config, ''));
 
@@ -163,7 +164,10 @@ impl Cache {
             tx.last_insert_rowid()
         };
 
-        tx.commit()?;
+        if let Err(e) = tx.commit() {
+            log::error!("Failed to commit series insertion: {}", e);
+            return Err(e.into());
+        }
         Ok(id)
     }
 
@@ -186,7 +190,10 @@ impl Cache {
             )?;
         }
 
-        tx.commit()?;
+        if let Err(e) = tx.commit() {
+            log::error!("Failed to commit series points insertion: {}", e);
+            return Err(e.into());
+        }
         Ok(())
     }
 
