@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-use crate::config::NoiseDef;
+use crate::config::{NoiseDef, FilterDef};
 use crate::ffi::ParamValue;
 
 /// Parameters for a series computation.
@@ -47,6 +47,9 @@ pub struct ComputeTask {
     /// Algorithms to apply
     #[serde(default)]
     pub algorithms: Vec<AccelParams>,
+    /// Filters to apply
+    #[serde(default)]
+    pub filters: Vec<FilterDef>,
 }
 
 impl ComputeTask {
@@ -63,6 +66,7 @@ impl ComputeTask {
             n_points,
             noise: None,
             algorithms: Vec::new(),
+            filters: Vec::new(),
         }
     }
 

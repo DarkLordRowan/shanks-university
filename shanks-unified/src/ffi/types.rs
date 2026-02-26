@@ -539,9 +539,27 @@ pub struct AccelResult {
     /// Errors during computation
     #[serde(default)]
     pub errors: Vec<ComputeError>,
+    /// Smoothed estimates for divergent tails
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub filtered_estimates: Vec<SmoothedEstimate>,
     /// Profiling information (if enabled)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profiling: Option<ProfilingTrace>,
+}
+
+/// A smoothed limit estimate from a divergent tail.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SmoothedEstimate {
+    /// The name of the event that triggered smoothing (e.g. "divergent_accel")
+    pub event_name: String,
+    /// Name of the filter applied (e.g. "kz")
+    pub filter: String,
+    /// The calculated limit points matching the tail segment
+    pub limit: Vec<SeriesPoint>,
+    /// The index where divergence started
+    pub start_n: u64,
+    /// Length of the smoothed segment
+    pub length: u64,
 }
 
 /// An event during computation (convergence, strategy change, etc.)

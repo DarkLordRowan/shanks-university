@@ -235,6 +235,7 @@ impl HeadlessRunner {
                         n_points: max_n_points as u64,
                         noise: noise_opt.cloned(),
                         algorithms: bundled_algorithms.clone(),
+                        filters: self.config.filters.clone(),
                     };
 
                     if let Ok(id) = engine.start_task(task.clone()) {

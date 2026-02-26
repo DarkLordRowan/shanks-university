@@ -149,6 +149,15 @@ impl AppState {
         }
     }
 
+    /// Get filter definitions from experiment config.
+    pub fn get_filters(&self) -> Vec<crate::config::FilterDef> {
+        if let Some(ref exp) = self.experiment {
+            exp.read().unwrap().filters.clone()
+        } else {
+            vec![]
+        }
+    }
+
     /// Get precisions from experiment config or defaults.
     pub fn get_precisions(&self) -> Vec<String> {
         if let Some(ref exp) = self.experiment {
@@ -194,7 +203,8 @@ struct PlotCache {
     log_linthresh: f64,
     main_sn: Vec<CachedPlotLine>,
     main_accel: Vec<CachedPlotLine>,
-    limits: Vec<(String, f64)>,
+    limits: Vec<(String, f64, Option<(f64, f64)>)>,
+    smoothed_estimates: Vec<CachedPlotLine>,
     max_n: f64,
     deviations: Vec<CachedPlotLine>,
     /// Filled bounds for the real axis (or 1-D interval).
@@ -234,6 +244,7 @@ pub struct ShanksApp {
     show_partial_sums: bool,
     show_accel_values: bool,
     show_limit_lines: bool,
+    show_smoothed_estimates: bool,
     show_interval_sup: bool,
     show_interval_inf: bool,
     show_interval_shade: bool,
@@ -354,6 +365,7 @@ impl ShanksApp {
             show_partial_sums,
             show_accel_values: true,
             show_limit_lines: true,
+            show_smoothed_estimates: true,
             show_interval_sup: true,
             show_interval_inf: true,
             show_interval_shade: true,
@@ -471,8 +483,9 @@ impl ShanksApp {
             }
         }
 
-        // Get noises list from experiment config
+        // Get noises and filters list from experiment config
         let noises = self.state.get_noises();
+        let filters = self.state.get_filters();
 
         for (
             (series_name, _series_json, precision, noise_idx),
@@ -496,6 +509,7 @@ impl ShanksApp {
                 n_points: n_points as u64,
                 noise: noise.cloned(),
                 algorithms,
+                filters: filters.clone(),
             };
 
             if let Some(ref mut engine) = self.compute_engine {
@@ -704,6 +718,7 @@ impl ShanksApp {
         self.plot_cache.main_sn.clear();
         self.plot_cache.main_accel.clear();
         self.plot_cache.limits.clear();
+        self.plot_cache.smoothed_estimates.clear();
         self.plot_cache.deviations.clear();
         self.plot_cache.intervals_re.clear();
         self.plot_cache.intervals_im.clear();
@@ -739,12 +754,12 @@ impl ShanksApp {
                     } else {
                         format!("Limit - {}", series_name)
                     };
-                    self.plot_cache.limits.push((name, r));
+                    self.plot_cache.limits.push((name, r, None));
 
                     if let Some(im) = i_opt {
                         self.plot_cache
                             .limits
-                            .push((format!("Limit (Im) - {}", series_name), im));
+                            .push((format!("Limit (Im) - {}", series_name), im, None));
                     }
                 }
             }
@@ -982,6 +997,46 @@ impl ShanksApp {
                 });
             }
 
+            // Smoothed Estimates (Limits)
+            for est in &results.filtered_estimates {
+                let start_idx = est.start_n as f64 - 1.0;
+                let mut pts_re = Vec::with_capacity(est.limit.len());
+                let mut pts_im = Vec::with_capacity(est.limit.len());
+                let mut has_im = false;
+
+                for (idx, point) in est.limit.iter().enumerate() {
+                    let current_x = start_idx + idx as f64;
+                    if let Some((re, im_opt)) = self.point_to_f64_parts(point, use_symlog, log_linthresh) {
+                        pts_re.push([current_x, re].into());
+                        if let Some(im) = im_opt {
+                            has_im = true;
+                            pts_im.push([current_x, im].into());
+                        }
+                    }
+                }
+
+                if !pts_re.is_empty() {
+                    let ext_name = if has_im {
+                        format!("{} (Re) - {}", est.filter, name)
+                    } else {
+                        format!("{} - {}", est.filter, name)
+                    };
+                    self.plot_cache.smoothed_estimates.push(CachedPlotLine {
+                        name: ext_name,
+                        color: egui::Color32::KHAKI,
+                        points: pts_re,
+                    });
+                }
+
+                if has_im && !pts_im.is_empty() {
+                    self.plot_cache.smoothed_estimates.push(CachedPlotLine {
+                        name: format!("{} (Im) - {}", est.filter, name),
+                        color: egui::Color32::KHAKI,
+                        points: pts_im,
+                    });
+                }
+            }
+
             // Deviations
             let mut dev_pts: Vec<egui_plot::PlotPoint> =
                 Vec::with_capacity(results.deviations.len());
@@ -1135,7 +1190,8 @@ impl eframe::App for ShanksApp {
                 ui.menu_button("View", |ui| {
                     ui.checkbox(&mut self.show_partial_sums, "Show Partial Sums");
                     ui.checkbox(&mut self.show_accel_values, "Show Accelerated Values");
-                    ui.checkbox(&mut self.show_limit_lines, "Show Limit Lines");
+                    ui.checkbox(&mut self.show_limit_lines, "Show Series Limits");
+                    ui.checkbox(&mut self.show_smoothed_estimates, "Show Smoothed Estimates");
                     ui.checkbox(&mut self.show_interval_sup, "Show Interval Sup");
                     ui.checkbox(&mut self.show_interval_inf, "Show Interval Inf");
                     ui.checkbox(&mut self.show_interval_shade, "Shade Interval Bounds");
@@ -1461,12 +1517,27 @@ impl eframe::App for ShanksApp {
                         // Plot limits if enabled
                         if self.show_limit_lines {
                             let max_n = self.plot_cache.max_n;
-                            for (name, val) in &self.plot_cache.limits {
+                            for (name, val, span) in &self.plot_cache.limits {
+                                let (x_start, x_end) = span.unwrap_or((-1.0, max_n + 1.0));
+                                let pt_start = [x_start, *val];
+                                let pt_end = [x_end, *val];
                                 plot_ui.line(
-                                    egui_plot::Line::new(vec![[-1.0, *val], [max_n + 1.0, *val]])
+                                    egui_plot::Line::new(vec![pt_start, pt_end])
                                         .name(name)
                                         .color(egui::Color32::RED)
                                         .width(2.0),
+                                );
+                            }
+                        }
+
+                        // Plot smoothed estimates if enabled
+                        if self.show_smoothed_estimates {
+                            for line in &self.plot_cache.smoothed_estimates {
+                                plot_ui.line(
+                                    egui_plot::Line::new(egui_plot::PlotPoints::Owned(line.points.clone()))
+                                        .name(&line.name)
+                                        .color(line.color)
+                                        .width(3.0),
                                 );
                             }
                         }

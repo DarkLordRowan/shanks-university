@@ -1,23 +1,34 @@
 {
-  "precisions": ["F32", "F64", "FLong", "Arb128", "Arb256"],
+  "precisions": [
+    "F32",
+    "F64",
+    "FLong",
+    "Arb128",
+    "Arb256"
+  ],
   "series": [
-    "example_series.csv",
     {
       "name": "ExpSeries",
       "args": {
-        "x": [0.1]
+        "x": [
+          0.1
+        ]
       }
     },
     {
       "name": "CosSeries",
       "args": {
-        "x": [0.1]
+        "x": [
+          0.1
+        ]
       }
     },
     {
       "name": "SinSeries",
       "args": {
-        "x": [0.1]
+        "x": [
+          0.1
+        ]
       }
     }
   ],
@@ -56,13 +67,28 @@
   "methods": [
     {
       "name": "BrezinskiThetaAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -72,13 +98,28 @@
     },
     {
       "name": "ChangWynnAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -88,16 +129,35 @@
     },
     {
       "name": "DrummondDAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {
-        "remainder": ["u_type"],
-        "useRecurrentFormula": [false]
+        "remainder": [
+          "u_type"
+        ],
+        "useRecurrentFormula": [
+          false
+        ]
       },
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -107,13 +167,28 @@
     },
     {
       "name": "FordSidi2Algorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -123,13 +198,28 @@
     },
     {
       "name": "FordSidi3Algorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -139,13 +229,28 @@
     },
     {
       "name": "JTransformationAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -155,17 +260,38 @@
     },
     {
       "name": "LevinAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {
-        "remainder": ["u_type"],
-        "useRecurrentFormula": [false],
-        "beta": [1.0]
+        "remainder": [
+          "u_type"
+        ],
+        "useRecurrentFormula": [
+          false
+        ],
+        "beta": [
+          1.0
+        ]
       },
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -175,15 +301,32 @@
     },
     {
       "name": "LevinSidiMAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {
-        "remainder": ["u_type"]
+        "remainder": [
+          "u_type"
+        ]
       },
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -193,16 +336,35 @@
     },
     {
       "name": "LevinSidiSAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {
-        "remainder": ["u_type"],
-        "useRecurrentFormula": [false]
+        "remainder": [
+          "u_type"
+        ],
+        "useRecurrentFormula": [
+          false
+        ]
       },
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -212,13 +374,28 @@
     },
     {
       "name": "LubkinWAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -228,13 +405,28 @@
     },
     {
       "name": "RichardsonAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -244,13 +436,28 @@
     },
     {
       "name": "ShanksAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -260,13 +467,28 @@
     },
     {
       "name": "ShanksTransformAlternating",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -276,13 +498,28 @@
     },
     {
       "name": "WenigerAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -292,13 +529,28 @@
     },
     {
       "name": "WynnEpsilon1Algorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -308,13 +560,28 @@
     },
     {
       "name": "WynnEpsilon2Algorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -324,13 +591,28 @@
     },
     {
       "name": "WynnEpsilon3Algorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,
@@ -340,17 +622,38 @@
     },
     {
       "name": "WynnRhoAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
+      "n": {
+        "start": 1,
+        "step": 1,
+        "stop": 33
+      },
+      "m": [
+        4
+      ],
       "args": {
-        "numerator": ["rho_type"],
-        "gamma": [1.0],
-        "RHO": [1.0]
+        "numerator": [
+          "rho_type"
+        ],
+        "gamma": [
+          1.0
+        ],
+        "RHO": [
+          1.0
+        ]
       },
       "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": 2
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": 2
+        },
         {
           "type": "divergent_accel",
           "log_action_capacity": 2,

@@ -322,6 +322,28 @@ SHANKS_FFI_API char* shanks_accel_apply_data(
     uint64_t order
 );
 
+// ============================================================================
+// Post-Processing
+// ============================================================================
+
+/**
+ * @brief Compute a smoothed limit from a divergent tail using Kolmogorov-Zurbenko filter.
+ * 
+ * @param precision Precision type (e.g., "F64", "Arb").
+ * @param values Array of string values representing the tail.
+ * @param len Number of values in the array.
+ * @param filter_type Filter type string (e.g. "kolmogorovZurbenko").
+ * @param args_json JSON string of arguments.
+ * @return Smoothed limit as a string. Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_compute_smoothed_limit(
+    const char* precision,
+    const char** values,
+    uint64_t len,
+    const char* filter_type,
+    const char* args_json
+);
+
 #ifdef __cplusplus
 }
 #endif

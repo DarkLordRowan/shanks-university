@@ -75,6 +75,7 @@ impl ComputeEngine {
                 &task.algorithms,
                 task.n_points,
                 task.noise.as_ref(),
+                &task.filters,
                 Some(event_tx.clone()),
                 Some(cancel_flags.clone()),
             ) {

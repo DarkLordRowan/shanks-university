@@ -484,6 +484,59 @@ impl ShanksLibrary {
         }
     }
 
+    /// Compute a smoothed limit from a divergent tail.
+    pub fn compute_smoothed_limit(
+        &self,
+        precision: &str,
+        values: &[String],
+        filter_type: &str,
+        args_json: &str,
+    ) -> Result<String, FfiError> {
+        unsafe {
+            let func: Symbol<
+                unsafe extern "C" fn(
+                    *const i8,
+                    *const *const i8,
+                    u64,
+                    *const i8,
+                    *const i8,
+                ) -> *mut i8,
+            > = self.library.get(b"shanks_compute_smoothed_limit")?;
+
+            let precision_c = CString::new(precision)?;
+            let filter_type_c = CString::new(filter_type)?;
+            let args_json_c = CString::new(args_json)?;
+            
+            let mut c_strings: Vec<CString> = Vec::with_capacity(values.len());
+            let mut c_ptrs: Vec<*const i8> = Vec::with_capacity(values.len());
+            
+            for v in values {
+                let c_str = CString::new(v.as_str())?;
+                c_ptrs.push(c_str.as_ptr());
+                c_strings.push(c_str);
+            }
+
+            let ptr = func(
+                precision_c.as_ptr(),
+                c_ptrs.as_ptr(),
+                values.len() as u64,
+                filter_type_c.as_ptr(),
+                args_json_c.as_ptr(),
+            );
+            
+            if ptr.is_null() {
+                let err = self
+                    .last_error()
+                    .unwrap_or_else(|| "Unknown error".to_string());
+                return Err(FfiError::LibraryError(err));
+            }
+
+            let json_str = CStr::from_ptr(ptr).to_str()?.to_string();
+            self.free_string(ptr);
+            Ok(json_str)
+        }
+    }
+
     /// Free a string allocated by the library.
     fn free_string(&self, ptr: *mut i8) {
         unsafe {

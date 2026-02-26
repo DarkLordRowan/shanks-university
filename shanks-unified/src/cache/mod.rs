@@ -89,6 +89,18 @@ impl Cache {
                 FOREIGN KEY (accel_id) REFERENCES accelerations(id)
             );
 
+            -- Filtered estimates for divergent tails
+            CREATE TABLE IF NOT EXISTS filtered_estimates (
+                id INTEGER PRIMARY KEY,
+                accel_id INTEGER NOT NULL,
+                event_name TEXT NOT NULL,
+                filter TEXT NOT NULL,
+                limit_points JSON NOT NULL,
+                start_n INTEGER NOT NULL,
+                length INTEGER NOT NULL,
+                FOREIGN KEY (accel_id) REFERENCES accelerations(id)
+            );
+
             -- Indexes for common queries
             CREATE INDEX IF NOT EXISTS idx_series_name ON series(name);
             CREATE INDEX IF NOT EXISTS idx_series_precision ON series(precision);
@@ -217,6 +229,42 @@ impl Cache {
             )?;
         }
 
+        tx.commit()?;
+        Ok(())
+    }
+
+    /// Insert events for an acceleration.
+    pub fn insert_accel_events(
+        &mut self,
+        accel_id: i64,
+        events: &[crate::ffi::ComputeEventEntry],
+    ) -> Result<()> {
+        let tx = self.conn.transaction()?;
+        for e in events {
+            tx.execute(
+                "INSERT INTO events (accel_id, n, name, description) VALUES (?1, ?2, ?3, ?4)",
+                params![accel_id, e.n, e.name, e.description],
+            )?;
+        }
+        tx.commit()?;
+        Ok(())
+    }
+
+    /// Insert filtered estimates for an acceleration.
+    pub fn insert_filtered_estimates(
+        &mut self,
+        accel_id: i64,
+        estimates: &[crate::ffi::SmoothedEstimate],
+    ) -> Result<()> {
+        let tx = self.conn.transaction()?;
+        for est in estimates {
+            let limit_points_json = serde_json::to_string(&est.limit)?;
+            tx.execute(
+                "INSERT INTO filtered_estimates (accel_id, event_name, filter, limit_points, start_n, length)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params![accel_id, est.event_name, est.filter, limit_points_json, est.start_n, est.length],
+            )?;
+        }
         tx.commit()?;
         Ok(())
     }
@@ -569,12 +617,55 @@ impl Cache {
             exponent: dev_exponent,
         };
 
+        // --- Fetch events ---
+        let mut stmt_events = self.conn.prepare(
+            "SELECT n, name, description FROM events WHERE accel_id = ?1 ORDER BY n ASC"
+        )?;
+        let events_iter = stmt_events.query_map(params![accel_id], |row| {
+            Ok(crate::ffi::ComputeEventEntry {
+                n: row.get::<_, i64>(0)? as u64,
+                name: row.get(1)?,
+                description: row.get::<_, Option<String>>(2)?.unwrap_or_default(),
+            })
+        })?;
+        let mut events = Vec::new();
+        for e in events_iter {
+            events.push(e?);
+        }
+
+        // --- Fetch filtered estimates ---
+        let mut stmt_est = self.conn.prepare(
+            "SELECT event_name, filter, limit_points, start_n, length FROM filtered_estimates WHERE accel_id = ?1 ORDER BY start_n ASC"
+        )?;
+        let est_iter = stmt_est.query_map(params![accel_id], |row| {
+            let event_name: String = row.get(0)?;
+            let filter: String = row.get(1)?;
+            let limit_points_json: String = row.get(2)?;
+            let start_n: i64 = row.get(3)?;
+            let length: i64 = row.get(4)?;
+
+            let limit = serde_json::from_str(&limit_points_json).unwrap_or_else(|_| vec![]);
+
+            Ok(crate::ffi::SmoothedEstimate {
+                event_name,
+                filter,
+                limit,
+                start_n: start_n as u64,
+                length: length as u64,
+            })
+        })?;
+        let mut filtered_estimates = Vec::new();
+        for est in est_iter {
+            filtered_estimates.push(est?);
+        }
+
         Ok(Some(crate::ffi::AccelResult {
             values: values_array,
             valid,
             deviations: deviations_array,
-            events: vec![],
+            events,
             errors: vec![],
+            filtered_estimates,
             profiling,
         }))
     }

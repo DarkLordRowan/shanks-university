@@ -124,6 +124,7 @@ impl ComputeCore {
         algorithms: &[AccelParams],
         n_points: u64,
         noise: Option<&NoiseDef>,
+        filters: &[crate::config::FilterDef],
         event_tx: Option<std_mpsc::Sender<ComputeEvent>>,
         cancel_flags: Option<Arc<Mutex<std::collections::HashSet<Uuid>>>>,
     ) -> Result<(bool, Vec<String>)> {
@@ -464,7 +465,7 @@ impl ComputeCore {
 
             self.library.accel_destroy(accel_handle);
 
-            let parsed_accel: AccelResult = match serde_json::from_str(&accel_result_json) {
+            let mut parsed_accel: AccelResult = match serde_json::from_str(&accel_result_json) {
                 Ok(r) => r,
                 Err(e) => {
                     let msg = format!("JSON parse error for '{}': {}\n", accel.name, e);
@@ -474,6 +475,83 @@ impl ComputeCore {
                     continue;
                 }
             };
+
+            // --- Event Detection & Smoothing ---
+            // Simple divergence detection: if deviation increases 3 times consecutively
+            let mut divergence_start = None;
+            let mut inc_count = 0;
+            for i in 1..parsed_accel.deviations.len() {
+                if parsed_accel.deviations.to_f64(i) > parsed_accel.deviations.to_f64(i - 1) {
+                    inc_count += 1;
+                    if inc_count >= 3 && divergence_start.is_none() {
+                        divergence_start = Some(i - 3); // Start of divergence
+                        break;
+                    }
+                } else {
+                    inc_count = 0;
+                }
+            }
+
+            if let Some(start_n) = divergence_start {
+                let tail_len = parsed_accel.values.len().saturating_sub(start_n);
+                if tail_len >= 5 {
+                    // Extract tail values as strings
+                    let mut tail_strings = Vec::with_capacity(tail_len);
+                    for i in start_n..parsed_accel.values.len() {
+                        let val_str = match parsed_accel.values.get(i) {
+                            crate::ffi::SeriesPoint::Real(r) => r.format(),
+                            crate::ffi::SeriesPoint::Complex(c) => c.format(),
+                            crate::ffi::SeriesPoint::Interval(_) => continue, // Skip unsupported precision
+                            crate::ffi::SeriesPoint::CInterval(_) => continue,
+                        };
+                        tail_strings.push(val_str);
+                    }
+
+                    if tail_strings.len() == tail_len {
+                        for filter_def in filters {
+                            let filter_type = &filter_def.filter_type;
+                            let args_json = match serde_json::to_string(&filter_def.args) {
+                                Ok(json) => json,
+                                Err(e) => {
+                                    log::error!("Failed to serialize filter args: {}", e);
+                                    continue;
+                                }
+                            };
+
+                            if let Ok(limit_json) = self.library.compute_smoothed_limit(
+                                precision,
+                                &tail_strings,
+                                filter_type,
+                                &args_json,
+                            ) {
+                                log::info!("Filtered limit JSON ({}): {}", filter_type, limit_json);
+                                if !limit_json.is_empty() {
+                                    if let Ok(limit_points) = serde_json::from_str::<Vec<crate::ffi::SeriesPoint>>(&limit_json) {
+                                        log::info!("Successfully parsed {} limit points for filter {}", limit_points.len(), filter_type);
+                                        // Only add the event once
+                                        if parsed_accel.filtered_estimates.is_empty() {
+                                            parsed_accel.events.push(crate::ffi::ComputeEventEntry {
+                                                n: start_n as u64,
+                                                name: "divergent_accel".to_string(),
+                                                description: format!("Divergence detected, applied filters to tail."),
+                                            });
+                                        }
+                                        parsed_accel.filtered_estimates.push(crate::ffi::SmoothedEstimate {
+                                            event_name: "divergent_accel".to_string(),
+                                            filter: filter_type.clone(),
+                                            limit: limit_points,
+                                            start_n: start_n as u64,
+                                            length: tail_len as u64,
+                                        });
+                                    } else {
+                                        log::error!("Failed to parse smoothed limit JSON into Vec<SeriesPoint> for filter {}!", filter_type);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             send_event(ComputeEventBody::AccelComplete {
                 name: format!(
@@ -565,6 +643,13 @@ impl ComputeCore {
                     }
                     if !db_points.is_empty() {
                         let _ = cache.insert_accel_points(accel_id, &db_points);
+                    }
+
+                    if !parsed_accel.events.is_empty() {
+                        let _ = cache.insert_accel_events(accel_id, &parsed_accel.events);
+                    }
+                    if !parsed_accel.filtered_estimates.is_empty() {
+                        let _ = cache.insert_filtered_estimates(accel_id, &parsed_accel.filtered_estimates);
                     }
                 }
             }
