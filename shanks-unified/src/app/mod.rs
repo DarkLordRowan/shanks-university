@@ -8,7 +8,7 @@ use crate::cache::Cache;
 use crate::compute::ComputeEngine;
 use crate::experiment::{ExperimentConfig, MethodInstance, NoiseDef, SeriesInstance};
 use crate::ffi::{
-    AccelResult, ComputeEvent, ComputeEventBody, SeriesPoint, SeriesResult, ShanksLibrary,
+    AccelResult, ComputeEvent, ComputeEventBody, SeriesPoint, SeriesResult, ShanksLibrary, Series,
 };
 use std::collections::HashMap;
 use std::sync::{mpsc, Arc, Mutex, RwLock};

@@ -10,7 +10,7 @@ use uuid::Uuid;
 use super::core::ComputeCore;
 use super::task::ComputeTask;
 use crate::cache::Cache;
-use crate::ffi::{ComputeEvent, ComputeEventBody, ShanksLibrary};
+use crate::ffi::{ComputeEvent, ComputeEventBody, ShanksLibrary, Series};
 
 /// Compute engine for running series generation and acceleration.
 pub struct ComputeEngine {

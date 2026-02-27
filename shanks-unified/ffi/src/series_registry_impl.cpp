@@ -180,6 +180,7 @@ shanks::series::series_registry<T_TYPE, K_TYPE>::s_entries = [] { \
 
 namespace shanks { namespace series {
 
+#ifndef SHANKS_SKIP_PRECISION
 // ---------------------------------------------------------------------------
 // float, size_t
 // ---------------------------------------------------------------------------
@@ -192,7 +193,9 @@ series_registry<float, size_t>::s_entries = [] {
 #include "../../core/include/series_registry.def"
     };
 }();
+#endif
 
+#ifndef SHANKS_SKIP_PRECISION
 // ---------------------------------------------------------------------------
 // double, size_t
 // ---------------------------------------------------------------------------
@@ -205,7 +208,9 @@ series_registry<double, size_t>::s_entries = [] {
 #include "../../core/include/series_registry.def"
     };
 }();
+#endif
 
+#ifndef SHANKS_SKIP_PRECISION
 // ---------------------------------------------------------------------------
 // long double, size_t
 // ---------------------------------------------------------------------------
@@ -218,6 +223,7 @@ series_registry<long double, size_t>::s_entries = [] {
 #include "../../core/include/series_registry.def"
     };
 }();
+#endif
 
 // ---------------------------------------------------------------------------
 // mpfr::mpreal, size_t
@@ -232,6 +238,7 @@ series_registry<mpfr::mpreal, size_t>::s_entries = [] {
     };
 }();
 
+#ifndef SHANKS_SKIP_PRECISION
 // ---------------------------------------------------------------------------
 // std::complex<float>, size_t
 // ---------------------------------------------------------------------------
@@ -270,6 +277,7 @@ series_registry<std::complex<long double>, size_t>::s_entries = [] {
 #include "../../core/include/series_registry.def"
     };
 }();
+#endif
 
 // ---------------------------------------------------------------------------
 // std::complex<mpfr::mpreal>, size_t
@@ -284,6 +292,7 @@ series_registry<std::complex<mpfr::mpreal>, size_t>::s_entries = [] {
     };
 }();
 
+#ifndef SHANKS_SKIP_PRECISION
 // ---------------------------------------------------------------------------
 // intprec::interval<float>, size_t
 // ---------------------------------------------------------------------------
@@ -322,6 +331,7 @@ series_registry<intprec::interval<long double>, size_t>::s_entries = [] {
 #include "../../core/include/series_registry.def"
     };
 }();
+#endif
 
 // ---------------------------------------------------------------------------
 // intprec::interval<mpfr::mpreal>, size_t
@@ -336,6 +346,7 @@ series_registry<intprec::interval<mpfr::mpreal>, size_t>::s_entries = [] {
     };
 }();
 
+#ifndef SHANKS_SKIP_PRECISION
 // ---------------------------------------------------------------------------
 // std::complex<intprec::interval<float>>, size_t
 // s_entries definition only — NO full template class instantiation below,
@@ -376,6 +387,7 @@ series_registry<std::complex<intprec::interval<long double>>, size_t>::s_entries
 #include "../../core/include/series_registry.def"
     };
 }();
+#endif
 
 // ---------------------------------------------------------------------------
 // std::complex<intprec::interval<mpfr::mpreal>>, size_t
@@ -403,19 +415,25 @@ series_registry<std::complex<intprec::interval<mpfr::mpreal>>, size_t>::s_entrie
 // ---------------------------------------------------------------------------
 namespace shanks { namespace series {
 
+#ifndef SHANKS_SKIP_PRECISION
 template class series_registry<float,       size_t>;
 template class series_registry<double,      size_t>;
 template class series_registry<long double, size_t>;
+#endif
 template class series_registry<mpfr::mpreal, size_t>;
 
+#ifndef SHANKS_SKIP_PRECISION
 template class series_registry<std::complex<float>,       size_t>;
 template class series_registry<std::complex<double>,      size_t>;
 template class series_registry<std::complex<long double>, size_t>;
+#endif
 template class series_registry<std::complex<mpfr::mpreal>, size_t>;
 
+#ifndef SHANKS_SKIP_PRECISION
 template class series_registry<intprec::interval<float>,       size_t>;
 template class series_registry<intprec::interval<double>,      size_t>;
 template class series_registry<intprec::interval<long double>, size_t>;
+#endif
 template class series_registry<intprec::interval<mpfr::mpreal>, size_t>;
 
 }} // namespace shanks::series

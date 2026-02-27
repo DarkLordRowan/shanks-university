@@ -11,7 +11,7 @@ use crate::cache::Cache;
 use crate::compute::engine::ComputeEngine;
 use crate::compute::task::{AccelParams, ComputeTask, SeriesParams};
 use crate::experiment::{ExperimentConfig, NoiseDef};
-use crate::ffi::{ComputeEventBody, ShanksLibrary};
+use crate::ffi::{ComputeEventBody, ShanksLibrary, Series};
 
 /// Progress information for headless runs.
 #[derive(Debug, Clone)]

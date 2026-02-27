@@ -18,7 +18,7 @@ use uuid::Uuid;
 use super::task::{AccelParams, SeriesParams};
 use crate::cache::Cache;
 use crate::experiment::NoiseDef;
-use crate::ffi::{AccelResult, ComputeEvent, ComputeEventBody, SeriesResult, ShanksLibrary};
+use crate::ffi::{AccelResult, ComputeEvent, ComputeEventBody, SeriesResult, ShanksLibrary, Series};
 
 /// Deterministic serialization of parameters to ensure caching consistency.
 /// Always produces a sorted-key JSON string regardless of HashMap iteration order.
@@ -464,6 +464,7 @@ impl ComputeCore {
                                 &args_json,
                             ) {
                                 log::info!("Filtered limit JSON ({}): {}", filter_type, limit_json);
+                                let limit_json: String = limit_json;
                                 if !limit_json.is_empty() {
                                     if let Ok(limit_points) = serde_json::from_str::<Vec<crate::ffi::SeriesPoint>>(&limit_json) {
                                         log::info!("Successfully parsed {} limit points for filter {}", limit_points.len(), filter_type);
