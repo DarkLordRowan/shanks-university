@@ -420,7 +420,7 @@ impl ComputeCore {
             let mut divergence_start = None;
             let mut inc_count = 0;
             for i in 1..parsed_accel.deviations.len() {
-                if parsed_accel.deviations.to_f64(i) > parsed_accel.deviations.to_f64(i - 1) {
+                if parsed_accel.deviations.as_f64(i) > parsed_accel.deviations.as_f64(i - 1) {
                     inc_count += 1;
                     if inc_count >= 3 && divergence_start.is_none() {
                         divergence_start = Some(i - 3); // Start of divergence

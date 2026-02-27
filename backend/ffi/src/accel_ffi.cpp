@@ -134,7 +134,7 @@ struct AccelHandleReal : public AccelHandleBaseExt {
                 T val = (*algo)(i, order, *data);
                 val_ser.push(val);
                 if (has_sum) {
-                    dev_ser.push(utils::math<T>::abs(val - sum));
+                    dev_ser.push(val - sum);
                 } else {
                     dev_ser.push(T(0));
                 }
@@ -147,10 +147,7 @@ struct AccelHandleReal : public AccelHandleBaseExt {
         auto* res = new FFIAccelResult();
         std::memset(res, 0, sizeof(FFIAccelResult));
         res->values = val_ser.finalize();
-        // Since deviations is just FFILine now 
-        // RealBinarySerializer creates FFILineColl. We just take the first line.
-        FFILineColl dev_coll = dev_ser.finalize();
-        res->deviations = dev_coll.lines[0];
+        res->deviations = dev_ser.finalize();
         
         return res;
     }
@@ -207,30 +204,27 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
         }
 
         shanks::ffi::ComplexBinarySerializer<T> val_ser;
-        shanks::ffi::RealBinarySerializer<T> dev_ser;
+        shanks::ffi::ComplexBinarySerializer<T> dev_ser;
 
         for (uint64_t i = 1; i <= n; ++i) {
             try {
                 auto val = (*algo)(i, order, *data);
                 val_ser.push(val);
                 if (has_sum) {
-                    dev_ser.push(utils::math<std::complex<T>>::abs(val - sum));
+                    dev_ser.push(val - sum);
                 } else {
-                    dev_ser.push(T(0));
+                    dev_ser.push(std::complex<T>(0, 0));
                 }
             } catch (...) {
                 val_ser.push(std::complex<T>(0, 0));
-                dev_ser.push(T(0));
+                dev_ser.push(std::complex<T>(0, 0));
             }
         }
         
         auto* res = new FFIAccelResult();
         std::memset(res, 0, sizeof(FFIAccelResult));
         res->values = val_ser.finalize();
-        // Since deviations is just FFILine now 
-        // RealBinarySerializer creates FFILineColl. We just take the first line.
-        FFILineColl dev_coll = dev_ser.finalize();
-        res->deviations = dev_coll.lines[0];
+        res->deviations = dev_ser.finalize();
         
         return res;
     }
@@ -287,30 +281,27 @@ struct AccelHandleInterval : public AccelHandleBaseExt {
         }
 
         shanks::ffi::IntervalBinarySerializer<T> val_ser;
-        shanks::ffi::RealBinarySerializer<T> dev_ser;
+        shanks::ffi::IntervalBinarySerializer<T> dev_ser;
 
         for (uint64_t i = 1; i <= n; ++i) {
             try {
                 auto val = (*algo)(i, order, *data);
                 val_ser.push(val);
                 if (has_sum) {
-                    dev_ser.push(utils::math<intprec::interval<T>>::abs(val - sum).mag());
+                    dev_ser.push(val - sum);
                 } else {
-                    dev_ser.push(T(0));
+                    dev_ser.push(intprec::interval<T>(0));
                 }
             } catch (...) {
                 val_ser.push(intprec::interval<T>(0));
-                dev_ser.push(T(0));
+                dev_ser.push(intprec::interval<T>(0));
             }
         }
         
         auto* res = new FFIAccelResult();
         std::memset(res, 0, sizeof(FFIAccelResult));
         res->values = val_ser.finalize();
-        // Since deviations is just FFILine now 
-        // RealBinarySerializer creates FFILineColl. We just take the first line.
-        FFILineColl dev_coll = dev_ser.finalize();
-        res->deviations = dev_coll.lines[0];
+        res->deviations = dev_ser.finalize();
         
         return res;
     }
@@ -367,30 +358,27 @@ struct AccelHandleCInterval : public AccelHandleBaseExt {
         }
 
         shanks::ffi::CIntervalBinarySerializer<T> val_ser;
-        shanks::ffi::RealBinarySerializer<T> dev_ser;
+        shanks::ffi::CIntervalBinarySerializer<T> dev_ser;
 
         for (uint64_t i = 1; i <= n; ++i) {
             try {
                 auto val = (*algo)(i, order, *data);
                 val_ser.push(val);
                 if (has_sum) {
-                    dev_ser.push(utils::math<std::complex<intprec::interval<T>>>::abs(val - sum).mag());
+                    dev_ser.push(val - sum);
                 } else {
-                    dev_ser.push(T(0));
+                    dev_ser.push(std::complex<intprec::interval<T>>(0));
                 }
             } catch (...) {
                 val_ser.push(std::complex<intprec::interval<T>>(0));
-                dev_ser.push(T(0));
+                dev_ser.push(std::complex<intprec::interval<T>>(0));
             }
         }
         
         auto* res = new FFIAccelResult();
         std::memset(res, 0, sizeof(FFIAccelResult));
         res->values = val_ser.finalize();
-        // Since deviations is just FFILine now 
-        // RealBinarySerializer creates FFILineColl. We just take the first line.
-        FFILineColl dev_coll = dev_ser.finalize();
-        res->deviations = dev_coll.lines[0];
+        res->deviations = dev_ser.finalize();
         
         return res;
     }
@@ -752,7 +740,7 @@ extern "C" SHANKS_FFI_API FFIAccelResult* shanks_accel_apply(
 extern "C" SHANKS_FFI_API void shanks_accel_result_free(FFIAccelResult* result) {
     if (!result) return;
     shanks::ffi::free_ffi_line_coll(&result->values);
-    shanks::ffi::free_ffi_line(&result->deviations);
+    shanks::ffi::free_ffi_line_coll(&result->deviations);
     delete result;
 }
 

@@ -370,7 +370,7 @@ impl ShanksLibrary {
             // Convert to native safe types
             let sn = ffi_res.sn.to_series_point_array();
             let an = ffi_res.an.to_series_point_array();
-            let deviations = ffi_res.deviations.lines[0].to_scientific_array();
+            let deviations = ffi_res.deviations.to_series_point_array();
 
             let sum = if ffi_res.has_sum != 0 {
                 match ffi_res.sum_type {
@@ -509,7 +509,7 @@ impl ShanksLibrary {
             
             // Convert to native safe types
             let values = ffi_res.values.to_series_point_array();
-            let deviations = ffi_res.deviations.to_scientific_array();
+            let deviations = ffi_res.deviations.to_series_point_array();
 
             let result = AccelResult {
                 values,

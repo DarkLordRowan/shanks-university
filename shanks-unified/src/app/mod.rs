@@ -194,6 +194,14 @@ enum PointBounds {
 }
 
 #[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum DeviationMode {
+    #[default]
+    Magnitude,
+    Components,
+}
+
+#[derive(Default)]
 struct PlotCache {
     symlog: bool,
     log_linthresh: f64,
@@ -218,6 +226,7 @@ struct PlotCache {
     prof_mul: Vec<CachedPlotLine>,
     prof_div: Vec<CachedPlotLine>,
     prof_special: Vec<CachedPlotLine>,
+    deviation_mode: DeviationMode,
 }
 
 /// Main application struct for egui.
@@ -254,7 +263,9 @@ pub struct ShanksApp {
     show_an: bool,
     show_accel_values: bool,
     show_limit_lines: bool,
-    show_smoothed_estimates: bool,
+    pub show_smoothed_estimates: bool,
+    pub deviation_mode: DeviationMode,
+    pub show_errors: bool,
     show_interval_sup: bool,
     show_interval_inf: bool,
     show_interval_shade: bool,
@@ -377,6 +388,8 @@ impl ShanksApp {
             show_partial_sums,
             show_an,
             show_accel_values: true,
+            deviation_mode: DeviationMode::Magnitude,
+            show_errors: true,
             show_limit_lines: true,
             show_smoothed_estimates: true,
             show_interval_sup: true,
@@ -756,23 +769,12 @@ impl ShanksApp {
     }
 
     fn recompute_plot_cache(&mut self, use_symlog: bool, log_linthresh: f64) {
+        self.plot_cache = PlotCache::default();
         self.plot_cache.symlog = use_symlog;
         self.plot_cache.log_linthresh = log_linthresh;
-        self.plot_cache.main_sn.clear();
-        self.plot_cache.main_an.clear();
-        self.plot_cache.main_accel.clear();
-        self.plot_cache.main_accel_an.clear();
-        self.plot_cache.limits.clear();
-        self.plot_cache.smoothed_estimates.clear();
-        self.plot_cache.deviations_sn.clear();
-        self.plot_cache.deviations_accel.clear();
-        self.plot_cache.deviations_smoothed.clear();
-        self.plot_cache.intervals_re.clear();
-        self.plot_cache.intervals_im.clear();
-        self.plot_cache.prof_add.clear();
-        self.plot_cache.prof_mul.clear();
-        self.plot_cache.prof_div.clear();
-        self.plot_cache.prof_special.clear();
+        self.plot_cache.deviation_mode = self.deviation_mode;
+        
+        // Populate plot cache
         self.plot_cache.max_n = 0.0;
 
         let mut max_n_seen = 0;
@@ -963,26 +965,67 @@ impl ShanksApp {
             }
         }
 
-        // Series partial-sum deviations (same pattern as accel deviations)
+        // Series partial-sum deviations
         for (i, (series_name, results)) in self.current_results.iter().enumerate() {
-            let mut dev_pts: Vec<egui_plot::PlotPoint> =
-                Vec::with_capacity(results.deviations.len());
+            let mut component_plots: Vec<(&'static str, Vec<egui_plot::PlotPoint>)> = Vec::new();
+
             for j in 0..results.deviations.len() {
-                let d = results.deviations.get(j);
-                let mut val = d.to_f64();
-                if use_symlog {
-                    val = crate::plot::Scientific(d.mantissa, d.exponent as i32)
-                        .symlog(log_linthresh);
-                }
-                if val.is_finite() {
-                    dev_pts.push([j as f64 + 1.0, val].into());
+                let p = results.deviations.get(j);
+                match self.deviation_mode {
+                    DeviationMode::Magnitude => {
+                        let mut val = p.magnitude();
+                        if use_symlog {
+                            val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh);
+                        }
+                        if val.is_finite() && val > 0.0 {
+                            if component_plots.is_empty() {
+                                component_plots.push(("", Vec::new()));
+                            }
+                            component_plots[0].1.push([j as f64 + 1.0, val].into());
+                        }
+                    }
+                    DeviationMode::Components => {
+                        let components = p.components();
+                        if component_plots.is_empty() {
+                            for (name, _) in &components {
+                                component_plots.push((name, Vec::new()));
+                            }
+                        }
+                        for (idx, (_, mut val)) in components.into_iter().enumerate() {
+                            if use_symlog {
+                                val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh);
+                            }
+                            if val.is_finite() {
+                                if idx < component_plots.len() {
+                                    component_plots[idx].1.push([j as f64 + 1.0, val].into());
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            if !dev_pts.is_empty() {
+
+            for (comp_idx, (comp_name, points)) in component_plots.into_iter().enumerate() {
+                if points.is_empty() { continue; }
+                
+                let name = if comp_name.is_empty() {
+                    format!("{} Sn Dev", series_name)
+                } else {
+                    format!("{} Sn Dev ({})", series_name, comp_name)
+                };
+
+                // Adjust color slightly for different components
+                let base_color = colors_sn[i % colors_sn.len()];
+                let color = if comp_idx == 0 {
+                    base_color
+                } else {
+                    base_color.gamma_multiply(1.0 - (comp_idx as f32 * 0.2).min(0.6))
+                };
+
                 self.plot_cache.deviations_sn.push(CachedPlotLine {
-                    name: format!("{} Sn Dev", series_name),
-                    color: colors_sn[i % colors_sn.len()],
-                    points: dev_pts,
+                    name,
+                    color,
+                    points,
                 });
             }
         }
@@ -1254,24 +1297,67 @@ impl ShanksApp {
             }
 
             // Acceleration deviations
-            let mut dev_pts: Vec<egui_plot::PlotPoint> =
-                Vec::with_capacity(results.deviations.len());
+            let mut component_plots: Vec<(&'static str, Vec<egui_plot::PlotPoint>)> = Vec::new();
+
             for j in 0..results.deviations.len() {
-                let d = results.deviations.get(j);
-                let mut val = d.to_f64();
-                if use_symlog {
-                    val = crate::plot::Scientific(d.mantissa, d.exponent as i32)
-                        .symlog(log_linthresh);
-                }
-                if val.is_finite() {
-                    dev_pts.push([j as f64 + 1.0, val].into());
+                let p = results.deviations.get(j);
+                match self.deviation_mode {
+                    DeviationMode::Magnitude => {
+                        let mut val = p.magnitude();
+                        if use_symlog {
+                            val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh);
+                        }
+                        if val.is_finite() && val > 0.0 {
+                            if component_plots.is_empty() {
+                                component_plots.push(("", Vec::new()));
+                            }
+                            component_plots[0].1.push([j as f64 + 1.0, val].into());
+                        }
+                    }
+                    DeviationMode::Components => {
+                        let components = p.components();
+                        if component_plots.is_empty() {
+                            for (name, _) in &components {
+                                component_plots.push((name, Vec::new()));
+                            }
+                        }
+                        for (idx, (_, mut val)) in components.into_iter().enumerate() {
+                            if use_symlog {
+                                val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh);
+                            }
+                            if val.is_finite() {
+                                if idx < component_plots.len() {
+                                    component_plots[idx].1.push([j as f64 + 1.0, val].into());
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            self.plot_cache.deviations_accel.push(CachedPlotLine {
-                name: format!("{} Dev", name),
-                color: colors_accel[i % colors_accel.len()],
-                points: dev_pts,
-            });
+
+            for (comp_idx, (comp_name, points)) in component_plots.into_iter().enumerate() {
+                if points.is_empty() { continue; }
+                
+                let name = if comp_name.is_empty() {
+                    format!("{} Dev", name)
+                } else {
+                    format!("{} Dev ({})", name, comp_name)
+                };
+
+                // Adjust color slightly for different components
+                let base_color = colors_accel[i % colors_accel.len()];
+                let color = if comp_idx == 0 {
+                    base_color
+                } else {
+                    base_color.gamma_multiply(1.0 - (comp_idx as f32 * 0.2).min(0.6))
+                };
+
+                self.plot_cache.deviations_accel.push(CachedPlotLine {
+                    name,
+                    color,
+                    points,
+                });
+            }
 
             // Profiling
             if let Some(prof) = &results.profiling {
@@ -1418,6 +1504,14 @@ impl eframe::App for ShanksApp {
                             .italics()
                             .color(egui::Color32::GRAY),
                     ));
+                    ui.separator();
+                    ui.label("Deviation Mode:");
+                    if ui.radio_value(&mut self.deviation_mode, DeviationMode::Magnitude, "Magnitude").changed() {
+                        self.results_dirty = true;
+                    }
+                    if ui.radio_value(&mut self.deviation_mode, DeviationMode::Components, "Components").changed() {
+                        self.results_dirty = true;
+                    }
                     ui.separator();
                 });
             });
@@ -1568,6 +1662,7 @@ impl eframe::App for ShanksApp {
             if self.results_dirty
                 || self.plot_cache.symlog != use_symlog
                 || self.plot_cache.log_linthresh != log_linthresh
+                || self.plot_cache.deviation_mode != self.deviation_mode
             {
                 self.recompute_plot_cache(use_symlog, log_linthresh);
                 self.results_dirty = false;

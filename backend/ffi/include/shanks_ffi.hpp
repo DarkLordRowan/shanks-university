@@ -264,7 +264,7 @@ typedef struct {
  */
 typedef struct {
     FFILineColl values;
-    FFILine deviations; // Always Real (double)
+    FFILineColl deviations; 
 } FFIAccelResult;
 
 // ============================================================================

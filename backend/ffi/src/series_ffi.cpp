@@ -103,7 +103,7 @@ struct SeriesHandleReal : public SeriesHandleBaseExt {
 
         for (const auto& val : result.Sn) {
             sn_ser.push(val);
-            dev_ser.push(has_sum ? utils::math<T>::abs(val - sum) : T(0));
+            dev_ser.push(has_sum ? (val - sum) : T(0));
         }
         for (const auto& val : result.an) an_ser.push(val);
         
@@ -203,7 +203,7 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
         
         shanks::ffi::ComplexBinarySerializer<T> sn_ser;
         shanks::ffi::ComplexBinarySerializer<T> an_ser;
-        shanks::ffi::RealBinarySerializer<T> dev_ser;
+        shanks::ffi::ComplexBinarySerializer<T> dev_ser;
 
         std::complex<T> sum(0, 0);
         bool has_sum = !series->is_invalid();
@@ -213,7 +213,7 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
 
         for (const auto& val : result.Sn) {
             sn_ser.push(val);
-            dev_ser.push(has_sum ? utils::math<std::complex<T>>::abs(val - sum) : T(0));
+            dev_ser.push(has_sum ? (val - sum) : std::complex<T>(0, 0));
         }
         for (const auto& val : result.an) an_ser.push(val);
         
@@ -317,7 +317,7 @@ struct SeriesHandleInterval : public SeriesHandleBaseExt {
         
         shanks::ffi::IntervalBinarySerializer<T> sn_ser;
         shanks::ffi::IntervalBinarySerializer<T> an_ser;
-        shanks::ffi::RealBinarySerializer<T> dev_ser;
+        shanks::ffi::IntervalBinarySerializer<T> dev_ser;
 
         intprec::interval<T> sum(0);
         bool has_sum = !series->is_invalid();
@@ -327,7 +327,7 @@ struct SeriesHandleInterval : public SeriesHandleBaseExt {
 
         for (const auto& val : result.Sn) {
             sn_ser.push(val);
-            dev_ser.push(has_sum ? utils::math<intprec::interval<T>>::abs(val - sum).mag() : T(0));
+            dev_ser.push(has_sum ? (val - sum) : intprec::interval<T>(0));
         }
         for (const auto& val : result.an) an_ser.push(val);
         
@@ -418,7 +418,7 @@ struct SeriesHandleCInterval : public SeriesHandleBaseExt {
         
         shanks::ffi::CIntervalBinarySerializer<T> sn_ser;
         shanks::ffi::CIntervalBinarySerializer<T> an_ser;
-        shanks::ffi::RealBinarySerializer<T> dev_ser;
+        shanks::ffi::CIntervalBinarySerializer<T> dev_ser;
 
         std::complex<intprec::interval<T>> sum(0);
         bool has_sum = !series->is_invalid();
@@ -428,7 +428,7 @@ struct SeriesHandleCInterval : public SeriesHandleBaseExt {
 
         for (const auto& val : result.Sn) {
             sn_ser.push(val);
-            dev_ser.push(has_sum ? utils::math<std::complex<intprec::interval<T>>>::abs(val - sum).mag() : T(0));
+            dev_ser.push(has_sum ? (val - sum) : std::complex<intprec::interval<T>>(0));
         }
         for (const auto& val : result.an) an_ser.push(val);
         

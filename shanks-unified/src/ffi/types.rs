@@ -38,7 +38,7 @@ pub struct FfiSeriesResult {
 #[derive(Debug, Clone, Copy)]
 pub struct FfiAccelResult {
     pub values: FfiLineColl,
-    pub deviations: FfiLine,
+    pub deviations: FfiLineColl,
 }
 
 impl FfiLine {
@@ -433,6 +433,37 @@ impl SeriesPoint {
             _ => None,
         }
     }
+
+    pub fn magnitude(&self) -> f64 {
+        match self {
+            SeriesPoint::Real(v) => v.to_f64().abs(),
+            SeriesPoint::Complex(v) => {
+                let re = v.real.to_f64();
+                let im = v.imag.to_f64();
+                (re * re + im * im).sqrt()
+            }
+            SeriesPoint::Interval(v) => ((v.inf.to_f64() + v.sup.to_f64()) / 2.0).abs(),
+            SeriesPoint::CInterval(v) => {
+                let re = (v.real.inf.to_f64() + v.real.sup.to_f64()) / 2.0;
+                let im = (v.imag.inf.to_f64() + v.imag.sup.to_f64()) / 2.0;
+                (re * re + im * im).sqrt()
+            }
+        }
+    }
+
+    pub fn components(&self) -> Vec<(&'static str, f64)> {
+        match self {
+            SeriesPoint::Real(v) => vec![("Re", v.to_f64())],
+            SeriesPoint::Complex(v) => vec![("Re", v.real.to_f64()), ("Im", v.imag.to_f64())],
+            SeriesPoint::Interval(v) => vec![("inf", v.inf.to_f64()), ("sup", v.sup.to_f64())],
+            SeriesPoint::CInterval(v) => vec![
+                ("Re inf", v.real.inf.to_f64()),
+                ("Re sup", v.real.sup.to_f64()),
+                ("Im inf", v.imag.inf.to_f64()),
+                ("Im sup", v.imag.sup.to_f64()),
+            ],
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -514,6 +545,12 @@ pub enum SeriesPointArray {
     Complex(ComplexArray),
     Interval(IntervalArray),
     CInterval(CIntervalArray),
+}
+
+impl Default for SeriesPointArray {
+    fn default() -> Self {
+        Self::Real(ScientificArray::default())
+    }
 }
 
 impl SeriesPointArray {
@@ -697,7 +734,7 @@ pub struct SeriesResult {
     pub sum: Option<SeriesPoint>,
     /// Deviations |Sn - S| for each partial sum (if the true limit is known)
     #[serde(default)]
-    pub deviations: ScientificArray,
+    pub deviations: SeriesPointArray,
 }
 
 /// Profiling trace for operation counting per point.
@@ -722,7 +759,7 @@ pub struct AccelResult {
     pub valid: Vec<bool>,
     /// Deviations/errors for each value
     #[serde(default)]
-    pub deviations: ScientificArray,
+    pub deviations: SeriesPointArray,
     /// Events during computation
     #[serde(default)]
     pub events: Vec<ComputeEventEntry>,
