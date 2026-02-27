@@ -109,29 +109,28 @@ impl From<Scientific> for f64 {
 pub fn symlog_formatter(val: f64, log_linthresh: f64) -> String {
     if val == 0.0 {
         return "0".to_string();
-    } else if (val + log_linthresh).abs() < 0.00001 {
-        return "1".to_string();
     }
 
     let sign_str = if val < 0.0 { "-" } else { "" };
-    let abs_plot_y = val.abs();
 
-    // Inverse transform: |x| = L * (10^|y| - 1)
-    // In log region: |x| ~= L * 10^|y|
-    // So: log10(|x|) = log10(L) + |y|
-    let target_log10 = log_linthresh + abs_plot_y;
+    // Use the EXACT inverse: |x| = L * (10^|y| - 1)
+    let linthresh = 10f64.powf(log_linthresh);
+    let true_abs_x = linthresh * (10f64.powf(val.abs()) - 1.0);
 
-    // Reconstruct scientific notation
+    if true_abs_x == 0.0 {
+        return "0".to_string();
+    }
+
+    let target_log10 = true_abs_x.log10();
     let exponent = target_log10.floor();
     let fractional = target_log10 - exponent;
     let mantissa = 10f64.powf(fractional);
 
-    // Format
     if exponent < -2.0 || exponent > 3.0 {
         format!("{}{:.1}e{:.0}", sign_str, mantissa, exponent)
     } else {
-        let real_val = mantissa * 10f64.powi(exponent as i32);
-        format!("{}{:.4}", sign_str, real_val)
+        let rounded = (true_abs_x * 10_000.0).round() / 10_000.0;
+        format!("{}{}", sign_str, rounded)
     }
 }
 
