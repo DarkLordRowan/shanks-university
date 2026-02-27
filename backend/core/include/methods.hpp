@@ -53,6 +53,7 @@ enum class transformation_id_t {
 #include "transformations/levin_sidi_s_algorithm.hpp"
 #include "transformations/lubkin_w_algorithm.hpp"
 #include "transformations/overholt_algorithm.hpp"
+#include "transformations/pj_algorithm.hpp"
 #include "transformations/richardson_algorithm.hpp"
 #include "transformations/shanks_algorithm.hpp"
 #include "transformations/shanks_alternating_algorithm.hpp"

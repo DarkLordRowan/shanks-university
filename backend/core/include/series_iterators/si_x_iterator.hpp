@@ -41,8 +41,7 @@ public:
      * @return T The value of the Sine Integral function at point x.
      */
     T get_sum() const override {
-        if constexpr (typename utils::math<T>::has_si_x{})
-            return utils::math<T>::si_x(this->x);
+        if constexpr (typename utils::math<T>::has_si_x{}) return utils::math<T>::si_x(this->x);
 
         assert(false);
         return utils::helpers<T>::get_nan();

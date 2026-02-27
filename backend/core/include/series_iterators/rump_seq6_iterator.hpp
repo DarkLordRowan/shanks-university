@@ -62,7 +62,10 @@ public:
         else if (n == 1)
             state = std::make_pair(utils::cast<T, int>()(-6, precision), utils::cast<T, int>()(64, precision));
         else {
-            state.first = utils::cast<T, int>()(82, precision) - (utils::cast<T,int>()(1824, precision) - utils::cast<T, int>()(6048, precision) / state.first) / state.second;
+            state.first =
+                utils::cast<T, int>()(82, precision) -
+                (utils::cast<T, int>()(1824, precision) - utils::cast<T, int>()(6048, precision) / state.first) /
+                    state.second;
             std::swap(state.first, state.second);
         }
         return state.second;

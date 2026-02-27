@@ -32,7 +32,8 @@ public:
     }
 
     /**
-     * @brief Retrieves limit for the series x_{n+1} = 108 - (815 - 1500/x_{n-1})/x_n with initial values x_0 = 4, x_1 = 4.25
+     * @brief Retrieves limit for the series x_{n+1} = 108 - (815 - 1500/x_{n-1})/x_n with initial values x_0 = 4, x_1
+     * = 4.25
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The limit of the sequence.
      */
@@ -62,7 +63,10 @@ public:
         else if (n == 1)
             state = std::make_pair(utils::cast<T, int>()(4, precision), utils::cast<T, double>()(4.25, precision));
         else {
-            state.first = utils::cast<T, int>()(108, precision) - (utils::cast<T,int>()(815, precision) - utils::cast<T, int>()(1500, precision) / state.first) / state.second;
+            state.first =
+                utils::cast<T, int>()(108, precision) -
+                (utils::cast<T, int>()(815, precision) - utils::cast<T, int>()(1500, precision) / state.first) /
+                    state.second;
             std::swap(state.first, state.second);
         }
         return state.second;

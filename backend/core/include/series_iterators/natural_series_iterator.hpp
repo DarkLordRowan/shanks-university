@@ -39,7 +39,10 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of x.
      */
-    T get_sum() const override { return utils::cast<T, int>()(-1, utils::helpers<T>::get_precision(this->x)) / utils::cast<T, int>()(12, utils::helpers<T>::get_precision(this->x)); }
+    T get_sum() const override {
+        return utils::cast<T, int>()(-1, utils::helpers<T>::get_precision(this->x)) /
+               utils::cast<T, int>()(12, utils::helpers<T>::get_precision(this->x));
+    }
 
     /**
      * @brief Validates the current evaluation point x.

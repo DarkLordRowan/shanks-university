@@ -27,9 +27,8 @@ void test_series() {
 
     K n = console_IO<K>::input("n");
 
-    series_result<T> result = series->generate(
-        n, shanks::series::is_seq(static_cast<shanks::series::series_iterator_id_t>(series_idx + 1))
-        );
+    series_result<T> result =
+        series->generate(n, shanks::series::is_seq(static_cast<shanks::series::series_iterator_id_t>(series_idx + 1)));
 
     for (size_t i{0}; i < result.an.size(); ++i) {
         std::cout << "n = " << i << " " << entry.name << "\n";

@@ -41,8 +41,7 @@ public:
      * @return T The value of the Riemann zeta function at point x (s).
      */
     T get_sum() const override {
-        if constexpr (typename utils::math<T>::has_zeta{})
-            return utils::math<T>::zeta(this->x);
+        if constexpr (typename utils::math<T>::has_zeta{}) return utils::math<T>::zeta(this->x);
 
         assert(false);
         return utils::helpers<T>::get_nan();

@@ -2,13 +2,13 @@
 #define SERIES_HPP
 #pragma once
 
-#include <memory>
 #include <functional>
+#include <memory>
 
 namespace shanks {
 namespace series {
 
-inline bool is_seq(shanks::series::series_iterator_id_t id){
+inline bool is_seq(shanks::series::series_iterator_id_t id) {
     return id == shanks::series::series_iterator_id_t::rump_seq1_iterator_id ||
            id == shanks::series::series_iterator_id_t::rump_seq2_iterator_id ||
            id == shanks::series::series_iterator_id_t::rump_seq3_iterator_id ||
@@ -54,9 +54,7 @@ public:
     // Defined in series_registry_impl.cpp via explicit specialization.
     static const std::vector<entry> s_entries;
 
-    static const std::vector<entry>& get_entries() {
-        return s_entries;
-    }
+    static const std::vector<entry>& get_entries() { return s_entries; }
 
     static std::unique_ptr<series_base<T, K>> create(size_t index, T x, T addTParameter = T(1), K addKParameter = K(1));
 };
@@ -96,28 +94,31 @@ inline std::unique_ptr<series_base<T, K>> series_registry<T, K>::create(size_t i
 // backend/ffi/src/series_registry_impl.cpp.
 // ---------------------------------------------------------------------------
 #ifdef SHANKS_FFI_SHARED_BUILD
-#include "custom_types/intervalprecision.fwd.hpp"
-#include "custom_types/mpreal.h"
 #include <complex>
 
-namespace shanks { namespace series {
+#include "custom_types/intervalprecision.fwd.hpp"
+#include "custom_types/mpreal.h"
 
-extern template class series_registry<float,       size_t>;
-extern template class series_registry<double,      size_t>;
+namespace shanks {
+namespace series {
+
+extern template class series_registry<float, size_t>;
+extern template class series_registry<double, size_t>;
 extern template class series_registry<long double, size_t>;
 extern template class series_registry<mpfr::mpreal, size_t>;
 
-extern template class series_registry<std::complex<float>,       size_t>;
-extern template class series_registry<std::complex<double>,      size_t>;
+extern template class series_registry<std::complex<float>, size_t>;
+extern template class series_registry<std::complex<double>, size_t>;
 extern template class series_registry<std::complex<long double>, size_t>;
 extern template class series_registry<std::complex<mpfr::mpreal>, size_t>;
 
-extern template class series_registry<intprec::interval<float>,       size_t>;
-extern template class series_registry<intprec::interval<double>,      size_t>;
+extern template class series_registry<intprec::interval<float>, size_t>;
+extern template class series_registry<intprec::interval<double>, size_t>;
 extern template class series_registry<intprec::interval<long double>, size_t>;
 extern template class series_registry<intprec::interval<mpfr::mpreal>, size_t>;
 
-}} // namespace shanks::series
-#endif // SHANKS_FFI_SHARED_BUILD
+}  // namespace series
+}  // namespace shanks
+#endif  // SHANKS_FFI_SHARED_BUILD
 
 #endif

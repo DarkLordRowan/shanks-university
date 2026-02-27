@@ -3,7 +3,6 @@
 
 #pragma once
 #include <cassert>
-
 #include <numbers>
 
 #include "../series_base.hpp"

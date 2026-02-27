@@ -2603,47 +2603,87 @@ inline interval<IT> hypot(const interval<IT>& x, const interval<IT>& y) {
 
 // Arithmetic operators for integral types mixed arithmetic
 template <FloatLike IT, std::integral _X>
-inline interval<IT> operator+(const interval<IT>& a, const _X& b) { return a + interval<IT>(b); }
+inline interval<IT> operator+(const interval<IT>& a, const _X& b) {
+    return a + interval<IT>(b);
+}
 template <FloatLike IT, std::integral _X>
-inline interval<IT> operator+(const _X& a, const interval<IT>& b) { return interval<IT>(a) + b; }
+inline interval<IT> operator+(const _X& a, const interval<IT>& b) {
+    return interval<IT>(a) + b;
+}
 template <FloatLike IT, std::integral _X>
-inline interval<IT> operator-(const interval<IT>& a, const _X& b) { return a - interval<IT>(b); }
+inline interval<IT> operator-(const interval<IT>& a, const _X& b) {
+    return a - interval<IT>(b);
+}
 template <FloatLike IT, std::integral _X>
-inline interval<IT> operator-(const _X& a, const interval<IT>& b) { return interval<IT>(a) - b; }
+inline interval<IT> operator-(const _X& a, const interval<IT>& b) {
+    return interval<IT>(a) - b;
+}
 template <FloatLike IT, std::integral _X>
-inline interval<IT> operator*(const interval<IT>& a, const _X& b) { return a * interval<IT>(b); }
+inline interval<IT> operator*(const interval<IT>& a, const _X& b) {
+    return a * interval<IT>(b);
+}
 template <FloatLike IT, std::integral _X>
-inline interval<IT> operator*(const _X& a, const interval<IT>& b) { return interval<IT>(a) * b; }
+inline interval<IT> operator*(const _X& a, const interval<IT>& b) {
+    return interval<IT>(a) * b;
+}
 template <FloatLike IT, std::integral _X>
-inline interval<IT> operator/(const interval<IT>& a, const _X& b) { return a / interval<IT>(b); }
+inline interval<IT> operator/(const interval<IT>& a, const _X& b) {
+    return a / interval<IT>(b);
+}
 template <FloatLike IT, std::integral _X>
-inline interval<IT> operator/(const _X& a, const interval<IT>& b) { return interval<IT>(a) / b; }
+inline interval<IT> operator/(const _X& a, const interval<IT>& b) {
+    return interval<IT>(a) / b;
+}
 
 // Boolean operators for integral types mixed arithmetic
 template <FloatLike IT, std::integral _X>
-inline bool operator==(const interval<IT>& a, const _X& b) { return a == interval<IT>(b); }
+inline bool operator==(const interval<IT>& a, const _X& b) {
+    return a == interval<IT>(b);
+}
 template <FloatLike IT, std::integral _X>
-inline bool operator==(const _X& a, const interval<IT>& b) { return interval<IT>(a) == b; }
+inline bool operator==(const _X& a, const interval<IT>& b) {
+    return interval<IT>(a) == b;
+}
 template <FloatLike IT, std::integral _X>
-inline bool operator!=(const interval<IT>& a, const _X& b) { return a != interval<IT>(b); }
+inline bool operator!=(const interval<IT>& a, const _X& b) {
+    return a != interval<IT>(b);
+}
 template <FloatLike IT, std::integral _X>
-inline bool operator!=(const _X& a, const interval<IT>& b) { return interval<IT>(a) != b; }
+inline bool operator!=(const _X& a, const interval<IT>& b) {
+    return interval<IT>(a) != b;
+}
 template <FloatLike IT, std::integral _X>
-inline bool operator>=(const interval<IT>& a, const _X& b) { return a >= interval<IT>(b); }
+inline bool operator>=(const interval<IT>& a, const _X& b) {
+    return a >= interval<IT>(b);
+}
 template <FloatLike IT, std::integral _X>
-inline bool operator>=(const _X& a, const interval<IT>& b) { return interval<IT>(a) >= b; }
+inline bool operator>=(const _X& a, const interval<IT>& b) {
+    return interval<IT>(a) >= b;
+}
 template <FloatLike IT, std::integral _X>
-inline bool operator<=(const interval<IT>& a, const _X& b) { return a <= interval<IT>(b); }
+inline bool operator<=(const interval<IT>& a, const _X& b) {
+    return a <= interval<IT>(b);
+}
 template <FloatLike IT, std::integral _X>
-inline bool operator<=(const _X& a, const interval<IT>& b) { return interval<IT>(a) <= b; }
+inline bool operator<=(const _X& a, const interval<IT>& b) {
+    return interval<IT>(a) <= b;
+}
 template <FloatLike IT, std::integral _X>
-inline bool operator>(const interval<IT>& a, const _X& b) { return a > interval<IT>(b); }
+inline bool operator>(const interval<IT>& a, const _X& b) {
+    return a > interval<IT>(b);
+}
 template <FloatLike IT, std::integral _X>
-inline bool operator>(const _X& a, const interval<IT>& b) { return interval<IT>(a) > b; }
+inline bool operator>(const _X& a, const interval<IT>& b) {
+    return interval<IT>(a) > b;
+}
 template <FloatLike IT, std::integral _X>
-inline bool operator<(const interval<IT>& a, const _X& b) { return a < interval<IT>(b); }
+inline bool operator<(const interval<IT>& a, const _X& b) {
+    return a < interval<IT>(b);
+}
 template <FloatLike IT, std::integral _X>
-inline bool operator<(const _X& a, const interval<IT>& b) { return interval<IT>(a) < b; }
+inline bool operator<(const _X& a, const interval<IT>& b) {
+    return interval<IT>(a) < b;
+}
 
 template <class _Ty>
 inline std::ostream& operator<<(std::ostream& strm, const interval<_Ty>& a) {

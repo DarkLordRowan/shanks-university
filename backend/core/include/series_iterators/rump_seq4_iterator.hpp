@@ -6,7 +6,8 @@
 
 /**
  * @file rump_seq4_iterator.hpp
- * @brief Iterator for the sequence x_{n+1} = 56.5 + (160 - 737.5/x_{n-1})/x_n with initial values x_0 = 109225/43691, x_1 = 10923/4369
+ * @brief Iterator for the sequence x_{n+1} = 56.5 + (160 - 737.5/x_{n-1})/x_n with initial values x_0 = 109225/43691,
+ * x_1 = 10923/4369
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * On recurrences converging to the wrong limit infnite precision and some new examples (14), limit = 1.6666667?
  */
@@ -15,7 +16,8 @@ namespace shanks {
 namespace series {
 
 /**
- * @brief Iterator for the sequence x_{n+1} = 56.5 + (160 - 737.5/x_{n-1})/x_n with initial values x_0 = 109225/43691, x_1 = 10923/4369
+ * @brief Iterator for the sequence x_{n+1} = 56.5 + (160 - 737.5/x_{n-1})/x_n with initial values x_0 = 109225/43691,
+ * x_1 = 10923/4369
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
@@ -32,7 +34,8 @@ public:
     }
 
     /**
-     * @brief Retrieves limit for the series x_{n+1} = 56.5 + (160 - 737.5/x_{n-1})/x_n with initial values x_0 = 109225/43691, x_1 = 10923/4369
+     * @brief Retrieves limit for the series x_{n+1} = 56.5 + (160 - 737.5/x_{n-1})/x_n with initial values x_0 =
+     * 109225/43691, x_1 = 10923/4369
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The limit of the sequence.
      */
@@ -58,11 +61,16 @@ public:
     T next(K n, std::pair<T, T>& state) const override {
         const size_t precision = utils::helpers<T>::get_precision(this->x);
         if (n == 0)
-            state = std::make_pair(utils::cast<T, int>()(0, precision), utils::cast<T, double>()(109225/43691, precision));
+            state = std::make_pair(utils::cast<T, int>()(0, precision),
+                                   utils::cast<T, double>()(109225 / 43691, precision));
         else if (n == 1)
-            state = std::make_pair(utils::cast<T, double>()(109225/43691, precision), utils::cast<T, double>()(10923/4369, precision));
+            state = std::make_pair(utils::cast<T, double>()(109225 / 43691, precision),
+                                   utils::cast<T, double>()(10923 / 4369, precision));
         else {
-            state.first = utils::cast<T, double>()(56.5, precision) +(utils::cast<T, int>()(160, precision) - utils::cast<T, double>()(737.5, precision) / state.first)/ state.second;
+            state.first =
+                utils::cast<T, double>()(56.5, precision) +
+                (utils::cast<T, int>()(160, precision) - utils::cast<T, double>()(737.5, precision) / state.first) /
+                    state.second;
             std::swap(state.first, state.second);
         }
         return state.second;

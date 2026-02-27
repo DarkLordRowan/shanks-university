@@ -177,8 +177,7 @@ inline void main_testing_function() {
     // Generating the initial series terms
 
     series_result<T> result = series->generate(
-        n + 3 * order + 1, shanks::series::is_seq(static_cast<shanks::series::series_iterator_id_t>(series_idx + 1))
-    );
+        n + 3 * order + 1, shanks::series::is_seq(static_cast<shanks::series::series_iterator_id_t>(series_idx + 1)));
 
     // Optional noise application
     std::string answer = "ok";

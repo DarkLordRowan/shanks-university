@@ -3,7 +3,6 @@
 
 #pragma once
 #include <cassert>
-
 #include <numbers>
 
 #include "../series_base.hpp"
@@ -44,8 +43,7 @@ public:
      * @return T The value of E_x(x).
      */
     T get_sum() const override {
-        if constexpr (typename utils::math<T>::has_e_x{})
-            return utils::math<T>::e_x(this->x);
+        if constexpr (typename utils::math<T>::has_e_x{}) return utils::math<T>::e_x(this->x);
 
         assert(false);
         return utils::helpers<T>::get_nan();

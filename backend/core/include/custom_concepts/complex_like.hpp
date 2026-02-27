@@ -35,7 +35,8 @@ struct isComplexLike<std::complex<intprec::interval<T>>> : public std::true_type
 
 #ifdef SHANKS_ENABLE_PROFILING
 template <typename T>
-struct isComplexLike<std::complex<shanks::profiling::OperationCounting<intprec::interval<T>>>> : public std::true_type {};
+struct isComplexLike<std::complex<shanks::profiling::OperationCounting<intprec::interval<T>>>> : public std::true_type {
+};
 #endif
 
 #ifdef __MPREAL_H__

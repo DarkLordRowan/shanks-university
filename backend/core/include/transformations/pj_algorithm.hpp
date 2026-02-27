@@ -1,82 +1,33 @@
-#ifndef F_ALGORITHM_HPP
-#define F_ALGORITHM_HPP
+#ifndef PJ_ALGORITHM_HPP
+#define PJ_ALGORITHM_HPP
 #pragma once
-/**
- * @file drummond_d_algorithm.hpp
- * @brief Contains implementation of Drummond's D-transformation for sequence acceleration.
- *
- * For theory, see:
- * Drummond, J.E. (1976). A method for the summation of slowly convergent series.
- * Osada, N. (1993). Acceleration Methods for Slowly Convergent Sequences and Their Applications.
- * Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications, Section 9.5.
- * @authors Naumov A.U.
- */
 
 namespace shanks {
 namespace algos {
 
 template <AcceptedLike T, UnsignedIntLike K>
-class f_algorithm final : public series_acceleration<T, K> {
+class pj_algorithm final : public series_acceleration<T, K> {
 protected:
+    using float_type = real_of<T>::value;  // type in case of complex or interval
+
     /// Unique pointer to the remainder estimator strategy being used.
     std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
     /// The specific type of remainder variant currently active.
     shanks::remainders::remainder_type remainder_type_in_use{shanks::remainders::remainder_type::u_type};
 
-    std::function<T(K)> auxilary_series = [](K n) { return utils::cast<T, K>()(n + 4); };
+    const int p;
+    const float_type beta;
 
 public:
-    /**
-     * @brief Parameterized constructor to initialize Drummond's D-algorithm.
-     * @param variant Type of remainder estimator to use
-     *        Determines the specific variant of Drummond's transformation:
-     *        - u_type: Standard remainder estimator
-     *        - t_type: Alternative remainder estimator
-     *        - v_type: Alternative remainder estimator
-     *        - t_wave_type: Modified remainder estimator
-     *        - v_wave_type: Modified remainder estimator
-     * @param use_recurrent_formula Flag indicating whether to use recurrence formulas
-     *        true: Use recursive computation (better for large orders)
-     *        false: Use direct computation (simpler but potentially slower)
-     * @authors Naumov A.U.
-     */
-    explicit f_algorithm(
+    explicit pj_algorithm(
         const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
-        std::function<T(K)> auxilary_series = [](K n) { return utils::cast<T, K>()(n + 4); })
-        : series_acceleration<T, K>(), auxilary_series(auxilary_series) {
+        const int p = 2, const float_type beta = float_type(1))
+        : series_acceleration<T, K>(), p(p), beta(beta) {
         update_type(remainder_type_to_use);
     };
 
-    /**
-     * @brief Executes Drummond's D-transformation to accelerate series convergence.
-     *
-     * This method acts as the entry point for the transformation, delegating the work
-     * to either the direct or recursive implementation based on the configuration.
-     *
-     * For theory, see: Drummond (1976), Main Theorem and Sidi (2003), Theorem 9.5.1
-     *
-     * @param n The starting index for partial sums (S_n)
-     *        Valid values: n >= 0, determines the starting point of transformation
-     *        Higher values use more stable terms but may converge slower
-     * @param order The order of transformation
-     *        Valid values: order >= 0, higher orders use more terms but may provide better acceleration
-     *        Typically order <= 10 for numerical stability
-     * @param data series_result<T> struct containing necessary information for algorithm
-     * @return The accelerated partial sum after Drummond transformation
-     * @throws std::overflow_error if division by zero or numerical instability occurs
-     * @throws std::out_of_range if the input data vectors are too small.
-     * @throws std::overflow_error if numerical instability or division by zero occurs.
-     */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
 
-    /**
-     * @brief Updates the remainder estimator type used by the algorithm.
-     *
-     * Re-initializes the internal remainder estimator pointer with the specified variant.
-     *
-     * @authors Naumov A.U.
-     * @param remainder_type_to_use The new remainder variant to employ.
-     */
     void update_type(const remainders::remainder_type remainder_type_to_use) {
         remainder_type_in_use = remainder_type_to_use;
 
@@ -109,13 +60,8 @@ public:
         }
     }
 
-    /**
-     * @brief Returns the descriptive name of the specific Drummond variant currently in use.
-     * @authors Naumov A.U.
-     * @return std::string A string containing the variant name and configuration details.
-     */
     std::string get_name() override {
-        series_acceleration<T, K>::acceleration_name = "f_algorithm ";
+        series_acceleration<T, K>::acceleration_name = "pj_algorithm ";
         switch (remainder_type_in_use) {
             case shanks::remainders::remainder_type::u_type: {
                 series_acceleration<T, K>::acceleration_name += "with u-variant ";
@@ -148,7 +94,7 @@ public:
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
-T f_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
+T pj_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Calculate minimum required size based on the chosen remainder variant
     const K required_size =
         n + order + static_cast<K>(1) +
@@ -172,28 +118,43 @@ T f_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>
     // Initialize base values
     // xn = n+4
     for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
-        Denom[i] += remainder->operator()(n + i, n + i, data.an) / (auxilary_series(n + i) - utils::cast<T, int>()(1));
-        Num[i] += data.Sn.at(n + i) * Denom[i] / (auxilary_series(n + i) - utils::cast<T, int>()(1));
+        Denom[i] += remainder->operator()(n + i, n + i, data.an);
+        Num[i] += data.Sn.at(n + i) * Denom[i];
     }
 
-    // Apply forward difference recurrence:
-    // N_j^{(i)} = N_{j+1}^{(i-1)} - N_j^{(i-1)}
-    // D_j^{(i)} = D_{j+1}^{(i-1)} - D_j^{(i-1)}
+    std::function<float_type(K, K)> psi;
+    if (p == static_cast<K>(2)) {
+        psi = [&precision, this](K n, K k) {
+            if (k == static_cast<K>(0)) return utils::cast<float_type, int>()(1, precision);
+            const float_type num =
+                utils::cast<float_type, K>()(n + k, precision) + beta - utils::cast<float_type, int>()(-1, precision);
+            const float_type denom = num + utils::cast<float_type, int>()(2, precision);
+            return utils::math<float_type>::pow(num / denom, utils::cast<float_type, K>()(k, precision));
+        };
+    } else {
+        psi = [&precision, this](K n, K k) {
+            if (k == static_cast<K>(0)) return utils::cast<float_type, int>()(1, precision);
+            const float_type num = (utils::cast<float_type, K>()(n + k, precision) + beta -
+                           utils::cast<float_type, int>()(-1, precision)) /
+                          utils::cast<float_type, int>()(p - 2, precision);
+            const float_type denom =
+                (utils::cast<float_type, K>()(n + k, precision) + beta - utils::cast<float_type, int>()(1, precision)) /
+                utils::cast<float_type, int>()(p - 2, precision);
+            float_type res = num / denom;
+            for (K i{1}; i <= k; ++i)
+                res *= (num + utils::cast<float_type, K>()(i, precision)) /
+                       (denom + utils::cast<float_type, K>()(i, precision));
+            return res;
+        };
+    }
+
     for (K i = static_cast<K>(1); i <= order; ++i)
         for (K j = static_cast<K>(0); j <= order - i; ++j) {
-            const T left =
-                utils::cast<T, K>()(i, precision) + auxilary_series(n + i + j) - utils::cast<T, int>()(2, precision);
-            const T right =
-                utils::cast<T, K>()(i, precision) + auxilary_series(n + j) - utils::cast<T, int>()(2, precision);
-            const T denom = auxilary_series(n + i + j) - auxilary_series(n + j);
-            const T DenomTmp = (Denom[j + static_cast<K>(1)] * left - Denom[j] * right) / denom;
-            const T NumTmp = (Num[j + static_cast<K>(1)] * left - Num[j] * right) / denom;
-            Denom[j] =
-                (utils::helpers<T>::isfinite(DenomTmp) && utils::helpers<T>::isfinite(NumTmp) ? DenomTmp : Denom[j]);
-            Num[j] = (utils::helpers<T>::isfinite(DenomTmp) && utils::helpers<T>::isfinite(NumTmp) ? NumTmp : Num[j]);
+            const T right = utils::cast<T, float_type>()(psi(n + j, i));
+            Denom[j] = utils::math<T>::fma(-right, Denom[j], Denom[j + 1]);
+            Num[j] = utils::math<T>::fma(-right, Num[j], Num[j + 1]);
         }
 
-    // Final result: D_n^{(order)} = N_0^{(order)} / D_0^{(order)}
     Num[0] /= Denom[0];
     return Num[0];
 }

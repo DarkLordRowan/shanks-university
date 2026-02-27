@@ -44,8 +44,7 @@ public:
      * @return T The value of Ci(x).
      */
     T get_sum() const override {
-        if constexpr (typename utils::math<T>::has_ci_x{})
-            return utils::math<T>::ci_x(this->x);
+        if constexpr (typename utils::math<T>::has_ci_x{}) return utils::math<T>::ci_x(this->x);
 
         assert(false);
         return utils::helpers<T>::get_nan();

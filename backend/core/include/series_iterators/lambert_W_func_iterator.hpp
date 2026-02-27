@@ -3,7 +3,6 @@
 
 #pragma once
 #include <cassert>
-
 #include <numbers>
 
 #include "../series_base.hpp"
@@ -44,8 +43,7 @@ public:
      * @return T The value of the principal branch of the Lambert W function.
      */
     T get_sum() const override {
-        if constexpr (typename utils::math<T>::has_lambertW0{})
-            return utils::math<T>::lambertW0(this->x);
+        if constexpr (typename utils::math<T>::has_lambertW0{}) return utils::math<T>::lambertW0(this->x);
 
         assert(false);
         return utils::helpers<T>::get_nan();
