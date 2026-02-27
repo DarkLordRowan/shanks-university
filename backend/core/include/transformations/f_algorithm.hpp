@@ -2,13 +2,11 @@
 #define F_ALGORITHM_HPP
 #pragma once
 /**
- * @file drummond_d_algorithm.hpp
- * @brief Contains implementation of Drummond's D-transformation for sequence acceleration.
+ * @file f_algorithm.hpp
+ * @brief Contains implementation of F-transformation for sequence acceleration.
  *
  * For theory, see:
- * Drummond, J.E. (1976). A method for the summation of slowly convergent series.
- * Osada, N. (1993). Acceleration Methods for Slowly Convergent Sequences and Their Applications.
- * Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications, Section 9.5.
+ * Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS
  * @authors Naumov A.U.
  */
 
@@ -18,26 +16,25 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class f_algorithm final : public series_acceleration<T, K> {
 protected:
+
     /// Unique pointer to the remainder estimator strategy being used.
     std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
     /// The specific type of remainder variant currently active.
     shanks::remainders::remainder_type remainder_type_in_use{shanks::remainders::remainder_type::u_type};
-
+    /// lambda function for auxilary series an to use, {an} must be such that 1/an->0, x_{n+l}>x_{n}, x_{0}>1
     std::function<T(K)> auxilary_series = [](K n) { return utils::cast<T, K>()(n + 4); };
 
 public:
     /**
-     * @brief Parameterized constructor to initialize Drummond's D-algorithm.
+     * @brief Parameterized constructor to initialize F-algorithm.
      * @param variant Type of remainder estimator to use
-     *        Determines the specific variant of Drummond's transformation:
+     *        Determines the specific variant of F's transformation:
      *        - u_type: Standard remainder estimator
      *        - t_type: Alternative remainder estimator
      *        - v_type: Alternative remainder estimator
      *        - t_wave_type: Modified remainder estimator
      *        - v_wave_type: Modified remainder estimator
-     * @param use_recurrent_formula Flag indicating whether to use recurrence formulas
-     *        true: Use recursive computation (better for large orders)
-     *        false: Use direct computation (simpler but potentially slower)
+     * @param auxilary_series std::function<T(K)> lambda function to get auxilary series a_{n}
      * @authors Naumov A.U.
      */
     explicit f_algorithm(
@@ -48,12 +45,12 @@ public:
     };
 
     /**
-     * @brief Executes Drummond's D-transformation to accelerate series convergence.
+     * @brief Executes F-transformation to accelerate series convergence.
      *
      * This method acts as the entry point for the transformation, delegating the work
      * to either the direct or recursive implementation based on the configuration.
      *
-     * For theory, see: Drummond (1976), Main Theorem and Sidi (2003), Theorem 9.5.1
+     * For theory, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS [148, p. 23]
      *
      * @param n The starting index for partial sums (S_n)
      *        Valid values: n >= 0, determines the starting point of transformation
@@ -110,7 +107,7 @@ public:
     }
 
     /**
-     * @brief Returns the descriptive name of the specific Drummond variant currently in use.
+     * @brief Returns the descriptive name of the specific F variant currently in use.
      * @authors Naumov A.U.
      * @return std::string A string containing the variant name and configuration details.
      */
@@ -170,22 +167,19 @@ T f_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>
     std::vector<T> Denom = std::vector<T>(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
 
     // Initialize base values
-    // xn = n+4
     for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
         Denom[i] += remainder->operator()(n + i, n + i, data.an) / (auxilary_series(n + i) - utils::cast<T, int>()(1));
         Num[i] += data.Sn.at(n + i) * Denom[i];
     }
 
-    // Apply forward difference recurrence:
-    // N_j^{(i)} = N_{j+1}^{(i-1)} - N_j^{(i-1)}
-    // D_j^{(i)} = D_{j+1}^{(i-1)} - D_j^{(i-1)}
+    // Implement recursive scheme, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS [148, p. 23]
     for (K i = static_cast<K>(1); i <= order; ++i)
         for (K j = static_cast<K>(0); j <= order - i; ++j) {
             const T left =
-                utils::cast<T, K>()(i, precision) + auxilary_series(n + i + j) - utils::cast<T, int>()(2, precision);
+                utils::cast<T, K>()(i, precision) + auxilary_series(n + i + j) - utils::cast<T, int>()(2, precision); /// (x_{n+k}+k-2)
             const T right =
-                utils::cast<T, K>()(i, precision) + auxilary_series(n + j) - utils::cast<T, int>()(2, precision);
-            const T denom = auxilary_series(n + i + j) - auxilary_series(n + j);
+                utils::cast<T, K>()(i, precision) + auxilary_series(n + j) - utils::cast<T, int>()(2, precision); /// x_{n} + k -2
+            const T denom = auxilary_series(n + i + j) - auxilary_series(n + j); /// x_{n+k} - x_{n}
             const T DenomTmp = (Denom[j + static_cast<K>(1)] * left - Denom[j] * right) / denom;
             const T NumTmp = (Num[j + static_cast<K>(1)] * left - Num[j] * right) / denom;
             Denom[j] =

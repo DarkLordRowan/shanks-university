@@ -2,13 +2,11 @@
 #define H_ALGORITHM_HPP
 #pragma once
 /**
- * @file H_ALGORITHM_HPP.hpp
- * @brief Contains implementation of H-transformation for sequence acceleration.
+ * @file h_algorithm.hpp
+ * @brief Contains implementation of Homier's H-transformation for sequence acceleration.
  *
  * For theory, see:
- * Drummond, J.E. (1976). A method for the summation of slowly convergent series.
- * Osada, N. (1993). Acceleration Methods for Slowly Convergent Sequences and Their Applications.
- * Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications, Section 9.5.
+ * Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS
  * @authors Naumov A.U.
  */
 
@@ -25,13 +23,14 @@ protected:
     std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
     /// The specific type of remainder variant currently active.
     shanks::remainders::remainder_type remainder_type_in_use{shanks::remainders::remainder_type::u_type};
-
+    /// Real non-negative parameter.
     const float_type beta;
+    /// Complex angle, such that cos(a)!=+-1
     const T alpha;
 
 public:
     /**
-     * @brief Parameterized constructor to initialize H-algorithm.
+     * @brief Parameterized constructor to initialize Homier's H-transformation.
      * @param variant Type of remainder estimator to use
      *        Determines the specific variant of Drummond's transformation:
      *        - u_type: Standard remainder estimator
@@ -39,9 +38,10 @@ public:
      *        - v_type: Alternative remainder estimator
      *        - t_wave_type: Modified remainder estimator
      *        - v_wave_type: Modified remainder estimator
-     * @param use_recurrent_formula Flag indicating whether to use recurrence formulas
-     *        true: Use recursive computation (better for large orders)
-     *        false: Use direct computation (simpler but potentially slower)
+     * @param beta Positive real parameter β (must be > 0). Default value: 1.0..
+     *        For theory, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS, p. 24
+     * @param alpha Complex parameter a (cos(a)!=+-1). Default value: pi/4.
+     *        For theory, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS, p. 24
      * @authors Naumov A.U.
      */
     explicit h_algorithm(
@@ -54,12 +54,12 @@ public:
     };
 
     /**
-     * @brief Executes Drummond's D-transformation to accelerate series convergence.
+     * @brief Executes Homier's H-transformation to accelerate series convergence.
      *
      * This method acts as the entry point for the transformation, delegating the work
      * to either the direct or recursive implementation based on the configuration.
      *
-     * For theory, see: Drummond (1976), Main Theorem and Sidi (2003), Theorem 9.5.1
+     * For theory, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS, p. 24
      *
      * @param n The starting index for partial sums (S_n)
      *        Valid values: n >= 0, determines the starting point of transformation
@@ -176,20 +176,18 @@ T h_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>
     std::vector<T> Denom = std::vector<T>(2*order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
 
     // Initialize base values
-    // xn = n+4
     for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
         Denom[i] += remainder->operator()(n + i, n + i, data.an) / (utils::cast<T,K>()(n + i) + beta);
         Num[i] += data.Sn.at(n + i) * Denom[i];
     }
 
-    // Apply forward difference recurrence:
-    // N_j^{(i)} = N_{j+1}^{(i-1)} - N_j^{(i-1)}
-    // D_j^{(i)} = D_{j+1}^{(i-1)} - D_j^{(i-1)}
+    // Implement recursive scheme, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS [155, p. 24]
     for (K i = static_cast<K>(1); i <= order; ++i)
         for (K j = static_cast<K>(0); j <= order - i; ++j) {
-            const T left   = utils::cast<T, float_type>()( utils::cast<float_type,K>()(n + j        , precision) + beta, precision);
-            const T middle = utils::cast<T, float_type>()( utils::cast<float_type,K>()(n + j + 2 * i, precision) + beta, precision);
-            const T right  = utils::cast<T, float_type>()( utils::cast<float_type,K>()(n + j +     i, precision) + beta, precision) * utils::math<T>::cos(alpha);
+            const T left   = utils::cast<T, float_type>()( utils::cast<float_type,K>()(n + j        , precision) + beta, precision); /// n+β
+            const T middle = utils::cast<T, float_type>()( utils::cast<float_type,K>()(n + j + 2 * i, precision) + beta, precision); /// n+2k+β
+            const T right  = utils::cast<T, float_type>()( utils::cast<float_type,K>()(n + j +     i, precision) + beta, precision) 
+                * utils::math<T>::cos(alpha) * utils::cast<T,int>()(2); /// n+k+β
             const T DenomTmp = Denom[j] * left + Denom[j + static_cast<K>(2)] * middle - Denom[j + static_cast<K>(1)] * right;
             const T   NumTmp =   Num[j] * left +   Num[j + static_cast<K>(2)] * middle -   Num[j + static_cast<K>(1)] * right;
             Denom[j] =

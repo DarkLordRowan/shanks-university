@@ -62,10 +62,10 @@ public:
         const size_t precision = utils::helpers<T>::get_precision(this->x);
         if (n == 0)
             state = std::make_pair(utils::cast<T, int>()(0, precision),
-                                   utils::cast<T, double>()(109225 / 43691, precision));
+                                   utils::cast<T, int>()(109225, precision) / utils::cast<T, int>()(43691.0, precision));
         else if (n == 1)
-            state = std::make_pair(utils::cast<T, double>()(109225 / 43691, precision),
-                                   utils::cast<T, double>()(10923 / 4369, precision));
+            state = std::make_pair(utils::cast<T, int>()(109225, precision) / utils::cast<T, int>()(43691.0, precision),
+                                   utils::cast<T, int>()(10923, precision) / utils::cast<T, int>()(4369.0, precision));
         else {
             state.first =
                 utils::cast<T, double>()(56.5, precision) +
