@@ -36,11 +36,7 @@ jobs:
             mingw-w64-x86_64-eigen3
             mingw-w64-x86_64-gsl
             mingw-w64-x86_64-ccache
-
-      - name: Setup Rust (GNU)
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable-x86_64-pc-windows-gnu
+            mingw-w64-x86_64-rust
 
       - name: Cache C++ (ccache)
         uses: actions/cache@v4
