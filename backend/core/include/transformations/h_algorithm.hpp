@@ -1,9 +1,9 @@
-#ifndef F_ALGORITHM_HPP
-#define F_ALGORITHM_HPP
+#ifndef H_ALGORITHM_HPP
+#define H_ALGORITHM_HPP
 #pragma once
 /**
- * @file drummond_d_algorithm.hpp
- * @brief Contains implementation of Drummond's D-transformation for sequence acceleration.
+ * @file H_ALGORITHM_HPP.hpp
+ * @brief Contains implementation of H-transformation for sequence acceleration.
  *
  * For theory, see:
  * Drummond, J.E. (1976). A method for the summation of slowly convergent series.
@@ -16,18 +16,22 @@ namespace shanks {
 namespace algos {
 
 template <AcceptedLike T, UnsignedIntLike K>
-class f_algorithm final : public series_acceleration<T, K> {
+class h_algorithm final : public series_acceleration<T, K> {
 protected:
+
+    using float_type = real_of<T>::value;  // type in case of complex or interval
+
     /// Unique pointer to the remainder estimator strategy being used.
     std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
     /// The specific type of remainder variant currently active.
     shanks::remainders::remainder_type remainder_type_in_use{shanks::remainders::remainder_type::u_type};
 
-    std::function<T(K)> auxilary_series = [](K n) { return utils::cast<T, K>()(n + 4); };
+    const float_type beta;
+    const T alpha;
 
 public:
     /**
-     * @brief Parameterized constructor to initialize Drummond's D-algorithm.
+     * @brief Parameterized constructor to initialize H-algorithm.
      * @param variant Type of remainder estimator to use
      *        Determines the specific variant of Drummond's transformation:
      *        - u_type: Standard remainder estimator
@@ -40,10 +44,12 @@ public:
      *        false: Use direct computation (simpler but potentially slower)
      * @authors Naumov A.U.
      */
-    explicit f_algorithm(
+    explicit h_algorithm(
         const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
-        std::function<T(K)> auxilary_series = [](K n) { return utils::cast<T, K>()(n + 4); })
-        : series_acceleration<T, K>(), auxilary_series(auxilary_series) {
+        const float_type beta = float_type(1),
+        const T alpha = T(std::numbers::pi * 0.25)
+    )
+        : series_acceleration<T, K>(), beta(beta), alpha(alpha) {
         update_type(remainder_type_to_use);
     };
 
@@ -115,7 +121,7 @@ public:
      * @return std::string A string containing the variant name and configuration details.
      */
     std::string get_name() override {
-        series_acceleration<T, K>::acceleration_name = "f_algorithm ";
+        series_acceleration<T, K>::acceleration_name = "h_algorithm ";
         switch (remainder_type_in_use) {
             case shanks::remainders::remainder_type::u_type: {
                 series_acceleration<T, K>::acceleration_name += "with u-variant ";
@@ -148,10 +154,10 @@ public:
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
-T f_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
+T h_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Calculate minimum required size based on the chosen remainder variant
     const K required_size =
-        n + order + static_cast<K>(1) +
+        n + 2*order + static_cast<K>(1) +
         static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
                        remainder_type_in_use == shanks::remainders::remainder_type::v_type) +
         static_cast<K>(2) * static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
@@ -166,13 +172,13 @@ T f_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>
     const size_t precision =
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
-    std::vector<T> Num = std::vector<T>(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
-    std::vector<T> Denom = std::vector<T>(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
+    std::vector<T> Num = std::vector<T>(2*order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
+    std::vector<T> Denom = std::vector<T>(2*order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
 
     // Initialize base values
     // xn = n+4
     for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
-        Denom[i] += remainder->operator()(n + i, n + i, data.an) / (auxilary_series(n + i) - utils::cast<T, int>()(1));
+        Denom[i] += remainder->operator()(n + i, n + i, data.an) / (utils::cast<T,K>()(n + i) + beta);
         Num[i] += data.Sn.at(n + i) * Denom[i];
     }
 
@@ -181,13 +187,11 @@ T f_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>
     // D_j^{(i)} = D_{j+1}^{(i-1)} - D_j^{(i-1)}
     for (K i = static_cast<K>(1); i <= order; ++i)
         for (K j = static_cast<K>(0); j <= order - i; ++j) {
-            const T left =
-                utils::cast<T, K>()(i, precision) + auxilary_series(n + i + j) - utils::cast<T, int>()(2, precision);
-            const T right =
-                utils::cast<T, K>()(i, precision) + auxilary_series(n + j) - utils::cast<T, int>()(2, precision);
-            const T denom = auxilary_series(n + i + j) - auxilary_series(n + j);
-            const T DenomTmp = (Denom[j + static_cast<K>(1)] * left - Denom[j] * right) / denom;
-            const T NumTmp = (Num[j + static_cast<K>(1)] * left - Num[j] * right) / denom;
+            const T left   = utils::cast<T, float_type>()( utils::cast<float_type,K>()(n + j        , precision) + beta, precision);
+            const T middle = utils::cast<T, float_type>()( utils::cast<float_type,K>()(n + j + 2 * i, precision) + beta, precision);
+            const T right  = utils::cast<T, float_type>()( utils::cast<float_type,K>()(n + j +     i, precision) + beta, precision) * utils::math<T>::cos(alpha);
+            const T DenomTmp = Denom[j] * left + Denom[j + static_cast<K>(2)] * middle - Denom[j + static_cast<K>(1)] * right;
+            const T   NumTmp =   Num[j] * left +   Num[j + static_cast<K>(2)] * middle -   Num[j + static_cast<K>(1)] * right;
             Denom[j] =
                 (utils::helpers<T>::isfinite(DenomTmp) && utils::helpers<T>::isfinite(NumTmp) ? DenomTmp : Denom[j]);
             Num[j] = (utils::helpers<T>::isfinite(DenomTmp) && utils::helpers<T>::isfinite(NumTmp) ? NumTmp : Num[j]);

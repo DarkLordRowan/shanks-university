@@ -47,6 +47,7 @@ enum class transformation_id_t {
 #include "transformations/f_algorithm.hpp"
 #include "transformations/ford_sidi_2_algorithm.hpp"
 #include "transformations/ford_sidi_3_algorithm.hpp"
+#include "transformations/h_algorithm.hpp"
 #include "transformations/j_transformation_algorithm.hpp"
 #include "transformations/levin_algorithm.hpp"
 #include "transformations/levin_sidi_m_algorithm.hpp"
