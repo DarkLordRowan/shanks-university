@@ -2,9 +2,9 @@ name: Build Windows Release
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "vizrd"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "vizrd"]
   workflow_dispatch:
 
 jobs:
