@@ -62,6 +62,11 @@ void test_mpreal() {
                   << "\n";
         std::cout << "\n\n";
     }
+
+    //std::ofstream fout("mpfr_sin.csv")
+
+    //mpfr::mpreal large_accurate_x = mpfr::mpreal("0.25", mpfr::digits2bits())
+
 }
 
 void test_intervals() {

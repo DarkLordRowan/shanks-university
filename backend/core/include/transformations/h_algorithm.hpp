@@ -46,8 +46,8 @@ public:
      */
     explicit h_algorithm(
         const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
-        const float_type beta = float_type(1),
-        const T alpha = T(std::numbers::pi * 0.25)
+        const float_type beta = utils::cast<float_type, int>()(1),
+        const T alpha = utils::cast<T, double>()(std::numbers::pi * 0.25)
     )
         : series_acceleration<T, K>(), beta(beta), alpha(alpha) {
         update_type(remainder_type_to_use);
@@ -177,7 +177,7 @@ T h_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>
 
     // Initialize base values
     for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
-        Denom[i] += remainder->operator()(n + i, n + i, data.an) / (utils::cast<T,K>()(n + i) + beta);
+        Denom[i] += remainder->operator()(n + i, n + i, data.an) / utils::cast<T, float_type>()(utils::cast<float_type,K>()(n + i) + beta, precision);
         Num[i] += data.Sn.at(n + i) * Denom[i];
     }
 
