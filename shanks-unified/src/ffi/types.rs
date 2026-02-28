@@ -110,6 +110,17 @@ pub enum ParamValue {
     String(String),
 }
 
+impl std::fmt::Display for ParamValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParamValue::Float(val) => write!(f, "{}", val),
+            ParamValue::Int(val) => write!(f, "{}", val),
+            ParamValue::Bool(val) => write!(f, "{}", val),
+            ParamValue::String(val) => write!(f, "{}", val),
+        }
+    }
+}
+
 impl ParamValue {
     pub fn as_f64(&self) -> Option<f64> {
         match self {

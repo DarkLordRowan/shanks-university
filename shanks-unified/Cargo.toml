@@ -50,6 +50,10 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 # Parallel iterators (optional, for batch processing)
 rayon = "1.10"
 
+# Export
+arrow = "54"
+parquet = "54"
+
 [build-dependencies]
 cxx-build = { version = "1.0", features = ["parallel"] }
 pkg-config = "0.3"

@@ -36,6 +36,10 @@ struct Args {
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 
+    /// Disable database caching
+    #[arg(long)]
+    no_cache: bool,
+
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -56,6 +60,10 @@ enum Commands {
         /// Comma-separated list of precisions to use
         #[arg(long)]
         precisions: Option<String>,
+
+        /// Path to export results in Parquet format
+        #[arg(short, long)]
+        export: Option<PathBuf>,
     },
 
     /// List available series, algorithms, and precisions
@@ -86,9 +94,15 @@ fn main() -> anyhow::Result<()> {
     let library = Arc::new(shanks_unified::ffi::ShanksLibrary::new());
 
     // Initialize database
-    log::info!("Initializing database at {:?}", args.db_path);
-    let cache = shanks_unified::cache::Cache::new(&args.db_path)?;
-    cache.initialize_schema()?;
+    let cache = if args.no_cache {
+        log::info!("Cache disabled by --no-cache flag");
+        shanks_unified::cache::Cache::disabled()
+    } else {
+        log::info!("Initializing database at {:?}", args.db_path);
+        let cache = shanks_unified::cache::Cache::new(&args.db_path)?;
+        cache.initialize_schema()?;
+        cache
+    };
 
     match &args.command {
         // Drag & Drop or GUI without subcommand
@@ -104,11 +118,12 @@ fn main() -> anyhow::Result<()> {
             }
         }
         Some(Commands::Gui { config }) => run_gui(library, cache, Some(config.clone())),
-        Some(Commands::Headless { config, precisions }) => run_headless(
+        Some(Commands::Headless { config, precisions, export }) => run_headless(
             library,
             cache,
             config.clone(),
             precisions.clone(),
+            export.clone(),
             args.verbose > 0,
         ),
         Some(Commands::List { what }) => run_list(&library, what),
@@ -167,6 +182,7 @@ fn run_headless(
     cache: shanks_unified::cache::Cache,
     config_path: PathBuf,
     precisions: Option<String>,
+    export_path: Option<PathBuf>,
     verbose: bool,
 ) -> anyhow::Result<()> {
     log::info!("Running in headless mode");
@@ -181,6 +197,10 @@ fn run_headless(
 
     // Create headless runner
     let mut runner = shanks_unified::headless::HeadlessRunner::new(config, library, cache)?;
+
+    if let Some(path) = export_path {
+        runner.set_export_path(path);
+    }
 
     // Set up progress callback
     let last_print =
@@ -203,7 +223,6 @@ fn run_headless(
 
             let status = match info.status {
                 shanks_unified::headless::Status::Computing => "Computing",
-                shanks_unified::headless::Status::Cached => "Cached   ",
                 shanks_unified::headless::Status::Complete => "Complete ",
                 shanks_unified::headless::Status::Error(_) => "Error    ",
             };
@@ -237,7 +256,6 @@ fn run_headless(
     println!("\n=== Run Summary ===");
     println!("Total trials: {}", summary.total_trials);
     println!("Successful: {}", summary.successful);
-    println!("Cached (skipped): {}", summary.cached);
     println!("Failed: {}", summary.failed);
     println!("Total time: {:.2}s", summary.total_time_secs);
 

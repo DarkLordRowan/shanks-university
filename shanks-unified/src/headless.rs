@@ -37,8 +37,6 @@ pub struct ProgressInfo {
 pub enum Status {
     /// Computing
     Computing,
-    /// Result cached
-    Cached,
     /// Completed successfully
     Complete,
     /// Error occurred
@@ -52,8 +50,6 @@ pub struct RunSummary {
     pub total_trials: usize,
     /// Number of successful trials
     pub successful: usize,
-    /// Number of cached trials (skipped)
-    pub cached: usize,
     /// Number of failed trials
     pub failed: usize,
     /// Total time in seconds
@@ -69,6 +65,7 @@ pub struct HeadlessRunner {
     cache: Arc<Mutex<Cache>>,
     progress_callback: Option<Box<dyn Fn(ProgressInfo) + Send + Sync>>,
     precisions: Vec<String>,
+    export_path: Option<std::path::PathBuf>,
 }
 
 impl HeadlessRunner {
@@ -89,12 +86,18 @@ impl HeadlessRunner {
             cache: Arc::new(Mutex::new(cache)),
             progress_callback: None,
             precisions,
+            export_path: None,
         })
     }
 
     /// Set a progress callback.
     pub fn set_progress_callback<F: Fn(ProgressInfo) + Send + Sync + 'static>(&mut self, f: F) {
         self.progress_callback = Some(Box::new(f));
+    }
+
+    /// Set export path.
+    pub fn set_export_path(&mut self, path: std::path::PathBuf) {
+        self.export_path = Some(path);
     }
 
     /// Run all computations from the config.
@@ -112,7 +115,6 @@ impl HeadlessRunner {
             return Ok(RunSummary {
                 total_trials: 0,
                 successful: 0,
-                cached: 0,
                 failed: 0,
                 total_time_secs: start_time.elapsed().as_secs_f64(),
                 errors: vec!["No series defined in config".to_string()],
@@ -124,7 +126,6 @@ impl HeadlessRunner {
             return Ok(RunSummary {
                 total_trials: 0,
                 successful: 0,
-                cached: 0,
                 failed: 0,
                 total_time_secs: start_time.elapsed().as_secs_f64(),
                 errors: vec!["No methods defined in config".to_string()],
@@ -145,15 +146,24 @@ impl HeadlessRunner {
         let mut active_tasks = 0;
         let mut task_mappings = std::collections::HashMap::new();
 
+        // For incremental export: task_id -> (series_result, accel_results)
+        let mut task_results: std::collections::HashMap<uuid::Uuid, (
+            Option<(i64, String, String, std::collections::HashMap<String, String>, crate::ffi::SeriesResult)>,
+            Vec<(i64, String, i64, String, std::collections::HashMap<String, String>, crate::ffi::AccelResult)>
+        )> = std::collections::HashMap::new();
+
         let noise_iter: Vec<Option<&NoiseDef>> = if noises.is_empty() {
             vec![None]
         } else {
             noises.iter().map(Some).collect()
         };
 
+        let mut series_id_counter = 0;
         for precision in &self.precisions {
             for series_inst in &series {
                 for noise_opt in &noise_iter {
+                    series_id_counter += 1;
+                    let current_series_id = series_id_counter;
                     let mut series_params_map = std::collections::HashMap::new();
                     for (k, v) in &series_inst.args {
                         let pv = match v {
@@ -226,6 +236,7 @@ impl HeadlessRunner {
 
                     let task = ComputeTask {
                         id: uuid::Uuid::new_v4(),
+                        series_id: current_series_id,
                         precision: precision.to_string(),
                         series: series_params.clone(),
                         n_points: n_points as u64,
@@ -251,22 +262,71 @@ impl HeadlessRunner {
                 match event.body {
                     ComputeEventBody::Started => {}
                     ComputeEventBody::Progress { .. } => {}
-                    ComputeEventBody::SeriesComplete { .. } => {}
-                    ComputeEventBody::AccelComplete { .. } => {
+                    ComputeEventBody::SeriesComplete { name: _, result } => {
+                        if self.export_path.is_some() {
+                            let task = task_mappings.get(&event.task_id).unwrap();
+                            let mut args_str_map = std::collections::HashMap::new();
+                            for (k, v) in &task.series.params {
+                                args_str_map.insert(k.clone(), v.to_string());
+                            }
+                            
+                            let entry = task_results.entry(event.task_id).or_insert((None, Vec::new()));
+                            entry.0 = Some((task.series_id, task.series.name.clone(), task.precision.clone(), args_str_map, result));
+                        }
+                    }
+                    ComputeEventBody::AccelComplete { name, result } => {
+                        let task = task_mappings.get(&event.task_id).unwrap();
                         self.report_progress(ProgressInfo {
                             current: successful + failed,
                             total,
-                            series_name: task_mappings
-                                .get(&event.task_id)
-                                .unwrap()
-                                .series
-                                .name
-                                .clone(),
-                            method_name: "(batch item)".to_string(),
-                            precision: task_mappings.get(&event.task_id).unwrap().precision.clone(),
+                            series_name: task.series.name.clone(),
+                            method_name: name.clone(),
+                            precision: task.precision.clone(),
                             status: Status::Complete,
                             elapsed_secs: start_time.elapsed().as_secs_f64(),
                         });
+
+                        if self.export_path.is_some() {
+                            // Stable series_id from task
+                            let series_id = task.series_id;
+                            
+                            // Find accel name and m_value
+                            // Event name is usually "Series - Accel"
+                            let accel_name = name.split(" - ").last().unwrap_or(&name).to_string();
+
+                            // Try to find m_value in task algorithms
+                            let m_val = task
+                                .algorithms
+                                .iter()
+                                .find(|a| name.contains(&a.name))
+                                .and_then(|a| a.params.get("m"))
+                                .and_then(|v| match v {
+                                    crate::ffi::ParamValue::Int(i) => Some(*i),
+                                    _ => None,
+                                })
+                                .unwrap_or(0);
+
+                            let mut args_str_map = std::collections::HashMap::new();
+                            if let Some(algo) =
+                                task.algorithms.iter().find(|a| name.contains(&a.name))
+                            {
+                                for (k, v) in &algo.params {
+                                    if k != "m" {
+                                        args_str_map.insert(k.clone(), v.to_string());
+                                    }
+                                }
+                            }
+
+                            let entry = task_results.entry(event.task_id).or_insert((None, Vec::new()));
+                            entry.1.push((
+                                series_id,
+                                accel_name,
+                                m_val,
+                                task.precision.clone(),
+                                args_str_map,
+                                result,
+                            ));
+                        }
                     }
                     ComputeEventBody::Error { error } => {
                         let task = task_mappings.get(&event.task_id).unwrap();
@@ -282,6 +342,23 @@ impl HeadlessRunner {
                     }
                     ComputeEventBody::Complete => {
                         let task = task_mappings.get(&event.task_id).unwrap();
+                        
+                        // Incremental export if requested
+                        if let Some(ref path) = self.export_path {
+                            if let Some((Some(series_res), accels)) = task_results.remove(&event.task_id) {
+                                log::info!("Exporting series_id={} ({} accelerations) to {:?}", task.series_id, accels.len(), path);
+                                let partition = crate::export::parquet::PartitionData {
+                                    series_id: task.series_id,
+                                    series_result: series_res,
+                                    accel_results: accels,
+                                };
+                                if let Err(e) = crate::export::parquet::ParquetExporter::export_partition(partition, path) {
+                                    log::error!("Failed to export partition for series_id={}: {}", task.series_id, e);
+                                    errors.push(format!("Partition export failed: {}", e));
+                                }
+                            }
+                        }
+
                         successful += task.algorithms.len();
                         active_tasks -= 1;
                         engine.wait_for_task(event.task_id);
@@ -298,10 +375,14 @@ impl HeadlessRunner {
 
         engine.cleanup_completed();
 
+        // Export summary / cleanup
+        if let Some(ref path) = self.export_path {
+            log::info!("Incremental export finished at {:?}", path);
+        }
+
         Ok(RunSummary {
             total_trials: total,
             successful,
-            cached: 0,
             failed,
             total_time_secs: start_time.elapsed().as_secs_f64(),
             errors,

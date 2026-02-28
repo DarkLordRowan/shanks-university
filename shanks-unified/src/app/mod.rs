@@ -530,6 +530,7 @@ impl ShanksApp {
 
             let task = crate::compute::task::ComputeTask {
                 id: uuid::Uuid::new_v4(),
+                series_id: 0,
                 precision: precision.clone(),
                 series: crate::compute::task::SeriesParams {
                     name: series_name.clone(),
