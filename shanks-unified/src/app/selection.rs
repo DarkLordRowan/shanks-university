@@ -239,24 +239,6 @@ pub fn build_accel_tree(
                     .with_expandable(true)
             });
 
-        // Ensure "n" node exists
-        if !method_node.children.iter().any(|c| c.label == "n") {
-            method_node.children.push(
-                SelectionNode::new(format!("{}_n", method_node.id), "n").with_expandable(true),
-            );
-        }
-        let n_node = method_node
-            .children
-            .iter_mut()
-            .find(|c| c.label == "n")
-            .unwrap();
-        let n_str = instance.n.to_string();
-        if !n_node.children.iter().any(|c| c.label == n_str) {
-            n_node
-                .children
-                .push(SelectionNode::new(format!("{}_{}", n_node.id, n_str), n_str));
-        }
-
         // Ensure "m" node exists
         if !method_node.children.iter().any(|c| c.label == "m") {
             method_node.children.push(
@@ -355,8 +337,6 @@ pub struct SelectedCombination {
     pub series_params: HashMap<String, String>,
     /// Method name
     pub method_name: String,
-    /// Method n value
-    pub method_n: i64,
     /// Method m value
     pub method_m: i64,
     /// Method additional args
@@ -389,9 +369,8 @@ pub fn generate_combinations(
                         series_name: series.0.clone(),
                         series_params: series.1.clone(),
                         method_name: accel.0.clone(),
-                        method_n: accel.1,
-                        method_m: accel.2,
-                        method_args: accel.3.clone(),
+                        method_m: accel.1,
+                        method_args: accel.2.clone(),
                         noise_idx: *noise,
                         precision: precision.clone(),
                     });
@@ -404,7 +383,7 @@ pub fn generate_combinations(
 }
 
 type SeriesCombo = (String, HashMap<String, String>);
-type AccelCombo = (String, i64, i64, HashMap<String, String>);
+type AccelCombo = (String, i64, HashMap<String, String>);
 
 fn extract_series_combinations(tree: &SelectionNode) -> Vec<SeriesCombo> {
     let mut combos = Vec::new();
@@ -440,7 +419,6 @@ fn extract_accel_combinations(tree: &SelectionNode) -> Vec<AccelCombo> {
         }
 
         let name = method_node.label.clone();
-        let mut n_values = Vec::new();
         let mut m_values = Vec::new();
         let mut args: HashMap<String, Vec<String>> = HashMap::new();
 
@@ -450,15 +428,6 @@ fn extract_accel_combinations(tree: &SelectionNode) -> Vec<AccelCombo> {
             }
 
             match param_node.label.as_str() {
-                "n" => {
-                    for value_node in &param_node.children {
-                        if value_node.is_selected() {
-                            if let Ok(n) = value_node.label.parse::<i64>() {
-                                n_values.push(n);
-                            }
-                        }
-                    }
-                }
                 "m" => {
                     for value_node in &param_node.children {
                         if value_node.is_selected() {
@@ -482,12 +451,6 @@ fn extract_accel_combinations(tree: &SelectionNode) -> Vec<AccelCombo> {
             }
         }
 
-        // Generate combinations
-        let n_values = if n_values.is_empty() {
-            vec![33]
-        } else {
-            n_values
-        };
         let m_values = if m_values.is_empty() {
             vec![4]
         } else {
@@ -500,11 +463,9 @@ fn extract_accel_combinations(tree: &SelectionNode) -> Vec<AccelCombo> {
             generate_param_combinations(&args)
         };
 
-        for n in &n_values {
-            for m in &m_values {
-                for arg_combo in &arg_combos {
-                    combos.push((name.clone(), *n, *m, arg_combo.clone()));
-                }
+        for m in &m_values {
+            for arg_combo in &arg_combos {
+                combos.push((name.clone(), *m, arg_combo.clone()));
             }
         }
     }

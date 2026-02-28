@@ -652,6 +652,7 @@ impl Cache {
 
         Ok(Some(crate::ffi::AccelResult {
             values,
+            an: Default::default(),
             valid,
             deviations,
             events,

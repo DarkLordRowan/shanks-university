@@ -753,8 +753,11 @@ pub struct ProfilingTrace {
 /// Result of acceleration algorithm application.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccelResult {
-    /// Accelerated values
+    /// Accelerated values (Sn of accelerated series)
     pub values: SeriesPointArray,
+    /// Differences of accelerated values (an of accelerated series)
+    #[serde(default)]
+    pub an: SeriesPointArray,
     /// Whether each point is valid (e.g., algorithm didn't fail)
     pub valid: Vec<bool>,
     /// Deviations/errors for each value

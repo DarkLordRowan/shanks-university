@@ -385,14 +385,15 @@ impl ComputeCore {
 
             let (algo_name, _, algo_params): (String, String, String) = serde_json::from_str(&method_args_json)?;
             let m_usize = m_val.unwrap_or(5) as usize;
-            let n_indices: Vec<i32> = (0..n_points as i32).collect();
-            let accel_series = series_handle.run_algo(&algo_name, &algo_params, m_usize, &n_indices)?;
+            let accel_series = series_handle.run_algo(&algo_name, &algo_params, m_usize, n_points as usize)?;
             
             let sn_points = accel_series.sn().to_series_points();
+            let an_points = accel_series.an().to_series_points();
             let dev_points = accel_series.deviation().to_series_points();
             
             let mut parsed_accel = crate::ffi::AccelResult {
                 values: crate::ffi::SeriesPointArray::from_vec(&sn_points),
+                an: crate::ffi::SeriesPointArray::from_vec(&an_points),
                 valid: vec![true; sn_points.len()],
                 deviations: crate::ffi::SeriesPointArray::from_vec(&dev_points),
                 events: vec![],

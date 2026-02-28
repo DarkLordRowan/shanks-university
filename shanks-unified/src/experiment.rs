@@ -37,6 +37,9 @@ pub struct ExperimentConfig {
     /// Precision types to use (optional override)
     #[serde(default)]
     pub precisions: Option<Vec<String>>,
+
+    /// Number of terms for computation (high-level parameter)
+    pub n_points: Option<u64>,
 }
 
 impl ExperimentConfig {
@@ -103,6 +106,7 @@ impl Default for ExperimentConfig {
             filters: Vec::new(),
             methods: Vec::new(),
             precisions: None,
+            n_points: Some(33),
         }
     }
 }
@@ -307,9 +311,6 @@ pub struct MethodDef {
     /// Method name from registry
     pub name: String,
 
-    /// N values - range or array
-    pub n: NValue,
-
     /// M values (order parameter)
     pub m: Vec<i64>,
 
@@ -366,7 +367,6 @@ impl RangeDefInt {
 impl MethodDef {
     /// Expand this definition into concrete instances.
     pub fn expand(&self) -> Vec<MethodInstance> {
-        let n_values = self.n.values();
         let m_values = &self.m;
 
         // Expand args combinations
@@ -374,26 +374,22 @@ impl MethodDef {
 
         let mut instances = Vec::new();
 
-        for n in &n_values {
-            for m in m_values {
-                if args_combinations.is_empty() {
+        for m in m_values {
+            if args_combinations.is_empty() {
+                instances.push(MethodInstance {
+                    name: self.name.clone(),
+                    m: *m,
+                    args: HashMap::new(),
+                    events: self.events.clone(),
+                });
+            } else {
+                for args in &args_combinations {
                     instances.push(MethodInstance {
                         name: self.name.clone(),
-                        n: *n,
                         m: *m,
-                        args: HashMap::new(),
+                        args: args.clone(),
                         events: self.events.clone(),
                     });
-                } else {
-                    for args in &args_combinations {
-                        instances.push(MethodInstance {
-                            name: self.name.clone(),
-                            n: *n,
-                            m: *m,
-                            args: args.clone(),
-                            events: self.events.clone(),
-                        });
-                    }
                 }
             }
         }
@@ -432,8 +428,6 @@ fn expand_method_args(
 pub struct MethodInstance {
     /// Method name from registry
     pub name: String,
-    /// Number of terms
-    pub n: i64,
     /// Order parameter
     pub m: i64,
     /// Concrete argument values

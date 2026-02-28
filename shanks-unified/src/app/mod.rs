@@ -35,6 +35,7 @@ struct ComputeInputState {
     accel_tree: Option<SelectionNode>,
     noise_tree: Option<SelectionNode>,
     precision_tree: Option<SelectionNode>,
+    n_points: u64,
 }
 
 /// Application state shared across the UI.
@@ -285,6 +286,7 @@ pub struct ShanksApp {
     prof_show_mul: bool,
     prof_show_div: bool,
     prof_show_special: bool,
+    pub n_points: u64,
 }
 
 #[derive(Clone)]
@@ -329,6 +331,11 @@ impl ShanksApp {
         let method_instances = state.get_method_instances();
         let noises = state.get_noises();
         let precisions = state.get_precisions();
+        let n_points = if let Some(ref exp) = state.experiment {
+            exp.read().unwrap().n_points.unwrap_or(33)
+        } else {
+            33
+        };
 
         let series_tree = if !series_instances.is_empty() {
             Some(selection::build_series_tree(&series_instances))
@@ -405,6 +412,7 @@ impl ShanksApp {
             prof_show_mul: true,
             prof_show_div: true,
             prof_show_special: true,
+            n_points,
         }
     }
 
@@ -494,11 +502,8 @@ impl ShanksApp {
 
             let entry = task_map
                 .entry(key)
-                .or_insert_with(|| (Vec::new(), combo.method_n, series_params.clone()));
-            // Track max n_points
-            if combo.method_n > entry.1 {
-                entry.1 = combo.method_n;
-            }
+                .or_insert_with(|| (Vec::new(), self.n_points as i64, series_params.clone()));
+            
             // Push accel if not already there (deduplicate by serialization)
             let accel_json =
                 crate::compute::core::to_sorted_json(&accel.params).unwrap_or_default();
@@ -535,7 +540,7 @@ impl ShanksApp {
                         .unwrap_or_else(|| "1.0".to_string()),
                     params: series_params,
                 },
-                n_points: n_points as u64,
+                n_points: self.n_points,
                 noise: noise.cloned(),
                 algorithms,
                 filters: filters.clone(),
@@ -765,6 +770,7 @@ impl ShanksApp {
             accel_tree: self.accel_tree.clone(),
             noise_tree: self.noise_tree.clone(),
             precision_tree: self.precision_tree.clone(),
+            n_points: self.n_points,
         }
     }
 
@@ -1094,34 +1100,23 @@ impl ShanksApp {
             ];
             let mut accel_an_re: Vec<egui_plot::PlotPoint> = Vec::new();
             let mut accel_an_im: Vec<egui_plot::PlotPoint> = Vec::new();
-            let mut prev_re: Option<f64> = None;
-            let mut prev_im: Option<f64> = None;
-            for j in 0..results.values.len() {
+            for j in 0..results.an.len() {
                 let valid = results.valid.get(j).copied().unwrap_or(false);
                 if valid {
-                    let p = results.values.get(j);
+                    let p = results.an.get(j);
                     match self.point_to_f64_parts(&p, use_symlog, log_linthresh) {
                         Some((re, im_opt)) => {
-                            if let Some(pr) = prev_re {
-                                let diff_re = re - pr;
-                                if diff_re.is_finite() {
-                                    accel_an_re.push([j as f64, diff_re].into());
+                            if re.is_finite() {
+                                accel_an_re.push([j as f64, re].into());
+                            }
+                            if let Some(im) = im_opt {
+                                if im.is_finite() {
+                                    accel_an_im.push([j as f64, im].into());
                                 }
                             }
-                            if let (Some(pi), Some(im)) = (prev_im, im_opt) {
-                                let diff_im = im - pi;
-                                if diff_im.is_finite() {
-                                    accel_an_im.push([j as f64, diff_im].into());
-                                }
-                            }
-                            prev_re = Some(re);
-                            prev_im = im_opt;
                         }
-                        None => { prev_re = None; prev_im = None; }
+                        None => {}
                     }
-                } else {
-                    prev_re = None;
-                    prev_im = None;
                 }
             }
             if !accel_an_re.is_empty() {
@@ -1534,6 +1529,14 @@ impl eframe::App for ShanksApp {
 
                 ui.separator();
             }
+
+            // High-level parameters
+            ui.heading("Parameters");
+            ui.horizontal(|ui| {
+                ui.label("Points (n):");
+                ui.add(egui::DragValue::new(&mut self.n_points).speed(1.0).clamp_range(1..=1000));
+            });
+            ui.separator();
 
             // Tree selection mode
             if self.series_tree.is_some() {

@@ -187,7 +187,7 @@ impl HeadlessRunner {
                     };
 
                     let mut bundled_algorithms = Vec::new();
-                    let mut max_n_points = 10;
+                    let n_points = self.config.n_points.unwrap_or(33);
 
                     for method_inst in &methods {
                         let mut accel_args = std::collections::HashMap::new();
@@ -222,17 +222,13 @@ impl HeadlessRunner {
                             name: method_inst.name.clone(),
                             params: accel_args,
                         });
-
-                        if method_inst.n > max_n_points {
-                            max_n_points = method_inst.n;
-                        }
                     }
 
                     let task = ComputeTask {
                         id: uuid::Uuid::new_v4(),
                         precision: precision.to_string(),
                         series: series_params.clone(),
-                        n_points: max_n_points as u64,
+                        n_points: n_points as u64,
                         noise: noise_opt.cloned(),
                         algorithms: bundled_algorithms.clone(),
                         filters: self.config.filters.clone(),

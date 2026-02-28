@@ -1,8 +1,8 @@
 pub mod bridge;
 pub mod types;
 
+pub use bridge::ffi::{CIntervalValue, ComplexValue, IntervalValue, RealValue};
 pub use types::*;
-pub use bridge::ffi::{RealValue, ComplexValue, IntervalValue, CIntervalValue};
 
 use bridge::ffi;
 use cxx::UniquePtr;
@@ -52,17 +52,31 @@ impl Arr {
     fn from_raw(raw: ffi::RawArr) -> Self {
         match raw.tag {
             ffi::ArrKind::Real => Arr::Real(raw.r1),
-            ffi::ArrKind::Complex => Arr::Complex(raw.r2.into_iter().zip(raw.r1).map(|(imag, real)| ComplexValue { real, imag }).collect()),
-            ffi::ArrKind::Interval => Arr::Interval(raw.r2.into_iter().zip(raw.r1).map(|(sup, inf)| IntervalValue { inf, sup }).collect()),
+            ffi::ArrKind::Complex => Arr::Complex(
+                raw.r2
+                    .into_iter()
+                    .zip(raw.r1)
+                    .map(|(imag, real)| ComplexValue { real, imag })
+                    .collect(),
+            ),
+            ffi::ArrKind::Interval => Arr::Interval(
+                raw.r2
+                    .into_iter()
+                    .zip(raw.r1)
+                    .map(|(sup, inf)| IntervalValue { inf, sup })
+                    .collect(),
+            ),
             ffi::ArrKind::CInterval => Arr::CInterval(
-                raw.r1.into_iter()
+                raw.r1
+                    .into_iter()
                     .zip(raw.r2)
                     .zip(raw.r3)
                     .zip(raw.r4)
                     .map(|(((r1, r2), r3), r4)| CIntervalValue {
                         inf: ComplexValue { real: r1, imag: r3 },
                         sup: ComplexValue { real: r2, imag: r4 },
-                    }).collect()
+                    })
+                    .collect(),
             ),
             _ => Arr::Real(Vec::new()),
         }
@@ -73,13 +87,28 @@ impl Value {
     fn from_raw(raw: ffi::RawValue) -> Self {
         match raw.tag {
             ffi::ValueKind::Real => Value::Real(raw.r1),
-            ffi::ValueKind::Complex => Value::Complex(ComplexValue { real: raw.r1, imag: raw.r2 }),
-            ffi::ValueKind::Interval => Value::Interval(IntervalValue { inf: raw.r1, sup: raw.r2 }),
-            ffi::ValueKind::CInterval => Value::CInterval(CIntervalValue { 
-                inf: ComplexValue { real: raw.r1, imag: raw.r3 },
-                sup: ComplexValue { real: raw.r2, imag: raw.r4 },
+            ffi::ValueKind::Complex => Value::Complex(ComplexValue {
+                real: raw.r1,
+                imag: raw.r2,
             }),
-            _ => Value::Real(RealValue { mantissa: 0.0, exponent: 0 }),
+            ffi::ValueKind::Interval => Value::Interval(IntervalValue {
+                inf: raw.r1,
+                sup: raw.r2,
+            }),
+            ffi::ValueKind::CInterval => Value::CInterval(CIntervalValue {
+                inf: ComplexValue {
+                    real: raw.r1,
+                    imag: raw.r3,
+                },
+                sup: ComplexValue {
+                    real: raw.r2,
+                    imag: raw.r4,
+                },
+            }),
+            _ => Value::Real(RealValue {
+                mantissa: 0.0,
+                exponent: 0,
+            }),
         }
     }
 }
@@ -90,8 +119,6 @@ pub struct ShanksLibrary;
 
 impl ShanksLibrary {
     pub fn new() -> Self {
-        // Force linkage of GSL CBLAS
-        ffi::shanks_force_link_gslcblas();
         Self
     }
 
@@ -116,13 +143,32 @@ impl ShanksLibrary {
     }
 
     // Legacy series methods, delegating to Series wrapper
-    pub fn series_create(&self, name: &str, precision: &str, x: &str, params: &str, n: usize) -> Result<Series, FfiError> {
+    pub fn series_create(
+        &self,
+        name: &str,
+        precision: &str,
+        x: &str,
+        params: &str,
+        n: usize,
+    ) -> Result<Series, FfiError> {
         Series::new(name, precision, params, n, x)
     }
 
-    pub fn series_create_with_noise(&self, name: &str, precision: &str, x: &str, params: &str, nt: &str, nm: &str, p1: f64, p2: f64, seed: u64, n: usize) -> Result<Series, FfiError> {
+    pub fn series_create_with_noise(
+        &self,
+        name: &str,
+        precision: &str,
+        x: &str,
+        params: &str,
+        nt: &str,
+        nm: &str,
+        p1: f64,
+        p2: f64,
+        seed: u64,
+        n: usize,
+    ) -> Result<Series, FfiError> {
         // For now, we apply noise after creation if needed, or we could update mk_series to handle it.
-        // But the C++ mk_series doesn't handle noise yet. 
+        // But the C++ mk_series doesn't handle noise yet.
         // We'll follow the pattern of creating then applying noise or just updating this to use n/x.
         Series::new(name, precision, params, n, x)
     }
@@ -141,19 +187,31 @@ impl ShanksLibrary {
         Ok(serde_json::to_string(&point)?)
     }
 
-    pub fn accel_create(&self, name: &str, precision: &str, params: &str) -> Result<String, FfiError> {
+    pub fn accel_create(
+        &self,
+        name: &str,
+        precision: &str,
+        params: &str,
+    ) -> Result<String, FfiError> {
         Ok(serde_json::to_string(&(name, precision, params))?)
     }
 
-    pub fn accel_apply(&self, accel_spec: &str, series: &Series, n_indices: &[i32], m: usize) -> Result<AccelResult, FfiError> {
+    pub fn accel_apply(
+        &self,
+        accel_spec: &str,
+        series: &Series,
+        n: usize,
+        m: usize,
+    ) -> Result<AccelResult, FfiError> {
         let (name, _prec, params): (String, String, String) = serde_json::from_str(accel_spec)?;
-        let accel_series = series.run_algo(&name, &params, m, n_indices)?;
-        
+        let accel_series = series.run_algo(&name, &params, m, n)?;
+
         let val_arr = accel_series.sn();
         let dev_arr = accel_series.deviation();
 
         Ok(AccelResult {
             values: SeriesPointArray::from_vec(&val_arr.to_series_points()),
+            an: SeriesPointArray::from_vec(&accel_series.an().to_series_points()),
             valid: vec![true; val_arr_len(&val_arr)],
             deviations: SeriesPointArray::from_vec(&dev_arr.to_series_points()),
             events: vec![],
@@ -162,12 +220,9 @@ impl ShanksLibrary {
             profiling: None,
         })
     }
-    
+
     pub fn series_destroy(&self, _series: Series) {}
     pub fn accel_destroy(&self, _handle: String) {}
-
-
-
 }
 
 fn val_arr_len(arr: &Arr) -> usize {
@@ -185,19 +240,36 @@ pub struct Series {
 }
 impl Series {
     /// Create a new series instance.
-    pub fn new(name: &str, precision: &str, params_json: &str, n: usize, x: &str) -> Result<Self, FfiError> {
+    pub fn new(
+        name: &str,
+        precision: &str,
+        params_json: &str,
+        n: usize,
+        x: &str,
+    ) -> Result<Self, FfiError> {
         let inner = ffi::mk_series(name, precision, params_json, n, x)?;
         Ok(Self { inner })
     }
 
     /// Apply noise to the series and return a new series.
-    pub fn apply_noise(&self, name: &str, params_json: &str, start_n: u64) -> Result<Self, FfiError> {
+    pub fn apply_noise(
+        &self,
+        name: &str,
+        params_json: &str,
+        start_n: u64,
+    ) -> Result<Self, FfiError> {
         let inner = ffi::apply_noise(&self.inner, name, params_json, start_n)?;
         Ok(Self { inner })
     }
 
     /// Run an acceleration algorithm on the series and return a result series.
-    pub fn run_algo(&self, name: &str, params_json: &str, m: usize, n: &[i32]) -> Result<Self, FfiError> {
+    pub fn run_algo(
+        &self,
+        name: &str,
+        params_json: &str,
+        m: usize,
+        n: usize,
+    ) -> Result<Self, FfiError> {
         let inner = ffi::run_algo(&self.inner, name, params_json, m, n)?;
         Ok(Self { inner })
     }
@@ -231,10 +303,30 @@ impl Series {
 impl Arr {
     pub fn to_series_points(&self) -> Vec<SeriesPoint> {
         match self {
-            Arr::Real(v) => v.iter().copied().map(Into::into).map(SeriesPoint::Real).collect(),
-            Arr::Complex(v) => v.iter().copied().map(Into::into).map(SeriesPoint::Complex).collect(),
-            Arr::Interval(v) => v.iter().copied().map(Into::into).map(SeriesPoint::Interval).collect(),
-            Arr::CInterval(v) => v.iter().copied().map(Into::into).map(SeriesPoint::CInterval).collect(),
+            Arr::Real(v) => v
+                .iter()
+                .copied()
+                .map(Into::into)
+                .map(SeriesPoint::Real)
+                .collect(),
+            Arr::Complex(v) => v
+                .iter()
+                .copied()
+                .map(Into::into)
+                .map(SeriesPoint::Complex)
+                .collect(),
+            Arr::Interval(v) => v
+                .iter()
+                .copied()
+                .map(Into::into)
+                .map(SeriesPoint::Interval)
+                .collect(),
+            Arr::CInterval(v) => v
+                .iter()
+                .copied()
+                .map(Into::into)
+                .map(SeriesPoint::CInterval)
+                .collect(),
         }
     }
 }
@@ -252,24 +344,27 @@ impl Value {
 
 impl From<ffi::RealValue> for ScientificValue {
     fn from(rv: ffi::RealValue) -> Self {
-        Self { mantissa: rv.mantissa, exponent: rv.exponent }
+        Self {
+            mantissa: rv.mantissa,
+            exponent: rv.exponent,
+        }
     }
 }
 
 impl From<ffi::ComplexValue> for crate::ffi::types::ComplexValue {
     fn from(cv: ffi::ComplexValue) -> Self {
-        Self { 
-            real: cv.real.into(), 
-            imag: cv.imag.into() 
+        Self {
+            real: cv.real.into(),
+            imag: cv.imag.into(),
         }
     }
 }
 
 impl From<ffi::IntervalValue> for crate::ffi::types::IntervalValue {
     fn from(iv: ffi::IntervalValue) -> Self {
-        Self { 
-            inf: iv.inf.into(), 
-            sup: iv.sup.into() 
+        Self {
+            inf: iv.inf.into(),
+            sup: iv.sup.into(),
         }
     }
 }
@@ -277,16 +372,14 @@ impl From<ffi::IntervalValue> for crate::ffi::types::IntervalValue {
 impl From<ffi::CIntervalValue> for crate::ffi::types::CIntervalValue {
     fn from(civ: ffi::CIntervalValue) -> Self {
         Self {
-            real: crate::ffi::types::IntervalValue { 
-                inf: civ.inf.real.into(), 
-                sup: civ.sup.real.into() 
+            real: crate::ffi::types::IntervalValue {
+                inf: civ.inf.real.into(),
+                sup: civ.sup.real.into(),
             },
-            imag: crate::ffi::types::IntervalValue { 
-                inf: civ.inf.imag.into(), 
-                sup: civ.sup.imag.into() 
+            imag: crate::ffi::types::IntervalValue {
+                inf: civ.inf.imag.into(),
+                sup: civ.sup.imag.into(),
             },
         }
     }
 }
-
-

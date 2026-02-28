@@ -156,23 +156,43 @@ public:
 
     RawArr get_deviation() const override {
         try {
-            std::vector<T> dev;
-            dev.reserve(result.Sn.size());
-            using std::abs;
-            for (const auto& s : result.Sn) {
-                if constexpr (shanks::ffi::is_interval_v<T>) {
-                    // For intervals, we might need a custom abs or just cast to something else if it fails
-                    // But usually backend/core/include/custom_types/intervalprecision.hpp defines it.
-                    // The error was about ambiguous abs or missing.
-                    dev.push_back(abs(s - limit));
-                } else if constexpr (shanks::ffi::is_complex_interval_v<T>) {
-                    dev.push_back(abs(s - limit));
-                } else {
-                    dev.push_back(abs(s - limit));
+            RawArr res;
+            auto size = result.Sn.size();
+
+            if constexpr (is_complex_interval_v<T>) {
+                res.tag = ArrKind::CInterval;
+                res.r1.reserve(size); res.r2.reserve(size); res.r3.reserve(size); res.r4.reserve(size);
+                for (const auto& s : result.Sn) {
+                    res.r1.push_back(to_rv(s.real().inf() - limit.real().inf()));
+                    res.r2.push_back(to_rv(s.real().sup() - limit.real().sup()));
+                    res.r3.push_back(to_rv(s.imag().inf() - limit.imag().inf()));
+                    res.r4.push_back(to_rv(s.imag().sup() - limit.imag().sup()));
+                }
+            } else if constexpr (is_complex_v<T>) {
+                res.tag = ArrKind::Complex;
+                res.r1.reserve(size); res.r2.reserve(size);
+                for (const auto& s : result.Sn) {
+                    res.r1.push_back(to_rv(s.real() - limit.real()));
+                    res.r2.push_back(to_rv(s.imag() - limit.imag()));
+                }
+            } else if constexpr (is_interval_v<T>) {
+                res.tag = ArrKind::Interval;
+                res.r1.reserve(size); res.r2.reserve(size);
+                for (const auto& s : result.Sn) {
+                    res.r1.push_back(to_rv(s.inf() - limit.inf()));
+                    res.r2.push_back(to_rv(s.sup() - limit.sup()));
+                }
+            } else {
+                res.tag = ArrKind::Real;
+                res.r1.reserve(size);
+                for (const auto& s : result.Sn) {
+                    res.r1.push_back(to_rv(s - limit));
                 }
             }
-            return convert_vec(dev);
-        } catch (...) { RawArr res; res.tag = ArrKind::Real; return res; }
+            return res;
+        } catch (...) {
+            RawArr res; res.tag = ArrKind::Real; return res;
+        }
     }
 
     RawValue get_limit() const override {
@@ -209,8 +229,10 @@ public:
         return std::make_unique<CSeriesImpl<T, P>>(std::move(new_res), limit);
     }
 
-    std::unique_ptr<CSeries> run_algo(rust::Str name, rust::Str params_json, size_t m, rust::Slice<const int32_t> n_indices) const override {
+    std::unique_ptr<CSeries> run_algo(rust::Str name, rust::Str params_json, size_t m, size_t n) const override {
         std::string s_name(name);
+        std::string s_params(params_json);
+
         auto keys = shanks::algos::transformation_registry_metadata::get_keys();
         size_t idx = 0; bool found = false;
         for (; idx < keys.size(); ++idx) if (keys[idx] == s_name) { found = true; break; }
@@ -221,17 +243,21 @@ public:
         if (!found) throw std::runtime_error("Algorithm not found: " + s_name);
 
         auto algo = shanks::algos::transformation_registry<T, size_t>::create_by_index(idx);
-        
-        // TODO: use n_indices if needed. For now we follow the user request to pass it.
-        // The current operator() takes (n_terms, order, result).
-        // If n_indices is provided, we might want to evaluate at those points.
-        // For now, we use result.Sn.size() as before, but pass the m directly.
-        
-        auto accelerated = (*algo)(result.Sn.size(), m, result);
+
         ::series_result<T> acc_res;
-        acc_res.Sn = {accelerated};
-        acc_res.an = {accelerated};
-        return std::make_unique<CSeriesImpl<T, P>>(std::move(acc_res), accelerated);
+        acc_res.Sn.reserve(n);
+        acc_res.an.reserve(n);
+        
+        T prev_accel = T(0);
+        for (size_t i = 1; i <= n; ++i) {
+            // Compute acceleration for first i terms of the original series
+            T accelerated = (*algo)(i, m, result);
+            acc_res.Sn.push_back(accelerated);
+            acc_res.an.push_back(accelerated - prev_accel);
+            prev_accel = accelerated;
+        }
+
+        return std::make_unique<CSeriesImpl<T, P>>(std::move(acc_res), prev_accel);
     }
 
     RawArr filter(rust::Str name, rust::Str params_json, uint64_t start_n) const override {

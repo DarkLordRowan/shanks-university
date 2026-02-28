@@ -61,10 +61,13 @@ pub mod ffi {
 
         type CSeries;
 
-        fn shanks_force_link_gslcblas();
-
-        fn mk_series(name: &str, precision: &str, params_json: &str, n: usize, x: &str) -> Result<UniquePtr<CSeries>>;
-
+        fn mk_series(
+            name: &str,
+            precision: &str,
+            params_json: &str,
+            n: usize,
+            x: &str,
+        ) -> Result<UniquePtr<CSeries>>;
 
         fn apply_noise(
             series: &CSeries,
@@ -72,7 +75,13 @@ pub mod ffi {
             params_json: &str,
             start_n: u64,
         ) -> Result<UniquePtr<CSeries>>;
-        fn run_algo(series: &CSeries, name: &str, params_json: &str, m: usize, n: &[i32]) -> Result<UniquePtr<CSeries>>;
+        fn run_algo(
+            series: &CSeries,
+            name: &str,
+            params_json: &str,
+            m: usize,
+            n: usize,
+        ) -> Result<UniquePtr<CSeries>>;
 
         fn get_sn(series: &CSeries) -> RawArr;
         fn get_an(series: &CSeries) -> RawArr;

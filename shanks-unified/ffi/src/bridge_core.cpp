@@ -30,7 +30,7 @@ std::unique_ptr<CSeries> apply_noise(const CSeries& series, rust::Str name, rust
     return series.apply_noise(name, params_json, start_n);
 }
 
-std::unique_ptr<CSeries> run_algo(const CSeries& series, rust::Str name, rust::Str params_json, size_t m, rust::Slice<const int32_t> n) {
+std::unique_ptr<CSeries> run_algo(const CSeries& series, rust::Str name, rust::Str params_json, size_t m, size_t n) {
     return series.run_algo(name, params_json, m, n);
 }
 
