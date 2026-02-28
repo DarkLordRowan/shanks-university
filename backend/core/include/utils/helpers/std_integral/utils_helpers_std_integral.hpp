@@ -42,7 +42,7 @@ T utils::helpers<T>::get_nan() {
 }
 
 template <std::integral T>
-std::size_t utils::helpers<T>::get_precision(const T& x) {
+std::size_t utils::helpers<T>::get_precision([[maybe_unused]] const T& x) {
     return std::size_t{0};
 }
 
@@ -65,11 +65,11 @@ bool utils::helpers<T>::isinf(const T& x) {
 }
 
 template <std::integral T>
-T utils::helpers<T>::epsilon(std::size_t precision) {
+T utils::helpers<T>::epsilon([[maybe_unused]] std::size_t precision) {
     return std::numeric_limits<T>::epsilon();
 }
 template <std::integral T>
-T utils::helpers<T>::numeric_max(std::size_t precision) {
+T utils::helpers<T>::numeric_max([[maybe_unused]] std::size_t precision) {
     return std::numeric_limits<T>::max();
 }
 

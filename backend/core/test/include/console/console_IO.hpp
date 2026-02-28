@@ -222,7 +222,7 @@ complex_precision<InputType> inline console_IO<complex_precision<InputType>>::in
  * @brief Input implementation for interval types
  */
 template <FloatLike InputType>
-intprec::interval<InputType> inline console_IO<intprec::interval<InputType>>::input(const std::string& var_name) {
+intprec::interval<InputType> inline console_IO<intprec::interval<InputType>>::input([[maybe_unused]]const std::string& var_name) {
     // Reading left and right boundaries of the interval
     InputType left_x = console_IO<InputType>::input("left border");
     InputType right_x = console_IO<InputType>::input("right border");
@@ -274,7 +274,7 @@ struct console_IO<std::complex<T>> {
 };
 
 template <std::floating_point T>
-std::complex<T> inline console_IO<std::complex<T>>::input(const std::string& var_name) {
+std::complex<T> inline console_IO<std::complex<T>>::input([[maybe_unused]]const std::string& var_name) {
     // Standard input for complex numbers via real and imaginary parts
     T real_value = console_IO<T>::input("Real of x");
     T imag_value = console_IO<T>::input("Imag of x");

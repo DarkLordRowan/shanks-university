@@ -23,8 +23,7 @@
  * @param test The type of transformation that is being used
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void cmp_sum_and_transform(const K n, const K order, shanks::series::series_base<T, K>* series,
-                           series_result<T>& result, shanks::algos::series_acceleration<T, K>* test) {
+void cmp_sum_and_transform(const K n, const K order, shanks::series::series_base<T, K>* series, series_result<T>& result, shanks::algos::series_acceleration<T, K>* test) {
     std::cout << "transformation : " << test->get_name() << "\n";
     for (K i = 1; i <= n; ++i) {
         try {
@@ -59,7 +58,7 @@ void cmp_sum_and_transform(const K n, const K order, shanks::series::series_base
  * @param test The type of transformation that is being used
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void cmp_a_n_and_transform(const K n, const K order, shanks::series::series_base<T, K>* series,
+void cmp_a_n_and_transform(const K n, const K order,
                            series_result<T>& result, shanks::algos::series_acceleration<T, K>* test) {
     std::cout << "transformation : " << test->get_name() << "\n";
     for (K i = 1; i <= n; ++i) {
@@ -240,7 +239,7 @@ void cmp_transformations(const K n, const K order, shanks::series::series_base<T
  * @param test The type of the first transformation that is being used
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void eval_transform_time(const K n, const K order, shanks::series::series_base<T, K>* series, series_result<T>& result,
+void eval_transform_time(const K n, const K order, series_result<T>& result,
                          shanks::algos::series_acceleration<T, K>* test) {
     // Starting timer
     const auto start_time = std::chrono::system_clock::now();
@@ -269,8 +268,7 @@ void eval_transform_time(const K n, const K order, shanks::series::series_base<T
  * @tparam K The type of enumerating integer
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void test_all_transforms(const K n, const K order, shanks::series::series_base<T, K>* series,
-                         series_result<T>& result) {
+void test_all_transforms(const K n, const K order, series_result<T>& result) {
     // Get all registered transformations
     auto entries = shanks::algos::transformation_registry<T, K>::get_entries();
     std::vector<std::unique_ptr<shanks::algos::series_acceleration<T, K>>> algos;

@@ -63,6 +63,10 @@ public:
     explicit interval(const IT&);  // Singleton interval
     // Regular interval with interval_type (default CLOSE)
     explicit interval(const IT&, const IT&, const enum interval_type t = CLOSE);
+    // copy constructor
+    interval(const interval<IT>&);
+    //move constructor
+    interval(interval<IT>&&);
 
     // Implicit promotion constructors from integer types to allow Eigen traits to instantiate Scalar(1) or Scalar(0)
     interval(int val) : left(IT(val)), right(IT(val)), type(CLOSE), decoration(COM) {}
@@ -126,10 +130,9 @@ public:
     operator unsigned long long() const;
     operator double() const;
     operator float() const;
-    // operator float_precision() const;
 
     // Essential operators
-    interval<IT>& operator=(const interval<IT>&);
+    interval<IT>& operator=(const interval<IT>&); // assign operator
     interval<IT>& operator+=(const interval<IT>&);
     interval<IT>& operator-=(const interval<IT>&);
     interval<IT>& operator*=(const interval<IT>&);

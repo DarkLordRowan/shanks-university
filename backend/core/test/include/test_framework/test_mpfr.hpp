@@ -2,6 +2,8 @@
 #define TEST_MPFR_HPP
 #pragma once
 
+#include <fstream>
+
 template <typename T, typename U, typename V>
 const std::vector<
     std::tuple<const char*, std::function<T(const T&)>, std::function<U(const U&)>, std::function<V(const V&)>>>
@@ -63,9 +65,34 @@ void test_mpreal() {
         std::cout << "\n\n";
     }
 
-    //std::ofstream fout("mpfr_sin.csv")
+    std::ofstream fout("mpfr_sin.csv");
+    fout << "precision" << "," << "sin(0.25)_precision" << "," << "sin(0.25)_1000-sin(0.25)_precision" << ","    << "sin(0.25)_precision+1-sin(0.25)_precision" << ","
+                               << "exp(0.25)_precision" << "," << "exp(0.25)_1000-exp(0.25)_precision" << ","    << "exp(0.25)_precision+1-exp(0.25)_precision" << ","
+                               << "sqrt(9.13)_precision" << "," << "sqrt(9.13)_1000-sqrt(9.13)_precision" << "," << "sqrt(9.13)_precision+1-sqrt(9.13)_precision" << ","
+                               << "zeta(2.0)_precision" << "," << "zeta(2.0)_1000-zeta(2.0)_precision" << ","    << "zeta(2.0)_precision+1-zeta(2.0)_precision" << "\n";
+    for(int i{1000}; i > 15; --i){
+        fout << i << ","
+        //sin
+        << utils::helpers<mpfr::mpreal>::to_string(mpfr::sin(mpfr::mpreal("0.25", mp_prec_t(i)))) << "," 
+        << mpfr::sin(mpfr::mpreal("0.25", mp_prec_t(1000))) - mpfr::sin(mpfr::mpreal("0.25", mp_prec_t(i))) << ","
+        << mpfr::sin(mpfr::mpreal("0.25", mp_prec_t(i+1))) -  mpfr::sin(mpfr::mpreal("0.25", mp_prec_t(i))) << ","
+        //exp
+        << utils::helpers<mpfr::mpreal>::to_string(mpfr::exp(mpfr::mpreal("0.25", mp_prec_t(i)))) << "," 
+        << mpfr::exp(mpfr::mpreal("0.25", mp_prec_t(1000)))   - mpfr::exp(mpfr::mpreal("0.25", mp_prec_t(i))) << ","
+        << mpfr::exp(mpfr::mpreal("0.25", mp_prec_t(i+1)))    - mpfr::exp(mpfr::mpreal("0.25", mp_prec_t(i))) << ","
+        //sqrt
+        << utils::helpers<mpfr::mpreal>::to_string(mpfr::sqrt(mpfr::mpreal("9.13", mp_prec_t(i)))) << "," 
+        << mpfr::sqrt(mpfr::mpreal("9.13", mp_prec_t(1000)))   - mpfr::sqrt(mpfr::mpreal("9.13", mp_prec_t(i))) << ","
+        << mpfr::sqrt(mpfr::mpreal("9.13", mp_prec_t(i+1)))    - mpfr::sqrt(mpfr::mpreal("9.13", mp_prec_t(i))) << ","
+        //zeta
+        << utils::helpers<mpfr::mpreal>::to_string(mpfr::zeta(mpfr::mpreal("2", mp_prec_t(i)))) << "," 
+        << mpfr::zeta(mpfr::mpreal("2", mp_prec_t(1000)))   - mpfr::zeta(mpfr::mpreal("2", mp_prec_t(i))) << ","
+        << mpfr::zeta(mpfr::mpreal("2", mp_prec_t(i+1)))    - mpfr::zeta(mpfr::mpreal("2", mp_prec_t(i)))
+        << "\n";
+    }
 
-    //mpfr::mpreal large_accurate_x = mpfr::mpreal("0.25", mpfr::digits2bits())
+    fout.close();
+
 
 }
 
