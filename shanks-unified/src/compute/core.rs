@@ -280,10 +280,11 @@ impl ComputeCore {
                 n.param1,
                 n.param2,
                 n.seed,
+                n_points as usize,
             ),
             None => self
                 .library
-                .series_create(&series.name, precision, &x_value, &args_json),
+                .series_create(&series.name, precision, &x_value, &args_json, n_points as usize),
         };
 
         let series_handle = match series_handle {
@@ -382,37 +383,23 @@ impl ComputeCore {
                 return Ok((false, errors));
             }
 
-            let accel_handle =
-                match self
-                    .library
-                    .accel_create(&accel.name, precision, &method_args_json)
-                {
-                    Ok(h) => h,
-                    Err(e) => {
-                        let msg = format!("Failed to create algorithm '{}': {}", accel.name, e);
-                        errors.push(msg.clone());
-                        send_event(ComputeEventBody::Error { error: msg });
-                        continue;
-                    }
-                };
-
-            let mut parsed_accel = match self.library.accel_apply(
-                &accel_handle,
-                &series_handle,
-                n_points,
-                m_val.unwrap_or(5) as u64,
-            ) {
-                Ok(r) => r,
-                Err(e) => {
-                    self.library.accel_destroy(accel_handle);
-                    let msg = format!("Failed to apply algorithm '{}': {}", accel.name, e);
-                    errors.push(msg.clone());
-                    send_event(ComputeEventBody::Error { error: msg });
-                    continue;
-                }
+            let (algo_name, _, algo_params): (String, String, String) = serde_json::from_str(&method_args_json)?;
+            let m_usize = m_val.unwrap_or(5) as usize;
+            let n_indices: Vec<i32> = (0..n_points as i32).collect();
+            let accel_series = series_handle.run_algo(&algo_name, &algo_params, m_usize, &n_indices)?;
+            
+            let sn_points = accel_series.sn().to_series_points();
+            let dev_points = accel_series.deviation().to_series_points();
+            
+            let mut parsed_accel = crate::ffi::AccelResult {
+                values: crate::ffi::SeriesPointArray::from_vec(&sn_points),
+                valid: vec![true; sn_points.len()],
+                deviations: crate::ffi::SeriesPointArray::from_vec(&dev_points),
+                events: vec![],
+                errors: vec![],
+                filtered_estimates: vec![],
+                profiling: None,
             };
-
-            self.library.accel_destroy(accel_handle);
 
 
             // --- Event Detection & Smoothing ---
@@ -434,60 +421,39 @@ impl ComputeCore {
             if let Some(start_n) = divergence_start {
                 let tail_len = parsed_accel.values.len().saturating_sub(start_n);
                 if tail_len >= 5 {
-                    // Extract tail values as strings
-                    let mut tail_strings = Vec::with_capacity(tail_len);
-                    for i in start_n..parsed_accel.values.len() {
-                        let val_str = match parsed_accel.values.get(i) {
-                            crate::ffi::SeriesPoint::Real(r) => r.format(),
-                            crate::ffi::SeriesPoint::Complex(c) => c.format(),
-                            crate::ffi::SeriesPoint::Interval(_) => continue, // Skip unsupported precision
-                            crate::ffi::SeriesPoint::CInterval(_) => continue,
-                        };
-                        tail_strings.push(val_str);
-                    }
-
-                    if tail_strings.len() == tail_len {
-                        for filter_def in filters {
-                            let filter_type = &filter_def.filter_type;
-                            let args_json = match serde_json::to_string(&filter_def.args) {
-                                Ok(json) => json,
-                                Err(e) => {
-                                    log::error!("Failed to serialize filter args: {}", e);
-                                    continue;
-                                }
-                            };
-
-                            if let Ok(limit_json) = self.library.compute_smoothed_limit(
-                                precision,
-                                &tail_strings,
-                                filter_type,
-                                &args_json,
-                            ) {
-                                log::info!("Filtered limit JSON ({}): {}", filter_type, limit_json);
-                                let limit_json: String = limit_json;
-                                if !limit_json.is_empty() {
-                                    if let Ok(limit_points) = serde_json::from_str::<Vec<crate::ffi::SeriesPoint>>(&limit_json) {
-                                        log::info!("Successfully parsed {} limit points for filter {}", limit_points.len(), filter_type);
-                                        // Only add the event once
-                                        if parsed_accel.filtered_estimates.is_empty() {
-                                            parsed_accel.events.push(crate::ffi::ComputeEventEntry {
-                                                n: start_n as u64,
-                                                name: "divergent_accel".to_string(),
-                                                description: format!("Divergence detected, applied filters to tail."),
-                                            });
-                                        }
-                                        parsed_accel.filtered_estimates.push(crate::ffi::SmoothedEstimate {
-                                            event_name: "divergent_accel".to_string(),
-                                            filter: filter_type.clone(),
-                                            limit: limit_points,
-                                            start_n: start_n as u64,
-                                            length: tail_len as u64,
-                                        });
-                                    } else {
-                                        log::error!("Failed to parse smoothed limit JSON into Vec<SeriesPoint> for filter {}!", filter_type);
-                                    }
-                                }
+                    for filter_def in filters {
+                        let filter_type = &filter_def.filter_type;
+                        let args_json = match serde_json::to_string(&filter_def.args) {
+                            Ok(json) => json,
+                            Err(e) => {
+                                log::error!("Failed to serialize filter args: {}", e);
+                                continue;
                             }
+                        };
+
+                        let limit_points = accel_series.filter(
+                            filter_type,
+                            &args_json,
+                            start_n as u64,
+                        ).to_series_points();
+                        
+                        if !limit_points.is_empty() {
+                            log::info!("Successfully generated {} filtered limit points for filter {}", limit_points.len(), filter_type);
+                            // Only add the event once
+                            if parsed_accel.filtered_estimates.is_empty() {
+                                parsed_accel.events.push(crate::ffi::ComputeEventEntry {
+                                    n: start_n as u64,
+                                    name: "divergent_accel".to_string(),
+                                    description: format!("Divergence detected, applied filters to tail."),
+                                });
+                            }
+                            parsed_accel.filtered_estimates.push(crate::ffi::SmoothedEstimate {
+                                event_name: "divergent_accel".to_string(),
+                                filter: filter_type.clone(),
+                                limit: limit_points,
+                                start_n: start_n as u64,
+                                length: tail_len as u64,
+                            });
                         }
                     }
                 }

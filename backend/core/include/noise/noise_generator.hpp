@@ -1,8 +1,7 @@
 #ifndef SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
 #define SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
 #pragma once
-
-#define pseudo_random_seed (std::chrono::system_clock::now().time_since_epoch().count() + std::rand())
+#include <chrono>
 
 #include <cstdlib>
 #include <random>
@@ -11,6 +10,10 @@
 #include "normal_noise.hpp"
 #include "poisson_noise.hpp"
 #include "uniform_noise.hpp"
+
+namespace shanks {
+
+#define pseudo_random_seed (std::chrono::system_clock::now().time_since_epoch().count() + std::rand())
 
 /**
  * @brief Enum of noise types
@@ -46,11 +49,12 @@ series_result<T> apply_noise_impl(const series_result<T>& result, std::mt19937_6
     for (size_t i = 0; i < size; ++i) {
         T noise;
         if constexpr (Type == NoiseType::uniform) {
-            noise = uniform_noise<T>::generate(utils::cast<double, paramType>()(tParam1),
-                                               utils::cast<double, paramType>()(tParam2), rng);
+            using Underlying = typename GetUnderlyingType<T>::value;
+            noise = uniform_noise<T>::generate(utils::cast<Underlying, paramType>()(tParam1),
+                                               utils::cast<Underlying, paramType>()(tParam2), rng);
         } else if constexpr (Type == NoiseType::normal) {
-            noise = normal_noise<T>::generate(utils::cast<double, paramType>()(tParam1),
-                                              utils::cast<double, paramType>()(tParam2), rng);
+            noise = normal_noise<T>::generate(static_cast<double>(tParam1),
+                                              static_cast<double>(tParam2), rng);
         } else if constexpr (Type == NoiseType::poisson) {
             noise = poisson_noise<T>::generate(utils::cast<double, paramType>()(tParam1), rng);
         }
@@ -114,5 +118,7 @@ series_result<T> apply_noise(const series_result<T>& result, const NoiseMethod m
             throw std::invalid_argument("Invalid noise method");
     }
 };
+
+} // namespace shanks
 
 #endif  // SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP

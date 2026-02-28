@@ -63,22 +63,26 @@ pub mod ffi {
 
         fn shanks_force_link_gslcblas();
 
-        fn mk_series(name: &str, precision: &str, params_json: &str) -> Result<UniquePtr<CSeries>>;
+        fn mk_series(name: &str, precision: &str, params_json: &str, n: usize, x: &str) -> Result<UniquePtr<CSeries>>;
+
+
         fn apply_noise(
             series: &CSeries,
             name: &str,
             params_json: &str,
+            start_n: u64,
         ) -> Result<UniquePtr<CSeries>>;
-        fn run_algo(series: &CSeries, name: &str, params_json: &str) -> Result<UniquePtr<CSeries>>;
+        fn run_algo(series: &CSeries, name: &str, params_json: &str, m: usize, n: &[i32]) -> Result<UniquePtr<CSeries>>;
 
         fn get_sn(series: &CSeries) -> RawArr;
         fn get_an(series: &CSeries) -> RawArr;
         fn get_deviation(series: &CSeries) -> RawArr;
         fn get_limit(series: &CSeries) -> RawValue;
 
-        fn filter(series: &CSeries, name: &str, params_json: &str) -> RawArr;
+        fn filter(series: &CSeries, name: &str, params_json: &str, start_n: u64) -> RawArr;
 
         fn list_series() -> Vec<String>;
+
         fn list_accels() -> Vec<String>;
         fn list_precisions() -> Vec<String>;
         fn list_noises() -> Vec<String>;

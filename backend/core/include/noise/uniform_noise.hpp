@@ -51,9 +51,18 @@ struct uniform_noise<T> {
 template <typename T>
     requires ComplexLike<T> || IntervalLike<T>
 T uniform_noise<T>::generate(const typename GetUnderlyingType<T>::value left,
-                             const typename GetUnderlyingType<T>::value right, std::mt19937_64& rng) {
-    return utils::cast<T, typename GetUnderlyingType<T>::value>()(
-        uniform_noise<typename GetUnderlyingType<T>::value>::generate(left, right, rng));
+                              const typename GetUnderlyingType<T>::value right, std::mt19937_64& rng) {
+    using NextT = typename GetUnderlyingType<T>::value;
+    using BaseOfNextT = typename GetUnderlyingType<NextT>::value;
+    
+    if constexpr (IntervalLike<NextT>) {
+        return utils::cast<T, NextT>()(
+            uniform_noise<NextT>::generate(left.mid(), right.mid(), rng));
+    } else {
+        return utils::cast<T, NextT>()(
+            uniform_noise<NextT>::generate(utils::cast<BaseOfNextT, NextT>()(left), 
+                                          utils::cast<BaseOfNextT, NextT>()(right), rng));
+    }
 }
 
 #endif

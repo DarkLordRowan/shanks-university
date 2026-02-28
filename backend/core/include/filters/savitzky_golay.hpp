@@ -31,14 +31,22 @@ std::vector<Scalar> savitzky_golay_filter(const std::vector<Scalar>& data, size_
     const size_t precision = utils::helpers<Scalar>::get_precision(data.at(0));
 
     // Setting up the least squares problem using Eigen
-    Scalar N = utils::cast<Scalar, int>()(static_cast<int>(window_length) / 2, precision);
-
-    Eigen::Vector<Scalar, Eigen::Dynamic> v = Eigen::Vector<Scalar, Eigen::Dynamic>::LinSpaced(window_length, -N, N);
+    Scalar N_val = utils::cast<Scalar, int>()(static_cast<int>(window_length) / 2, precision);
+    Eigen::Vector<Scalar, Eigen::Dynamic> v(window_length);
+    for (size_t i = 0; i < window_length; ++i) {
+        v[i] = -N_val + utils::cast<Scalar, int>()(static_cast<int>(i), precision);
+    }
+    
     Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> x =
         Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>::Ones(window_length, polyorder + 1);
 
+
     // Constructing the Vandermonde matrix
-    for (size_t i{1}; i <= polyorder; ++i) x.col(i) = (x.col(i - 1).array() * v.array()).matrix();
+    for (size_t i{1}; i <= polyorder; ++i) {
+        for (size_t r = 0; r < window_length; ++r) {
+            x(r, i) = x(r, i - 1) * v(r);
+        }
+    }
 
     // Calculating the pseudo-inverse to find polynomial coefficients
     Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> coeff_mat = (x.transpose() * x).inverse() * x.transpose();

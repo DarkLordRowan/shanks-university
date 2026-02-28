@@ -6,3 +6,26 @@
 * Сумму операций, с возможностью (потом) добавить веса операциям при суммировании
 * Отказаться от json
 * Придумать, что бы прога не убивала пк, при чрезмерной нагрузке, а или сама крашилась, либо не давала включить много, либо... хз, считая операционку, которая потребуется перед тем, как будет все делать?
+
+- name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          release: false
+          update: false
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-gmp
+            mingw-w64-x86_64-mpfr
+            mingw-w64-x86_64-eigen3
+            mingw-w64-x86_64-gsl
+            mingw-w64-x86_64-ccache
+
+      - name: Setup Rust (GNU)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable-x86_64-pc-windows-gnu
+
+      - name: Cache C++ (ccache)

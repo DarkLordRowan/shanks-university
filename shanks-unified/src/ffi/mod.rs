@@ -116,15 +116,15 @@ impl ShanksLibrary {
     }
 
     // Legacy series methods, delegating to Series wrapper
-    pub fn series_create(&self, name: &str, precision: &str, x: &str, params: &str) -> Result<Series, FfiError> {
-        Series::new(name, precision, params)
+    pub fn series_create(&self, name: &str, precision: &str, x: &str, params: &str, n: usize) -> Result<Series, FfiError> {
+        Series::new(name, precision, params, n, x)
     }
 
-    pub fn series_create_with_noise(&self, name: &str, precision: &str, x: &str, params: &str, nt: &str, nm: &str, p1: f64, p2: f64, seed: u64) -> Result<Series, FfiError> {
-        // For now, we don't have a direct noise factory in mk_series, 
-        // but we can apply noise after creation if needed, or update mk_series.
-        // Let's just use mk_series for now.
-        Series::new(name, precision, params)
+    pub fn series_create_with_noise(&self, name: &str, precision: &str, x: &str, params: &str, nt: &str, nm: &str, p1: f64, p2: f64, seed: u64, n: usize) -> Result<Series, FfiError> {
+        // For now, we apply noise after creation if needed, or we could update mk_series to handle it.
+        // But the C++ mk_series doesn't handle noise yet. 
+        // We'll follow the pattern of creating then applying noise or just updating this to use n/x.
+        Series::new(name, precision, params, n, x)
     }
 
     pub fn series_generate(&self, series: &Series, n: u64) -> Result<SeriesResult, FfiError> {
@@ -145,9 +145,9 @@ impl ShanksLibrary {
         Ok(serde_json::to_string(&(name, precision, params))?)
     }
 
-    pub fn accel_apply(&self, accel_spec: &str, series: &Series, n: u64, m: u64) -> Result<AccelResult, FfiError> {
+    pub fn accel_apply(&self, accel_spec: &str, series: &Series, n_indices: &[i32], m: usize) -> Result<AccelResult, FfiError> {
         let (name, _prec, params): (String, String, String) = serde_json::from_str(accel_spec)?;
-        let accel_series = series.run_algo(&name, &params)?;
+        let accel_series = series.run_algo(&name, &params, m, n_indices)?;
         
         let val_arr = accel_series.sn();
         let dev_arr = accel_series.deviation();
@@ -166,10 +166,8 @@ impl ShanksLibrary {
     pub fn series_destroy(&self, _series: Series) {}
     pub fn accel_destroy(&self, _handle: String) {}
 
-    pub fn compute_smoothed_limit(&self, precision: &str, points: &[String], filter: &str, params: &str) -> Result<String, FfiError> {
-        // TODO: filter implementation in bridge
-        Ok("[]".to_string())
-    }
+
+
 }
 
 fn val_arr_len(arr: &Arr) -> usize {
@@ -187,20 +185,20 @@ pub struct Series {
 }
 impl Series {
     /// Create a new series instance.
-    pub fn new(name: &str, precision: &str, params_json: &str) -> Result<Self, FfiError> {
-        let inner = ffi::mk_series(name, precision, params_json)?;
+    pub fn new(name: &str, precision: &str, params_json: &str, n: usize, x: &str) -> Result<Self, FfiError> {
+        let inner = ffi::mk_series(name, precision, params_json, n, x)?;
         Ok(Self { inner })
     }
 
     /// Apply noise to the series and return a new series.
-    pub fn apply_noise(&self, name: &str, params_json: &str) -> Result<Self, FfiError> {
-        let inner = ffi::apply_noise(&self.inner, name, params_json)?;
+    pub fn apply_noise(&self, name: &str, params_json: &str, start_n: u64) -> Result<Self, FfiError> {
+        let inner = ffi::apply_noise(&self.inner, name, params_json, start_n)?;
         Ok(Self { inner })
     }
 
     /// Run an acceleration algorithm on the series and return a result series.
-    pub fn run_algo(&self, name: &str, params_json: &str) -> Result<Self, FfiError> {
-        let inner = ffi::run_algo(&self.inner, name, params_json)?;
+    pub fn run_algo(&self, name: &str, params_json: &str, m: usize, n: &[i32]) -> Result<Self, FfiError> {
+        let inner = ffi::run_algo(&self.inner, name, params_json, m, n)?;
         Ok(Self { inner })
     }
 
@@ -225,8 +223,8 @@ impl Series {
     }
 
     /// Apply a filter and return the filtered data.
-    pub fn filter(&self, name: &str, params_json: &str) -> Arr {
-        Arr::from_raw(ffi::filter(&self.inner, name, params_json))
+    pub fn filter(&self, name: &str, params_json: &str, start_n: u64) -> Arr {
+        Arr::from_raw(ffi::filter(&self.inner, name, params_json, start_n))
     }
 }
 
