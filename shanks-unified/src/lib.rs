@@ -14,3 +14,4 @@ pub mod experiment;
 pub mod ffi;
 pub mod headless;
 pub mod plot;
+pub mod export;

@@ -35,6 +35,9 @@ pub struct ComputeTask {
     /// Unique task ID
     #[serde(default = "Uuid::new_v4")]
     pub id: Uuid,
+    /// Stable series ID for export alignment
+    #[serde(default)]
+    pub series_id: i64,
     /// Precision type: "F32", "F64", "FLong", "Arb", "CF32", "CF64", "CFLong", "CArb"
     pub precision: String,
     /// Series parameters
@@ -57,6 +60,7 @@ impl ComputeTask {
     pub fn new(series_name: impl Into<String>, n_points: u64) -> Self {
         Self {
             id: Uuid::new_v4(),
+            series_id: 0,
             precision: "F64".to_string(),
             series: SeriesParams {
                 name: series_name.into(),

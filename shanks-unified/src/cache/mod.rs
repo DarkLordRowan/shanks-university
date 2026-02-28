@@ -43,19 +43,33 @@ fn bytes_to_i64(data: &[u8]) -> Vec<i64> {
 
 /// SQLite cache for series and acceleration results.
 pub struct Cache {
-    conn: Connection,
+    conn: Option<Connection>,
 }
 
 impl Cache {
     /// Open or create the cache database.
     pub fn new(path: &Path) -> Result<Self> {
         let conn = Connection::open(path)?;
-        Ok(Self { conn })
+        Ok(Self { conn: Some(conn) })
+    }
+
+    /// Create a disabled cache that does nothing.
+    pub fn disabled() -> Self {
+        Self { conn: None }
+    }
+
+    /// Check if the cache is enabled.
+    pub fn is_enabled(&self) -> bool {
+        self.conn.is_some()
     }
 
     /// Initialize the database schema.
     pub fn initialize_schema(&self) -> Result<()> {
-        self.conn.execute_batch(
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(()),
+        };
+        conn.execute_batch(
             r#"
             -- Series metadata and parameters
             CREATE TABLE IF NOT EXISTS series (
@@ -177,7 +191,11 @@ impl Cache {
         profiling: Option<&str>,
         sum_val: Option<&str>,
     ) -> Result<i64> {
-        let tx = self.conn.transaction()?;
+        let conn = match &mut self.conn {
+            Some(c) => c,
+            None => return Ok(0),
+        };
+        let tx = conn.transaction()?;
 
         let result = tx.execute(
             "INSERT OR IGNORE INTO series (name, precision, x_value, arguments, noise_config, profiling, sum)
@@ -278,7 +296,12 @@ impl Cache {
         let (an_type, an_len, an_data) = self.serialize_point_array(&result.an);
         let (dev_type, dev_len, dev_data) = self.serialize_point_array(&result.deviations);
 
-        self.conn.execute(
+        let conn = match &mut self.conn {
+            Some(c) => c,
+            None => return Ok(()),
+        };
+
+        conn.execute(
             "INSERT OR REPLACE INTO series_data (
                 series_id,
                 sn_type, sn_len, sn_m0, sn_e0, sn_m1, sn_e1, sn_m2, sn_e2, sn_m3, sn_e3,
@@ -304,7 +327,12 @@ impl Cache {
         let (val_type, val_len, val_data) = self.serialize_point_array(&result.values);
         let (dev_type, dev_len, dev_data) = self.serialize_point_array(&result.deviations);
 
-        self.conn.execute(
+        let conn = match &mut self.conn {
+            Some(c) => c,
+            None => return Ok(()),
+        };
+
+        conn.execute(
             "INSERT OR REPLACE INTO accel_data (
                 accel_id,
                 val_type, val_len, val_m0, val_e0, val_m1, val_e1, val_m2, val_e2, val_m3, val_e3,
@@ -328,7 +356,11 @@ impl Cache {
         additional_args: &str,
         profiling: Option<&str>,
     ) -> Result<i64> {
-        let tx = self.conn.transaction()?;
+        let conn = match &mut self.conn {
+            Some(c) => c,
+            None => return Ok(0),
+        };
+        let tx = conn.transaction()?;
 
         tx.execute(
             "INSERT INTO accelerations (series_id, accel_name, m_value, additional_args, profiling)
@@ -357,7 +389,11 @@ impl Cache {
         accel_id: i64,
         events: &[crate::ffi::ComputeEventEntry],
     ) -> Result<()> {
-        let tx = self.conn.transaction()?;
+        let conn = match &mut self.conn {
+            Some(c) => c,
+            None => return Ok(()),
+        };
+        let tx = conn.transaction()?;
         for e in events {
             tx.execute(
                 "INSERT INTO events (accel_id, n, name, description) VALUES (?1, ?2, ?3, ?4)",
@@ -374,7 +410,11 @@ impl Cache {
         accel_id: i64,
         estimates: &[crate::ffi::SmoothedEstimate],
     ) -> Result<()> {
-        let tx = self.conn.transaction()?;
+        let conn = match &mut self.conn {
+            Some(c) => c,
+            None => return Ok(()),
+        };
+        let tx = conn.transaction()?;
         for est in estimates {
             let limit_points_json = serde_json::to_string(&est.limit)?;
             tx.execute(
@@ -396,14 +436,18 @@ impl Cache {
         arguments: &str,
         noise_config: Option<&str>,
     ) -> Result<Option<i64>> {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(None),
+        };
         let result = if let Some(nc) = noise_config {
-            self.conn.query_row(
+            conn.query_row(
                 "SELECT id FROM series WHERE name = ?1 AND precision = ?2 AND x_value = ?3 AND arguments = ?4 AND noise_config = ?5",
                 params![name, precision, x_value, arguments, nc],
                 |row| row.get(0),
             )
         } else {
-            self.conn.query_row(
+            conn.query_row(
                 "SELECT id FROM series WHERE name = ?1 AND precision = ?2 AND x_value = ?3 AND arguments = ?4 AND noise_config IS NULL",
                 params![name, precision, x_value, arguments],
                 |row| row.get(0),
@@ -425,7 +469,11 @@ impl Cache {
         m_value: Option<i64>,
         additional_args: &str,
     ) -> Result<Option<i64>> {
-        let result = self.conn.query_row(
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(None),
+        };
+        let result = conn.query_row(
             "SELECT id FROM accelerations WHERE series_id = ?1 AND accel_name = ?2 AND
              (m_value = ?3 OR (m_value IS NULL AND ?3 IS NULL)) AND additional_args = ?4",
             params![series_id, accel_name, m_value, additional_args],
@@ -440,8 +488,11 @@ impl Cache {
     }
 
     pub fn get_series_result(&self, series_id: i64) -> Result<Option<crate::ffi::SeriesResult>> {
-        let sum_json: Option<String> = self
-            .conn
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(None),
+        };
+        let sum_json: Option<String> = conn
             .query_row(
                 "SELECT sum FROM series WHERE id = ?1",
                 params![series_id],
@@ -451,7 +502,7 @@ impl Cache {
 
         let sum_val = sum_json.and_then(|s| serde_json::from_str(&s).ok());
 
-        let result = self.conn.query_row(
+        let result = conn.query_row(
             "SELECT 
                 sn_type, sn_len, sn_m0, sn_e0, sn_m1, sn_e1, sn_m2, sn_e2, sn_m3, sn_e3,
                 an_type, an_len, an_m0, an_e0, an_m1, an_e1, an_m2, an_e2, an_m3, an_e3,
@@ -565,7 +616,11 @@ impl Cache {
 
     /// Get acceleration result from cache.
     pub fn get_accel_result(&self, accel_id: i64) -> Result<Option<crate::ffi::AccelResult>> {
-        let result = self.conn.query_row(
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(None),
+        };
+        let result = conn.query_row(
             "SELECT 
                 val_type, val_len, val_m0, val_e0, val_m1, val_e1, val_m2, val_e2, val_m3, val_e3,
                 dev_type, dev_len, dev_m0, dev_e0, dev_m1, dev_e1, dev_m2, dev_e2, dev_m3, dev_e3
@@ -609,7 +664,7 @@ impl Cache {
         let valid = vec![true; val_len as usize];
 
         // --- Fetch events ---
-        let mut stmt_events = self.conn.prepare(
+        let mut stmt_events = conn.prepare(
             "SELECT n, name, description FROM events WHERE accel_id = ?1 ORDER BY n ASC"
         )?;
         let events_iter = stmt_events.query_map(params![accel_id], |row| {
@@ -625,7 +680,7 @@ impl Cache {
         }
 
         // --- Fetch filtered estimates ---
-        let mut stmt_est = self.conn.prepare(
+        let mut stmt_est = conn.prepare(
             "SELECT event_name, filter, limit_points, start_n, length FROM filtered_estimates WHERE accel_id = ?1 ORDER BY start_n ASC"
         )?;
         let est_iter = stmt_est.query_map(params![accel_id], |row| {
@@ -663,7 +718,11 @@ impl Cache {
 
     /// Get all series names in the cache.
     pub fn list_cached_series(&self) -> Result<Vec<String>> {
-        let mut stmt = self.conn.prepare("SELECT DISTINCT name FROM series")?;
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(Vec::new()),
+        };
+        let mut stmt = conn.prepare("SELECT DISTINCT name FROM series")?;
         let rows = stmt.query_map([], |row| row.get(0))?;
         let mut names = Vec::new();
         for name in rows {
@@ -674,8 +733,11 @@ impl Cache {
 
     /// Get all precisions for a series name.
     pub fn get_precisions_for_series(&self, name: &str) -> Result<Vec<String>> {
-        let mut stmt = self
-            .conn
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(Vec::new()),
+        };
+        let mut stmt = conn
             .prepare("SELECT DISTINCT precision FROM series WHERE name = ?1")?;
         let rows = stmt.query_map(params![name], |row| row.get(0))?;
         let mut precisions = Vec::new();
@@ -687,21 +749,28 @@ impl Cache {
 
     /// Clear all cached data.
     pub fn clear_all(&self) -> Result<()> {
-        self.conn.execute("DELETE FROM accel_data", [])?;
-        self.conn.execute("DELETE FROM accelerations", [])?;
-        self.conn.execute("DELETE FROM events", [])?;
-        self.conn.execute("DELETE FROM series_data", [])?;
-        self.conn.execute("DELETE FROM series", [])?;
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(()),
+        };
+        conn.execute("DELETE FROM accel_data", [])?;
+        conn.execute("DELETE FROM accelerations", [])?;
+        conn.execute("DELETE FROM events", [])?;
+        conn.execute("DELETE FROM series_data", [])?;
+        conn.execute("DELETE FROM series", [])?;
         Ok(())
     }
 
     /// Get database statistics.
     pub fn stats(&self) -> Result<CacheStats> {
-        let series_count: i64 = self
-            .conn
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(CacheStats { series_count: 0, accel_count: 0, points_count: 0 }),
+        };
+        let series_count: i64 = conn
             .query_row("SELECT COUNT(*) FROM series", [], |row| row.get(0))?;
         let accel_count: i64 =
-            self.conn
+            conn
                 .query_row("SELECT COUNT(*) FROM accelerations", [], |row| row.get(0))?;
         
         Ok(CacheStats {
