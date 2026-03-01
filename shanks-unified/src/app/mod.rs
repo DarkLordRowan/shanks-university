@@ -11,7 +11,7 @@ use crate::compute::{
 use crate::experiment::{
     AccelInstance, ExperimentConfig, FilterInstance, NoiseInstance, SeriesInstance,
 };
-use crate::ffi::{Value, Arr, RealValue, ArrF64, ComplexOf, IntervalOf, ValueOf};
+use crate::ffi::{Arr, ArrF64, ComplexOf, IntervalOf, RealValue, Value, ValueOf};
 use egui_plot::{Line, LineStyle, PlotPoint, PlotPoints};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::{Arc, Mutex};
@@ -26,6 +26,19 @@ struct ResultKey {
     precision: String,
     noise: Option<NoiseInstance>,
     accel: Option<AccelInstance>,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, serde::Serialize, serde::Deserialize)]
+pub enum PlotTab {
+    Main,
+    Deviation,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Default, serde::Serialize, serde::Deserialize)]
+pub enum DeviationMode {
+    #[default]
+    Magnitude,
+    Components,
 }
 
 impl ResultKey {
@@ -73,12 +86,12 @@ struct BakedLine {
     color: egui::Color32,
     width: f32,
     style: LineStyle,
-    visible: bool,
 }
 
 #[derive(Default)]
 struct PlotCache {
     lines_main: Vec<BakedLine>,
+    lines_deviation: Vec<BakedLine>,
     dirty: bool,
 }
 
@@ -112,10 +125,16 @@ pub struct ShanksApp {
     pub precision_tree: Option<SelectionNode>,
 
     plot_cache: PlotCache,
+    pub selected_tab: PlotTab,
+    pub deviation_mode: DeviationMode,
     pub symlog: bool,
     pub log_linthresh: f64,
     pub show_sn: bool,
     pub show_accel: bool,
+    pub show_partial_sums: bool,
+    pub show_accel_values: bool,
+    pub show_smoothed_estimates: bool,
+    pub show_limit_lines: bool,
 
     pub status: String,
 }
@@ -135,10 +154,16 @@ impl ShanksApp {
             noise_tree: None,
             precision_tree: None,
             plot_cache: PlotCache::default(),
+            selected_tab: PlotTab::Main,
+            deviation_mode: DeviationMode::Magnitude,
             symlog: false,
             log_linthresh: -50.0,
             show_sn: true,
             show_accel: true,
+            show_partial_sums: true,
+            show_accel_values: true,
+            show_smoothed_estimates: true,
+            show_limit_lines: true,
             status: "Ready".to_string(),
         };
 
@@ -256,15 +281,105 @@ impl ShanksApp {
             }),
             Arr::CInterval(ci) => ArrF64::CInterval(ComplexOf {
                 real: IntervalOf {
-                    inf: ci.real.inf.iter().map(|val| self.to_plot_point(val)).collect(),
-                    sup: ci.real.sup.iter().map(|val| self.to_plot_point(val)).collect(),
+                    inf: ci
+                        .real
+                        .inf
+                        .iter()
+                        .map(|val| self.to_plot_point(val))
+                        .collect(),
+                    sup: ci
+                        .real
+                        .sup
+                        .iter()
+                        .map(|val| self.to_plot_point(val))
+                        .collect(),
                 },
                 imag: IntervalOf {
-                    inf: ci.imag.inf.iter().map(|val| self.to_plot_point(val)).collect(),
-                    sup: ci.imag.sup.iter().map(|val| self.to_plot_point(val)).collect(),
+                    inf: ci
+                        .imag
+                        .inf
+                        .iter()
+                        .map(|val| self.to_plot_point(val))
+                        .collect(),
+                    sup: ci
+                        .imag
+                        .sup
+                        .iter()
+                        .map(|val| self.to_plot_point(val))
+                        .collect(),
                 },
             }),
         }
+    }
+
+    fn bake_deviation_lines(
+        &self,
+        name: String,
+        arr: &Arr,
+        color: egui::Color32,
+        width: f32,
+        style: LineStyle,
+        mode: DeviationMode,
+    ) -> Vec<BakedLine> {
+        let mut lines = Vec::new();
+        match (arr, mode) {
+            (Arr::Complex(c), DeviationMode::Magnitude) => {
+                let mags = c
+                    .real
+                    .iter()
+                    .zip(&c.imag)
+                    .map(|(re, im)| {
+                        let r = re.to_f64();
+                        let i = im.to_f64();
+                        let mut mag = (r * r + i * i).sqrt();
+                        if self.symlog {
+                            mag = crate::plot::Scientific::from_f64(mag)
+                                .symlog(self.log_linthresh);
+                        }
+                        mag
+                    })
+                    .collect::<Vec<_>>();
+
+                lines.push(BakedLine {
+                    name: format!("{} (Mag)", name),
+                    data: ArrF64::Real(mags),
+                    color,
+                    width,
+                    style,
+                });
+            }
+            (Arr::Complex(c), DeviationMode::Components) => {
+                lines.push(BakedLine {
+                    name: format!("{} (Re)", name),
+                    data: ArrF64::Real(
+                        c.real.iter().map(|v| self.to_plot_point(v)).collect(),
+                    ),
+                    color,
+                    width,
+                    style,
+                });
+                lines.push(BakedLine {
+                    name: format!("{} (Im)", name),
+                    data: ArrF64::Real(
+                        c.imag.iter().map(|v| self.to_plot_point(v)).collect(),
+                    ),
+                    color: color.gamma_multiply(0.6),
+                    width,
+                    style,
+                });
+            }
+            _ => {
+                let data = self.arr_to_f64(arr);
+                lines.push(BakedLine {
+                    name,
+                    data,
+                    color,
+                    width,
+                    style,
+                });
+            }
+        }
+        lines
     }
 
     pub fn bake_plot_cache(&mut self) {
@@ -273,8 +388,10 @@ impl ShanksApp {
         }
 
         self.plot_cache.lines_main.clear();
+        self.plot_cache.lines_deviation.clear();
 
         for (key, (sdata, adata)) in &self.results {
+            // Main Plot
             if self.show_sn {
                 let data = self.arr_to_f64(&sdata.sn);
                 self.plot_cache.lines_main.push(BakedLine {
@@ -283,21 +400,45 @@ impl ShanksApp {
                     color: egui::Color32::DARK_GRAY,
                     width: 1.0,
                     style: LineStyle::Dashed { length: 4.0 },
-                    visible: true,
                 });
             }
 
-            if let Some(data) = adata {
+            if let Some(adata) = adata {
                 if self.show_accel {
-                    let data = self.arr_to_f64(&data.values);
+                    let data = self.arr_to_f64(&adata.values);
                     self.plot_cache.lines_main.push(BakedLine {
                         name: format!("{} Accel", key.precision),
                         data,
                         color: egui::Color32::LIGHT_BLUE,
                         width: 2.0,
                         style: LineStyle::Solid,
-                        visible: true,
                     });
+                }
+            }
+
+            if self.show_partial_sums {
+                let lines = self.bake_deviation_lines(
+                    format!("{} Sn Dev", key.precision),
+                    &sdata.deviations,
+                    egui::Color32::from_rgb(100, 100, 255),
+                    1.0,
+                    LineStyle::Dashed { length: 4.0 },
+                    self.deviation_mode,
+                );
+                self.plot_cache.lines_deviation.extend(lines);
+            }
+
+            if let Some(adata) = adata {
+                if self.show_accel_values {
+                    let lines = self.bake_deviation_lines(
+                        format!("{} Accel Dev", key.precision),
+                        &adata.deviations,
+                        egui::Color32::from_rgb(255, 100, 100),
+                        2.0,
+                        LineStyle::Solid,
+                        self.deviation_mode,
+                    );
+                    self.plot_cache.lines_deviation.extend(lines);
                 }
             }
         }
@@ -313,8 +454,49 @@ impl eframe::App for ShanksApp {
         self.bake_plot_cache();
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.heading("Shanks Unified");
+            egui::menu::bar(ui, |ui| {
+                ui.menu_button("File", |ui| {
+                    if ui.button("Clear Cache").clicked() {
+                        let cache = self.state.cache.lock().unwrap().clone();
+                        tokio::spawn(async move {
+                            if let Err(e) = cache.clear_all().await {
+                                log::error!("Failed to clear cache: {}", e);
+                            }
+                        });
+                    }
+                    if ui.button("Quit").clicked() {
+                        ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                    }
+                });
+                ui.menu_button("View", |ui| {
+                    if ui.checkbox(&mut self.show_sn, "Show Sn").changed() {
+                        self.plot_cache.dirty = true;
+                    }
+                    if ui.checkbox(&mut self.show_accel, "Show Accel").changed() {
+                        self.plot_cache.dirty = true;
+                    }
+                    ui.separator();
+                    if ui.checkbox(&mut self.show_partial_sums, "Show Partial Sums").changed() {
+                        self.plot_cache.dirty = true;
+                    }
+                    if ui.checkbox(&mut self.show_accel_values, "Show Accelerated Deviations").changed() {
+                        self.plot_cache.dirty = true;
+                    }
+                    if ui.checkbox(&mut self.show_limit_lines, "Show Series Limits").changed() {
+                        self.plot_cache.dirty = true;
+                    }
+                    if ui.checkbox(&mut self.show_smoothed_estimates, "Show Smoothed Estimates").changed() {
+                        self.plot_cache.dirty = true;
+                    }
+                    ui.separator();
+                    ui.label("Deviation Mode:");
+                    if ui.radio_value(&mut self.deviation_mode, DeviationMode::Magnitude, "Magnitude").changed() {
+                        self.plot_cache.dirty = true;
+                    }
+                    if ui.radio_value(&mut self.deviation_mode, DeviationMode::Components, "Components").changed() {
+                        self.plot_cache.dirty = true;
+                    }
+                });
                 ui.separator();
                 ui.label(format!("Status: {}", self.status));
             });
@@ -341,45 +523,75 @@ impl eframe::App for ShanksApp {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
+                ui.selectable_value(&mut self.selected_tab, PlotTab::Main, "Main Plot");
+                ui.selectable_value(&mut self.selected_tab, PlotTab::Deviation, "Deviations");
+
+                ui.separator();
+
                 if ui.checkbox(&mut self.symlog, "Symlog").changed() {
                     self.plot_cache.dirty = true;
                 }
                 if self.symlog {
-                    ui.add(
-                        egui::Slider::new(&mut self.log_linthresh, -100.0..=0.0).text("Threshold"),
-                    );
-                }
-                ui.separator();
-                if ui.checkbox(&mut self.show_sn, "Show Sn").changed() {
-                    self.plot_cache.dirty = true;
-                }
-                if ui.checkbox(&mut self.show_accel, "Show Accel").changed() {
-                    self.plot_cache.dirty = true;
+                    let slider = egui::Slider::new(&mut self.log_linthresh, -100.0..=100.0)
+                        .text("Threshold")
+                        .clamp_to_range(false);
+                    if ui.add(slider).changed() {
+                        self.plot_cache.dirty = true;
+                    }
                 }
             });
+
+            let plot_lines = match self.selected_tab {
+                PlotTab::Main => &self.plot_cache.lines_main,
+                PlotTab::Deviation => &self.plot_cache.lines_deviation,
+            };
 
             egui_plot::Plot::new("main_plot")
                 .legend(egui_plot::Legend::default())
                 .show(ui, |plot_ui| {
-                    for baked in &self.plot_cache.lines_main {
-                        if baked.visible {
-                            let points: Vec<PlotPoint> = match &baked.data {
-                                ArrF64::Real(v) => v.iter().enumerate().map(|(i, &y)| PlotPoint::new(i as f64, y)).collect(),
-                                ArrF64::Complex(c) => c.real.iter().enumerate().map(|(i, &y)| PlotPoint::new(i as f64, y)).collect(),
-                                ArrF64::Interval(iv) => iv.inf.iter().zip(&iv.sup).enumerate()
-                                    .map(|(i, (&inf, &sup))| PlotPoint::new(i as f64, (inf + sup) / 2.0)).collect(),
-                                ArrF64::CInterval(ci) => ci.real.inf.iter().zip(&ci.real.sup).enumerate()
-                                    .map(|(i, (&inf, &sup))| PlotPoint::new(i as f64, (inf + sup) / 2.0)).collect(),
-                            };
+                    for baked in plot_lines {
+                        let points: Vec<PlotPoint> = match &baked.data {
+                            ArrF64::Real(v) => v
+                                .iter()
+                                .enumerate()
+                                .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                .collect(),
+                            ArrF64::Complex(c) => c
+                                .real
+                                .iter()
+                                .enumerate()
+                                .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                .collect(),
+                            ArrF64::Interval(iv) => iv
+                                .inf
+                                .iter()
+                                .zip(&iv.sup)
+                                .enumerate()
+                                .map(|(i, (&inf, &sup))| {
+                                    PlotPoint::new(i as f64, (inf + sup) / 2.0)
+                                })
+                                .collect(),
+                            ArrF64::CInterval(ci) => ci
+                                .real
+                                .inf
+                                .iter()
+                                .zip(&ci.real.sup)
+                                .enumerate()
+                                .map(|(i, (&inf, &sup))| {
+                                    PlotPoint::new(i as f64, (inf + sup) / 2.0)
+                                })
+                                .collect(),
+                        };
 
-                            plot_ui.line(
-                                Line::new(PlotPoints::new(points.into_iter().map(|p| [p.x, p.y]).collect::<Vec<_>>()))
-                                    .name(&baked.name)
-                                    .color(baked.color)
-                                    .width(baked.width)
-                                    .style(baked.style),
-                            );
-                        }
+                        plot_ui.line(
+                            Line::new(PlotPoints::new(
+                                points.into_iter().map(|p| [p.x, p.y]).collect::<Vec<_>>(),
+                            ))
+                            .name(&baked.name)
+                            .color(baked.color)
+                            .width(baked.width)
+                            .style(baked.style),
+                        );
                     }
                 });
         });
