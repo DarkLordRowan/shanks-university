@@ -173,12 +173,12 @@ impl ArgI {
 pub type SeriesDef = Series<Arg>;
 pub type NoiseDef = Noise<ArgStr, Arg, Option<ArgI>>;
 pub type FilterDef = Filter<Arg>;
-pub type MethodDef = Method<ArgI, Arg>;
+pub type AccelDef = Accel<ArgI, Arg>;
 
 pub type SeriesInstance = Series<serde_json::Value>;
 pub type NoiseInstance = Noise<String, serde_json::Value, i64>;
 pub type FilterInstance = Filter<serde_json::Value>;
-pub type MethodInstance = Method<i64, serde_json::Value>;
+pub type AccelInstance = Accel<i64, serde_json::Value>;
 
 /// Main experiment configuration - matches JSON format from backend/runner/config/
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -197,7 +197,7 @@ pub struct ExperimentConfig {
 
     /// Acceleration methods
     #[serde(default)]
-    pub methods: Vec<MethodDef>,
+    pub methods: Vec<AccelDef>,
 
     /// Precision types to use (optional override)
     #[serde(default)]
@@ -299,10 +299,10 @@ impl FilterDef {
     }
 }
 
-/// Method definition with parameter expansion.
+/// Accel definition with parameter expansion.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Method<I, F> {
-    /// Method name from registry
+pub struct Accel<I, F> {
+    /// Accel name from registry
     pub name: String,
 
     /// M values (order parameter)
@@ -317,13 +317,13 @@ pub struct Method<I, F> {
     pub events: Vec<EventDef>,
 }
 
-impl MethodDef {
+impl AccelDef {
     /// Expand this definition into concrete instances.
-    pub fn expand(&self) -> impl Iterator<Item = MethodInstance> {
+    pub fn expand(&self) -> impl Iterator<Item = AccelInstance> {
         self.m
             .iter()
             .zip(Arg::expand(&self.args))
-            .map(|(m, args)| MethodInstance {
+            .map(|(m, args)| AccelInstance {
                 name: self.name.clone(),
                 m,
                 args,
@@ -397,7 +397,7 @@ pub struct EventDef {
 
 //     #[test]
 //     fn test_method_expansion() {
-//         let def = MethodDef {
+//         let def = AccelDef {
 //             name: "LevinAlgorithm".to_string(),
 //             m: vec![4],
 //             args: {

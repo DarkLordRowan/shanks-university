@@ -301,7 +301,7 @@ pub fn build_noise_tree(noises: &[super::super::experiment::NoiseDef]) -> Select
     root.expanded = true;
 
     for (idx, noise) in noises.iter().enumerate() {
-        let label = format!("{} ({})", noise.noise_type, noise.method);
+        let label = format!("{} ({:?})", noise.noise_type, noise.method);
         let noise_node = SelectionNode::new(format!("noise_{}", idx), label);
         root.children.push(noise_node);
     }

@@ -24,13 +24,13 @@ pub enum FfiError {
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ComplexOf<T> {
-    real: T,
-    imag: T,
+    pub real: T,
+    pub imag: T,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct IntervalOf<T> {
-    inf: T,
-    sup: T,
+    pub inf: T,
+    pub sup: T,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

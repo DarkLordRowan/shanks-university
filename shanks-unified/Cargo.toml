@@ -18,6 +18,7 @@ cxx = "1.0"
 
 # Database
 rusqlite = { version = "0.32", features = ["bundled"] }
+tokio-rusqlite = "0.6"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

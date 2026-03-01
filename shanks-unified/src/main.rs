@@ -99,9 +99,8 @@ fn main() -> anyhow::Result<()> {
         shanks_unified::cache::Cache::disabled()
     } else {
         log::info!("Initializing database at {:?}", args.db_path);
-        let cache = shanks_unified::cache::Cache::new(&args.db_path)?;
-        cache.initialize_schema()?;
-        cache
+        let rt = tokio::runtime::Runtime::new()?;
+        rt.block_on(shanks_unified::cache::Cache::new(&args.db_path))?
     };
 
     match &args.command {
