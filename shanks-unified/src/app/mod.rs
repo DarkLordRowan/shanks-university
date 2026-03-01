@@ -11,8 +11,8 @@ use crate::compute::{
 use crate::experiment::{
     AccelInstance, ExperimentConfig, FilterInstance, NoiseInstance, SeriesInstance,
 };
-use crate::ffi::Value;
-use egui_plot::{Line, PlotPoint, PlotPoints};
+use crate::ffi::{Value, Arr, RealValue, ArrF64, ComplexOf, IntervalOf, ValueOf};
+use egui_plot::{Line, LineStyle, PlotPoint, PlotPoints};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 use tokio::task::JoinHandle;
@@ -68,7 +68,11 @@ impl ResultKey {
 }
 
 struct BakedLine {
-    line: Line,
+    name: String,
+    data: ArrF64,
+    color: egui::Color32,
+    width: f32,
+    style: LineStyle,
     visible: bool,
 }
 
@@ -203,51 +207,6 @@ impl ShanksApp {
         });
     }
 
-    fn build_task(
-        &self,
-        key: &ResultKey,
-        combo: &SelectedCombination,
-    ) -> Option<ComputeTask<ResultKey>> {
-        let exp = self.state.experiment.as_ref()?;
-
-        // Find original definitions to use for expansion correctly
-        let series_def = exp.series.iter().find(|s| s.name == combo.series_name)?;
-        let series_inst = series_def.expand().find(|inst| {
-            // Approximate match by comparing params
-            combo.series_params.iter().all(|(k, v)| {
-                inst.args
-                    .get(k)
-                    .map(|sv| sv.to_string() == *v)
-                    .unwrap_or(false)
-            })
-        })?;
-
-        let accel_def = exp.accels.iter().find(|a| a.name == combo.method_name)?;
-        let accel_inst = accel_def.expand().find(|inst| {
-            inst.m == combo.method_m
-                && combo.method_args.iter().all(|(k, v)| {
-                    inst.args
-                        .get(k)
-                        .map(|sv| sv.to_string() == *v)
-                        .unwrap_or(false)
-                })
-        })?;
-
-        let noise_inst = combo
-            .noise_idx
-            .and_then(|i| exp.noises.get(i).and_then(|d| d.expand().next()));
-
-        Some(ComputeTask {
-            id: key.clone(),
-            precision: combo.precision.clone(),
-            series: series_inst,
-            n_points: self.state.n_points,
-            noise: noise_inst,
-            algorithms: vec![accel_inst],
-            filters: vec![],
-        })
-    }
-
     pub fn process_events(&mut self) {
         while let Ok(event) = self.event_rx.try_recv() {
             match event {
@@ -284,44 +243,27 @@ impl ShanksApp {
         }
     }
 
-    fn arr_to_points(&self, arr: &compute::Arr) -> Vec<PlotPoint> {
+    fn arr_to_f64(&self, arr: &Arr) -> ArrF64 {
         match arr {
-            compute::Arr::Real(v) => v
-                .iter()
-                .enumerate()
-                .map(|(i, val)| PlotPoint::new(i as f64, self.to_plot_point(val)))
-                .collect(),
-            compute::Arr::Complex(c) => c
-                .real
-                .iter()
-                .enumerate()
-                .map(|(i, val)| PlotPoint::new(i as f64, self.to_plot_point(val)))
-                .collect(),
-            compute::Arr::Interval(iv) => iv
-                .inf
-                .iter()
-                .zip(&iv.sup)
-                .enumerate()
-                .map(|(i, (inf, sup))| {
-                    PlotPoint::new(
-                        i as f64,
-                        (self.to_plot_point(inf) + self.to_plot_point(sup)) / 2.0,
-                    )
-                })
-                .collect(),
-            compute::Arr::CInterval(ci) => ci
-                .real
-                .inf
-                .iter()
-                .zip(&ci.real.sup)
-                .enumerate()
-                .map(|(i, (inf, sup))| {
-                    PlotPoint::new(
-                        i as f64,
-                        (self.to_plot_point(inf) + self.to_plot_point(sup)) / 2.0,
-                    )
-                })
-                .collect(),
+            Arr::Real(v) => ArrF64::Real(v.iter().map(|val| self.to_plot_point(val)).collect()),
+            Arr::Complex(c) => ArrF64::Complex(ComplexOf {
+                real: c.real.iter().map(|val| self.to_plot_point(val)).collect(),
+                imag: c.imag.iter().map(|val| self.to_plot_point(val)).collect(),
+            }),
+            Arr::Interval(iv) => ArrF64::Interval(IntervalOf {
+                inf: iv.inf.iter().map(|val| self.to_plot_point(val)).collect(),
+                sup: iv.sup.iter().map(|val| self.to_plot_point(val)).collect(),
+            }),
+            Arr::CInterval(ci) => ArrF64::CInterval(ComplexOf {
+                real: IntervalOf {
+                    inf: ci.real.inf.iter().map(|val| self.to_plot_point(val)).collect(),
+                    sup: ci.real.sup.iter().map(|val| self.to_plot_point(val)).collect(),
+                },
+                imag: IntervalOf {
+                    inf: ci.imag.inf.iter().map(|val| self.to_plot_point(val)).collect(),
+                    sup: ci.imag.sup.iter().map(|val| self.to_plot_point(val)).collect(),
+                },
+            }),
         }
     }
 
@@ -334,22 +276,26 @@ impl ShanksApp {
 
         for (key, (sdata, adata)) in &self.results {
             if self.show_sn {
-                let points = self.arr_to_points(&sdata.sn);
+                let data = self.arr_to_f64(&sdata.sn);
                 self.plot_cache.lines_main.push(BakedLine {
-                    line: Line::new(points)
-                        .color(egui::Color32::DARK_GRAY)
-                        .name(format!("{} Sn", key.precision)),
+                    name: format!("{} Sn", key.precision),
+                    data,
+                    color: egui::Color32::DARK_GRAY,
+                    width: 1.0,
+                    style: LineStyle::Dashed { length: 4.0 },
                     visible: true,
                 });
             }
 
             if let Some(data) = adata {
                 if self.show_accel {
-                    let points = self.arr_to_points(&data.values);
+                    let data = self.arr_to_f64(&data.values);
                     self.plot_cache.lines_main.push(BakedLine {
-                        line: Line::new(points)
-                            .width(2.0)
-                            .name(format!("{} Accel", key.precision)),
+                        name: format!("{} Accel", key.precision),
+                        data,
+                        color: egui::Color32::LIGHT_BLUE,
+                        width: 2.0,
+                        style: LineStyle::Solid,
                         visible: true,
                     });
                 }
@@ -417,7 +363,22 @@ impl eframe::App for ShanksApp {
                 .show(ui, |plot_ui| {
                     for baked in &self.plot_cache.lines_main {
                         if baked.visible {
-                            plot_ui.line(baked.line.clone());
+                            let points: Vec<PlotPoint> = match &baked.data {
+                                ArrF64::Real(v) => v.iter().enumerate().map(|(i, &y)| PlotPoint::new(i as f64, y)).collect(),
+                                ArrF64::Complex(c) => c.real.iter().enumerate().map(|(i, &y)| PlotPoint::new(i as f64, y)).collect(),
+                                ArrF64::Interval(iv) => iv.inf.iter().zip(&iv.sup).enumerate()
+                                    .map(|(i, (&inf, &sup))| PlotPoint::new(i as f64, (inf + sup) / 2.0)).collect(),
+                                ArrF64::CInterval(ci) => ci.real.inf.iter().zip(&ci.real.sup).enumerate()
+                                    .map(|(i, (&inf, &sup))| PlotPoint::new(i as f64, (inf + sup) / 2.0)).collect(),
+                            };
+
+                            plot_ui.line(
+                                Line::new(PlotPoints::new(points.into_iter().map(|p| [p.x, p.y]).collect::<Vec<_>>()))
+                                    .name(&baked.name)
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                            );
                         }
                     }
                 });

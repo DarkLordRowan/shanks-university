@@ -70,7 +70,7 @@ impl HeadlessRunner {
         self
     }
     /// Run all tasks defined in the config.
-    pub fn run_all(&mut self) -> Result<RunSummary> {
+    pub async fn run_all(&mut self) -> Result<RunSummary> {
         let start_time = std::time::Instant::now();
 
         // 1. Expand tasks
@@ -80,57 +80,50 @@ impl HeadlessRunner {
             return Ok(RunSummary::default());
         }
 
-        // 2. Create runtime
-        let rt = tokio::runtime::Runtime::new()?;
+        let mut summary = RunSummary::default();
+        summary.total_trials = total_tasks;
 
-        // 3. Run tasks
-        let summary = rt.block_on(async {
-            let mut summary = RunSummary::default();
-            summary.total_trials = total_tasks;
+        let (tx, mut rx) = mpsc::channel(32);
 
-            let (tx, mut rx) = mpsc::channel(32);
+        for task in tasks {
+            compute::spawn_task(task, self.cache.clone(), tx.clone());
+        }
+        drop(tx); // Close the sender so rx ends when all tasks finish
 
-            for task in tasks {
-                compute::spawn_task(task, self.cache.clone(), tx.clone());
-            }
-            drop(tx); // Close the sender so rx ends when all tasks finish
+        let mut finished_tasks = 0;
+        while let Some(event) = rx.recv().await {
+            match event {
+                ComputeEvent::SeriesDone { series, accel, .. } => {
+                    let method = accel
+                        .as_ref()
+                        .map(|(d, _)| d.accel.name.clone())
+                        .unwrap_or_else(|| "none".to_string());
 
-            let mut finished_tasks = 0;
-            while let Some(event) = rx.recv().await {
-                match event {
-                    ComputeEvent::SeriesDone { series, accel, .. } => {
-                        let method = accel
-                            .as_ref()
-                            .map(|(d, _)| d.accel.name.clone())
-                            .unwrap_or_else(|| "none".to_string());
-
-                        if let Some(ref mut cb) = self.progress {
-                            cb(ProgressInfo {
-                                current: finished_tasks,
-                                total: total_tasks,
-                                series_name: series.series.name.clone(),
-                                precision: series.precision.clone(),
-                                method_name: method,
-                                elapsed_secs: start_time.elapsed().as_secs_f64(),
-                                status: Status::Computing,
-                            });
-                        }
-                    }
-                    ComputeEvent::Complete(_) => {
-                        finished_tasks += 1;
-                        summary.successful += 1;
-                    }
-                    ComputeEvent::Error { error, .. } => {
-                        finished_tasks += 1;
-                        summary.failed += 1;
-                        summary.errors.push(error);
+                    if let Some(ref mut cb) = self.progress {
+                        cb(ProgressInfo {
+                            current: finished_tasks,
+                            total: total_tasks,
+                            series_name: series.series.name.clone(),
+                            precision: series.precision.clone(),
+                            method_name: method,
+                            elapsed_secs: start_time.elapsed().as_secs_f64(),
+                            status: Status::Computing,
+                        });
                     }
                 }
+                ComputeEvent::Complete(_) => {
+                    finished_tasks += 1;
+                    summary.successful += 1;
+                }
+                ComputeEvent::Error { error, .. } => {
+                    finished_tasks += 1;
+                    summary.failed += 1;
+                    summary.errors.push(error);
+                }
             }
+        }
 
-            summary.total_time_secs = start_time.elapsed().as_secs_f64();
-            summary
-        });
+        summary.total_time_secs = start_time.elapsed().as_secs_f64();
 
         Ok(summary)
     }

@@ -73,7 +73,8 @@ enum Commands {
     },
 }
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
     // Initialize logging
@@ -95,8 +96,7 @@ fn main() -> anyhow::Result<()> {
         shanks_unified::cache::Cache::disabled()
     } else {
         log::info!("Initializing database at {:?}", args.db_path);
-        let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(shanks_unified::cache::Cache::new(&args.db_path))?
+        shanks_unified::cache::Cache::new(&args.db_path).await?
     };
 
     match &args.command {
@@ -123,7 +123,7 @@ fn main() -> anyhow::Result<()> {
             precisions.clone(),
             export.clone(),
             args.verbose > 0,
-        ),
+        ).await,
         Some(Commands::List { what }) => run_list(what),
     }
 }
@@ -173,7 +173,7 @@ fn run_gui(
     Ok(())
 }
 
-fn run_headless(
+async fn run_headless(
     cache: shanks_unified::cache::Cache,
     config_path: PathBuf,
     precisions: Option<String>,
@@ -241,7 +241,7 @@ fn run_headless(
     });
 
     // Run all computations
-    let summary = runner.run_all()?;
+    let summary = runner.run_all().await?;
 
     // Print summary
     println!("\n=== Run Summary ===");

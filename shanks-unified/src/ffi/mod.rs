@@ -1,6 +1,12 @@
 pub mod bridge;
 
 pub use bridge::ffi::RealValue;
+
+impl RealValue {
+    pub fn to_f64(&self) -> f64 {
+        self.mantissa * 10f64.powi(self.exponent as i32)
+    }
+}
 use serde::{Deserialize, Serialize};
 
 /// Error type for FFI operations.
@@ -43,6 +49,7 @@ pub enum ValueOf<T> {
 
 pub type Value = ValueOf<RealValue>;
 pub type Arr = ValueOf<Vec<RealValue>>;
+pub type ArrF64 = ValueOf<Vec<f64>>;
 
 // /// Helper to convert f64 slice to bytes
 // fn f64_to_bytes(data: &[f64]) -> &[u8] {
@@ -81,7 +88,6 @@ pub type Arr = ValueOf<Vec<RealValue>>;
 //     }
 //     vec
 // }
-
 
 /// A parameter value that can be passed to series or algorithms.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

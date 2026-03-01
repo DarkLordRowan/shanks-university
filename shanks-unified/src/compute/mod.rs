@@ -672,10 +672,9 @@ fn empty_series_data() -> SeriesData {
 // ---------------------------------------------------------------------------
 
 fn sorted_args_json(
-    params: &std::collections::HashMap<String, serde_json::Value>,
+    params: &BTreeMap<String, serde_json::Value>,
 ) -> Result<String> {
-    let sorted: BTreeMap<_, _> = params.iter().collect();
-    Ok(serde_json::to_string(&sorted)?)
+    Ok(serde_json::to_string(params)?)
 }
 
 /// Detect the first index where there are 3+ consecutive rising deviations.
