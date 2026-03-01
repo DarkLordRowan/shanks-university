@@ -6,15 +6,17 @@ fn main() {
         .map(|o| o.status.success())
         .unwrap_or(false);
 
-    if ccache {
-        std::env::set_var("CC", "ccache gcc");
-        std::env::set_var("CXX", "ccache g++");
-    }
-
     // Skip unnecessary precisions in debug build to save time
     let is_debug = std::env::var("PROFILE").unwrap_or_default() == "debug";
 
     let mut build = cxx_build::bridge("src/ffi/bridge.rs");
+
+    if ccache {
+        unsafe {
+            std::env::set_var("CC", "ccache gcc");
+            std::env::set_var("CXX", "ccache g++");
+        }
+    }
 
     build
         .file("ffi/src/bridge_core.cpp")

@@ -1,5 +1,49 @@
+use serde::{Deserialize, Serialize};
+
+#[cfg(not(target_endian = "little"))]
+compile_error!(
+    "RealValue serialization is little-endian, please implement proper serialization/deserialization."
+);
+
+impl ffi::RealValue {
+    #[cfg(target_endian = "little")]
+    pub fn to_bytes(slice: &[ffi::RealValue]) -> &[u8] {
+        let byte_len = slice.len() * std::mem::size_of::<ffi::RealValue>();
+        let ptr = slice.as_ptr() as *const u8;
+        unsafe { std::slice::from_raw_parts(ptr, byte_len) }
+    }
+
+    #[cfg(target_endian = "little")]
+    pub fn from_bytes(bytes: &[u8]) -> Vec<ffi::RealValue> {
+        let size = std::mem::size_of::<ffi::RealValue>();
+        assert_eq!(
+            bytes.len() % size,
+            0,
+            "Bytes length must be a multiple of 16"
+        );
+
+        let target_len = bytes.len() / size;
+        let mut vec = Vec::with_capacity(target_len);
+
+        // SAFETY: We copy exactly `bytes.len()` bytes into the newly allocated
+        // vector. Because `ffi::RealValue` is Copy, a bitwise copy is perfectly valid.
+        unsafe {
+            std::ptr::copy_nonoverlapping(bytes.as_ptr(), vec.as_mut_ptr() as *mut u8, bytes.len());
+            vec.set_len(target_len);
+        }
+
+        vec
+    }
+}
+
 #[cxx::bridge(namespace = "shanks::ffi::bridge")]
 pub mod ffi {
+    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+    struct RealValue {
+        mantissa: f64,
+        exponent: i64,
+    }
+
     #[derive(Clone, Copy, Debug, PartialEq)]
     enum ValueKind {
         Real,
@@ -9,34 +53,12 @@ pub mod ffi {
     }
 
     #[derive(Clone, Copy, Debug, PartialEq)]
-    struct RealValue {
-        mantissa: f64,
-        exponent: i64,
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    struct ComplexValue {
-        real: RealValue,
-        imag: RealValue,
-    }
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    struct IntervalValue {
-        inf: RealValue,
-        sup: RealValue,
-    }
-    #[derive(Clone, Copy, Debug, PartialEq)]
-    struct CIntervalValue {
-        inf: ComplexValue,
-        sup: ComplexValue,
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq)]
     struct RawValue {
         tag: ValueKind,
-        r1: RealValue,
-        r2: RealValue,
-        r3: RealValue,
-        r4: RealValue,
+        r1: RealValue, // real, inf
+        r2: RealValue, // real, sup
+        r3: RealValue, // imag, inf
+        r4: RealValue, // imag, sup
     }
 
     #[derive(Clone, Copy, Debug, PartialEq)]

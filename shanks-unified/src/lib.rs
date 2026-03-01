@@ -1,3 +1,7 @@
+#![feature(gen_blocks)]
+#![feature(yield_expr)]
+#![feature(trait_alias)]
+
 //! Shanks Unified - Series Acceleration Visualization Tool
 //!
 //! This library provides:
@@ -11,7 +15,7 @@ pub mod app;
 pub mod cache;
 pub mod compute;
 pub mod experiment;
+pub mod export;
 pub mod ffi;
 pub mod headless;
 pub mod plot;
-pub mod export;

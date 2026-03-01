@@ -46,6 +46,19 @@ inline RealValue to_rv(const T& v) {
     }
 }
 
+struct ComplexValue {
+    RealValue real;
+    RealValue imag;
+};
+struct IntervalValue {
+    RealValue inf;
+    RealValue sup;
+};
+struct CIntervalValue {
+    ComplexValue inf;
+    ComplexValue sup;
+};
+
 template <typename T>
 inline ComplexValue to_cv(const T& v) {
     if constexpr (shanks::ffi::is_complex_v<T>) {
@@ -247,11 +260,17 @@ public:
         ::series_result<T> acc_res;
         acc_res.Sn.reserve(n);
         acc_res.an.reserve(n);
-        
+
         T prev_accel = T(0);
         for (size_t i = 1; i <= n; ++i) {
             // Compute acceleration for first i terms of the original series
-            T accelerated = (*algo)(i, m, result);
+            T accelerated;
+            try {
+                accelerated = (*algo)(i, m, result);
+            } catch (...) {
+                // TODO PUSH EVENT
+                accelerated = prev_accel;
+            }
             acc_res.Sn.push_back(accelerated);
             acc_res.an.push_back(accelerated - prev_accel);
             prev_accel = accelerated;

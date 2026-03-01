@@ -8,7 +8,7 @@ use crate::cache::Cache;
 use crate::compute::ComputeEngine;
 use crate::experiment::{ExperimentConfig, MethodInstance, NoiseDef, SeriesInstance};
 use crate::ffi::{
-    AccelResult, ComputeEvent, ComputeEventBody, SeriesPoint, SeriesResult, ShanksLibrary, Series,
+    AccelResult, ComputeEvent, ComputeEventBody, Series, SeriesPoint, SeriesResult, ShanksLibrary,
 };
 use std::collections::HashMap;
 use std::sync::{mpsc, Arc, Mutex, RwLock};
@@ -194,8 +194,7 @@ enum PointBounds {
     },
 }
 
-#[derive(Default)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum DeviationMode {
     #[default]
     Magnitude,
@@ -503,7 +502,7 @@ impl ShanksApp {
             let entry = task_map
                 .entry(key)
                 .or_insert_with(|| (Vec::new(), self.n_points as i64, series_params.clone()));
-            
+
             // Push accel if not already there (deduplicate by serialization)
             let accel_json =
                 crate::compute::core::to_sorted_json(&accel.params).unwrap_or_default();
@@ -579,7 +578,7 @@ impl ShanksApp {
                     } => {
                         self.status_message = format!("{}: {}/{}", stage, current, total);
                     }
-                     ComputeEventBody::SeriesComplete { name, result } => {
+                    ComputeEventBody::SeriesComplete { name, result } => {
                         log::info!("SeriesComplete: {} Sn points", result.sn.len());
                         if let Some(task) = self.active_tasks.get(&event.task_id) {
                             self.current_results_params
@@ -608,7 +607,8 @@ impl ShanksApp {
                                     )
                                 );
                                 if accel_name == name {
-                                    self.current_accel_params.insert(name.clone(), accel.clone());
+                                    self.current_accel_params
+                                        .insert(name.clone(), accel.clone());
                                     break;
                                 }
                             }
@@ -780,7 +780,7 @@ impl ShanksApp {
         self.plot_cache.symlog = use_symlog;
         self.plot_cache.log_linthresh = log_linthresh;
         self.plot_cache.deviation_mode = self.deviation_mode;
-        
+
         // Populate plot cache
         self.plot_cache.max_n = 0.0;
 
@@ -813,9 +813,11 @@ impl ShanksApp {
                     self.plot_cache.limits.push((name, r, None));
 
                     if let Some(im) = i_opt {
-                        self.plot_cache
-                            .limits
-                            .push((format!("Limit (Im) - {}", series_name), im, None));
+                        self.plot_cache.limits.push((
+                            format!("Limit (Im) - {}", series_name),
+                            im,
+                            None,
+                        ));
                     }
                 }
             }
@@ -920,7 +922,10 @@ impl ShanksApp {
             // Guard against sub-display-precision (e.g. IntervalArb) where inf==sup at f64.
             let is_degenerate = |infs: &[egui_plot::PlotPoint], sups: &[egui_plot::PlotPoint]| {
                 infs.len() == sups.len()
-                    && infs.iter().zip(sups.iter()).all(|(a, b)| (a.y - b.y).abs() < 1e-300)
+                    && infs
+                        .iter()
+                        .zip(sups.iter())
+                        .all(|(a, b)| (a.y - b.y).abs() < 1e-300)
             };
             let inf_pts_re_degenerate = is_degenerate(&inf_pts_re, &sup_pts_re);
             let inf_pts_im_degenerate = is_degenerate(&inf_pts_im, &sup_pts_im);
@@ -1013,8 +1018,10 @@ impl ShanksApp {
             }
 
             for (comp_idx, (comp_name, points)) in component_plots.into_iter().enumerate() {
-                if points.is_empty() { continue; }
-                
+                if points.is_empty() {
+                    continue;
+                }
+
                 let name = if comp_name.is_empty() {
                     format!("{} Sn Dev", series_name)
                 } else {
@@ -1222,7 +1229,9 @@ impl ShanksApp {
 
                 for (idx, point) in est.limit.iter().enumerate() {
                     let current_x = start_idx + idx as f64;
-                    if let Some((re, im_opt)) = self.point_to_f64_parts(point, use_symlog, log_linthresh) {
+                    if let Some((re, im_opt)) =
+                        self.point_to_f64_parts(point, use_symlog, log_linthresh)
+                    {
                         pts_re.push([current_x, re].into());
                         if let Some(im) = im_opt {
                             has_im = true;
@@ -1255,32 +1264,40 @@ impl ShanksApp {
 
             // Smoothed Estimates Deviations
             let series_name_for_lim = name.split(" - ").next().unwrap_or(name);
-            let true_limit = self.current_results.get(series_name_for_lim).and_then(|r| r.sum.as_ref());
-            
+            let true_limit = self
+                .current_results
+                .get(series_name_for_lim)
+                .and_then(|r| r.sum.as_ref());
+
             if let Some(limit_pt) = true_limit {
-                if let Some((lim_re, lim_im_opt)) = self.point_to_f64_parts(limit_pt, false, log_linthresh) {
+                if let Some((lim_re, lim_im_opt)) =
+                    self.point_to_f64_parts(limit_pt, false, log_linthresh)
+                {
                     let lim_im = lim_im_opt.unwrap_or(0.0);
-                    
+
                     for est in &results.filtered_estimates {
                         let start_idx = est.start_n as f64 - 1.0;
                         let mut dev_pts = Vec::with_capacity(est.limit.len());
-                        
+
                         for (idx, point) in est.limit.iter().enumerate() {
                             let current_x = start_idx + idx as f64;
-                            if let Some((pt_re, pt_im_opt)) = self.point_to_f64_parts(point, false, log_linthresh) {
+                            if let Some((pt_re, pt_im_opt)) =
+                                self.point_to_f64_parts(point, false, log_linthresh)
+                            {
                                 let pt_im = pt_im_opt.unwrap_or(0.0);
                                 let d_re = pt_re - lim_re;
                                 let d_im = pt_im - lim_im;
                                 let mut error = (d_re * d_re + d_im * d_im).sqrt();
                                 if use_symlog {
-                                    error = crate::plot::Scientific::from_f64(error).symlog(log_linthresh);
+                                    error = crate::plot::Scientific::from_f64(error)
+                                        .symlog(log_linthresh);
                                 }
                                 if error.is_finite() && error > 0.0 {
                                     dev_pts.push([current_x, error].into());
                                 }
                             }
                         }
-                        
+
                         if !dev_pts.is_empty() {
                             self.plot_cache.deviations_smoothed.push(CachedPlotLine {
                                 name: format!("{} Dev - {}", est.filter, name),
@@ -1332,8 +1349,10 @@ impl ShanksApp {
             }
 
             for (comp_idx, (comp_name, points)) in component_plots.into_iter().enumerate() {
-                if points.is_empty() { continue; }
-                
+                if points.is_empty() {
+                    continue;
+                }
+
                 let name = if comp_name.is_empty() {
                     format!("{} Dev", name)
                 } else {
@@ -1495,17 +1514,33 @@ impl eframe::App for ShanksApp {
                     ui.checkbox(&mut self.show_interval_inf, "Show Interval Inf");
                     ui.checkbox(&mut self.show_interval_shade, "Shade Interval Bounds");
                     ui.add(egui::Label::new(
-                        egui::RichText::new("Note: Arb interval bounds may be invisible if width < f64 precision")
-                            .small()
-                            .italics()
-                            .color(egui::Color32::GRAY),
+                        egui::RichText::new(
+                            "Note: Arb interval bounds may be invisible if width < f64 precision",
+                        )
+                        .small()
+                        .italics()
+                        .color(egui::Color32::GRAY),
                     ));
                     ui.separator();
                     ui.label("Deviation Mode:");
-                    if ui.radio_value(&mut self.deviation_mode, DeviationMode::Magnitude, "Magnitude").changed() {
+                    if ui
+                        .radio_value(
+                            &mut self.deviation_mode,
+                            DeviationMode::Magnitude,
+                            "Magnitude",
+                        )
+                        .changed()
+                    {
                         self.results_dirty = true;
                     }
-                    if ui.radio_value(&mut self.deviation_mode, DeviationMode::Components, "Components").changed() {
+                    if ui
+                        .radio_value(
+                            &mut self.deviation_mode,
+                            DeviationMode::Components,
+                            "Components",
+                        )
+                        .changed()
+                    {
                         self.results_dirty = true;
                     }
                     ui.separator();
@@ -1535,7 +1570,11 @@ impl eframe::App for ShanksApp {
             ui.heading("Parameters");
             ui.horizontal(|ui| {
                 ui.label("Points (n):");
-                ui.add(egui::DragValue::new(&mut self.n_points).speed(1.0).clamp_range(1..=1000));
+                ui.add(
+                    egui::DragValue::new(&mut self.n_points)
+                        .speed(1.0)
+                        .clamp_range(1..=1000),
+                );
             });
             ui.separator();
 
@@ -1873,10 +1912,12 @@ impl eframe::App for ShanksApp {
                         if self.show_smoothed_estimates {
                             for line in &self.plot_cache.smoothed_estimates {
                                 plot_ui.line(
-                                    egui_plot::Line::new(egui_plot::PlotPoints::Owned(line.points.clone()))
-                                        .name(&line.name)
-                                        .color(line.color)
-                                        .width(3.0),
+                                    egui_plot::Line::new(egui_plot::PlotPoints::Owned(
+                                        line.points.clone(),
+                                    ))
+                                    .name(&line.name)
+                                    .color(line.color)
+                                    .width(3.0),
                                 );
                             }
                         }
@@ -1975,8 +2016,12 @@ impl ShanksApp {
             for i in 0..n_points {
                 partial_sums.push(series_res.sn.get(i).format_high_precision());
             }
-            series_entry["partial_sums"] =
-                serde_json::Value::Array(partial_sums.into_iter().map(serde_json::Value::String).collect());
+            series_entry["partial_sums"] = serde_json::Value::Array(
+                partial_sums
+                    .into_iter()
+                    .map(serde_json::Value::String)
+                    .collect(),
+            );
 
             // Export an (individual series terms)
             let an_len = series_res.an.len();
@@ -1984,8 +2029,9 @@ impl ShanksApp {
             for i in 0..an_len {
                 terms.push(series_res.an.get(i).format_high_precision());
             }
-            series_entry["terms"] =
-                serde_json::Value::Array(terms.into_iter().map(serde_json::Value::String).collect());
+            series_entry["terms"] = serde_json::Value::Array(
+                terms.into_iter().map(serde_json::Value::String).collect(),
+            );
 
             let mut accelerations = Vec::new();
             for (accel_name, accel_res) in &self.current_accel_results {
@@ -2007,19 +2053,22 @@ impl ShanksApp {
                         let n = i + 1;
                         let mut point_map = serde_json::Map::new();
 
-                        point_map.insert("unaccelerated".to_string(), serde_json::json!({
-                            "value": series_res.sn.get(i).format_high_precision(),
-                            "an": if i < series_res.an.len() {
-                                series_res.an.get(i).format_high_precision()
-                            } else {
-                                "null".to_string()
-                            },
-                            "deviation": if i < series_res.deviations.len() {
-                                series_res.deviations.get(i).format_high_precision()
-                            } else {
-                                "null".to_string()
-                            }
-                        }));
+                        point_map.insert(
+                            "unaccelerated".to_string(),
+                            serde_json::json!({
+                                "value": series_res.sn.get(i).format_high_precision(),
+                                "an": if i < series_res.an.len() {
+                                    series_res.an.get(i).format_high_precision()
+                                } else {
+                                    "null".to_string()
+                                },
+                                "deviation": if i < series_res.deviations.len() {
+                                    series_res.deviations.get(i).format_high_precision()
+                                } else {
+                                    "null".to_string()
+                                }
+                            }),
+                        );
 
                         let accel_val = accel_res.values.get(i);
                         let valid = accel_res.valid.get(i).copied().unwrap_or(false);

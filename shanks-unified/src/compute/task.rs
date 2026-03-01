@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-use crate::experiment::{NoiseDef, FilterDef};
+use crate::experiment::{FilterDef, NoiseDef};
 use crate::ffi::ParamValue;
 
 /// Parameters for a series computation.
@@ -12,9 +12,9 @@ use crate::ffi::ParamValue;
 pub struct SeriesParams {
     /// Series name (e.g., "Ln2Series")
     pub name: String,
-    /// X value as string (scientific notation supported)
+    /// X value as string
     pub x_value: String,
-    /// Named parameters (e.g., "alpha" for BinSeries)
+    /// Extra parameters (e.g., "alpha" for BinSeries)
     #[serde(default)]
     pub params: HashMap<String, ParamValue>,
 }

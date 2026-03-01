@@ -5,70 +5,21 @@
 
 use anyhow::Result;
 use rusqlite::{params, Connection};
-use std::path::Path;
-
-/// Helper to convert f64 slice to bytes
-fn f64_to_bytes(data: &[f64]) -> &[u8] {
-    unsafe { std::slice::from_raw_parts(data.as_ptr() as *const u8, data.len() * 8) }
-}
-
-/// Helper to convert i64 slice to bytes
-fn i64_to_bytes(data: &[i64]) -> &[u8] {
-    unsafe { std::slice::from_raw_parts(data.as_ptr() as *const u8, data.len() * 8) }
-}
-
-/// Helper to parse f64 vec from bytes carefully (alignment safe)
-fn bytes_to_f64(data: &[u8]) -> Vec<f64> {
-    if data.is_empty() { return Vec::new(); }
-    let count = data.len() / 8;
-    let mut vec = Vec::with_capacity(count);
-    unsafe {
-        std::ptr::copy_nonoverlapping(data.as_ptr(), vec.as_mut_ptr() as *mut u8, count * 8);
-        vec.set_len(count);
-    }
-    vec
-}
-
-/// Helper to parse i64 vec from bytes carefully (alignment safe)
-fn bytes_to_i64(data: &[u8]) -> Vec<i64> {
-    if data.is_empty() { return Vec::new(); }
-    let count = data.len() / 8;
-    let mut vec = Vec::with_capacity(count);
-    unsafe {
-        std::ptr::copy_nonoverlapping(data.as_ptr(), vec.as_mut_ptr() as *mut u8, count * 8);
-        vec.set_len(count);
-    }
-    vec
-}
+use std::{
+    path::Path,
+    sync::{Arc, RwLock, RwLockReadGuard},
+};
 
 /// SQLite cache for series and acceleration results.
+#[derive(Clone)]
 pub struct Cache {
-    conn: Option<Connection>,
+    conn: Option<Arc<RwLock<Connection>>>,
 }
 
 impl Cache {
     /// Open or create the cache database.
     pub fn new(path: &Path) -> Result<Self> {
         let conn = Connection::open(path)?;
-        Ok(Self { conn: Some(conn) })
-    }
-
-    /// Create a disabled cache that does nothing.
-    pub fn disabled() -> Self {
-        Self { conn: None }
-    }
-
-    /// Check if the cache is enabled.
-    pub fn is_enabled(&self) -> bool {
-        self.conn.is_some()
-    }
-
-    /// Initialize the database schema.
-    pub fn initialize_schema(&self) -> Result<()> {
-        let conn = match &self.conn {
-            Some(c) => c,
-            None => return Ok(()),
-        };
         conn.execute_batch(
             r#"
             -- Series metadata and parameters
@@ -176,9 +127,19 @@ impl Cache {
             ALTER TABLE accel_data ADD COLUMN dev_e3 BLOB;
             "#,
         ).ok(); // Ignore errors if columns already exist
-        
-        Ok(())
+        Ok(Self {
+            conn: Some(Arc::new(RwLock::new(conn))),
+        })
     }
+
+    /// Create a disabled cache that does nothing.
+    pub fn disabled() -> Self {
+        Self { conn: None }
+    }
+
+    // fn conn(&self) -> Option<RwLockReadGuard<Connection>> {
+    //     self.conn.map(|x| x.read().unwrap())
+    // }
 
     /// Insert a series and return its ID.
     pub fn insert_series(
@@ -191,10 +152,10 @@ impl Cache {
         profiling: Option<&str>,
         sum_val: Option<&str>,
     ) -> Result<i64> {
-        let conn = match &mut self.conn {
-            Some(c) => c,
-            None => return Ok(0),
+        let Some(conn) = &self.conn else {
+            return Ok(0);
         };
+        let mut conn = conn.write().unwrap();
         let tx = conn.transaction()?;
 
         let result = tx.execute(
@@ -241,49 +202,6 @@ impl Cache {
             return Err(e.into());
         }
         Ok(id)
-    }
-
-    fn serialize_point_array<'a>(
-        &self,
-        array: &'a crate::ffi::SeriesPointArray,
-    ) -> (u32, i64, Vec<(&'a [u8], &'a [u8])>) {
-        let mut data = vec![(&[][..], &[][..]); 4];
-        let (t, len) = match array {
-            crate::ffi::SeriesPointArray::Real(r) => {
-                data[0] = (f64_to_bytes(&r.mantissa), i64_to_bytes(&r.exponent));
-                (0, r.len())
-            }
-            crate::ffi::SeriesPointArray::Complex(c) => {
-                data[0] = (f64_to_bytes(&c.real.mantissa), i64_to_bytes(&c.real.exponent));
-                data[1] = (f64_to_bytes(&c.imag.mantissa), i64_to_bytes(&c.imag.exponent));
-                (1, c.real.len())
-            }
-            crate::ffi::SeriesPointArray::Interval(i) => {
-                data[0] = (f64_to_bytes(&i.inf.mantissa), i64_to_bytes(&i.inf.exponent));
-                data[1] = (f64_to_bytes(&i.sup.mantissa), i64_to_bytes(&i.sup.exponent));
-                (2, i.inf.len())
-            }
-            crate::ffi::SeriesPointArray::CInterval(ci) => {
-                data[0] = (
-                    f64_to_bytes(&ci.real.inf.mantissa),
-                    i64_to_bytes(&ci.real.inf.exponent),
-                );
-                data[1] = (
-                    f64_to_bytes(&ci.real.sup.mantissa),
-                    i64_to_bytes(&ci.real.sup.exponent),
-                );
-                data[2] = (
-                    f64_to_bytes(&ci.imag.inf.mantissa),
-                    i64_to_bytes(&ci.imag.inf.exponent),
-                );
-                data[3] = (
-                    f64_to_bytes(&ci.imag.sup.mantissa),
-                    i64_to_bytes(&ci.imag.sup.exponent),
-                );
-                (3, ci.real.inf.len())
-            }
-        };
-        (t, len as i64, data)
     }
 
     /// Insert series binary data.
@@ -503,7 +421,7 @@ impl Cache {
         let sum_val = sum_json.and_then(|s| serde_json::from_str(&s).ok());
 
         let result = conn.query_row(
-            "SELECT 
+            "SELECT
                 sn_type, sn_len, sn_m0, sn_e0, sn_m1, sn_e1, sn_m2, sn_e2, sn_m3, sn_e3,
                 an_type, an_len, an_m0, an_e0, an_m1, an_e1, an_m2, an_e2, an_m3, an_e3,
                 dev_type, dev_len, dev_m0, dev_e0, dev_m1, dev_e1, dev_m2, dev_e2, dev_m3, dev_e3
@@ -517,25 +435,29 @@ impl Cache {
 
                 let an_type: u32 = row.get(10)?;
                 let _an_len: i64 = row.get(11)?;
-                let an_m: Vec<Vec<u8>> = vec![row.get(12)?, row.get(14)?, row.get(16)?, row.get(18)?];
-                let an_e: Vec<Vec<u8>> = vec![row.get(13)?, row.get(15)?, row.get(17)?, row.get(19)?];
+                let an_m: Vec<Vec<u8>> =
+                    vec![row.get(12)?, row.get(14)?, row.get(16)?, row.get(18)?];
+                let an_e: Vec<Vec<u8>> =
+                    vec![row.get(13)?, row.get(15)?, row.get(17)?, row.get(19)?];
 
                 let dev_type: u32 = row.get(20).unwrap_or(0); // Migration fallback
                 let _dev_len: i64 = row.get(21)?;
                 let dev_m: Vec<Vec<u8>> = vec![
-                    row.get(22).unwrap_or_default(), 
-                    row.get(24).unwrap_or_default(), 
-                    row.get(26).unwrap_or_default(), 
-                    row.get(28).unwrap_or_default()
+                    row.get(22).unwrap_or_default(),
+                    row.get(24).unwrap_or_default(),
+                    row.get(26).unwrap_or_default(),
+                    row.get(28).unwrap_or_default(),
                 ];
                 let dev_e: Vec<Vec<u8>> = vec![
-                    row.get(23).unwrap_or_default(), 
-                    row.get(25).unwrap_or_default(), 
-                    row.get(27).unwrap_or_default(), 
-                    row.get(29).unwrap_or_default()
+                    row.get(23).unwrap_or_default(),
+                    row.get(25).unwrap_or_default(),
+                    row.get(27).unwrap_or_default(),
+                    row.get(29).unwrap_or_default(),
                 ];
 
-                Ok((sn_type, sn_m, sn_e, an_type, an_m, an_e, dev_type, dev_m, dev_e))
+                Ok((
+                    sn_type, sn_m, sn_e, an_type, an_m, an_e, dev_type, dev_m, dev_e,
+                ))
             },
         );
 
@@ -621,7 +543,7 @@ impl Cache {
             None => return Ok(None),
         };
         let result = conn.query_row(
-            "SELECT 
+            "SELECT
                 val_type, val_len, val_m0, val_e0, val_m1, val_e1, val_m2, val_e2, val_m3, val_e3,
                 dev_type, dev_len, dev_m0, dev_e0, dev_m1, dev_e1, dev_m2, dev_e2, dev_m3, dev_e3
              FROM accel_data WHERE accel_id = ?1",
@@ -635,19 +557,21 @@ impl Cache {
                 let dev_type: u32 = row.get(10).unwrap_or(0);
                 let _dev_len: i64 = row.get(11)?;
                 let dev_m: Vec<Vec<u8>> = vec![
-                    row.get(12).unwrap_or_default(), 
-                    row.get(14).unwrap_or_default(), 
-                    row.get(16).unwrap_or_default(), 
-                    row.get(18).unwrap_or_default()
+                    row.get(12).unwrap_or_default(),
+                    row.get(14).unwrap_or_default(),
+                    row.get(16).unwrap_or_default(),
+                    row.get(18).unwrap_or_default(),
                 ];
                 let dev_e: Vec<Vec<u8>> = vec![
-                    row.get(13).unwrap_or_default(), 
-                    row.get(15).unwrap_or_default(), 
-                    row.get(17).unwrap_or_default(), 
-                    row.get(19).unwrap_or_default()
+                    row.get(13).unwrap_or_default(),
+                    row.get(15).unwrap_or_default(),
+                    row.get(17).unwrap_or_default(),
+                    row.get(19).unwrap_or_default(),
                 ];
 
-                Ok((val_type, val_len, val_m, val_e, dev_type, _dev_len, dev_m, dev_e))
+                Ok((
+                    val_type, val_len, val_m, val_e, dev_type, _dev_len, dev_m, dev_e,
+                ))
             },
         );
 
@@ -665,7 +589,7 @@ impl Cache {
 
         // --- Fetch events ---
         let mut stmt_events = conn.prepare(
-            "SELECT n, name, description FROM events WHERE accel_id = ?1 ORDER BY n ASC"
+            "SELECT n, name, description FROM events WHERE accel_id = ?1 ORDER BY n ASC",
         )?;
         let events_iter = stmt_events.query_map(params![accel_id], |row| {
             Ok(crate::ffi::ComputeEventEntry {
@@ -738,8 +662,7 @@ impl Cache {
             Some(c) => c,
             None => return Ok(Vec::new()),
         };
-        let mut stmt = conn
-            .prepare("SELECT DISTINCT precision FROM series WHERE name = ?1")?;
+        let mut stmt = conn.prepare("SELECT DISTINCT precision FROM series WHERE name = ?1")?;
         let rows = stmt.query_map(params![name], |row| row.get(0))?;
         let mut precisions = Vec::new();
         for precision in rows {
@@ -766,14 +689,19 @@ impl Cache {
     pub fn stats(&self) -> Result<CacheStats> {
         let conn = match &self.conn {
             Some(c) => c,
-            None => return Ok(CacheStats { series_count: 0, accel_count: 0, points_count: 0 }),
+            None => {
+                return Ok(CacheStats {
+                    series_count: 0,
+                    accel_count: 0,
+                    points_count: 0,
+                })
+            }
         };
-        let series_count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM series", [], |row| row.get(0))?;
+        let series_count: i64 =
+            conn.query_row("SELECT COUNT(*) FROM series", [], |row| row.get(0))?;
         let accel_count: i64 =
-            conn
-                .query_row("SELECT COUNT(*) FROM accelerations", [], |row| row.get(0))?;
-        
+            conn.query_row("SELECT COUNT(*) FROM accelerations", [], |row| row.get(0))?;
+
         Ok(CacheStats {
             series_count,
             accel_count,

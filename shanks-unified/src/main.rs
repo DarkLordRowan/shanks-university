@@ -118,7 +118,11 @@ fn main() -> anyhow::Result<()> {
             }
         }
         Some(Commands::Gui { config }) => run_gui(library, cache, Some(config.clone())),
-        Some(Commands::Headless { config, precisions, export }) => run_headless(
+        Some(Commands::Headless {
+            config,
+            precisions,
+            export,
+        }) => run_headless(
             library,
             cache,
             config.clone(),
@@ -144,8 +148,7 @@ fn run_gui(
     };
 
     // Create application state
-    let app_state =
-        shanks_unified::app::AppState::new(experiment_config, cache, Some(library));
+    let app_state = shanks_unified::app::AppState::new(experiment_config, cache, Some(library));
 
     // Run GUI
     let native_options = eframe::NativeOptions {

@@ -10,15 +10,18 @@
 //! to events.
 
 use anyhow::Result;
-use std::collections::BTreeMap;
-use std::sync::mpsc as std_mpsc;
-use std::sync::{Arc, Mutex};
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::BTreeMap,
+    sync::{Arc, Mutex, mpsc as std_mpsc},
+};
 use uuid::Uuid;
 
 use super::task::{AccelParams, SeriesParams};
-use crate::cache::Cache;
-use crate::experiment::NoiseDef;
-use crate::ffi::{AccelResult, ComputeEvent, ComputeEventBody, SeriesResult, ShanksLibrary, Series};
+use crate::{
+    cache::Cache,
+    ffi::{Arr, Value},
+};
 
 /// Deterministic serialization of parameters to ensure caching consistency.
 /// Always produces a sorted-key JSON string regardless of HashMap iteration order.
@@ -96,14 +99,104 @@ pub fn build_distinct_name(accel: &AccelParams, all_accels: &[AccelParams]) -> S
 /// freshly computed data alike. Never rely on callers to read the cache.
 #[derive(Clone)]
 pub struct ComputeCore {
-    pub library: Arc<ShanksLibrary>,
-    pub cache: Arc<Mutex<Cache>>,
+    pub cache: Cache,
+}
+
+/// Result of series generation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SeriesResult {
+    /// Partial sums Sn
+    pub sn: Arr,
+    /// Individual terms an
+    pub an: Arr,
+    /// Analytical sum (if known)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sum: Option<Value>,
+    /// Deviations |Sn - S| for each partial sum (if the true limit is known)
+    pub deviations: Arr,
+}
+
+/// An event during computation (convergence, strategy change, etc.)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComputeEventEntry {
+    /// Index n where the event occurred
+    pub n: u64,
+    /// Event name
+    pub name: String,
+    /// Event description
+    #[serde(default)]
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SmoothedEstimate {
+    /// The name of the event that triggered smoothing (e.g. "divergent_accel")
+    pub event_name: String,
+    /// Name of the filter applied (e.g. "kz")
+    pub filter: String,
+    /// The calculated limit points matching the tail segment
+    pub limit: Vec<Value>,
+    /// The index where divergence started
+    pub start_n: u64,
+    /// Length of the smoothed segment
+    pub length: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccelResult {
+    /// Accelerated values (Sn of accelerated series)
+    pub values: Arr,
+    /// Differences of accelerated values (an of accelerated series)
+    pub an: Arr,
+    /// Deviations/errors for each value
+    pub deviations: Arr,
+    /// Events during computation
+    #[serde(default)]
+    pub events: Vec<ComputeEventEntry>,
+    /// Smoothed estimates for divergent tails
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub filtered_estimates: Vec<SmoothedEstimate>,
+    // /// Profiling information (if enabled)
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub profiling: Option<ProfilingTrace>,
+}
+
+/// Event body for compute orchestration.
+#[derive(Debug, Clone)]
+pub enum ComputeEventBody {
+    /// Task started
+    Started,
+    /// Progress update
+    Progress {
+        stage: String,
+        current: u64,
+        total: u64,
+    },
+    /// Series generation complete
+    SeriesComplete { name: String, result: SeriesResult },
+    /// Algorithm application complete
+    AccelComplete { name: String, result: AccelResult },
+    /// Error occurred
+    Error { error: String },
+    /// Task cancelled
+    Cancelled,
+    /// All computations complete
+    Complete,
+}
+
+/// Compute event with task ID.
+#[derive(Debug, Clone)]
+pub struct ComputeEvent {
+    /// Task ID
+    pub task_id: uuid::Uuid,
+    /// Event body
+    pub body: ComputeEventBody,
 }
 
 impl ComputeCore {
     /// Create a new ComputeCore backend.
-    pub fn new(library: Arc<ShanksLibrary>, cache: Arc<Mutex<Cache>>) -> Self {
-        Self { library, cache }
+    pub fn new(cache: Cache) -> Self {
+        Self { cache }
     }
 
     /// Run a full computation pipeline, emitting events for every result.
@@ -282,9 +375,13 @@ impl ComputeCore {
                 n.seed,
                 n_points as usize,
             ),
-            None => self
-                .library
-                .series_create(&series.name, precision, &x_value, &args_json, n_points as usize),
+            None => self.library.series_create(
+                &series.name,
+                precision,
+                &x_value,
+                &args_json,
+                n_points as usize,
+            ),
         };
 
         let series_handle = match series_handle {
@@ -303,10 +400,7 @@ impl ComputeCore {
             return Ok((false, errors));
         }
 
-        let mut series_result = match self
-            .library
-            .series_generate(&series_handle, n_points)
-        {
+        let mut series_result = match self.library.series_generate(&series_handle, n_points) {
             Ok(r) => r,
             Err(e) => {
                 let msg = format!("Failed to generate series '{}': {}", series.name, e);
@@ -383,14 +477,16 @@ impl ComputeCore {
                 return Ok((false, errors));
             }
 
-            let (algo_name, _, algo_params): (String, String, String) = serde_json::from_str(&method_args_json)?;
+            let algo_name = &accel.name;
+            let algo_params = &method_args_json;
             let m_usize = m_val.unwrap_or(5) as usize;
-            let accel_series = series_handle.run_algo(&algo_name, &algo_params, m_usize, n_points as usize)?;
-            
+            let accel_series =
+                series_handle.run_algo(algo_name, algo_params, m_usize, n_points as usize)?;
+
             let sn_points = accel_series.sn().to_series_points();
             let an_points = accel_series.an().to_series_points();
             let dev_points = accel_series.deviation().to_series_points();
-            
+
             let mut parsed_accel = crate::ffi::AccelResult {
                 values: crate::ffi::SeriesPointArray::from_vec(&sn_points),
                 an: crate::ffi::SeriesPointArray::from_vec(&an_points),
@@ -401,7 +497,6 @@ impl ComputeCore {
                 filtered_estimates: vec![],
                 profiling: None,
             };
-
 
             // --- Event Detection & Smoothing ---
             // Simple divergence detection: if deviation increases 3 times consecutively
@@ -432,29 +527,35 @@ impl ComputeCore {
                             }
                         };
 
-                        let limit_points = accel_series.filter(
-                            filter_type,
-                            &args_json,
-                            start_n as u64,
-                        ).to_series_points();
-                        
+                        let limit_points = accel_series
+                            .filter(filter_type, &args_json, start_n as u64)
+                            .to_series_points();
+
                         if !limit_points.is_empty() {
-                            log::info!("Successfully generated {} filtered limit points for filter {}", limit_points.len(), filter_type);
+                            log::info!(
+                                "Successfully generated {} filtered limit points for filter {}",
+                                limit_points.len(),
+                                filter_type
+                            );
                             // Only add the event once
                             if parsed_accel.filtered_estimates.is_empty() {
                                 parsed_accel.events.push(crate::ffi::ComputeEventEntry {
                                     n: start_n as u64,
                                     name: "divergent_accel".to_string(),
-                                    description: format!("Divergence detected, applied filters to tail."),
+                                    description: format!(
+                                        "Divergence detected, applied filters to tail."
+                                    ),
                                 });
                             }
-                            parsed_accel.filtered_estimates.push(crate::ffi::SmoothedEstimate {
-                                event_name: "divergent_accel".to_string(),
-                                filter: filter_type.clone(),
-                                limit: limit_points,
-                                start_n: start_n as u64,
-                                length: tail_len as u64,
-                            });
+                            parsed_accel
+                                .filtered_estimates
+                                .push(crate::ffi::SmoothedEstimate {
+                                    event_name: "divergent_accel".to_string(),
+                                    filter: filter_type.clone(),
+                                    limit: limit_points,
+                                    start_n: start_n as u64,
+                                    length: tail_len as u64,
+                                });
                         }
                     }
                 }
@@ -509,12 +610,22 @@ impl ComputeCore {
                     }
                     if !parsed_accel.events.is_empty() {
                         if let Err(e) = cache.insert_accel_events(accel_id, &parsed_accel.events) {
-                             log::error!("Failed to insert accel events into cache for id={}: {}", accel_id, e);
+                            log::error!(
+                                "Failed to insert accel events into cache for id={}: {}",
+                                accel_id,
+                                e
+                            );
                         }
                     }
                     if !parsed_accel.filtered_estimates.is_empty() {
-                        if let Err(e) = cache.insert_filtered_estimates(accel_id, &parsed_accel.filtered_estimates) {
-                             log::error!("Failed to insert filtered estimates into cache for id={}: {}", accel_id, e);
+                        if let Err(e) = cache
+                            .insert_filtered_estimates(accel_id, &parsed_accel.filtered_estimates)
+                        {
+                            log::error!(
+                                "Failed to insert filtered estimates into cache for id={}: {}",
+                                accel_id,
+                                e
+                            );
                         }
                     }
                 }

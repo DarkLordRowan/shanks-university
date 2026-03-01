@@ -10,7 +10,7 @@ use uuid::Uuid;
 use super::core::ComputeCore;
 use super::task::ComputeTask;
 use crate::cache::Cache;
-use crate::ffi::{ComputeEvent, ComputeEventBody, ShanksLibrary, Series};
+use crate::ffi::{ComputeEvent, ComputeEventBody, Series, ShanksLibrary};
 
 /// Compute engine for running series generation and acceleration.
 pub struct ComputeEngine {
@@ -57,7 +57,7 @@ impl ComputeEngine {
             task.precision
         );
 
-        let core = ComputeCore::new(library, cache);
+        let core = ComputeCore::new(cache);
 
         let handle = thread::spawn(move || {
             // Send started event
