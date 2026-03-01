@@ -147,7 +147,16 @@ inline series_result<T> apply_noise_interactive(series_result<T>& source, const 
     }
 
     // Applying noise
-    return apply_noise(source, NoiseMethod::jitter, noise_type, seed, param1, param2);
+    switch (noise_type) {
+        case uniform:
+            return apply_uniform_noise(source, NoiseMethod::jitter, seed, param1, param2);
+        case normal:
+            return apply_normal_noise(source, NoiseMethod::jitter, seed, param1, param2);
+        case poisson:
+            return apply_poisson_noise(source, NoiseMethod::jitter, seed, param1);
+        default:
+            throw std::invalid_argument("Invalid noise type");
+    }
 }
 
 /**

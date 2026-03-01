@@ -9,6 +9,8 @@
 * ВСЕ ПАРАМЕТРЫ JSON ДОЛЖНЫ ДОХОДИТЬ ДО C++ ТОЧНО.
 * DONE: ffi/,
 * From CSV
+* Спросить про window_length
+* Lists are currently 100% useless
 
 - name: Setup MSYS2
         uses: msys2/setup-msys2@v2

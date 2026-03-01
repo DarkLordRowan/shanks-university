@@ -16,4 +16,16 @@ struct is_interval<intprec::interval<T>> : public std::true_type {};
 template <typename T>
 concept IntervalLike = is_interval<T>::value;
 
+template <typename T>
+inline constexpr bool is_interval_v = is_interval<T>::value;
+
+template <typename T>
+struct is_complex_interval : public std::false_type {};
+
+template <FloatLike T>
+struct is_complex_interval<std::complex<intprec::interval<T>>> : public std::true_type {};
+
+template <typename T>
+inline constexpr bool is_complex_interval_v = is_complex_interval<T>::value;
+
 #endif

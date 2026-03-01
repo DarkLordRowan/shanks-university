@@ -20,6 +20,7 @@ use uuid::Uuid;
 use super::task::{AccelParams, SeriesParams};
 use crate::{
     cache::Cache,
+    experiment::{NoiseDef, NoiseInstance},
     ffi::{Arr, Value},
 };
 
@@ -32,65 +33,75 @@ pub fn to_sorted_json<T: serde::Serialize>(
     Ok(serde_json::to_string(&sorted_map)?)
 }
 
-/// Convert NoiseDef to JSON parameters specifically formatted for the FFI library.
-pub fn build_noise_json(noise: &NoiseDef) -> String {
-    serde_json::json!({
-        "type": noise.noise_type.to_lowercase(),
-        "method": noise.method,
-        "param1": noise.param1,
-        "param2": noise.param2,
-        "seed": noise.seed
-    })
-    .to_string()
+impl NoiseInstance {
+    fn to_json(&self) -> serde_json::Value {
+        serde_json::json!({
+            "type": self.noise_type.to_lowercase(),
+            "method": self.method,
+            "args": self.args,
+            "seed": self.seed
+        })
+    }
 }
+// /// Convert NoiseDef to JSON parameters specifically formatted for the FFI library.
+// pub fn build_noise_json(noise: &NoiseDef) -> String {
+//     serde_json::json!({
+//         "type": noise.noise_type.to_lowercase(),
+//         "method": noise.method,
+//         "param1": noise.param1,
+//         "param2": noise.param2,
+//         "seed": noise.seed
+//     })
+//     .to_string()
+// }
 
-/// Helper to generate a distinct algorithm name if multiple algorithms
-/// have the exact same base name (differentiating by parameters).
-pub fn build_distinct_name(accel: &AccelParams, all_accels: &[AccelParams]) -> String {
-    let same_name_accels: Vec<_> = all_accels.iter().filter(|a| a.name == accel.name).collect();
-    if same_name_accels.len() <= 1 {
-        return accel.name.clone();
-    }
+// /// Helper to generate a distinct algorithm name if multiple algorithms
+// /// have the exact same base name (differentiating by parameters).
+// pub fn build_distinct_name(accel: &AccelParams, all_accels: &[AccelParams]) -> String {
+//     let same_name_accels: Vec<_> = all_accels.iter().filter(|a| a.name == accel.name).collect();
+//     if same_name_accels.len() <= 1 {
+//         return accel.name.clone();
+//     }
 
-    let mut varying_keys = Vec::new();
-    let keys: Vec<_> = accel.params.keys().collect();
-    for &k in &keys {
-        let val = accel.params.get(k).unwrap();
-        let mut all_same = true;
-        for other in &same_name_accels {
-            if let Some(other_val) = other.params.get(k) {
-                if other_val != val {
-                    all_same = false;
-                    break;
-                }
-            } else {
-                all_same = false;
-                break;
-            }
-        }
-        if !all_same {
-            varying_keys.push(k);
-        }
-    }
+//     let mut varying_keys = Vec::new();
+//     let keys: Vec<_> = accel.params.keys().collect();
+//     for &k in &keys {
+//         let val = accel.params.get(k).unwrap();
+//         let mut all_same = true;
+//         for other in &same_name_accels {
+//             if let Some(other_val) = other.params.get(k) {
+//                 if other_val != val {
+//                     all_same = false;
+//                     break;
+//                 }
+//             } else {
+//                 all_same = false;
+//                 break;
+//             }
+//         }
+//         if !all_same {
+//             varying_keys.push(k);
+//         }
+//     }
 
-    if varying_keys.is_empty() {
-        return accel.name.clone();
-    }
+//     if varying_keys.is_empty() {
+//         return accel.name.clone();
+//     }
 
-    let mut param_strs = Vec::new();
-    for k in varying_keys {
-        let v = accel.params.get(k).unwrap();
-        let v_str = match v {
-            crate::ffi::ParamValue::Float(f) => f.to_string(),
-            crate::ffi::ParamValue::Int(i) => i.to_string(),
-            crate::ffi::ParamValue::Bool(b) => b.to_string(),
-            crate::ffi::ParamValue::String(s) => s.clone(),
-        };
-        param_strs.push(format!("{}={}", k, v_str));
-    }
-    param_strs.sort();
-    format!("{} ({})", accel.name, param_strs.join(", "))
-}
+//     let mut param_strs = Vec::new();
+//     for k in varying_keys {
+//         let v = accel.params.get(k).unwrap();
+//         let v_str = match v {
+//             crate::ffi::ParamValue::Float(f) => f.to_string(),
+//             crate::ffi::ParamValue::Int(i) => i.to_string(),
+//             crate::ffi::ParamValue::Bool(b) => b.to_string(),
+//             crate::ffi::ParamValue::String(s) => s.clone(),
+//         };
+//         param_strs.push(format!("{}={}", k, v_str));
+//     }
+//     param_strs.sort();
+//     format!("{} ({})", accel.name, param_strs.join(", "))
+// }
 
 /// Core execution engine for series and acceleration computation.
 ///

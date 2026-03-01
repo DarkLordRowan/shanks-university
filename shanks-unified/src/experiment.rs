@@ -163,13 +163,13 @@ pub type ArgI = Arg<i64>;
 pub type ArgF = Arg<Float>;
 
 pub type SeriesDef = Series<ArgF>;
-pub type NoiseDef = Noise<ArgStr, ArgF>;
-pub type FilterDef = Filter<ArgF>;
+pub type NoiseDef = Noise<ArgStr, ArgF, Option<ArgI>>;
+pub type FilterDef = Filter<ArgI, ArgF>;
 pub type MethodDef = Method<ArgI, ArgF>;
 
 pub type SeriesInstance = Series<Float>;
-pub type NoiseInstance = Noise<String, Float>;
-pub type FilterInstance = Filter<Float>;
+pub type NoiseInstance = Noise<String, Float, i64>;
+pub type FilterInstance = Filter<i64, Float>;
 pub type MethodInstance = Method<i64, Float>;
 
 /// Main experiment configuration - matches JSON format from backend/runner/config/
@@ -239,19 +239,17 @@ impl SeriesDef {
 
 // Float range def/// Noise configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Noise<S, T> {
+pub struct Noise<S, F, I> {
     /// Noise type (like "Normal", "Uniform", "Poisson")
     #[serde(rename = "type")]
     pub noise_type: String,
     /// Application method (like "jitter", "scaling")
     pub method: S,
-    /// First parameter (mean for normal, min for uniform)
-    pub param1: T,
-    /// Second parameter (stddev for normal, max for uniform)
-    pub param2: T,
+    /// Args (mean/stddev/min/max — different for all the types)
+    pub args: HashMap<String, F>,
     /// Random seed
     #[serde(default)]
-    pub seed: u64,
+    pub seed: I,
 }
 
 impl NoiseDef {
@@ -259,40 +257,42 @@ impl NoiseDef {
     pub fn expand(&self) -> impl Iterator<Item = NoiseInstance> {
         self.method
             .iter()
-            .zip(self.param1.iter())
-            .zip(self.param2.iter())
-            .map(|((method, param1), param2)| NoiseInstance {
+            .zip(Arg::expand(&self.args))
+            .zip(self.seed.as_ref().unwrap_or(&Arg::Single(0)).iter())
+            .map(|((method, args), seed)| NoiseInstance {
                 noise_type: self.noise_type.clone(),
                 method: method.to_string(),
-                param1,
-                param2,
-                seed: self.seed,
+                args,
+                seed,
             })
     }
 }
 
 /// Filter configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Filter<T> {
+pub struct Filter<I, F> {
     /// Filter type: "savitzkyGolay", "kolmogorovZurbenko"
     #[serde(rename = "type")]
     pub filter_type: String,
-
-    /// Filter arguments
+    /// Filter arguments, int
     #[serde(default)]
-    pub args: HashMap<String, T>,
+    pub argsi: HashMap<String, I>,
+    /// Filter arguments, float
+    #[serde(default)]
+    pub args: HashMap<String, F>,
 }
 
 impl FilterDef {
     /// Expand this definition into concrete instances.
     pub fn expand(&self) -> impl Iterator<Item = FilterInstance> {
-        // Collect all argument combinations
-        let arg_combinations = ArgF::expand(&self.args);
-
-        arg_combinations.into_iter().map(|args| FilterInstance {
-            filter_type: self.filter_type.clone(),
-            args,
-        })
+        Arg::expand(&self.argsi)
+            .into_iter()
+            .zip(Arg::expand(&self.args).into_iter())
+            .map(|(argsi, args)| FilterInstance {
+                filter_type: self.filter_type.clone(),
+                argsi,
+                args,
+            })
     }
 }
 

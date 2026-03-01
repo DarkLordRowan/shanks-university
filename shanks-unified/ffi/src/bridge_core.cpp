@@ -14,14 +14,14 @@ std::unique_ptr<CSeries> mk_series(rust::Str name, rust::Str precision, rust::St
     PrecisionType pt;
     if (!parse_precision(s_prec.c_str(), pt)) throw std::runtime_error("Invalid precision: " + s_prec);
 
-    auto names = shanks::series::series_registry_metadata::get_names();
+    auto names = ::shanks::series::series_registry_metadata::get_names();
     size_t idx = 0; bool found = false;
     for (; idx < names.size(); ++idx) if (names[idx] == s_name) { found = true; break; }
     if (!found) throw std::runtime_error("Series not found: " + s_name);
 
     std::unique_ptr<CSeries> res;
-    if (res = mk_series_f64(idx, pt, s_params, n, s_x)) return res;
-    if (res = mk_series_arb(idx, pt, s_params, n, s_x)) return res;
+    if ((res = mk_series_f64(idx, pt, s_params, n, s_x))) return res;
+    if ((res = mk_series_arb(idx, pt, s_params, n, s_x))) return res;
     
     throw std::runtime_error("Precision not yet implemented in bridge: " + s_prec);
 }
@@ -42,14 +42,14 @@ RawArr filter(const CSeries& series, rust::Str name, rust::Str params_json, uint
 
 rust::Vec<rust::String> list_series() {
     rust::Vec<rust::String> res;
-    auto names = shanks::series::series_registry_metadata::get_names();
+    auto names = ::shanks::series::series_registry_metadata::get_names();
     for (const auto& n : names) res.push_back(n);
     return res;
 }
 
 rust::Vec<rust::String> list_accels() {
     rust::Vec<rust::String> res;
-    auto names = shanks::algos::transformation_registry_metadata::get_names();
+    auto names = ::shanks::algos::transformation_registry_metadata::get_names();
     for (const auto& n : names) res.push_back(n);
     return res;
 }

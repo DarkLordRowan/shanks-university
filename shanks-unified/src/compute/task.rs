@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::experiment::{FilterDef, NoiseDef};
-use crate::ffi::ParamValue;
 
 /// Parameters for a series computation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
