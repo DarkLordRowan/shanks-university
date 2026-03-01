@@ -17,7 +17,6 @@ use std::{
 };
 use uuid::Uuid;
 
-use super::task::{AccelParams, SeriesParams};
 use crate::{
     cache::Cache,
     experiment::{NoiseDef, NoiseInstance},
@@ -33,16 +32,6 @@ pub fn to_sorted_json<T: serde::Serialize>(
     Ok(serde_json::to_string(&sorted_map)?)
 }
 
-impl NoiseInstance {
-    fn to_json(&self) -> serde_json::Value {
-        serde_json::json!({
-            "type": self.noise_type.to_lowercase(),
-            "method": self.method,
-            "args": self.args,
-            "seed": self.seed
-        })
-    }
-}
 // /// Convert NoiseDef to JSON parameters specifically formatted for the FFI library.
 // pub fn build_noise_json(noise: &NoiseDef) -> String {
 //     serde_json::json!({
@@ -116,13 +105,14 @@ pub struct ComputeCore {
 /// Result of series generation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SeriesResult {
+    /// Name
+    pub name: String,
     /// Partial sums Sn
     pub sn: Arr,
     /// Individual terms an
     pub an: Arr,
     /// Analytical sum (if known)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub sum: Option<Value>,
+    pub sum: Value,
     /// Deviations |Sn - S| for each partial sum (if the true limit is known)
     pub deviations: Arr,
 }
@@ -149,8 +139,6 @@ pub struct SmoothedEstimate {
     pub limit: Vec<Value>,
     /// The index where divergence started
     pub start_n: u64,
-    /// Length of the smoothed segment
-    pub length: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -166,7 +154,7 @@ pub struct AccelResult {
     pub events: Vec<ComputeEventEntry>,
     /// Smoothed estimates for divergent tails
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub filtered_estimates: Vec<SmoothedEstimate>,
+    pub smoothed: Vec<SmoothedEstimate>,
     // /// Profiling information (if enabled)
     // #[serde(skip_serializing_if = "Option::is_none")]
     // pub profiling: Option<ProfilingTrace>,
@@ -175,22 +163,12 @@ pub struct AccelResult {
 /// Event body for compute orchestration.
 #[derive(Debug, Clone)]
 pub enum ComputeEventBody {
-    /// Task started
-    Started,
-    /// Progress update
-    Progress {
-        stage: String,
-        current: u64,
-        total: u64,
-    },
     /// Series generation complete
     SeriesComplete { name: String, result: SeriesResult },
     /// Algorithm application complete
     AccelComplete { name: String, result: AccelResult },
     /// Error occurred
     Error { error: String },
-    /// Task cancelled
-    Cancelled,
     /// All computations complete
     Complete,
 }

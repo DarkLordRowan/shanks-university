@@ -14,61 +14,36 @@ use std::{
     ops::{Add, Mul},
     path::Path,
 };
-
 // TODO: Convert String to Arc<str>, and Vec<Event...> to Arc<[...]>.
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum Float {
-    Str(String), // We just assume that it's valid, and this is the problem of C++ from now on.
-    Float(f64),
-}
-
-impl From<f64> for Float {
-    fn from(v: f64) -> Self {
-        Self::Float(v)
-    }
-}
-
-trait ArgLike: Clone
-where
-    Self: From<Self::T>,
-{
-    type T: PartialOrd
-        + Clone
-        + Copy
-        + From<u32>
-        + Mul<Output = Self::T>
-        + Add<Output = Self::T>
-        + Debug
-        + Serialize
-        + for<'de> Deserialize<'de>;
-}
-impl ArgLike for Float {
-    type T = f64;
-}
-impl ArgLike for i64 {
-    type T = i64;
-}
-
 // Range
+trait NumLike = PartialOrd + From<u32> + Mul<Output = Self> + Add<Output = Self> + Copy;
+// + Clone
+// + Copy
+// + From<u32>
+// + Mul<Output = Self::T>
+// + Add<Output = Self::T>
+// + Debug
+// + Serialize
+// + for<'de> Deserialize<'de>;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RangeDef<A: ArgLike> {
-    pub start: A::T,
-    pub stop: A::T,
-    pub step: A::T,
+pub struct RangeDef<T> {
+    pub start: T,
+    pub stop: T,
+    pub step: T,
 }
 
-impl<A: ArgLike> RangeDef<A> {
-    pub fn iter(&self) -> impl Iterator<Item = A::T> {
+impl<T: NumLike> RangeDef<T> {
+    pub fn iter(&self) -> impl Iterator<Item = T> {
         let RangeDef { start, stop, step } = *self;
 
         (0_u32..)
-            .map(move |i| start + A::T::from(i) * step)
+            .map(move |i| start + T::from(i) * step)
             .take_while(move |&val| {
-                if step > A::T::from(0u32) {
+                if step > T::from(0u32) {
                     val < stop
-                } else if step < A::T::from(0u32) {
+                } else if step < T::from(0u32) {
                     val > stop
                 } else {
                     false
@@ -80,33 +55,28 @@ impl<A: ArgLike> RangeDef<A> {
 /// Argument value - can be single value, array, or range.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum Arg<A: ArgLike> {
+pub enum Arg {
     /// Array of values
-    Array(Vec<A>),
-    /// Range definition
-    Range(RangeDef<A>),
+    Array(Vec<serde_json::Value>),
+    /// Range i64
+    RangeI64(RangeDef<i64>),
+    /// Range f64
+    RangeF64(RangeDef<f64>),
     /// Single value
-    Single(A),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ArgStr {
-    Array(Vec<String>),
-    Single(String),
+    Single(serde_json::Value),
 }
 
 // I don't know why compiler requires me to implement this.
 // TODO: remove, source of unsound behaviour.
-impl<A: ArgLike> Default for Arg<A> {
+impl Default for Arg {
     fn default() -> Self {
         Arg::Array(vec![])
     }
 }
 
-impl<A: ArgLike> Arg<A> {
+impl Arg {
     /// Get iterator of values.
-    fn iter(&self) -> impl Iterator<Item = A> {
+    fn iter(&self) -> impl Iterator<Item = serde_json::Value> {
         gen {
             match self {
                 Arg::Single(v) => yield (*v).clone(),
@@ -115,7 +85,12 @@ impl<A: ArgLike> Arg<A> {
                         yield x.clone();
                     }
                 }
-                Arg::Range(range) => {
+                Arg::RangeF64(range) => {
+                    for v in range.iter() {
+                        yield v.into();
+                    }
+                }
+                Arg::RangeI64(range) => {
                     for v in range.iter() {
                         yield v.into();
                     }
@@ -125,7 +100,7 @@ impl<A: ArgLike> Arg<A> {
     }
 
     /// Expand arguments into all combinations.
-    fn expand(args: &HashMap<String, Arg<A>>) -> Vec<HashMap<String, A>> {
+    fn expand(args: &HashMap<String, Arg>) -> Vec<HashMap<String, serde_json::Value>> {
         let mut result = vec![HashMap::new()];
 
         for (key, value) in args {
@@ -144,6 +119,13 @@ impl<A: ArgLike> Arg<A> {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ArgStr {
+    Array(Vec<String>),
+    Single(String),
+}
+
 impl ArgStr {
     fn iter(&self) -> impl Iterator<Item = &str> {
         gen {
@@ -159,18 +141,44 @@ impl ArgStr {
     }
 }
 
-pub type ArgI = Arg<i64>;
-pub type ArgF = Arg<Float>;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ArgI {
+    Array(Vec<i64>),
+    RangeI64(RangeDef<i64>),
+    Single(i64),
+}
 
-pub type SeriesDef = Series<ArgF>;
-pub type NoiseDef = Noise<ArgStr, ArgF, Option<ArgI>>;
-pub type FilterDef = Filter<ArgI, ArgF>;
-pub type MethodDef = Method<ArgI, ArgF>;
+impl ArgI {
+    /// Get iterator of values.
+    fn iter(&self) -> impl Iterator<Item = i64> {
+        gen {
+            match self {
+                ArgI::Single(v) => yield (*v).clone(),
+                ArgI::Array(arr) => {
+                    for x in arr {
+                        yield x.clone();
+                    }
+                }
+                ArgI::RangeI64(range) => {
+                    for v in range.iter() {
+                        yield v.into();
+                    }
+                }
+            }
+        }
+    }
+}
 
-pub type SeriesInstance = Series<Float>;
-pub type NoiseInstance = Noise<String, Float, i64>;
-pub type FilterInstance = Filter<i64, Float>;
-pub type MethodInstance = Method<i64, Float>;
+pub type SeriesDef = Series<Arg>;
+pub type NoiseDef = Noise<ArgStr, Arg, Option<ArgI>>;
+pub type FilterDef = Filter<Arg>;
+pub type MethodDef = Method<ArgI, Arg>;
+
+pub type SeriesInstance = Series<serde_json::Value>;
+pub type NoiseInstance = Noise<String, serde_json::Value, i64>;
+pub type FilterInstance = Filter<serde_json::Value>;
+pub type MethodInstance = Method<i64, serde_json::Value>;
 
 /// Main experiment configuration - matches JSON format from backend/runner/config/
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -224,7 +232,7 @@ impl SeriesDef {
     /// Expand this definition into concrete instances.
     pub fn expand(&self) -> impl Iterator<Item = SeriesInstance> {
         // Collect all argument combinations
-        let arg_combinations = ArgF::expand(&self.args);
+        let arg_combinations = Arg::expand(&self.args);
 
         arg_combinations
             .into_iter()
@@ -258,7 +266,7 @@ impl NoiseDef {
         self.method
             .iter()
             .zip(Arg::expand(&self.args))
-            .zip(self.seed.as_ref().unwrap_or(&Arg::Single(0)).iter())
+            .zip(self.seed.as_ref().unwrap_or(&ArgI::Single(0)).iter())
             .map(|((method, args), seed)| NoiseInstance {
                 noise_type: self.noise_type.clone(),
                 method: method.to_string(),
@@ -270,27 +278,22 @@ impl NoiseDef {
 
 /// Filter configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Filter<I, F> {
+pub struct Filter<T> {
     /// Filter type: "savitzkyGolay", "kolmogorovZurbenko"
     #[serde(rename = "type")]
     pub filter_type: String,
-    /// Filter arguments, int
+    /// Filter arguments
     #[serde(default)]
-    pub argsi: HashMap<String, I>,
-    /// Filter arguments, float
-    #[serde(default)]
-    pub args: HashMap<String, F>,
+    pub args: HashMap<String, T>,
 }
 
 impl FilterDef {
     /// Expand this definition into concrete instances.
     pub fn expand(&self) -> impl Iterator<Item = FilterInstance> {
-        Arg::expand(&self.argsi)
+        Arg::expand(&self.args)
             .into_iter()
-            .zip(Arg::expand(&self.args).into_iter())
-            .map(|(argsi, args)| FilterInstance {
+            .map(|args| FilterInstance {
                 filter_type: self.filter_type.clone(),
-                argsi,
                 args,
             })
     }
