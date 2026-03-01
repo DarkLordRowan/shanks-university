@@ -13,7 +13,6 @@
 
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
-use std::sync::Arc;
 
 /// Shanks Unified - Series Acceleration Visualization Tool
 #[derive(Parser, Debug)]
@@ -90,9 +89,6 @@ fn main() -> anyhow::Result<()> {
 
     log::info!("Starting Shanks Unified...");
 
-    // Simplified library initialization (now handled via cxx bridge)
-    let library = Arc::new(shanks_unified::ffi::ShanksLibrary::new());
-
     // Initialize database
     let cache = if args.no_cache {
         log::info!("Cache disabled by --no-cache flag");
@@ -107,7 +103,7 @@ fn main() -> anyhow::Result<()> {
         // Drag & Drop or GUI without subcommand
         None => {
             if let Some(config) = &args.config {
-                run_gui(library, cache, Some(config.clone()))
+                run_gui(cache, Some(config.clone()))
             } else {
                 // No command and no config - print help
                 use clap::CommandFactory;
@@ -116,25 +112,23 @@ fn main() -> anyhow::Result<()> {
                 Ok(())
             }
         }
-        Some(Commands::Gui { config }) => run_gui(library, cache, Some(config.clone())),
+        Some(Commands::Gui { config }) => run_gui(cache, Some(config.clone())),
         Some(Commands::Headless {
             config,
             precisions,
             export,
         }) => run_headless(
-            library,
             cache,
             config.clone(),
             precisions.clone(),
             export.clone(),
             args.verbose > 0,
         ),
-        Some(Commands::List { what }) => run_list(&library, what),
+        Some(Commands::List { what }) => run_list(what),
     }
 }
 
 fn run_gui(
-    library: Arc<shanks_unified::ffi::ShanksLibrary>,
     cache: shanks_unified::cache::Cache,
     config_path: Option<PathBuf>,
 ) -> anyhow::Result<()> {
@@ -147,7 +141,7 @@ fn run_gui(
     };
 
     // Create application state
-    let app_state = shanks_unified::app::AppState::new(experiment_config, cache, Some(library));
+    let app_state = shanks_unified::app::AppState::new(experiment_config, cache);
 
     // Run GUI
     let native_options = eframe::NativeOptions {
@@ -180,7 +174,6 @@ fn run_gui(
 }
 
 fn run_headless(
-    library: Arc<shanks_unified::ffi::ShanksLibrary>,
     cache: shanks_unified::cache::Cache,
     config_path: PathBuf,
     precisions: Option<String>,
@@ -198,16 +191,12 @@ fn run_headless(
     }
 
     // Create headless runner
-    let mut runner = shanks_unified::headless::HeadlessRunner::new(config, library, cache)?;
-
-    if let Some(path) = export_path {
-        runner.set_export_path(path);
-    }
+    let mut runner = shanks_unified::headless::HeadlessRunner::new(config, cache, export_path)?;
 
     // Set up progress callback
     let last_print =
         std::sync::Arc::new(std::sync::Mutex::new((std::time::Instant::now(), -1_i32)));
-    runner.set_progress_callback(move |info| {
+    runner = runner.with_progress(move |info| {
         let now = std::time::Instant::now();
         let mut state = last_print.lock().unwrap();
 
@@ -271,22 +260,21 @@ fn run_headless(
     Ok(())
 }
 
-fn run_list(library: &shanks_unified::ffi::ShanksLibrary, what: &str) -> anyhow::Result<()> {
+fn run_list(what: &str) -> anyhow::Result<()> {
+    use shanks_unified::ffi::bridge::ffi as bridge;
     let what = what.to_lowercase();
 
     if what == "all" || what == "series" {
         println!("Available series:");
-        let series = library.list_series()?;
-        for name in &series {
+        for name in bridge::list_series() {
             println!("  - {}", name);
         }
         println!();
     }
 
-    if what == "all" || what == "accels" || what == "algorithms" {
+    if what == "all" || what == "accels" || what == "algorithms" || what == "methods" {
         println!("Available acceleration algorithms:");
-        let accels = library.list_accels()?;
-        for name in &accels {
+        for name in bridge::list_accels() {
             println!("  - {}", name);
         }
         println!();
@@ -294,8 +282,7 @@ fn run_list(library: &shanks_unified::ffi::ShanksLibrary, what: &str) -> anyhow:
 
     if what == "all" || what == "precisions" {
         println!("Available precisions:");
-        let precisions = library.list_precisions()?;
-        for name in &precisions {
+        for name in bridge::list_precisions() {
             println!("  - {}", name);
         }
         println!();
@@ -303,15 +290,13 @@ fn run_list(library: &shanks_unified::ffi::ShanksLibrary, what: &str) -> anyhow:
 
     if what == "all" || what == "noises" {
         println!("Available noise types:");
-        let noises = library.list_noises()?;
-        for name in &noises {
+        for name in bridge::list_noises() {
             println!("  - {}", name);
         }
         println!();
 
         println!("Available noise methods:");
-        let methods = library.list_noise_methods()?;
-        for name in &methods {
+        for name in bridge::list_noise_methods() {
             println!("  - {}", name);
         }
         println!();

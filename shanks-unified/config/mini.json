@@ -5,14 +5,13 @@
   "series": [
     {
       "name": "ExpSeries",
-      "args": {
-        "x": [
-          "1.0"
-        ]
-      }
+      "x": [
+        "1.0"
+      ],
+      "args": {}
     }
   ],
-  "methods": [
+  "accels": [
     {
       "name": "ShanksAlgorithm",
       "n": {

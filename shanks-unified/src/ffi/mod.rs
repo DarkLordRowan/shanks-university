@@ -82,44 +82,6 @@ pub type Arr = ValueOf<Vec<RealValue>>;
 //     vec
 // }
 
-impl Arr {
-    fn serialize(&self) -> (u32, i64, [&[u8]; 4]) {
-        use ValueOf::*;
-        match self {
-            Real(r) => (0, r.len() as i64, [RealValue::to_bytes(&r), &[], &[], &[]]),
-            Complex(c) => (
-                1,
-                c.real.len() as i64,
-                [
-                    RealValue::to_bytes(&c.real),
-                    RealValue::to_bytes(&c.imag),
-                    &[],
-                    &[],
-                ],
-            ),
-            Interval(i) => (
-                2,
-                i.inf.len() as i64,
-                [
-                    RealValue::to_bytes(&i.inf),
-                    RealValue::to_bytes(&i.sup),
-                    &[],
-                    &[],
-                ],
-            ),
-            CInterval(ci) => (
-                3,
-                ci.real.inf.len() as i64,
-                [
-                    RealValue::to_bytes(&ci.real.inf),
-                    RealValue::to_bytes(&ci.real.sup),
-                    RealValue::to_bytes(&ci.imag.inf),
-                    RealValue::to_bytes(&ci.imag.sup),
-                ],
-            ),
-        }
-    }
-}
 
 /// A parameter value that can be passed to series or algorithms.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

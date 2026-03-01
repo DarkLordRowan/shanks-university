@@ -9,7 +9,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashMap,
+    collections::{BTreeMap, HashMap},
     fmt::Debug,
     ops::{Add, Mul},
     path::Path,
@@ -100,8 +100,8 @@ impl Arg {
     }
 
     /// Expand arguments into all combinations.
-    fn expand(args: &HashMap<String, Arg>) -> Vec<HashMap<String, serde_json::Value>> {
-        let mut result = vec![HashMap::new()];
+    fn expand(args: &BTreeMap<String, Arg>) -> Vec<BTreeMap<String, serde_json::Value>> {
+        let mut result = vec![BTreeMap::new()];
 
         for (key, value) in args {
             let mut new_result = Vec::new();
@@ -197,7 +197,7 @@ pub struct ExperimentConfig {
 
     /// Acceleration methods
     #[serde(default)]
-    pub methods: Vec<AccelDef>,
+    pub accels: Vec<AccelDef>,
 
     /// Precision types to use (optional override)
     #[serde(default)]
@@ -217,7 +217,7 @@ impl ExperimentConfig {
 }
 
 /// Full series definition with parameters.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Series<T> {
     /// Series name from registry
     pub name: String,
@@ -225,7 +225,7 @@ pub struct Series<T> {
     pub x: T,
     /// Constructor arguments with value expansion support
     #[serde(default)]
-    pub args: HashMap<String, T>,
+    pub args: BTreeMap<String, T>,
 }
 
 impl SeriesDef {
@@ -246,7 +246,7 @@ impl SeriesDef {
 }
 
 // Float range def/// Noise configuration.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Noise<S, F, I> {
     /// Noise type (like "Normal", "Uniform", "Poisson")
     #[serde(rename = "type")]
@@ -254,7 +254,7 @@ pub struct Noise<S, F, I> {
     /// Application method (like "jitter", "scaling")
     pub method: S,
     /// Args (mean/stddev/min/max — different for all the types)
-    pub args: HashMap<String, F>,
+    pub args: BTreeMap<String, F>,
     /// Random seed
     #[serde(default)]
     pub seed: I,
@@ -277,14 +277,14 @@ impl NoiseDef {
 }
 
 /// Filter configuration.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Filter<T> {
     /// Filter type: "savitzkyGolay", "kolmogorovZurbenko"
     #[serde(rename = "type")]
     pub filter_type: String,
     /// Filter arguments
     #[serde(default)]
-    pub args: HashMap<String, T>,
+    pub args: BTreeMap<String, T>,
 }
 
 impl FilterDef {
@@ -300,7 +300,7 @@ impl FilterDef {
 }
 
 /// Accel definition with parameter expansion.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Accel<I, F> {
     /// Accel name from registry
     pub name: String,
@@ -310,7 +310,7 @@ pub struct Accel<I, F> {
 
     /// Additional arguments with expansion
     #[serde(default)]
-    pub args: HashMap<String, F>,
+    pub args: BTreeMap<String, F>,
 
     /// Event configurations
     #[serde(default)]
@@ -332,7 +332,7 @@ impl AccelDef {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EventDef {
     /// Event type: "slow_accel", "monotone", "divergent", "sign_changed", "second_diff"
     #[serde(rename = "type")]

@@ -224,7 +224,7 @@ pub fn build_series_tree(
 
 /// Build an acceleration selection tree from experiment config.
 pub fn build_accel_tree(
-    method_instances: &[super::super::experiment::MethodInstance],
+    method_instances: &[super::super::experiment::AccelInstance],
 ) -> SelectionNode {
     let mut root = SelectionNode::new("accel_root", "ALL ACCELERATIONS").with_expandable(true);
     root.expanded = true;
@@ -547,6 +547,7 @@ fn generate_param_combinations(
 
     result
 }
+
 
 #[cfg(test)]
 mod tests {
