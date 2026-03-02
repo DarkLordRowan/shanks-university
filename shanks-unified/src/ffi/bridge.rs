@@ -112,6 +112,10 @@ pub mod ffi {
 
         fn filter(series: &CSeries, name: &str, params_json: &str, start_n: u64) -> RawArr;
 
+        /// Returns events from the last `run_algo` call on this series.
+        /// Each entry is tab-separated: "n\tname\tdescription".
+        fn get_events(series: &CSeries) -> Vec<String>;
+
         fn list_series() -> Vec<String>;
 
         fn list_accels() -> Vec<String>;

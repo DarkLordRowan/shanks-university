@@ -9,6 +9,7 @@
 #include "series_acceleration.hpp"
 #include "methods.hpp"
 #include "utils.hpp"
+#include "utils/json.hpp"
 #include "noise/noise_generator.hpp"
 #include "filters/kolmogorov_zurbenko.hpp"
 #include "filters/savitzky_golay.hpp"
@@ -17,7 +18,10 @@
 #include <complex>
 #include <vector>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
+#include <string>
+#include <tuple>
 
 #include "shanks-unified/src/ffi/bridge.rs.h"
 
@@ -88,6 +92,10 @@ template <typename T, PrecisionType P>
 class CSeriesImpl : public CSeries {
     ::series_result<T> result;
     T limit;
+    // Events emitted during the last run_algo() call.
+    // Mutable so that run_algo (logically const, returns new obj) can store events.
+    // Actually stored on the *returned* object, so no mutation needed here.
+    mutable std::vector<std::tuple<uint64_t, std::string, std::string>> events_;
 
     RawArr convert_vec(const std::vector<T>& vec) const {
         RawArr res;
@@ -169,16 +177,25 @@ public:
         return convert_val(limit);
     }
 
+    rust::Vec<rust::String> get_events() const override {
+        rust::Vec<rust::String> out;
+        for (const auto& [n, name, desc] : events_) {
+            std::string encoded = std::to_string(n) + "\t" + name + "\t" + desc;
+            out.push_back(rust::String(encoded));
+        }
+        return out;
+    }
+
     std::unique_ptr<CSeries> apply_noise(rust::Str name, rust::Str params_json, uint64_t start_n) const override {
         auto new_res = ::shanks::apply_noise<T>(result, std::string(name), std::string(params_json), start_n);
         return std::make_unique<CSeriesImpl<T, P>>(std::move(new_res), limit);
     }
 
     std::unique_ptr<CSeries> run_algo(rust::Str name, rust::Str params_json, size_t m, size_t n) const override {
-        // ... (run_algo remains unchanged as it uses registries which are already in core)
         std::string s_name(name);
         std::string s_params(params_json);
 
+        // Locate algorithm by camel-key or display-name
         auto keys = ::shanks::algos::transformation_registry_metadata::get_keys();
         size_t idx = 0; bool found = false;
         for (; idx < keys.size(); ++idx) if (keys[idx] == s_name) { found = true; break; }
@@ -194,14 +211,26 @@ public:
         acc_res.Sn.reserve(n);
         acc_res.an.reserve(n);
 
+        std::vector<std::tuple<uint64_t, std::string, std::string>> new_events;
+
         T prev_accel = T(0);
         for (size_t i = 1; i <= n; ++i) {
-            // Compute acceleration for first i terms of the original series
             T accelerated;
             try {
                 accelerated = (*algo)(i, m, result);
+            } catch (const std::exception& ex) {
+                new_events.emplace_back(
+                    static_cast<uint64_t>(i),
+                    "algo_error",
+                    std::string(ex.what())
+                );
+                accelerated = prev_accel;
             } catch (...) {
-                // TODO PUSH EVENT
+                new_events.emplace_back(
+                    static_cast<uint64_t>(i),
+                    "algo_error",
+                    "Unknown exception in acceleration algorithm"
+                );
                 accelerated = prev_accel;
             }
             acc_res.Sn.push_back(accelerated);
@@ -209,7 +238,10 @@ public:
             prev_accel = accelerated;
         }
 
-        return std::make_unique<CSeriesImpl<T, P>>(std::move(acc_res), prev_accel);
+        // Build the result object and store events on it
+        auto result_obj = std::make_unique<CSeriesImpl<T, P>>(std::move(acc_res), prev_accel);
+        result_obj->events_ = std::move(new_events);
+        return result_obj;
     }
 
     RawArr filter(rust::Str name, rust::Str params_json, uint64_t start_n) const override {
@@ -229,9 +261,28 @@ T parse_x(const std::string& x) {
 template <typename T, PrecisionType P>
 std::unique_ptr<CSeries> mk_typed_series(size_t idx, const std::string& params_json, size_t n, const std::string& x_str) {
     T x = parse_x<T>(x_str);
-    auto series = ::shanks::series::series_registry<T, size_t>::create(idx, x);
+
+    // Parse optional T-parameter (alpha) and K-parameter (m) from params_json.
+    // These map to the addTParameter / addKParameter accepted by series_registry::create,
+    // which then dispatches bin_iterator(x, alpha), incomplete_Gamma_func_iterator(x, alpha),
+    // m_fact_1mx_mp1_inverse_iterator(x, k), etc. via if-constexpr in the factory lambda.
+    double alpha_d = 1.0;
+    size_t k_param = 1;
+    try {
+        auto s = ::shanks::utils::get_json_val(params_json, "alpha");
+        if (!s.empty()) alpha_d = std::stod(s);
+    } catch (...) {}
+    try {
+        auto s = ::shanks::utils::get_json_val(params_json, "m");
+        if (!s.empty()) k_param = std::stoul(s);
+    } catch (...) {}
+
+    // ::utils::cast is the project's type-safe numeric cast functor (same namespace as in series iterators).
+    T t_param = ::utils::cast<T, double>()(alpha_d);
+    auto series = ::shanks::series::series_registry<T, size_t>::create(idx, x, t_param, k_param);
     return std::make_unique<CSeriesImpl<T, P>>(series->generate(n), series->get_sum());
 }
+
 
 // Declarations of typed factory for split build
 std::unique_ptr<CSeries> mk_series_f64(size_t idx, PrecisionType pt, const std::string& params_json, size_t n, const std::string& x);

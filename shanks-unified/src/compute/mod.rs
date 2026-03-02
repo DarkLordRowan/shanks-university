@@ -343,7 +343,7 @@ where
             local_series_data = Some(sdata);
         }
 
-        let mut lazy_accels: BTreeMap<usize, (cxx::UniquePtr<bridge::CSeries>, Option<u64>)> =
+        let mut lazy_accels: BTreeMap<usize, (cxx::UniquePtr<bridge::CSeries>, Option<u64>, Vec<SeriesEvent>)> =
             BTreeMap::new();
 
         for (a_idx, a_inst, need_unfiltered, filters) in todo {
@@ -358,24 +358,38 @@ where
                     a_inst.m as usize,
                     s_n_needed as usize,
                 )?;
+                // Collect events emitted by the C++ algorithm (per-step errors)
+                let cpp_events: Vec<SeriesEvent> = bridge::get_events(&*ptr)
+                    .iter()
+                    .filter_map(|s| {
+                        let mut parts = s.splitn(3, '\t');
+                        let n: u64 = parts.next()?.parse().ok()?;
+                        let name = parts.next()?.to_string();
+                        let description = parts.next().unwrap_or("").to_string();
+                        Some(SeriesEvent { n, name, description })
+                    })
+                    .collect();
                 let dev = bridge::get_deviation(&*ptr);
                 let stop_n = detect_divergence(&dev.r1);
-                lazy_accels.insert(a_idx, (ptr, stop_n));
+                lazy_accels.insert(a_idx, (ptr, stop_n, cpp_events));
             }
-            let (ref a_ptr, stop_n) = lazy_accels[&a_idx];
+            let (ref a_ptr, stop_n, ref cpp_events) = lazy_accels[&a_idx];
             let s_data = local_series_data.as_ref().unwrap();
 
             if need_unfiltered {
-                let stop_event = stop_n.map(|n| SeriesEvent {
-                    n,
-                    name: "stop".to_string(),
-                    description: "Divergence detected; stop_action_limit reached.".to_string(),
-                });
+                let mut events: Vec<SeriesEvent> = cpp_events.clone();
+                if let Some(n) = stop_n {
+                    events.push(SeriesEvent {
+                        n,
+                        name: "stop".to_string(),
+                        description: "Divergence detected; stop_action_limit reached.".to_string(),
+                    });
+                }
                 let adata = AccelData {
                     values: arr_from_raw(bridge::get_sn(&**a_ptr)),
                     an: arr_from_raw(bridge::get_an(&**a_ptr)),
                     deviations: arr_from_raw(bridge::get_deviation(&**a_ptr)),
-                    events: stop_event.into_iter().collect(),
+                    events,
                 };
                 let _ = internal_tx.blocking_send(ComputeEvent::SeriesDone {
                     id: s_id.clone(),
