@@ -160,7 +160,7 @@ public:
         std::vector<T> dev;
         dev.reserve(result.Sn.size());
         for (const auto& sn : result.Sn) {
-            dev.push_back(::utils::math<T>::abs(sn - limit));
+            dev.push_back(sn - limit);
         }
         return convert_vec(dev);
     }

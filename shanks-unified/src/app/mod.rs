@@ -42,6 +42,26 @@ pub enum DeviationMode {
     Components,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct TabState {
+    pub symlog: bool,
+    pub log_linthresh: f64,
+    pub aspect_ratio: f32,
+    #[serde(skip)]
+    pub reset_view: bool,
+}
+
+impl Default for TabState {
+    fn default() -> Self {
+        Self {
+            symlog: false,
+            log_linthresh: -50.0,
+            aspect_ratio: 10.0,
+            reset_view: false,
+        }
+    }
+}
+
 impl ResultKey {
     fn from_combo(app: &ShanksApp, combo: &SelectedCombination) -> Option<Self> {
         let exp = app.state.experiment.as_ref()?;
@@ -106,7 +126,7 @@ impl ResultKey {
         let hash = hasher.finish();
 
         let hue = (hash % 360) as f32 / 360.0;
-        egui::ecolor::Hsva::new(hue, 0.8, 0.8, 1.0).into()
+        egui::ecolor::Hsva::new(hue, 1.0, 1.0, 1.0).into()
     }
 }
 
@@ -156,9 +176,10 @@ pub struct ShanksApp {
 
     plot_cache: PlotCache,
     pub selected_tab: PlotTab,
+    pub main_tab_state: TabState,
+    pub dev_tab_state: TabState,
+
     pub deviation_mode: DeviationMode,
-    pub symlog: bool,
-    pub log_linthresh: f64,
     pub show_sn: bool,
     pub show_accel: bool,
     pub show_partial_sums: bool,
@@ -186,9 +207,9 @@ impl ShanksApp {
             precision_tree: None,
             plot_cache: PlotCache::default(),
             selected_tab: PlotTab::Main,
+            main_tab_state: TabState::default(),
+            dev_tab_state: TabState::default(),
             deviation_mode: DeviationMode::Magnitude,
-            symlog: false,
-            log_linthresh: -50.0,
             show_sn: true,
             show_accel: true,
             show_partial_sums: true,
@@ -264,6 +285,12 @@ impl ShanksApp {
                 true
             }
         });
+
+        let old_size = self.results.len();
+        self.results.retain(|k, _| requested_keys.contains(k));
+        if self.results.len() != old_size {
+            self.plot_cache.dirty = true;
+        }
     }
 
     pub fn process_events(&mut self) {
@@ -294,24 +321,56 @@ impl ShanksApp {
         }
     }
 
-    fn to_plot_point(&self, val: &crate::ffi::RealValue) -> f64 {
-        if self.symlog {
-            crate::plot::Scientific(val.mantissa, val.exponent as i32).symlog(self.log_linthresh)
+    fn to_plot_point(val: &crate::ffi::RealValue, symlog: bool, log_linthresh: f64) -> f64 {
+        if symlog {
+            crate::plot::Scientific(val.mantissa, val.exponent as i32).symlog(log_linthresh)
         } else {
             val.to_f64()
         }
     }
 
-    fn arr_to_f64(&self, arr: &Arr) -> ArrF64 {
+    fn to_mag_point(val: &f64, symlog: bool, log_linthresh: f64) -> f64 {
+        if symlog {
+            if val.is_finite() {
+                crate::plot::Scientific::from_f64(val.abs()).symlog(log_linthresh)
+            } else {
+                *val
+            }
+        } else {
+            val.abs()
+        }
+    }
+
+    fn arr_to_f64(&self, arr: &Arr, symlog: bool, log_linthresh: f64) -> ArrF64 {
         match arr {
-            Arr::Real(v) => ArrF64::Real(v.iter().map(|val| self.to_plot_point(val)).collect()),
+            Arr::Real(v) => ArrF64::Real(
+                v.iter()
+                    .map(|val| Self::to_plot_point(val, symlog, log_linthresh))
+                    .collect(),
+            ),
             Arr::Complex(c) => ArrF64::Complex(ComplexOf {
-                real: c.real.iter().map(|val| self.to_plot_point(val)).collect(),
-                imag: c.imag.iter().map(|val| self.to_plot_point(val)).collect(),
+                real: c
+                    .real
+                    .iter()
+                    .map(|val| Self::to_plot_point(val, symlog, log_linthresh))
+                    .collect(),
+                imag: c
+                    .imag
+                    .iter()
+                    .map(|val| Self::to_plot_point(val, symlog, log_linthresh))
+                    .collect(),
             }),
             Arr::Interval(iv) => ArrF64::Interval(IntervalOf {
-                inf: iv.inf.iter().map(|val| self.to_plot_point(val)).collect(),
-                sup: iv.sup.iter().map(|val| self.to_plot_point(val)).collect(),
+                inf: iv
+                    .inf
+                    .iter()
+                    .map(|val| Self::to_plot_point(val, symlog, log_linthresh))
+                    .collect(),
+                sup: iv
+                    .sup
+                    .iter()
+                    .map(|val| Self::to_plot_point(val, symlog, log_linthresh))
+                    .collect(),
             }),
             Arr::CInterval(ci) => ArrF64::CInterval(ComplexOf {
                 real: IntervalOf {
@@ -319,13 +378,13 @@ impl ShanksApp {
                         .real
                         .inf
                         .iter()
-                        .map(|val| self.to_plot_point(val))
+                        .map(|val| Self::to_plot_point(val, symlog, log_linthresh))
                         .collect(),
                     sup: ci
                         .real
                         .sup
                         .iter()
-                        .map(|val| self.to_plot_point(val))
+                        .map(|val| Self::to_plot_point(val, symlog, log_linthresh))
                         .collect(),
                 },
                 imag: IntervalOf {
@@ -333,13 +392,13 @@ impl ShanksApp {
                         .imag
                         .inf
                         .iter()
-                        .map(|val| self.to_plot_point(val))
+                        .map(|val| Self::to_plot_point(val, symlog, log_linthresh))
                         .collect(),
                     sup: ci
                         .imag
                         .sup
                         .iter()
-                        .map(|val| self.to_plot_point(val))
+                        .map(|val| Self::to_plot_point(val, symlog, log_linthresh))
                         .collect(),
                 },
             }),
@@ -352,29 +411,75 @@ impl ShanksApp {
         line_type: &str,
         arr: &Arr,
         mode: DeviationMode,
+        symlog: bool,
+        log_linthresh: f64,
     ) -> Vec<(ResultKey, String, ArrF64)> {
         let mut results = Vec::new();
-        match (arr, mode) {
-            (Arr::Complex(c), DeviationMode::Magnitude) => {
-                let mags = c
+        if mode == DeviationMode::Magnitude {
+            let mags = match arr {
+                Arr::Real(v) => v
+                    .iter()
+                    .map(|val| {
+                        if symlog {
+                            crate::plot::Scientific(val.mantissa.abs(), val.exponent as i32)
+                                .symlog(log_linthresh)
+                        } else {
+                            val.to_f64().abs()
+                        }
+                    })
+                    .collect(),
+                Arr::Complex(c) => c
                     .real
                     .iter()
                     .zip(&c.imag)
                     .map(|(re, im)| {
                         let r = re.to_f64();
                         let i = im.to_f64();
-                        let mut mag = (r * r + i * i).sqrt();
-                        if self.symlog {
-                            mag = crate::plot::Scientific::from_f64(mag).symlog(self.log_linthresh);
-                        }
-                        mag
+                        let mag = r.hypot(i);
+                        Self::to_mag_point(&mag, symlog, log_linthresh)
                     })
-                    .collect::<Vec<_>>();
-                results.push((key.clone(), line_type.to_string(), ArrF64::Real(mags)));
-            }
-            _ => {
-                results.push((key.clone(), line_type.to_string(), self.arr_to_f64(arr)));
-            }
+                    .collect(),
+                Arr::Interval(iv) => iv
+                    .inf
+                    .iter()
+                    .zip(&iv.sup)
+                    .map(|(inf, sup)| {
+                        let mean = (inf.to_f64() + sup.to_f64()) / 2.0;
+                        Self::to_mag_point(&mean, symlog, log_linthresh)
+                    })
+                    .collect(),
+                Arr::CInterval(ci) => {
+                    let re_means: Vec<f64> = ci
+                        .real
+                        .inf
+                        .iter()
+                        .zip(&ci.real.sup)
+                        .map(|(inf, sup)| (inf.to_f64() + sup.to_f64()) / 2.0)
+                        .collect();
+                    let im_means: Vec<f64> = ci
+                        .imag
+                        .inf
+                        .iter()
+                        .zip(&ci.imag.sup)
+                        .map(|(inf, sup)| (inf.to_f64() + sup.to_f64()) / 2.0)
+                        .collect();
+                    re_means
+                        .into_iter()
+                        .zip(im_means)
+                        .map(|(re, im)| {
+                            let mag = re.hypot(im);
+                            Self::to_mag_point(&mag, symlog, log_linthresh)
+                        })
+                        .collect()
+                }
+            };
+            results.push((key.clone(), line_type.to_string(), ArrF64::Real(mags)));
+        } else {
+            results.push((
+                key.clone(),
+                line_type.to_string(),
+                self.arr_to_f64(arr, symlog, log_linthresh),
+            ));
         }
         results
     }
@@ -392,7 +497,12 @@ impl ShanksApp {
         for (key, ltype, data, _, _, _) in &raw_lines {
             match data {
                 ArrF64::Real(_) => {
-                    all_infos.push(LineInfo::from_key(key, ltype, None));
+                    let component = if ltype.contains("Dev") {
+                        Some("Mag")
+                    } else {
+                        None
+                    };
+                    all_infos.push(LineInfo::from_key(key, ltype, component));
                 }
                 ArrF64::Complex(_) => {
                     all_infos.push(LineInfo::from_key(key, ltype, Some("Re")));
@@ -481,6 +591,11 @@ impl ShanksApp {
         let mut main_raw = Vec::new();
         let mut dev_raw = Vec::new();
 
+        let main_symlog = self.main_tab_state.symlog;
+        let main_thresh = self.main_tab_state.log_linthresh;
+        let dev_symlog = self.dev_tab_state.symlog;
+        let dev_thresh = self.dev_tab_state.log_linthresh;
+
         for (key, (sdata, adata)) in &self.results {
             let base_color = key.color();
 
@@ -489,7 +604,7 @@ impl ShanksApp {
                 main_raw.push((
                     key.clone(),
                     "Sn".to_string(),
-                    self.arr_to_f64(&sdata.sn),
+                    self.arr_to_f64(&sdata.sn, main_symlog, main_thresh),
                     base_color.gamma_multiply(0.4),
                     1.0,
                     LineStyle::Dashed { length: 4.0 },
@@ -501,7 +616,7 @@ impl ShanksApp {
                     main_raw.push((
                         key.clone(),
                         "Accel".to_string(),
-                        self.arr_to_f64(&adata.values),
+                        self.arr_to_f64(&adata.values, main_symlog, main_thresh),
                         base_color,
                         2.0,
                         LineStyle::Solid,
@@ -516,6 +631,8 @@ impl ShanksApp {
                     "Sn Dev",
                     &sdata.deviations,
                     self.deviation_mode,
+                    dev_symlog,
+                    dev_thresh,
                 );
                 for (k, lt, data) in collected {
                     dev_raw.push((
@@ -536,16 +653,11 @@ impl ShanksApp {
                         "Accel Dev",
                         &adata.deviations,
                         self.deviation_mode,
+                        dev_symlog,
+                        dev_thresh,
                     );
                     for (k, lt, data) in collected {
-                        dev_raw.push((
-                            k,
-                            lt,
-                            data,
-                            base_color,
-                            2.0,
-                            LineStyle::Solid,
-                        ));
+                        dev_raw.push((k, lt, data, base_color, 2.0, LineStyle::Solid));
                     }
                 }
             }
@@ -611,28 +723,6 @@ impl eframe::App for ShanksApp {
                     {
                         self.plot_cache.dirty = true;
                     }
-                    ui.separator();
-                    ui.label("Deviation Mode:");
-                    if ui
-                        .radio_value(
-                            &mut self.deviation_mode,
-                            DeviationMode::Magnitude,
-                            "Magnitude",
-                        )
-                        .changed()
-                    {
-                        self.plot_cache.dirty = true;
-                    }
-                    if ui
-                        .radio_value(
-                            &mut self.deviation_mode,
-                            DeviationMode::Components,
-                            "Components",
-                        )
-                        .changed()
-                    {
-                        self.plot_cache.dirty = true;
-                    }
                 });
                 ui.separator();
                 ui.label(format!("Status: {}", self.status));
@@ -665,141 +755,187 @@ impl eframe::App for ShanksApp {
 
                 ui.separator();
 
-                if ui.checkbox(&mut self.symlog, "Symlog").changed() {
+                let tab_state = match self.selected_tab {
+                    PlotTab::Main => &mut self.main_tab_state,
+                    PlotTab::Deviation => &mut self.dev_tab_state,
+                };
+
+                if ui.checkbox(&mut tab_state.symlog, "Symlog").changed() {
                     self.plot_cache.dirty = true;
                 }
-                if self.symlog {
-                    let slider = egui::Slider::new(&mut self.log_linthresh, -100.0..=100.0)
-                        .text("Threshold")
+                if tab_state.symlog {
+                    let slider = egui::Slider::new(&mut tab_state.log_linthresh, -100.0..=100.0)
+                        .text("Log Threshold")
                         .clamping(egui::SliderClamping::Never);
                     if ui.add(slider).changed() {
                         self.plot_cache.dirty = true;
                     }
                 }
+
+                ui.separator();
+                let ar_slider = egui::Slider::new(&mut tab_state.aspect_ratio, 0.1..=100.0)
+                    .text("Aspect Ratio")
+                    .logarithmic(true);
+                ui.add(ar_slider);
+
+                if ui.button("Home").clicked() {
+                    tab_state.reset_view = true;
+                }
+
+                if self.selected_tab == PlotTab::Deviation {
+                    ui.separator();
+                    ui.label("Dev Mode:");
+                    if ui
+                        .radio_value(&mut self.deviation_mode, DeviationMode::Magnitude, "Mag")
+                        .changed()
+                    {
+                        self.plot_cache.dirty = true;
+                    }
+                    if ui
+                        .radio_value(&mut self.deviation_mode, DeviationMode::Components, "Comp")
+                        .changed()
+                    {
+                        self.plot_cache.dirty = true;
+                    }
+                }
             });
 
-            let plot_lines = match self.selected_tab {
-                PlotTab::Main => &self.plot_cache.lines_main,
-                PlotTab::Deviation => &self.plot_cache.lines_deviation,
+            let (plot_lines, current_tab_state) = match self.selected_tab {
+                PlotTab::Main => (&self.plot_cache.lines_main, &mut self.main_tab_state),
+                PlotTab::Deviation => (&self.plot_cache.lines_deviation, &mut self.dev_tab_state),
             };
 
-            egui_plot::Plot::new("main_plot")
+            let mut plot = egui_plot::Plot::new("main_plot")
                 .legend(egui_plot::Legend::default())
-                .show(ui, |plot_ui| {
-                    for baked in plot_lines {
-                        let lines = match &baked.data {
-                            ArrLine::Real((name, v)) => {
-                                vec![(
-                                    name.clone(),
-                                    v.iter()
+                .data_aspect(current_tab_state.aspect_ratio);
+
+            if current_tab_state.symlog {
+                let thresh = current_tab_state.log_linthresh;
+                plot = plot.y_axis_formatter(move |grid_mark, _range| {
+                    crate::plot::symlog_formatter(grid_mark.value, thresh)
+                });
+            }
+
+            if current_tab_state.reset_view {
+                plot = plot.reset();
+                current_tab_state.reset_view = false;
+            }
+
+            plot.show(ui, |plot_ui| {
+                for baked in plot_lines {
+                    let lines = match &baked.data {
+                        ArrLine::Real((name, v)) => {
+                            vec![(
+                                name.clone(),
+                                v.iter()
+                                    .enumerate()
+                                    .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                    .collect::<Vec<PlotPoint>>(),
+                            )]
+                        }
+                        ArrLine::Complex(c) => {
+                            vec![
+                                (
+                                    c.real.0.clone(),
+                                    c.real
+                                        .1
+                                        .iter()
                                         .enumerate()
                                         .map(|(i, &y)| PlotPoint::new(i as f64, y))
                                         .collect::<Vec<PlotPoint>>(),
-                                )]
-                            }
-                            ArrLine::Complex(c) => {
-                                vec![
-                                    (
-                                        c.real.0.clone(),
-                                        c.real
-                                            .1
-                                            .iter()
-                                            .enumerate()
-                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                            .collect::<Vec<PlotPoint>>(),
-                                    ),
-                                    (
-                                        c.imag.0.clone(),
-                                        c.imag
-                                            .1
-                                            .iter()
-                                            .enumerate()
-                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                            .collect::<Vec<PlotPoint>>(),
-                                    ),
-                                ]
-                            }
-                            ArrLine::Interval(iv) => {
-                                vec![
-                                    (
-                                        iv.inf.0.clone(),
-                                        iv.inf
-                                            .1
-                                            .iter()
-                                            .enumerate()
-                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                            .collect::<Vec<PlotPoint>>(),
-                                    ),
-                                    (
-                                        iv.sup.0.clone(),
-                                        iv.sup
-                                            .1
-                                            .iter()
-                                            .enumerate()
-                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                            .collect::<Vec<PlotPoint>>(),
-                                    ),
-                                ]
-                            }
-                            ArrLine::CInterval(ci) => {
-                                vec![
-                                    (
-                                        ci.real.inf.0.clone(),
-                                        ci.real
-                                            .inf
-                                            .1
-                                            .iter()
-                                            .enumerate()
-                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                            .collect::<Vec<PlotPoint>>(),
-                                    ),
-                                    (
-                                        ci.real.sup.0.clone(),
-                                        ci.real
-                                            .sup
-                                            .1
-                                            .iter()
-                                            .enumerate()
-                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                            .collect::<Vec<PlotPoint>>(),
-                                    ),
-                                    (
-                                        ci.imag.inf.0.clone(),
-                                        ci.imag
-                                            .inf
-                                            .1
-                                            .iter()
-                                            .enumerate()
-                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                            .collect::<Vec<PlotPoint>>(),
-                                    ),
-                                    (
-                                        ci.imag.sup.0.clone(),
-                                        ci.imag
-                                            .sup
-                                            .1
-                                            .iter()
-                                            .enumerate()
-                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                            .collect::<Vec<PlotPoint>>(),
-                                    ),
-                                ]
-                            }
-                        };
-
-                        for (name, points) in lines {
-                            plot_ui.line(
-                                Line::new(PlotPoints::new(
-                                    points.into_iter().map(|p| [p.x, p.y]).collect::<Vec<_>>(),
-                                ))
-                                .name(name)
-                                .color(baked.color)
-                                .width(baked.width)
-                                .style(baked.style),
-                            );
+                                ),
+                                (
+                                    c.imag.0.clone(),
+                                    c.imag
+                                        .1
+                                        .iter()
+                                        .enumerate()
+                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                        .collect::<Vec<PlotPoint>>(),
+                                ),
+                            ]
                         }
+                        ArrLine::Interval(iv) => {
+                            vec![
+                                (
+                                    iv.inf.0.clone(),
+                                    iv.inf
+                                        .1
+                                        .iter()
+                                        .enumerate()
+                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                        .collect::<Vec<PlotPoint>>(),
+                                ),
+                                (
+                                    iv.sup.0.clone(),
+                                    iv.sup
+                                        .1
+                                        .iter()
+                                        .enumerate()
+                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                        .collect::<Vec<PlotPoint>>(),
+                                ),
+                            ]
+                        }
+                        ArrLine::CInterval(ci) => {
+                            vec![
+                                (
+                                    ci.real.inf.0.clone(),
+                                    ci.real
+                                        .inf
+                                        .1
+                                        .iter()
+                                        .enumerate()
+                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                        .collect::<Vec<PlotPoint>>(),
+                                ),
+                                (
+                                    ci.real.sup.0.clone(),
+                                    ci.real
+                                        .sup
+                                        .1
+                                        .iter()
+                                        .enumerate()
+                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                        .collect::<Vec<PlotPoint>>(),
+                                ),
+                                (
+                                    ci.imag.inf.0.clone(),
+                                    ci.imag
+                                        .inf
+                                        .1
+                                        .iter()
+                                        .enumerate()
+                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                        .collect::<Vec<PlotPoint>>(),
+                                ),
+                                (
+                                    ci.imag.sup.0.clone(),
+                                    ci.imag
+                                        .sup
+                                        .1
+                                        .iter()
+                                        .enumerate()
+                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                        .collect::<Vec<PlotPoint>>(),
+                                ),
+                            ]
+                        }
+                    };
+
+                    for (name, points) in lines {
+                        plot_ui.line(
+                            Line::new(PlotPoints::new(
+                                points.into_iter().map(|p| [p.x, p.y]).collect::<Vec<_>>(),
+                            ))
+                            .name(name)
+                            .color(baked.color)
+                            .width(baked.width)
+                            .style(baked.style),
+                        );
                     }
-                });
+                }
+            });
         });
 
         if !self.active_tasks.is_empty() || self.plot_cache.dirty {
