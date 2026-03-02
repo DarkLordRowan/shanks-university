@@ -17,7 +17,9 @@ use std::collections::BTreeMap;
 use tokio::sync::mpsc;
 
 use crate::{
-    cache::{Cache, CachedAccelData, CachedEvent, CachedSeriesData, RawArrBlobs},
+    cache::{
+        Cache, CachedAccelData, CachedEvent, CachedResultData, CachedSeriesData, RawArrBlobs,
+    },
     experiment::{AccelInstance, FilterInstance, NoiseInstance, SeriesInstance},
     ffi::{
         Arr, ComplexOf, IntervalOf, Value,
@@ -40,24 +42,29 @@ pub struct ComputeTask<T> {
 }
 
 /// Identifies a computed series (what was computed).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SeriesDesc {
     pub precision: String,
     pub series: SeriesInstance,
     pub noise: Option<NoiseInstance>,
 }
 
-/// The numerical result of a series computation.
 #[derive(Debug, Clone)]
-pub struct SeriesData {
-    pub sn: Arr,
+pub struct ResultData {
+    pub values: Arr,
     pub an: Arr,
-    pub sum: Option<Value>,
     pub deviations: Arr,
 }
 
-/// Identifies the accel+filter combination that was computed.
+/// The numerical result of a series computation.
 #[derive(Debug, Clone)]
+pub struct SeriesData {
+    pub result: ResultData,
+    pub sum: Option<Value>,
+}
+
+/// Identifies the accel+filter combination that was computed.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AccelDesc {
     pub accel: AccelInstance,
     /// `None` = no filter was applied (no stop event, or no filters requested).
@@ -76,24 +83,23 @@ pub struct SeriesEvent {
 #[derive(Debug, Clone)]
 pub struct AccelData {
     pub start_offset: u64,
-    pub values: Arr,
-    pub an: Arr,
-    pub deviations: Arr,
+    pub result: ResultData,
     pub events: Vec<SeriesEvent>,
 }
 
 /// Events emitted via the channel.
-///
-/// One `SeriesDone` per (accel, filter) combination:
-/// - `accel_data = None` → bare series (no accel)
-/// - `accel_data = Some(…)` → result with that particular accel+filter
 #[derive(Debug, Clone)]
 pub enum ComputeEvent<T> {
     SeriesDone {
         id: T,
-        series: SeriesDesc,
-        series_data: SeriesData,
-        accel: Option<(AccelDesc, AccelData)>,
+        desc: SeriesDesc,
+        data: SeriesData,
+    },
+    AccelDone {
+        id: T,
+        series_desc: SeriesDesc,
+        desc: AccelDesc,
+        data: AccelData,
     },
     Complete(T),
     Error {
@@ -176,7 +182,6 @@ where
         None => (None, None, None),
     };
 
-    let mut current_series_data = None;
     if let Some(sid) = cached_id {
         if let Ok(Some(sd)) = cache.get_series_data(sid).await {
             let mut sdata = series_data_from_cache(&sd);
@@ -188,12 +193,10 @@ where
             let _ = tx
                 .send(ComputeEvent::SeriesDone {
                     id: id.clone(),
-                    series: desc.clone(),
-                    series_data: sdata.clone(),
-                    accel: None,
+                    desc: desc.clone(),
+                    data: sdata.clone(),
                 })
                 .await;
-            current_series_data = Some(sdata);
         }
     }
 
@@ -227,19 +230,14 @@ where
                 let events = cache.get_events(aid).await.unwrap_or_default();
                 let adata = accel_data_from_cache(&ad, events);
                 let _ = tx
-                    .send(ComputeEvent::SeriesDone {
+                    .send(ComputeEvent::AccelDone {
                         id: id.clone(),
-                        series: desc.clone(),
-                        series_data: current_series_data
-                            .clone()
-                            .unwrap_or_else(empty_series_data),
-                        accel: Some((
-                            AccelDesc {
-                                accel: accel.clone(),
-                                filter: None,
-                            },
-                            adata,
-                        )),
+                        series_desc: desc.clone(),
+                        desc: AccelDesc {
+                            accel: accel.clone(),
+                            filter: None,
+                        },
+                        data: adata,
                     })
                     .await;
             }
@@ -272,19 +270,14 @@ where
                     let events = cache.get_events(aid).await.unwrap_or_default();
                     let adata = accel_data_from_cache(&ad, events);
                     let _ = tx
-                        .send(ComputeEvent::SeriesDone {
+                        .send(ComputeEvent::AccelDone {
                             id: id.clone(),
-                            series: desc.clone(),
-                            series_data: current_series_data
-                                .clone()
-                                .unwrap_or_else(empty_series_data),
-                            accel: Some((
-                                AccelDesc {
-                                    accel: accel.clone(),
-                                    filter: Some(filter.clone()),
-                                },
-                                adata,
-                            )),
+                            series_desc: desc.clone(),
+                            desc: AccelDesc {
+                                accel: accel.clone(),
+                                filter: Some(filter.clone()),
+                            },
+                            data: adata,
                         })
                         .await;
                 }
@@ -333,7 +326,6 @@ where
 
     let blocking_handle = tokio::task::spawn_blocking(move || -> Result<()> {
         let mut lazy_series: Option<cxx::UniquePtr<bridge::CSeries>> = None;
-        let mut local_series_data: Option<SeriesData> = None;
 
         // Ensure series is computed if needed for anything in this block
         if series_short || !todo.is_empty() {
@@ -345,21 +337,22 @@ where
             }
             let sum = value_from_raw(&bridge::get_limit(&*ptr));
             let sdata = SeriesData {
-                sn: arr_from_raw(bridge::get_sn(&*ptr)),
-                an: arr_from_raw(bridge::get_an(&*ptr)),
-                deviations: arr_from_raw(bridge::get_deviation(&*ptr)),
+                result: ResultData {
+                    values: arr_from_raw(bridge::get_sn(&*ptr)),
+                    an: arr_from_raw(bridge::get_an(&*ptr)),
+                    deviations: arr_from_raw(bridge::get_deviation(&*ptr)),
+                },
                 sum: Some(sum.clone()),
             };
             if series_short {
                 let _ = internal_tx.blocking_send(ComputeEvent::SeriesDone {
                     id: s_id.clone(),
-                    series: s_desc.clone(),
-                    series_data: sdata.clone(),
-                    accel: None,
+                    desc: s_desc.clone(),
+                    data: sdata.clone(),
                 });
             }
             lazy_series = Some(ptr);
-            local_series_data = Some(sdata);
+            let _ = sdata; // assigned but never used
         }
 
         let mut lazy_accels: BTreeMap<
@@ -404,7 +397,6 @@ where
                 lazy_accels.insert(a_idx, (ptr, stop_n, cpp_events));
             }
             let (ref a_ptr, stop_n, ref cpp_events) = lazy_accels[&a_idx];
-            let s_data = local_series_data.as_ref().unwrap();
 
             if need_unfiltered {
                 let mut events: Vec<SeriesEvent> = cpp_events.clone();
@@ -417,22 +409,21 @@ where
                 }
                 let adata = AccelData {
                     start_offset: 0,
-                    values: arr_from_raw(bridge::get_sn(&**a_ptr)),
-                    an: arr_from_raw(bridge::get_an(&**a_ptr)),
-                    deviations: arr_from_raw(bridge::get_deviation(&**a_ptr)),
+                    result: ResultData {
+                        values: arr_from_raw(bridge::get_sn(&**a_ptr)),
+                        an: arr_from_raw(bridge::get_an(&**a_ptr)),
+                        deviations: arr_from_raw(bridge::get_deviation(&**a_ptr)),
+                    },
                     events,
                 };
-                let _ = internal_tx.blocking_send(ComputeEvent::SeriesDone {
+                let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
                     id: s_id.clone(),
-                    series: s_desc.clone(),
-                    series_data: s_data.clone(),
-                    accel: Some((
-                        AccelDesc {
-                            accel: a_inst.clone(),
-                            filter: None,
-                        },
-                        adata,
-                    )),
+                    series_desc: s_desc.clone(),
+                    desc: AccelDesc {
+                        accel: a_inst.clone(),
+                        filter: None,
+                    },
+                    data: adata,
                 });
             }
 
@@ -447,27 +438,26 @@ where
                 ) {
                     Ok(arr) => arr,
                     Err(e) => {
-                        let _ = internal_tx.blocking_send(ComputeEvent::SeriesDone {
+                        let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
                             id: s_id.clone(),
-                            series: s_desc.clone(),
-                            series_data: s_data.clone(),
-                            accel: Some((
-                                AccelDesc {
-                                    accel: a_inst.clone(),
-                                    filter: Some(f_inst.clone()),
-                                },
-                                AccelData {
-                                    start_offset: stop_n.unwrap_or(0),
+                            series_desc: s_desc.clone(),
+                            desc: AccelDesc {
+                                accel: a_inst.clone(),
+                                filter: Some(f_inst.clone()),
+                            },
+                            data: AccelData {
+                                start_offset: stop_n.unwrap_or(0),
+                                result: ResultData {
                                     values: Arr::Real(vec![RealValue::ZERO]),
                                     an: Arr::Real(vec![RealValue::ZERO]),
                                     deviations: Arr::Real(vec![RealValue::ZERO]),
-                                    events: vec![SeriesEvent {
-                                        n: stop_n.unwrap_or(0),
-                                        name: "algo_error".to_string(),
-                                        description: e.to_string(),
-                                    }],
                                 },
-                            )),
+                                events: vec![SeriesEvent {
+                                    n: stop_n.unwrap_or(0),
+                                    name: "algo_error".to_string(),
+                                    description: e.to_string(),
+                                }],
+                            },
                         });
                         continue;
                     }
@@ -480,22 +470,21 @@ where
                 });
                 let adata = AccelData {
                     start_offset: 0,
-                    values: arr_from_raw(farr),
-                    an: Arr::Real(Vec::new()),
-                    deviations: Arr::Real(Vec::new()),
+                    result: ResultData {
+                        values: arr_from_raw(farr),
+                        an: Arr::Real(Vec::new()),
+                        deviations: Arr::Real(Vec::new()),
+                    },
                     events: stop_event.into_iter().collect(),
                 };
-                let _ = internal_tx.blocking_send(ComputeEvent::SeriesDone {
+                let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
                     id: s_id.clone(),
-                    series: s_desc.clone(),
-                    series_data: s_data.clone(),
-                    accel: Some((
-                        AccelDesc {
-                            accel: a_inst.clone(),
-                            filter: Some(f_inst.clone()),
-                        },
-                        adata,
-                    )),
+                    series_desc: s_desc.clone(),
+                    desc: AccelDesc {
+                        accel: a_inst.clone(),
+                        filter: Some(f_inst.clone()),
+                    },
+                    data: adata,
                 });
             }
         }
@@ -509,16 +498,17 @@ where
         if series_db_id != -1 {
             match event {
                 ComputeEvent::SeriesDone {
-                    series_data,
-                    accel: None,
+                    data,
                     ..
                 } => {
                     let c = cache.clone();
                     let sid = series_db_id;
                     let blobs = CachedSeriesData {
-                        sn: arr_to_blobs(&series_data.sn),
-                        an: arr_to_blobs(&series_data.an),
-                        dev: arr_to_blobs(&series_data.deviations),
+                        result: CachedResultData {
+                            values: arr_to_blobs(&data.result.values),
+                            an: arr_to_blobs(&data.result.an),
+                            deviations: arr_to_blobs(&data.result.deviations),
+                        },
                     };
                     let name = s_name_raw.clone();
                     let prec = s_prec_raw.clone();
@@ -526,7 +516,7 @@ where
                     let args = s_args_raw.clone();
                     let noise = s_noise_json_raw.clone();
                     let npts = s_n_needed;
-                    let sum_opt = series_data.sum.clone();
+                    let sum_opt = data.sum.clone();
 
                     tokio::spawn(async move {
                         let _ = c.insert_series_data(sid, blobs).await;
@@ -539,9 +529,8 @@ where
                         }
                     });
                 }
-                ComputeEvent::SeriesDone {
-                    accel: Some((desc, data)),
-                    ..
+                ComputeEvent::AccelDone {
+                    desc, data, ..
                 } => {
                     let c = cache.clone();
                     let sid = series_db_id;
@@ -556,9 +545,11 @@ where
                         .map(|f| sorted_args_json(&f.args).unwrap_or_default());
                     let ablobs = CachedAccelData {
                         start_offset: data.start_offset,
-                        val: arr_to_blobs(&data.values),
-                        an: arr_to_blobs(&data.an),
-                        dev: arr_to_blobs(&data.deviations),
+                        result: CachedResultData {
+                            values: arr_to_blobs(&data.result.values),
+                            an: arr_to_blobs(&data.result.an),
+                            deviations: arr_to_blobs(&data.result.deviations),
+                        },
                     };
                     let evs: Vec<CachedEvent> = data
                         .events
@@ -729,19 +720,23 @@ fn arr_from_blobs(b: &RawArrBlobs) -> Arr {
 
 fn series_data_from_cache(sd: &CachedSeriesData) -> SeriesData {
     SeriesData {
-        sn: arr_from_blobs(&sd.sn),
-        an: arr_from_blobs(&sd.an),
+        result: ResultData {
+            values: arr_from_blobs(&sd.result.values),
+            an: arr_from_blobs(&sd.result.an),
+            deviations: arr_from_blobs(&sd.result.deviations),
+        },
         sum: None, // sum stored separately in the series row (not loaded here)
-        deviations: arr_from_blobs(&sd.dev),
     }
 }
 
 fn accel_data_from_cache(ad: &CachedAccelData, events: Vec<CachedEvent>) -> AccelData {
     AccelData {
         start_offset: ad.start_offset,
-        values: arr_from_blobs(&ad.val),
-        an: arr_from_blobs(&ad.an),
-        deviations: arr_from_blobs(&ad.dev),
+        result: ResultData {
+            values: arr_from_blobs(&ad.result.values),
+            an: arr_from_blobs(&ad.result.an),
+            deviations: arr_from_blobs(&ad.result.deviations),
+        },
         events: events
             .into_iter()
             .map(|e| SeriesEvent {
@@ -753,14 +748,6 @@ fn accel_data_from_cache(ad: &CachedAccelData, events: Vec<CachedEvent>) -> Acce
     }
 }
 
-fn empty_series_data() -> SeriesData {
-    SeriesData {
-        sn: Arr::Real(Vec::new()),
-        an: Arr::Real(Vec::new()),
-        sum: None,
-        deviations: Arr::Real(Vec::new()),
-    }
-}
 
 // ---------------------------------------------------------------------------
 // Misc helpers

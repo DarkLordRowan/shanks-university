@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use serde::{Deserialize, Serialize};
 
 #[cfg(not(target_endian = "little"))]

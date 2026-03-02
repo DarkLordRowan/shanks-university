@@ -39,21 +39,25 @@ pub struct RawArrBlobs {
     pub e: [Vec<u8>; 4], // reserved for future exponent storage; currently unused
 }
 
+/// Common numerical data for cache storage.
+#[derive(Debug, Clone, Default)]
+pub struct CachedResultData {
+    pub values: RawArrBlobs,
+    pub an: RawArrBlobs,
+    pub deviations: RawArrBlobs,
+}
+
 /// Plain series data for cache storage.
 #[derive(Debug, Clone, Default)]
 pub struct CachedSeriesData {
-    pub sn: RawArrBlobs,
-    pub an: RawArrBlobs,
-    pub dev: RawArrBlobs,
+    pub result: CachedResultData,
 }
 
 /// Plain accel data for cache storage.
 #[derive(Debug, Clone, Default)]
 pub struct CachedAccelData {
     pub start_offset: u64,
-    pub val: RawArrBlobs,
-    pub an: RawArrBlobs,
-    pub dev: RawArrBlobs,
+    pub result: CachedResultData,
 }
 
 /// One event row.
@@ -311,9 +315,11 @@ impl Cache {
                         })
                     };
                     Ok(CachedSeriesData {
-                        sn: load(0)?,
-                        an: load(6)?,
-                        dev: load(12)?,
+                        result: CachedResultData {
+                            values: load(0)?,
+                            an: load(6)?,
+                            deviations: load(12)?,
+                        },
                     })
                 },
             );
@@ -342,9 +348,25 @@ impl Cache {
                   dev_kind,dev_len,dev_m0,dev_m1,dev_m2,dev_m3)
                  VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19)",
                 params![
-                    series_id, d.sn.kind, d.sn.len, d.sn.m[0], d.sn.m[1], d.sn.m[2], d.sn.m[3],
-                    d.an.kind, d.an.len, d.an.m[0], d.an.m[1], d.an.m[2], d.an.m[3], d.dev.kind,
-                    d.dev.len, d.dev.m[0], d.dev.m[1], d.dev.m[2], d.dev.m[3],
+                    series_id,
+                    d.result.values.kind,
+                    d.result.values.len,
+                    d.result.values.m[0],
+                    d.result.values.m[1],
+                    d.result.values.m[2],
+                    d.result.values.m[3],
+                    d.result.an.kind,
+                    d.result.an.len,
+                    d.result.an.m[0],
+                    d.result.an.m[1],
+                    d.result.an.m[2],
+                    d.result.an.m[3],
+                    d.result.deviations.kind,
+                    d.result.deviations.len,
+                    d.result.deviations.m[0],
+                    d.result.deviations.m[1],
+                    d.result.deviations.m[2],
+                    d.result.deviations.m[3],
                 ],
             )
             .map_err(tokio_rusqlite::Error::Rusqlite)?;
@@ -480,9 +502,11 @@ impl Cache {
                         })
                     };
                     Ok(CachedAccelData {
-                        val: load(0)?,
-                        an: load(6)?,
-                        dev: load(12)?,
+                        result: CachedResultData {
+                            values: load(0)?,
+                            an: load(6)?,
+                            deviations: load(12)?,
+                        },
                         start_offset: r.get::<_, u64>(18).unwrap_or(0),
                     })
                 },
@@ -512,24 +536,24 @@ impl Cache {
                  VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20)",
                 params![
                     accel_id,
-                    data.val.kind,
-                    data.val.len,
-                    data.val.m[0],
-                    data.val.m[1],
-                    data.val.m[2],
-                    data.val.m[3],
-                    data.an.kind,
-                    data.an.len,
-                    data.an.m[0],
-                    data.an.m[1],
-                    data.an.m[2],
-                    data.an.m[3],
-                    data.dev.kind,
-                    data.dev.len,
-                    data.dev.m[0],
-                    data.dev.m[1],
-                    data.dev.m[2],
-                    data.dev.m[3],
+                    data.result.values.kind,
+                    data.result.values.len,
+                    data.result.values.m[0],
+                    data.result.values.m[1],
+                    data.result.values.m[2],
+                    data.result.values.m[3],
+                    data.result.an.kind,
+                    data.result.an.len,
+                    data.result.an.m[0],
+                    data.result.an.m[1],
+                    data.result.an.m[2],
+                    data.result.an.m[3],
+                    data.result.deviations.kind,
+                    data.result.deviations.len,
+                    data.result.deviations.m[0],
+                    data.result.deviations.m[1],
+                    data.result.deviations.m[2],
+                    data.result.deviations.m[3],
                     data.start_offset
                 ],
             )

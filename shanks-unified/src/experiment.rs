@@ -9,7 +9,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::BTreeMap,
     fmt::Debug,
     ops::{Add, Mul},
     path::Path,
@@ -17,7 +17,7 @@ use std::{
 // TODO: Convert String to Arc<str>, and Vec<Event...> to Arc<[...]>.
 
 // Range
-trait NumLike = PartialOrd + From<u32> + Mul<Output = Self> + Add<Output = Self> + Copy;
+pub trait NumLike = PartialOrd + From<u32> + Mul<Output = Self> + Add<Output = Self> + Copy;
 // + Clone
 // + Copy
 // + From<u32>

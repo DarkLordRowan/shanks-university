@@ -592,13 +592,9 @@ fn extract_param_values(node: &SelectionNode) -> HashMap<String, Vec<String>> {
 fn extract_filter_combinations(tree: &SelectionNode) -> Vec<FilterCombo> {
     let mut combos = Vec::new();
 
+    combos.push((None, HashMap::new()));
     for filter_node in &tree.children {
         if !filter_node.is_selected() {
-            continue;
-        }
-
-        if filter_node.id == "filter_none" {
-            combos.push((None, HashMap::new()));
             continue;
         }
 

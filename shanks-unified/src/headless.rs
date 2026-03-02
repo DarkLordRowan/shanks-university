@@ -7,7 +7,6 @@ use crate::experiment::{
 };
 use anyhow::Result;
 use std::path::PathBuf;
-use std::sync::Arc;
 use tokio::sync::mpsc;
 
 /// Status reported during headless computation.
@@ -93,19 +92,31 @@ impl HeadlessRunner {
         let mut finished_tasks = 0;
         while let Some(event) = rx.recv().await {
             match event {
-                ComputeEvent::SeriesDone { series, accel, .. } => {
-                    let method = accel
-                        .as_ref()
-                        .map(|(d, _)| d.accel.name.clone())
-                        .unwrap_or_else(|| "none".to_string());
-
+                ComputeEvent::SeriesDone { desc, .. } => {
                     if let Some(ref mut cb) = self.progress {
                         cb(ProgressInfo {
                             current: finished_tasks,
                             total: total_tasks,
-                            series_name: series.series.name.clone(),
-                            precision: series.precision.clone(),
-                            method_name: method,
+                            series_name: desc.series.name.clone(),
+                            precision: desc.precision.clone(),
+                            method_name: "none".to_string(),
+                            elapsed_secs: start_time.elapsed().as_secs_f64(),
+                            status: Status::Computing,
+                        });
+                    }
+                }
+                ComputeEvent::AccelDone {
+                    series_desc,
+                    desc,
+                    ..
+                } => {
+                    if let Some(ref mut cb) = self.progress {
+                        cb(ProgressInfo {
+                            current: finished_tasks,
+                            total: total_tasks,
+                            series_name: series_desc.series.name.clone(),
+                            precision: series_desc.precision.clone(),
+                            method_name: desc.accel.name.clone(),
                             elapsed_secs: start_time.elapsed().as_secs_f64(),
                             status: Status::Computing,
                         });

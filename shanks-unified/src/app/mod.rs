@@ -13,26 +13,16 @@ use crate::ffi::{Arr, ArrF64, ArrLine, ComplexOf, IntervalOf, Value};
 use egui_plot::{Line, LineStyle, PlotPoint, PlotPoints};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::{Arc, Mutex};
+use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
 pub use selection::{SelectedCombination, SelectionNode, SelectionState};
 
-/// Stable key for identifying a computation result.
+/// Stable key for identifying a computation result (series + optional accel).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ResultKey {
-    series: SeriesInstance,
-    precision: String,
-    noise: Option<NoiseInstance>,
-    accel: Option<AccelInstance>,
-    filter: Option<FilterInstance>,
-}
-
-/// Key for grouping multiple (accel, filter) combinations under one series compute task.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct GroupKey {
-    series: SeriesInstance,
-    precision: String,
-    noise: Option<NoiseInstance>,
+    series: compute::SeriesDesc,
+    accel: Option<compute::AccelDesc>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, serde::Serialize, serde::Deserialize)]
@@ -119,11 +109,15 @@ impl ResultKey {
         };
 
         Some(Self {
-            series,
-            precision: combo.precision.clone(),
-            noise,
-            accel: Some(accel),
-            filter,
+            series: compute::SeriesDesc {
+                precision: combo.precision.clone(),
+                series,
+                noise,
+            },
+            accel: Some(compute::AccelDesc {
+                accel,
+                filter,
+            }),
         })
     }
 
@@ -174,10 +168,11 @@ impl AppState {
 
 pub struct ShanksApp {
     state: AppState,
-    results: HashMap<ResultKey, (SeriesData, Option<AccelData>)>,
-    active_tasks: HashMap<GroupKey, JoinHandle<()>>,
-    event_rx: tokio::sync::mpsc::Receiver<ComputeEvent<GroupKey>>,
-    event_tx: tokio::sync::mpsc::Sender<ComputeEvent<GroupKey>>,
+    series_results: HashMap<compute::SeriesDesc, SeriesData>,
+    accel_results: HashMap<ResultKey, AccelData>,
+    active_tasks: HashMap<compute::SeriesDesc, JoinHandle<()>>,
+    event_rx: tokio::sync::mpsc::Receiver<ComputeEvent<compute::SeriesDesc>>,
+    event_tx: tokio::sync::mpsc::Sender<ComputeEvent<compute::SeriesDesc>>,
 
     pub series_tree: Option<SelectionNode>,
     pub accel_tree: Option<SelectionNode>,
@@ -204,11 +199,12 @@ pub struct ShanksApp {
 
 impl ShanksApp {
     pub fn new(state: AppState) -> Self {
-        let (event_tx, event_rx) = tokio::sync::mpsc::channel(512);
+        let (event_tx, event_rx) = tokio::sync::mpsc::channel(100);
 
         let mut app = Self {
             state,
-            results: HashMap::new(),
+            series_results: HashMap::new(),
+            accel_results: HashMap::new(),
             active_tasks: HashMap::new(),
             event_rx,
             event_tx,
@@ -264,110 +260,23 @@ impl ShanksApp {
         };
 
         let combinations = selection::generate_combinations(s_tree, a_tree, n_tree, f_tree, p_tree);
-        let mut requested_keys = HashSet::new();
-        let mut grouped_requests: HashMap<GroupKey, (Vec<AccelInstance>, Vec<FilterInstance>)> =
-            HashMap::new();
+
+        // Group combos by SeriesDesc to avoid redundant base series compute
+        let mut grouped: HashMap<compute::SeriesDesc, Vec<SelectedCombination>> = HashMap::new();
+        let mut requested_series = HashSet::new();
+        let mut requested_accels = HashSet::new();
 
         for combo in combinations {
-            if let Some(key) = ResultKey::from_combo(self, &combo) {
-                requested_keys.insert(key.clone());
-
-                let gkey = GroupKey {
-                    series: key.series.clone(),
-                    precision: key.precision.clone(),
-                    noise: key.noise.clone(),
-                };
-
-                let (accels, filters) = grouped_requests.entry(gkey).or_default();
-                if let Some(ref a) = key.accel {
-                    if !accels.contains(a) {
-                        accels.push(a.clone());
-                    }
-                }
-                if let Some(ref f) = key.filter {
-                    if !filters.contains(f) {
-                        filters.push(f.clone());
-                    }
-                }
+            if let Some(rk) = ResultKey::from_combo(self, &combo) {
+                requested_series.insert(rk.series.clone());
+                requested_accels.insert(rk.clone());
+                grouped.entry(rk.series).or_default().push(combo);
             }
         }
 
-        // Spawn tasks for groups that have missing data
-        for (gkey, (algos, filters)) in grouped_requests {
-            let mut need_recompute = false;
-            for algo in &algos {
-                // Check if bare algo is missing
-                let rkey_bare = ResultKey {
-                    series: gkey.series.clone(),
-                    precision: gkey.precision.clone(),
-                    noise: gkey.noise.clone(),
-                    accel: Some(algo.clone()),
-                    filter: None,
-                };
-                if !self.results.contains_key(&rkey_bare) {
-                    need_recompute = true;
-                    break;
-                }
-
-                // Check if filtered versions are missing
-                for filter in &filters {
-                    let rkey_filt = ResultKey {
-                        series: gkey.series.clone(),
-                        precision: gkey.precision.clone(),
-                        noise: gkey.noise.clone(),
-                        accel: Some(algo.clone()),
-                        filter: Some(filter.clone()),
-                    };
-                    if !self.results.contains_key(&rkey_filt) {
-                        need_recompute = true;
-                        break;
-                    }
-                }
-                if need_recompute {
-                    break;
-                }
-            }
-
-            // Also check if series itself is missing
-            if !need_recompute {
-                let rkey_series = ResultKey {
-                    series: gkey.series.clone(),
-                    precision: gkey.precision.clone(),
-                    noise: gkey.noise.clone(),
-                    accel: None,
-                    filter: None,
-                };
-                if !self.results.contains_key(&rkey_series) {
-                    need_recompute = true;
-                }
-            }
-
-            if need_recompute && !self.active_tasks.contains_key(&gkey) {
-                let task = ComputeTask {
-                    id: gkey.clone(),
-                    precision: gkey.precision.clone(),
-                    series: gkey.series.clone(),
-                    n_points: self.state.n_points,
-                    noise: gkey.noise.clone(),
-                    algorithms: algos,
-                    filters,
-                };
-
-                let tx = self.event_tx.clone();
-                let cache = self.state.cache.lock().unwrap().clone();
-                let handle = compute::spawn_task(task, cache, tx);
-                self.active_tasks.insert(gkey, handle);
-                self.status = "Computing...".to_string();
-            }
-        }
-
-        self.active_tasks.retain(|k, handle| {
-            // Check if ANY requested ResultKey matches this GroupKey
-            let requested = requested_keys.iter().any(|rk| {
-                rk.series == k.series && rk.precision == k.precision && rk.noise == k.noise
-            });
-
-            if !requested {
+        // 1. Cleanup old results and tasks
+        self.active_tasks.retain(|desc, handle| {
+            if !requested_series.contains(desc) {
                 handle.abort();
                 false
             } else {
@@ -375,32 +284,89 @@ impl ShanksApp {
             }
         });
 
-        let old_size = self.results.len();
-        self.results.retain(|k, _| requested_keys.contains(k));
-        if self.results.len() != old_size {
+        let old_series_count = self.series_results.len();
+        self.series_results.retain(|desc, _| requested_series.contains(desc));
+        
+        let old_accel_count = self.accel_results.len();
+        self.accel_results.retain(|rk, _| requested_accels.contains(rk));
+
+        if self.series_results.len() != old_series_count || self.accel_results.len() != old_accel_count {
             self.plot_cache.dirty = true;
+        }
+
+        // 2. Spawn new tasks
+        for (s_desc, s_combos) in grouped {
+            if self.active_tasks.contains_key(&s_desc) {
+                continue;
+            }
+
+            // Check if we already have ALL results for this series in memory
+            let mut all_present = self.series_results.contains_key(&s_desc);
+            if all_present {
+                for combo in &s_combos {
+                    if let Some(rk) = ResultKey::from_combo(self, combo) {
+                        if !self.accel_results.contains_key(&rk) {
+                            all_present = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if all_present {
+                continue;
+            }
+
+            // Start new task
+            let mut task = compute::ComputeTask {
+                id: s_desc.clone(),
+                precision: s_desc.precision.clone(),
+                series: s_desc.series.clone(),
+                n_points: self.state.n_points,
+                noise: s_desc.noise.clone(),
+                algorithms: Vec::new(),
+                filters: Vec::new(),
+            };
+
+            let mut algos = HashSet::new();
+            let mut filters = HashSet::new();
+            for combo in s_combos {
+                if let Some(rk) = ResultKey::from_combo(self, &combo) {
+                    if let Some(ref ad) = rk.accel {
+                        algos.insert(ad.accel.clone());
+                        if let Some(ref fd) = ad.filter {
+                            filters.insert(fd.clone());
+                        }
+                    }
+                }
+            }
+            task.algorithms = algos.into_iter().collect();
+            task.filters = filters.into_iter().collect();
+
+            let handle = compute::spawn_task(task, self.state.cache.lock().unwrap().clone(), self.event_tx.clone());
+            self.active_tasks.insert(s_desc, handle);
+            self.status = "Computing...".to_string();
         }
     }
 
     pub fn process_events(&mut self) {
         while let Ok(event) = self.event_rx.try_recv() {
             match event {
-                ComputeEvent::SeriesDone {
-                    id,
-                    series_data,
-                    accel,
+                ComputeEvent::SeriesDone { desc, data, .. } => {
+                    self.series_results.insert(desc, data);
+                    self.plot_cache.dirty = true;
+                }
+                ComputeEvent::AccelDone {
+                    series_desc,
+                    desc,
+                    data,
                     ..
                 } => {
                     let rkey = ResultKey {
-                        series: id.series.clone(),
-                        precision: id.precision.clone(),
-                        noise: id.noise.clone(),
-                        accel: accel.as_ref().map(|(ad, _)| ad.accel.clone()),
-                        filter: accel.as_ref().and_then(|(ad, _)| ad.filter.clone()),
+                        series: series_desc,
+                        accel: Some(desc),
                     };
-
-                    let adata = accel.map(|(_, data)| data);
-                    self.results.insert(rkey, (series_data, adata));
+                    self.accel_results.insert(rkey, data);
                     self.plot_cache.dirty = true;
                 }
                 ComputeEvent::Complete(id) => {
@@ -413,7 +379,6 @@ impl ShanksApp {
                     self.active_tasks.remove(&id);
                     self.status = format!("Error: {}", error);
                 }
-                _ => {}
             }
         }
     }
@@ -861,81 +826,53 @@ impl ShanksApp {
         let dev_thresh = self.dev_tab_state.log_linthresh;
 
         let mut max_n = 0usize;
-        for (sdata, adata) in self.results.values() {
-            max_n = max_n.max(match &sdata.sn {
+        for sdata in self.series_results.values() {
+            max_n = max_n.max(match &sdata.result.values {
                 Arr::Real(v) => v.len(),
                 Arr::Complex(c) => c.real.len(),
                 Arr::Interval(iv) => iv.inf.len(),
                 Arr::CInterval(ci) => ci.real.inf.len(),
             });
-            if let Some(adata) = adata {
-                max_n = max_n.max(
-                    adata.start_offset as usize
-                        + match &adata.values {
-                            Arr::Real(v) => v.len(),
-                            Arr::Complex(c) => c.real.len(),
-                            Arr::Interval(iv) => iv.inf.len(),
-                            Arr::CInterval(ci) => ci.real.inf.len(),
-                        },
-                );
-            }
+        }
+        for (_key, adata) in &self.accel_results {
+            max_n = max_n.max(
+                adata.start_offset as usize
+                    + match &adata.result.values {
+                        Arr::Real(v) => v.len(),
+                        Arr::Complex(c) => c.real.len(),
+                        Arr::Interval(iv) => iv.inf.len(),
+                        Arr::CInterval(ci) => ci.real.inf.len(),
+                    },
+            );
         }
 
-        for (key, (sdata, adata)) in &self.results {
+        // 1. Process Base Series Results
+        for (s_desc, sdata) in &self.series_results {
+            let key = ResultKey {
+                series: s_desc.clone(),
+                accel: None,
+            };
             let base_color = key.color();
 
-            // Main Plot
             if self.show_sn {
                 main_raw.push((
                     key.clone(),
                     "Sn".to_string(),
-                    self.arr_to_f64(&sdata.sn, main_symlog, main_thresh),
+                    self.arr_to_f64(&sdata.result.values, main_symlog, main_thresh),
                     base_color.gamma_multiply(0.4),
                     1.0,
                     LineStyle::Dashed { length: 4.0 },
-                    Vec::new(), // Series Sn itself has no events usually
+                    Vec::new(),
                 ));
             }
 
-            if let Some(adata) = adata {
-                let is_filtered = key.filter.is_some();
-                let show = if is_filtered {
-                    self.show_smoothed_estimates
-                } else {
-                    self.show_accel
-                };
-
-                if show {
-                    main_raw.push((
-                        key.clone(),
-                        if is_filtered {
-                            "Estimated".to_string()
-                        } else {
-                            "Accel".to_string()
-                        },
-                        self.arr_to_f64(&adata.values, main_symlog, main_thresh),
-                        if is_filtered {
-                            egui::Color32::from_rgb(240, 230, 140)
-                        } else {
-                            base_color
-                        }, // Khaki-ish
-                        if is_filtered { 3.0 } else { 2.0 },
-                        LineStyle::Solid,
-                        adata.events.clone(),
-                    ));
-                }
-            }
-
-            // Limits
-            if adata.is_none() && self.show_limit_lines {
+            if self.show_limit_lines {
                 if let Some(ref val) = sdata.sum {
                     let points = match val {
-                        Value::Real(rv) => {
-                            ArrF64::Real(vec![
-                                Self::to_plot_point(rv, main_symlog, main_thresh);
-                                max_n + 1
-                            ])
-                        }
+                        Value::Real(rv) => ArrF64::Real(vec![
+                            Self::to_plot_point(rv, main_symlog, main_thresh);
+                            max_n + 1
+                        ]),
                         Value::Complex(cv) => ArrF64::Complex(ComplexOf {
                             real: vec![
                                 Self::to_plot_point(&cv.real, main_symlog, main_thresh);
@@ -959,37 +896,21 @@ impl ShanksApp {
                         Value::CInterval(ci) => ArrF64::CInterval(ComplexOf {
                             real: IntervalOf {
                                 inf: vec![
-                                    Self::to_plot_point(
-                                        &ci.real.inf,
-                                        main_symlog,
-                                        main_thresh
-                                    );
+                                    Self::to_plot_point(&ci.real.inf, main_symlog, main_thresh);
                                     max_n + 1
                                 ],
                                 sup: vec![
-                                    Self::to_plot_point(
-                                        &ci.real.sup,
-                                        main_symlog,
-                                        main_thresh
-                                    );
+                                    Self::to_plot_point(&ci.real.sup, main_symlog, main_thresh);
                                     max_n + 1
                                 ],
                             },
                             imag: IntervalOf {
                                 inf: vec![
-                                    Self::to_plot_point(
-                                        &ci.imag.inf,
-                                        main_symlog,
-                                        main_thresh
-                                    );
+                                    Self::to_plot_point(&ci.imag.inf, main_symlog, main_thresh);
                                     max_n + 1
                                 ],
                                 sup: vec![
-                                    Self::to_plot_point(
-                                        &ci.imag.sup,
-                                        main_symlog,
-                                        main_thresh
-                                    );
+                                    Self::to_plot_point(&ci.imag.sup, main_symlog, main_thresh);
                                     max_n + 1
                                 ],
                             },
@@ -1007,12 +928,11 @@ impl ShanksApp {
                 }
             }
 
-            // Deviation Plot
             if self.show_partial_sums {
                 let collected = self.collect_deviation_data(
-                    key,
+                    &key,
                     "Sn Dev",
-                    &sdata.deviations,
+                    &sdata.result.deviations,
                     self.deviation_mode,
                     dev_symlog,
                     dev_thresh,
@@ -1029,32 +949,60 @@ impl ShanksApp {
                     ));
                 }
             }
+        }
 
-            if let Some(adata) = adata {
-                if self.show_accel_values {
-                    let collected = self.collect_deviation_data(
-                        key,
-                        "Accel Dev",
-                        &adata.deviations,
-                        self.deviation_mode,
-                        dev_symlog,
-                        dev_thresh,
-                    );
-                    for (k, lt, data) in collected {
-                        dev_raw.push((
-                            k,
-                            lt,
-                            data,
-                            base_color,
-                            2.0,
-                            LineStyle::Solid,
-                            adata.events.clone(),
-                        ));
-                    }
+        // 2. Process Accelerated Results
+        for (key, adata) in &self.accel_results {
+            let base_color = key.color();
+            let is_filtered = key.accel.as_ref().map(|a| a.filter.is_some()).unwrap_or(false);
+            let show = if is_filtered {
+                self.show_smoothed_estimates
+            } else {
+                self.show_accel
+            };
+
+            if show {
+                main_raw.push((
+                    key.clone(),
+                    if is_filtered {
+                        "Estimated".to_string()
+                    } else {
+                        "Accel".to_string()
+                    },
+                    self.arr_to_f64(&adata.result.values, main_symlog, main_thresh),
+                    if is_filtered {
+                        egui::Color32::from_rgb(240, 230, 140)
+                    } else {
+                        base_color
+                    },
+                    if is_filtered { 3.0 } else { 2.0 },
+                    LineStyle::Solid,
+                    adata.events.clone(),
+                ));
+            }
+
+            if self.show_accel_values {
+                let collected = self.collect_deviation_data(
+                    key,
+                    "Accel Dev",
+                    &adata.result.deviations,
+                    self.deviation_mode,
+                    dev_symlog,
+                    dev_thresh,
+                );
+                for (k, lt, data) in collected {
+                    dev_raw.push((
+                        k,
+                        lt,
+                        data,
+                        base_color,
+                        2.0,
+                        LineStyle::Solid,
+                        adata.events.clone(),
+                    ));
                 }
             }
         }
-
         self.plot_cache.lines_main = self.process_collected_lines(main_raw);
         self.plot_cache.lines_deviation = self.process_collected_lines(dev_raw);
 
@@ -1434,11 +1382,12 @@ impl LineInfo {
     fn from_key(key: &ResultKey, line_type: &str, component: Option<&str>) -> Self {
         let series_args = key
             .series
+            .series
             .args
             .iter()
             .map(|(k, v)| (k.clone(), v.to_string()))
             .collect();
-        let noise = key.noise.as_ref().map(|n| {
+        let noise = key.series.noise.as_ref().map(|n| {
             (
                 n.noise_type.clone(),
                 n.args
@@ -1447,31 +1396,34 @@ impl LineInfo {
                     .collect(),
             )
         });
-        let accel_name = key.accel.as_ref().map(|a| a.name.clone());
-        let accel_m = key.accel.as_ref().map(|a| a.m);
+        let accel_name = key.accel.as_ref().map(|a| a.accel.name.clone());
+        let accel_m = key.accel.as_ref().map(|a| a.accel.m);
         let accel_args = key
             .accel
             .as_ref()
             .map(|a| {
-                a.args
+                a.accel
+                    .args
                     .iter()
                     .map(|(k, v)| (k.clone(), v.to_string()))
                     .collect()
             })
             .unwrap_or_default();
-        let filter = key.filter.as_ref().map(|f| {
-            (
-                f.filter_type.clone(),
-                f.args
-                    .iter()
-                    .map(|(k, v)| (k.clone(), v.to_string()))
-                    .collect(),
-            )
+        let filter = key.accel.as_ref().and_then(|a| {
+            a.filter.as_ref().map(|f| {
+                (
+                    f.filter_type.clone(),
+                    f.args
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v.to_string()))
+                        .collect(),
+                )
+            })
         });
 
         Self {
-            precision: key.precision.clone(),
-            series_name: key.series.name.clone(),
+            precision: key.series.precision.clone(),
+            series_name: key.series.series.name.clone(),
             series_args,
             noise,
             accel_name,
