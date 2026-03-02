@@ -135,6 +135,7 @@ struct BakedLine {
     color: egui::Color32,
     width: f32,
     style: LineStyle,
+    shading_polygons: Vec<Vec<PlotPoint>>,
 }
 
 #[derive(Default)]
@@ -186,6 +187,7 @@ pub struct ShanksApp {
     pub show_accel_values: bool,
     pub show_smoothed_estimates: bool,
     pub show_limit_lines: bool,
+    pub show_interval_shading: bool,
 
     pub status: String,
 }
@@ -216,6 +218,7 @@ impl ShanksApp {
             show_accel_values: true,
             show_smoothed_estimates: true,
             show_limit_lines: true,
+            show_interval_shading: true,
             status: "Ready".to_string(),
         };
 
@@ -532,24 +535,53 @@ impl ShanksApp {
                 ArrF64::Real(v) => {
                     let name = shortened_names[name_idx].clone();
                     name_idx += 1;
-                    ArrLine::Real((name, v))
+                    let pts = v
+                        .iter()
+                        .enumerate()
+                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .collect();
+                    ArrLine::Real((name, pts))
                 }
                 ArrF64::Complex(c) => {
                     let re_name = shortened_names[name_idx].clone();
                     let im_name = shortened_names[name_idx + 1].clone();
                     name_idx += 2;
+                    let re_pts = c
+                        .real
+                        .iter()
+                        .enumerate()
+                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .collect();
+                    let im_pts = c
+                        .imag
+                        .iter()
+                        .enumerate()
+                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .collect();
                     ArrLine::Complex(ComplexOf {
-                        real: (re_name, c.real),
-                        imag: (im_name, c.imag),
+                        real: (re_name, re_pts),
+                        imag: (im_name, im_pts),
                     })
                 }
                 ArrF64::Interval(iv) => {
                     let inf_name = shortened_names[name_idx].clone();
                     let sup_name = shortened_names[name_idx + 1].clone();
                     name_idx += 2;
+                    let inf_pts = iv
+                        .inf
+                        .iter()
+                        .enumerate()
+                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .collect();
+                    let sup_pts = iv
+                        .sup
+                        .iter()
+                        .enumerate()
+                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .collect();
                     ArrLine::Interval(IntervalOf {
-                        inf: (inf_name, iv.inf),
-                        sup: (sup_name, iv.sup),
+                        inf: (inf_name, inf_pts),
+                        sup: (sup_name, sup_pts),
                     })
                 }
                 ArrF64::CInterval(ci) => {
@@ -558,23 +590,90 @@ impl ShanksApp {
                     let im_inf_name = shortened_names[name_idx + 2].clone();
                     let im_sup_name = shortened_names[name_idx + 3].clone();
                     name_idx += 4;
+                    let re_inf_pts = ci
+                        .real
+                        .inf
+                        .iter()
+                        .enumerate()
+                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .collect();
+                    let re_sup_pts = ci
+                        .real
+                        .sup
+                        .iter()
+                        .enumerate()
+                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .collect();
+                    let im_inf_pts = ci
+                        .imag
+                        .inf
+                        .iter()
+                        .enumerate()
+                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .collect();
+                    let im_sup_pts = ci
+                        .imag
+                        .sup
+                        .iter()
+                        .enumerate()
+                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .collect();
                     ArrLine::CInterval(ComplexOf {
                         real: IntervalOf {
-                            inf: (re_inf_name, ci.real.inf),
-                            sup: (re_sup_name, ci.real.sup),
+                            inf: (re_inf_name, re_inf_pts),
+                            sup: (re_sup_name, re_sup_pts),
                         },
                         imag: IntervalOf {
-                            inf: (im_inf_name, ci.imag.inf),
-                            sup: (im_sup_name, ci.imag.sup),
+                            inf: (im_inf_name, im_inf_pts),
+                            sup: (im_sup_name, im_sup_pts),
                         },
                     })
                 }
             };
+
+            let mut shading_polygons = Vec::new();
+            if self.show_interval_shading {
+                let gen_shading = |inf: &[PlotPoint], sup: &[PlotPoint]| {
+                    if inf.len() == sup.len() && inf.len() >= 2 {
+                        let mut polys = Vec::with_capacity(inf.len() - 1);
+                        for i in 0..inf.len() - 1 {
+                            let p_inf0 = inf[i];
+                            let p_inf1 = inf[i + 1];
+                            let p_sup0 = sup[i];
+                            let p_sup1 = sup[i + 1];
+
+                            if p_inf0.y.is_finite()
+                                && p_inf1.y.is_finite()
+                                && p_sup0.y.is_finite()
+                                && p_sup1.y.is_finite()
+                            {
+                                polys.push(vec![p_inf0, p_inf1, p_sup1, p_sup0]);
+                            }
+                        }
+                        polys
+                    } else {
+                        Vec::new()
+                    }
+                };
+
+                match &baked_data {
+                    ArrLine::Interval(iv) => {
+                        shading_polygons.extend(gen_shading(&iv.inf.1, &iv.sup.1));
+                    }
+                    ArrLine::CInterval(ci) => {
+                        shading_polygons.extend(gen_shading(&ci.real.inf.1, &ci.real.sup.1));
+                        shading_polygons.extend(gen_shading(&ci.imag.inf.1, &ci.imag.sup.1));
+                    }
+                    _ => {}
+                }
+            }
+
             baked_lines.push(BakedLine {
                 data: baked_data,
                 color,
                 width,
                 style,
+                shading_polygons,
             });
         }
         baked_lines
@@ -723,6 +822,12 @@ impl eframe::App for ShanksApp {
                     {
                         self.plot_cache.dirty = true;
                     }
+                    if ui
+                        .checkbox(&mut self.show_interval_shading, "Show Interval Shading")
+                        .changed()
+                    {
+                        self.plot_cache.dirty = true;
+                    }
                 });
                 ui.separator();
                 ui.label(format!("Status: {}", self.status));
@@ -823,116 +928,86 @@ impl eframe::App for ShanksApp {
 
             plot.show(ui, |plot_ui| {
                 for baked in plot_lines {
-                    let lines = match &baked.data {
+                    for poly_pts in &baked.shading_polygons {
+                        plot_ui.polygon(
+                            egui_plot::Polygon::new(PlotPoints::Borrowed(poly_pts))
+                                .fill_color(baked.color.gamma_multiply(0.2))
+                                .stroke(egui::Stroke::NONE),
+                        );
+                    }
+
+                    match &baked.data {
                         ArrLine::Real((name, v)) => {
-                            vec![(
-                                name.clone(),
-                                v.iter()
-                                    .enumerate()
-                                    .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                    .collect::<Vec<PlotPoint>>(),
-                            )]
+                            plot_ui.line(
+                                Line::new(PlotPoints::Borrowed(v))
+                                    .name(name)
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                            );
                         }
                         ArrLine::Complex(c) => {
-                            vec![
-                                (
-                                    c.real.0.clone(),
-                                    c.real
-                                        .1
-                                        .iter()
-                                        .enumerate()
-                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                        .collect::<Vec<PlotPoint>>(),
-                                ),
-                                (
-                                    c.imag.0.clone(),
-                                    c.imag
-                                        .1
-                                        .iter()
-                                        .enumerate()
-                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                        .collect::<Vec<PlotPoint>>(),
-                                ),
-                            ]
+                            plot_ui.line(
+                                Line::new(PlotPoints::Borrowed(&c.real.1))
+                                    .name(&c.real.0)
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                            );
+                            plot_ui.line(
+                                Line::new(PlotPoints::Borrowed(&c.imag.1))
+                                    .name(&c.imag.0)
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                            );
                         }
                         ArrLine::Interval(iv) => {
-                            vec![
-                                (
-                                    iv.inf.0.clone(),
-                                    iv.inf
-                                        .1
-                                        .iter()
-                                        .enumerate()
-                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                        .collect::<Vec<PlotPoint>>(),
-                                ),
-                                (
-                                    iv.sup.0.clone(),
-                                    iv.sup
-                                        .1
-                                        .iter()
-                                        .enumerate()
-                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                        .collect::<Vec<PlotPoint>>(),
-                                ),
-                            ]
+                            plot_ui.line(
+                                Line::new(PlotPoints::Borrowed(&iv.inf.1))
+                                    .name(&iv.inf.0)
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                            );
+                            plot_ui.line(
+                                Line::new(PlotPoints::Borrowed(&iv.sup.1))
+                                    .name(&iv.sup.0)
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                            );
                         }
                         ArrLine::CInterval(ci) => {
-                            vec![
-                                (
-                                    ci.real.inf.0.clone(),
-                                    ci.real
-                                        .inf
-                                        .1
-                                        .iter()
-                                        .enumerate()
-                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                        .collect::<Vec<PlotPoint>>(),
-                                ),
-                                (
-                                    ci.real.sup.0.clone(),
-                                    ci.real
-                                        .sup
-                                        .1
-                                        .iter()
-                                        .enumerate()
-                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                        .collect::<Vec<PlotPoint>>(),
-                                ),
-                                (
-                                    ci.imag.inf.0.clone(),
-                                    ci.imag
-                                        .inf
-                                        .1
-                                        .iter()
-                                        .enumerate()
-                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                        .collect::<Vec<PlotPoint>>(),
-                                ),
-                                (
-                                    ci.imag.sup.0.clone(),
-                                    ci.imag
-                                        .sup
-                                        .1
-                                        .iter()
-                                        .enumerate()
-                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                        .collect::<Vec<PlotPoint>>(),
-                                ),
-                            ]
+                            plot_ui.line(
+                                Line::new(PlotPoints::Borrowed(&ci.real.inf.1))
+                                    .name(&ci.real.inf.0)
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                            );
+                            plot_ui.line(
+                                Line::new(PlotPoints::Borrowed(&ci.real.sup.1))
+                                    .name(&ci.real.sup.0)
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                            );
+                            plot_ui.line(
+                                Line::new(PlotPoints::Borrowed(&ci.imag.inf.1))
+                                    .name(&ci.imag.inf.0)
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                            );
+                            plot_ui.line(
+                                Line::new(PlotPoints::Borrowed(&ci.imag.sup.1))
+                                    .name(&ci.imag.sup.0)
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                            );
                         }
-                    };
-
-                    for (name, points) in lines {
-                        plot_ui.line(
-                            Line::new(PlotPoints::new(
-                                points.into_iter().map(|p| [p.x, p.y]).collect::<Vec<_>>(),
-                            ))
-                            .name(name)
-                            .color(baked.color)
-                            .width(baked.width)
-                            .style(baked.style),
-                        );
                     }
                 }
             });
