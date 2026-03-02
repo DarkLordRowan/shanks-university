@@ -17,9 +17,7 @@ use std::collections::BTreeMap;
 use tokio::sync::mpsc;
 
 use crate::{
-    cache::{
-        Cache, CachedAccelData, CachedEvent, CachedResultData, CachedSeriesData, RawArrBlobs,
-    },
+    cache::{Cache, CachedAccelData, CachedEvent, CachedResultData, CachedSeriesData, RawArrBlobs},
     experiment::{AccelInstance, FilterInstance, NoiseInstance, SeriesInstance},
     ffi::{
         Arr, ComplexOf, IntervalOf, Value,
@@ -31,11 +29,9 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct ComputeTask<T> {
     pub id: T,
-    pub precision: String,
-    pub series: SeriesInstance,
+    pub series: SeriesDesc,
     pub n_points: u64,
     /// Expanded noise (all values resolved). `None` = no noise.
-    pub noise: Option<NoiseInstance>,
     pub algorithms: Vec<AccelInstance>,
     /// Filters applied independently to every accel that triggers a stop event.
     pub filters: Vec<FilterInstance>,
@@ -92,12 +88,10 @@ pub struct AccelData {
 pub enum ComputeEvent<T> {
     SeriesDone {
         id: T,
-        desc: SeriesDesc,
         data: SeriesData,
     },
     AccelDone {
         id: T,
-        series_desc: SeriesDesc,
         desc: AccelDesc,
         data: AccelData,
     },
@@ -129,19 +123,15 @@ where
     T: Clone + Send + 'static,
 {
     let id = task.id.clone();
-    match run_task(task, cache, &tx).await {
-        Ok(()) => {
-            let _ = tx.send(ComputeEvent::Complete(id)).await;
-        }
-        Err(e) => {
-            let _ = tx
-                .send(ComputeEvent::Error {
-                    id,
-                    error: e.to_string(),
-                })
-                .await;
-        }
+    if let Err(e) = run_task(task, cache, &tx).await {
+        let _ = tx
+            .send(ComputeEvent::Error {
+                id: id.clone(),
+                error: e.to_string(),
+            })
+            .await;
     }
+    let _ = tx.send(ComputeEvent::Complete(id)).await;
 }
 
 async fn run_task<T>(
@@ -154,23 +144,19 @@ where
 {
     let id = task.id.clone();
     let n_needed = task.n_points;
-    let args_json = sorted_args_json(&task.series.args)?;
+    let args_json = sorted_args_json(&task.series.series.args)?;
     let noise_json = task
+        .series
         .noise
         .as_ref()
         .map(|ni| serde_json::to_string(ni).unwrap_or_default());
-    let desc = SeriesDesc {
-        precision: task.precision.clone(),
-        series: task.series.clone(),
-        noise: task.noise.clone(),
-    };
 
     // 1. Initial Cache Scan & Emission (PASS 1)
     let cached_series = cache
         .series_exists(
-            task.series.name.clone(),
-            task.precision.clone(),
-            task.series.x.to_string(),
+            task.series.series.name.clone(),
+            task.series.precision.clone(),
+            task.series.series.x.to_string(),
             args_json.clone(),
             noise_json.clone(),
         )
@@ -193,7 +179,6 @@ where
             let _ = tx
                 .send(ComputeEvent::SeriesDone {
                     id: id.clone(),
-                    desc: desc.clone(),
                     data: sdata.clone(),
                 })
                 .await;
@@ -232,7 +217,6 @@ where
                 let _ = tx
                     .send(ComputeEvent::AccelDone {
                         id: id.clone(),
-                        series_desc: desc.clone(),
                         desc: AccelDesc {
                             accel: accel.clone(),
                             filter: None,
@@ -272,7 +256,6 @@ where
                     let _ = tx
                         .send(ComputeEvent::AccelDone {
                             id: id.clone(),
-                            series_desc: desc.clone(),
                             desc: AccelDesc {
                                 accel: accel.clone(),
                                 filter: Some(filter.clone()),
@@ -296,11 +279,11 @@ where
     // 2. PASS 2: Lazy Recomputation (spawn_blocking)
     let (internal_tx, mut internal_rx) = mpsc::channel(32);
     let s_id = id.clone();
-    let s_desc = desc.clone();
-    let s_name_raw = task.series.name.clone();
-    let s_prec_raw = task.precision.clone();
+    let s_desc = task.series.clone();
+    let s_name_raw = task.series.series.name.clone();
+    let s_prec_raw = task.series.precision.clone();
     let s_args_raw = args_json.clone();
-    let s_x_raw = task.series.x.to_string();
+    let s_x_raw = task.series.series.x.to_string();
     let s_noise_json_raw = noise_json.clone();
     let s_n_needed = task.n_points;
 
@@ -322,7 +305,7 @@ where
     let s_prec = s_prec_raw.clone();
     let s_args = s_args_raw.clone();
     let s_x = s_x_raw.clone();
-    let s_noise = task.noise.clone();
+    let s_noise = task.series.noise.clone();
 
     let blocking_handle = tokio::task::spawn_blocking(move || -> Result<()> {
         let mut lazy_series: Option<cxx::UniquePtr<bridge::CSeries>> = None;
@@ -347,7 +330,6 @@ where
             if series_short {
                 let _ = internal_tx.blocking_send(ComputeEvent::SeriesDone {
                     id: s_id.clone(),
-                    desc: s_desc.clone(),
                     data: sdata.clone(),
                 });
             }
@@ -418,7 +400,6 @@ where
                 };
                 let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
                     id: s_id.clone(),
-                    series_desc: s_desc.clone(),
                     desc: AccelDesc {
                         accel: a_inst.clone(),
                         filter: None,
@@ -438,26 +419,9 @@ where
                 ) {
                     Ok(arr) => arr,
                     Err(e) => {
-                        let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
+                        let _ = internal_tx.blocking_send(ComputeEvent::Error {
                             id: s_id.clone(),
-                            series_desc: s_desc.clone(),
-                            desc: AccelDesc {
-                                accel: a_inst.clone(),
-                                filter: Some(f_inst.clone()),
-                            },
-                            data: AccelData {
-                                start_offset: stop_n.unwrap_or(0),
-                                result: ResultData {
-                                    values: Arr::Real(vec![RealValue::ZERO]),
-                                    an: Arr::Real(vec![RealValue::ZERO]),
-                                    deviations: Arr::Real(vec![RealValue::ZERO]),
-                                },
-                                events: vec![SeriesEvent {
-                                    n: stop_n.unwrap_or(0),
-                                    name: "algo_error".to_string(),
-                                    description: e.to_string(),
-                                }],
-                            },
+                            error: e.to_string(),
                         });
                         continue;
                     }
@@ -469,7 +433,7 @@ where
                     description: "Divergence detected; stop_action_limit reached.".to_string(),
                 });
                 let adata = AccelData {
-                    start_offset: 0,
+                    start_offset: stop_n.unwrap_or(0),
                     result: ResultData {
                         values: arr_from_raw(farr),
                         an: Arr::Real(Vec::new()),
@@ -479,7 +443,6 @@ where
                 };
                 let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
                     id: s_id.clone(),
-                    series_desc: s_desc.clone(),
                     desc: AccelDesc {
                         accel: a_inst.clone(),
                         filter: Some(f_inst.clone()),
@@ -497,10 +460,7 @@ where
 
         if series_db_id != -1 {
             match event {
-                ComputeEvent::SeriesDone {
-                    data,
-                    ..
-                } => {
+                ComputeEvent::SeriesDone { data, .. } => {
                     let c = cache.clone();
                     let sid = series_db_id;
                     let blobs = CachedSeriesData {
@@ -529,9 +489,7 @@ where
                         }
                     });
                 }
-                ComputeEvent::AccelDone {
-                    desc, data, ..
-                } => {
+                ComputeEvent::AccelDone { desc, data, .. } => {
                     let c = cache.clone();
                     let sid = series_db_id;
                     let npts = n_needed;
@@ -747,7 +705,6 @@ fn accel_data_from_cache(ad: &CachedAccelData, events: Vec<CachedEvent>) -> Acce
             .collect(),
     }
 }
-
 
 // ---------------------------------------------------------------------------
 // Misc helpers

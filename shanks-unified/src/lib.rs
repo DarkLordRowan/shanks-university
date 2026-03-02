@@ -1,6 +1,7 @@
 #![feature(gen_blocks)]
 #![feature(yield_expr)]
 #![feature(trait_alias)]
+#![feature(map_try_insert)]
 
 //! Shanks Unified - Series Acceleration Visualization Tool
 //!

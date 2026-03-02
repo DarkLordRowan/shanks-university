@@ -7,10 +7,6 @@ compile_error!(
 );
 
 impl ffi::RealValue {
-    pub const ZERO: Self = Self {
-        mantissa: 0.0,
-        exponent: 0,
-    };
     #[cfg(target_endian = "little")]
     pub fn to_bytes(slice: &[ffi::RealValue]) -> &[u8] {
         let byte_len = slice.len() * std::mem::size_of::<ffi::RealValue>();

@@ -1,30 +1,19 @@
 {
-  "precisions": [
-    "Arb128",
-    "CArb128",
-    "IntervalArb128",
-    "CIntervalArb128"
-  ],
+  "precisions": ["Arb128", "CArb128", "IntervalArb128", "CIntervalArb128"],
   "series": [
     {
       "name": "ExpSeries",
-      "x": [
-        0.1
-      ],
+      "x": [0.1],
       "args": {}
     },
     {
       "name": "CosSeries",
-      "x": [
-        0.1
-      ],
+      "x": [0.1],
       "args": {}
     },
     {
       "name": "SinSeries",
-      "x": [
-        0.1
-      ],
+      "x": [0.1],
       "args": {}
     }
   ],
@@ -52,6 +41,7 @@
     {
       "type": "Savitzky-Golay",
       "args": {
+        "window_length": 10,
         "polyorder": 2,
         "derive": 0,
         "delta": 1.0
@@ -60,6 +50,7 @@
     {
       "type": "Kolmogorov-Zurbenko",
       "args": {
+        "window_length": 10,
         "degree": 3
       }
     }
@@ -67,9 +58,7 @@
   "accels": [
     {
       "name": "BrezinskiThetaAlgorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -93,9 +82,7 @@
     },
     {
       "name": "ChangWynnAlgorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -119,16 +106,10 @@
     },
     {
       "name": "DrummondDAlgorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {
-        "remainder": [
-          "u_type"
-        ],
-        "useRecurrentFormula": [
-          false
-        ]
+        "remainder": ["u_type"],
+        "useRecurrentFormula": [false]
       },
       "events": [
         {
@@ -152,9 +133,7 @@
     },
     {
       "name": "FordSidi2Algorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -178,9 +157,7 @@
     },
     {
       "name": "FordSidi3Algorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -204,9 +181,7 @@
     },
     {
       "name": "JTransformationAlgorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -230,19 +205,11 @@
     },
     {
       "name": "LevinAlgorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {
-        "remainder": [
-          "u_type"
-        ],
-        "useRecurrentFormula": [
-          false
-        ],
-        "beta": [
-          1.0
-        ]
+        "remainder": ["u_type"],
+        "useRecurrentFormula": [false],
+        "beta": [1.0]
       },
       "events": [
         {
@@ -266,13 +233,9 @@
     },
     {
       "name": "LevinSidiMAlgorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {
-        "remainder": [
-          "u_type"
-        ]
+        "remainder": ["u_type"]
       },
       "events": [
         {
@@ -296,16 +259,10 @@
     },
     {
       "name": "LevinSidiSAlgorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {
-        "remainder": [
-          "u_type"
-        ],
-        "useRecurrentFormula": [
-          false
-        ]
+        "remainder": ["u_type"],
+        "useRecurrentFormula": [false]
       },
       "events": [
         {
@@ -329,9 +286,7 @@
     },
     {
       "name": "LubkinWAlgorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -355,9 +310,7 @@
     },
     {
       "name": "RichardsonAlgorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -381,9 +334,7 @@
     },
     {
       "name": "ShanksAlgorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -407,9 +358,7 @@
     },
     {
       "name": "ShanksTransformAlternating",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -433,9 +382,7 @@
     },
     {
       "name": "WenigerAlgorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -459,9 +406,7 @@
     },
     {
       "name": "WynnEpsilon1Algorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -485,9 +430,7 @@
     },
     {
       "name": "WynnEpsilon2Algorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -511,9 +454,7 @@
     },
     {
       "name": "WynnEpsilon3Algorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {},
       "events": [
         {
@@ -537,19 +478,11 @@
     },
     {
       "name": "WynnRhoAlgorithm",
-      "m": [
-        4
-      ],
+      "m": [4],
       "args": {
-        "numerator": [
-          "rho_type"
-        ],
-        "gamma": [
-          1.0
-        ],
-        "RHO": [
-          1.0
-        ]
+        "numerator": ["rho_type"],
+        "gamma": [1.0],
+        "RHO": [1.0]
       },
       "events": [
         {

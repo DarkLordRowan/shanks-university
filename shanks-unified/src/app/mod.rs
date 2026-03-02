@@ -5,15 +5,12 @@ mod tree_ui;
 mod ui;
 
 use crate::cache::Cache;
-use crate::compute::{self, AccelData, ComputeEvent, ComputeTask, SeriesData};
-use crate::experiment::{
-    AccelInstance, ExperimentConfig, FilterInstance, NoiseInstance, SeriesInstance,
-};
+use crate::compute::{self, AccelData, ComputeEvent, SeriesData};
+use crate::experiment::ExperimentConfig;
 use crate::ffi::{Arr, ArrF64, ArrLine, ComplexOf, IntervalOf, Value};
 use egui_plot::{Line, LineStyle, PlotPoint, PlotPoints};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::{Arc, Mutex};
-use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
 pub use selection::{SelectedCombination, SelectionNode, SelectionState};
@@ -114,10 +111,7 @@ impl ResultKey {
                 series,
                 noise,
             },
-            accel: Some(compute::AccelDesc {
-                accel,
-                filter,
-            }),
+            accel: Some(compute::AccelDesc { accel, filter }),
         })
     }
 
@@ -168,8 +162,8 @@ impl AppState {
 
 pub struct ShanksApp {
     state: AppState,
-    series_results: HashMap<compute::SeriesDesc, SeriesData>,
-    accel_results: HashMap<ResultKey, AccelData>,
+    series_results: HashMap<compute::SeriesDesc, Option<SeriesData>>,
+    accel_results: HashMap<ResultKey, Option<AccelData>>,
     active_tasks: HashMap<compute::SeriesDesc, JoinHandle<()>>,
     event_rx: tokio::sync::mpsc::Receiver<ComputeEvent<compute::SeriesDesc>>,
     event_tx: tokio::sync::mpsc::Sender<ComputeEvent<compute::SeriesDesc>>,
@@ -195,6 +189,7 @@ pub struct ShanksApp {
     pub show_interval_shading: bool,
 
     pub status: String,
+    pub last_error: String,
 }
 
 impl ShanksApp {
@@ -226,6 +221,7 @@ impl ShanksApp {
             show_limit_lines: true,
             show_interval_shading: true,
             status: "Ready".to_string(),
+            last_error: String::default(),
         };
 
         app.rebuild_trees();
@@ -285,12 +281,16 @@ impl ShanksApp {
         });
 
         let old_series_count = self.series_results.len();
-        self.series_results.retain(|desc, _| requested_series.contains(desc));
-        
-        let old_accel_count = self.accel_results.len();
-        self.accel_results.retain(|rk, _| requested_accels.contains(rk));
+        self.series_results
+            .retain(|desc, _| requested_series.contains(desc));
 
-        if self.series_results.len() != old_series_count || self.accel_results.len() != old_accel_count {
+        let old_accel_count = self.accel_results.len();
+        self.accel_results
+            .retain(|rk, _| requested_accels.contains(rk));
+
+        if self.series_results.len() != old_series_count
+            || self.accel_results.len() != old_accel_count
+        {
             self.plot_cache.dirty = true;
         }
 
@@ -320,10 +320,8 @@ impl ShanksApp {
             // Start new task
             let mut task = compute::ComputeTask {
                 id: s_desc.clone(),
-                precision: s_desc.precision.clone(),
-                series: s_desc.series.clone(),
+                series: s_desc.clone(),
                 n_points: self.state.n_points,
-                noise: s_desc.noise.clone(),
                 algorithms: Vec::new(),
                 filters: Vec::new(),
             };
@@ -343,7 +341,11 @@ impl ShanksApp {
             task.algorithms = algos.into_iter().collect();
             task.filters = filters.into_iter().collect();
 
-            let handle = compute::spawn_task(task, self.state.cache.lock().unwrap().clone(), self.event_tx.clone());
+            let handle = compute::spawn_task(
+                task,
+                self.state.cache.lock().unwrap().clone(),
+                self.event_tx.clone(),
+            );
             self.active_tasks.insert(s_desc, handle);
             self.status = "Computing...".to_string();
         }
@@ -352,21 +354,16 @@ impl ShanksApp {
     pub fn process_events(&mut self) {
         while let Ok(event) = self.event_rx.try_recv() {
             match event {
-                ComputeEvent::SeriesDone { desc, data, .. } => {
-                    self.series_results.insert(desc, data);
+                ComputeEvent::SeriesDone { id, data, .. } => {
+                    self.series_results.insert(id, Some(data));
                     self.plot_cache.dirty = true;
                 }
-                ComputeEvent::AccelDone {
-                    series_desc,
-                    desc,
-                    data,
-                    ..
-                } => {
+                ComputeEvent::AccelDone { id, desc, data, .. } => {
                     let rkey = ResultKey {
-                        series: series_desc,
+                        series: id,
                         accel: Some(desc),
                     };
-                    self.accel_results.insert(rkey, data);
+                    self.accel_results.insert(rkey, Some(data));
                     self.plot_cache.dirty = true;
                 }
                 ComputeEvent::Complete(id) => {
@@ -377,7 +374,9 @@ impl ShanksApp {
                 }
                 ComputeEvent::Error { id, error } => {
                     self.active_tasks.remove(&id);
-                    self.status = format!("Error: {}", error);
+                    // ~> Welcome to the race condition zone <~
+                    let _ = self.series_results.try_insert(id, None);
+                    self.last_error = error;
                 }
             }
         }
@@ -556,6 +555,7 @@ impl ShanksApp {
             f32,
             LineStyle,
             Vec<compute::SeriesEvent>,
+            u64, // start_offset
         )>,
     ) -> Vec<BakedLine> {
         if raw_lines.is_empty() {
@@ -564,7 +564,7 @@ impl ShanksApp {
 
         // 1. Generate all LineInfos for all components
         let mut all_infos = Vec::new();
-        for (key, ltype, data, _, _, _, _) in &raw_lines {
+        for (key, ltype, data, _, _, _, _, _) in &raw_lines {
             match data {
                 ArrF64::Real(_) => {
                     let component = if ltype.contains("Dev") {
@@ -655,7 +655,7 @@ impl ShanksApp {
         // 3. Build BakedLines
         let mut baked_lines = Vec::new();
         let mut name_idx = 0;
-        for (_key, _ltype, data, color, width, style, events) in raw_lines {
+        for (_key, _ltype, data, color, width, style, events, offset) in raw_lines {
             // Determine full_name (take from the first component of this data)
             let full_name = full_names[name_idx].clone();
 
@@ -666,7 +666,7 @@ impl ShanksApp {
                     let pts = v
                         .iter()
                         .enumerate()
-                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .map(|(i, &y)| PlotPoint::new((i as u64 + offset) as f64, y))
                         .collect();
                     ArrLine::Real((name, pts))
                 }
@@ -678,13 +678,13 @@ impl ShanksApp {
                         .real
                         .iter()
                         .enumerate()
-                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .map(|(i, &y)| PlotPoint::new((i as u64 + offset) as f64, y))
                         .collect();
                     let im_pts = c
                         .imag
                         .iter()
                         .enumerate()
-                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .map(|(i, &y)| PlotPoint::new((i as u64 + offset) as f64, y))
                         .collect();
                     ArrLine::Complex(ComplexOf {
                         real: (re_name, re_pts),
@@ -699,13 +699,13 @@ impl ShanksApp {
                         .inf
                         .iter()
                         .enumerate()
-                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .map(|(i, &y)| PlotPoint::new((i as u64 + offset) as f64, y))
                         .collect();
                     let sup_pts = iv
                         .sup
                         .iter()
                         .enumerate()
-                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .map(|(i, &y)| PlotPoint::new((i as u64 + offset) as f64, y))
                         .collect();
                     ArrLine::Interval(IntervalOf {
                         inf: (inf_name, inf_pts),
@@ -723,28 +723,28 @@ impl ShanksApp {
                         .inf
                         .iter()
                         .enumerate()
-                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .map(|(i, &y)| PlotPoint::new((i as u64 + offset) as f64, y))
                         .collect();
                     let re_sup_pts = ci
                         .real
                         .sup
                         .iter()
                         .enumerate()
-                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .map(|(i, &y)| PlotPoint::new((i as u64 + offset) as f64, y))
                         .collect();
                     let im_inf_pts = ci
                         .imag
                         .inf
                         .iter()
                         .enumerate()
-                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .map(|(i, &y)| PlotPoint::new((i as u64 + offset) as f64, y))
                         .collect();
                     let im_sup_pts = ci
                         .imag
                         .sup
                         .iter()
                         .enumerate()
-                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                        .map(|(i, &y)| PlotPoint::new((i as u64 + offset) as f64, y))
                         .collect();
                     ArrLine::CInterval(ComplexOf {
                         real: IntervalOf {
@@ -827,6 +827,7 @@ impl ShanksApp {
 
         let mut max_n = 0usize;
         for sdata in self.series_results.values() {
+            let Some(sdata) = sdata else { continue };
             max_n = max_n.max(match &sdata.result.values {
                 Arr::Real(v) => v.len(),
                 Arr::Complex(c) => c.real.len(),
@@ -835,6 +836,7 @@ impl ShanksApp {
             });
         }
         for (_key, adata) in &self.accel_results {
+            let Some(adata) = adata else { continue };
             max_n = max_n.max(
                 adata.start_offset as usize
                     + match &adata.result.values {
@@ -848,6 +850,7 @@ impl ShanksApp {
 
         // 1. Process Base Series Results
         for (s_desc, sdata) in &self.series_results {
+            let Some(sdata) = sdata else { continue };
             let key = ResultKey {
                 series: s_desc.clone(),
                 accel: None,
@@ -863,16 +866,19 @@ impl ShanksApp {
                     1.0,
                     LineStyle::Dashed { length: 4.0 },
                     Vec::new(),
+                    0,
                 ));
             }
 
             if self.show_limit_lines {
                 if let Some(ref val) = sdata.sum {
                     let points = match val {
-                        Value::Real(rv) => ArrF64::Real(vec![
-                            Self::to_plot_point(rv, main_symlog, main_thresh);
-                            max_n + 1
-                        ]),
+                        Value::Real(rv) => {
+                            ArrF64::Real(vec![
+                                Self::to_plot_point(rv, main_symlog, main_thresh);
+                                max_n + 1
+                            ])
+                        }
                         Value::Complex(cv) => ArrF64::Complex(ComplexOf {
                             real: vec![
                                 Self::to_plot_point(&cv.real, main_symlog, main_thresh);
@@ -896,21 +902,37 @@ impl ShanksApp {
                         Value::CInterval(ci) => ArrF64::CInterval(ComplexOf {
                             real: IntervalOf {
                                 inf: vec![
-                                    Self::to_plot_point(&ci.real.inf, main_symlog, main_thresh);
+                                    Self::to_plot_point(
+                                        &ci.real.inf,
+                                        main_symlog,
+                                        main_thresh
+                                    );
                                     max_n + 1
                                 ],
                                 sup: vec![
-                                    Self::to_plot_point(&ci.real.sup, main_symlog, main_thresh);
+                                    Self::to_plot_point(
+                                        &ci.real.sup,
+                                        main_symlog,
+                                        main_thresh
+                                    );
                                     max_n + 1
                                 ],
                             },
                             imag: IntervalOf {
                                 inf: vec![
-                                    Self::to_plot_point(&ci.imag.inf, main_symlog, main_thresh);
+                                    Self::to_plot_point(
+                                        &ci.imag.inf,
+                                        main_symlog,
+                                        main_thresh
+                                    );
                                     max_n + 1
                                 ],
                                 sup: vec![
-                                    Self::to_plot_point(&ci.imag.sup, main_symlog, main_thresh);
+                                    Self::to_plot_point(
+                                        &ci.imag.sup,
+                                        main_symlog,
+                                        main_thresh
+                                    );
                                     max_n + 1
                                 ],
                             },
@@ -924,6 +946,7 @@ impl ShanksApp {
                         1.0,
                         LineStyle::Dotted { spacing: 4.0 },
                         Vec::new(),
+                        0,
                     ));
                 }
             }
@@ -946,6 +969,7 @@ impl ShanksApp {
                         1.0,
                         LineStyle::Dashed { length: 4.0 },
                         Vec::new(),
+                        0,
                     ));
                 }
             }
@@ -953,8 +977,13 @@ impl ShanksApp {
 
         // 2. Process Accelerated Results
         for (key, adata) in &self.accel_results {
+            let Some(adata) = adata else { continue };
             let base_color = key.color();
-            let is_filtered = key.accel.as_ref().map(|a| a.filter.is_some()).unwrap_or(false);
+            let is_filtered = key
+                .accel
+                .as_ref()
+                .map(|a| a.filter.is_some())
+                .unwrap_or(false);
             let show = if is_filtered {
                 self.show_smoothed_estimates
             } else {
@@ -978,7 +1007,11 @@ impl ShanksApp {
                     if is_filtered { 3.0 } else { 2.0 },
                     LineStyle::Solid,
                     adata.events.clone(),
+                    adata.start_offset,
                 ));
+                if adata.start_offset != 0 {
+                    println!("{}", adata.start_offset);
+                }
             }
 
             if self.show_accel_values {
@@ -999,6 +1032,7 @@ impl ShanksApp {
                         2.0,
                         LineStyle::Solid,
                         adata.events.clone(),
+                        adata.start_offset,
                     ));
                 }
             }
@@ -1094,6 +1128,8 @@ impl eframe::App for ShanksApp {
                     if let Some(ref mut t) = self.precision_tree {
                         tree_ui::draw_tree_with_header(ui, "Precisions", t, true);
                     }
+                    ui.separator();
+                    ui.label(&self.last_error);
                 });
             });
 

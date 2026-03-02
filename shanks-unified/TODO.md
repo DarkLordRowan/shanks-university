@@ -12,6 +12,7 @@
 * Спросить про window_length
 * Lists are currently 100% useless
 * Return export
+* REVERIFY goddamn View. It's not working as intended.
 
 - name: Setup MSYS2
         uses: msys2/setup-msys2@v2

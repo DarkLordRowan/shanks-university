@@ -1,7 +1,7 @@
 //! Headless runner — executes batch computations using the async compute pipeline.
 
 use crate::cache::Cache;
-use crate::compute::{self, ComputeEvent, ComputeTask};
+use crate::compute::{self, ComputeEvent, ComputeTask, SeriesDesc};
 use crate::experiment::{
     AccelInstance, ExperimentConfig, FilterInstance, NoiseInstance, SeriesInstance,
 };
@@ -48,11 +48,7 @@ pub struct HeadlessRunner {
 }
 
 impl HeadlessRunner {
-    pub fn new(
-        config: ExperimentConfig,
-        cache: Cache,
-        export: Option<PathBuf>,
-    ) -> Result<Self> {
+    pub fn new(config: ExperimentConfig, cache: Cache, export: Option<PathBuf>) -> Result<Self> {
         Ok(Self {
             config,
             cache,
@@ -92,30 +88,26 @@ impl HeadlessRunner {
         let mut finished_tasks = 0;
         while let Some(event) = rx.recv().await {
             match event {
-                ComputeEvent::SeriesDone { desc, .. } => {
+                ComputeEvent::SeriesDone { id, .. } => {
                     if let Some(ref mut cb) = self.progress {
                         cb(ProgressInfo {
                             current: finished_tasks,
                             total: total_tasks,
-                            series_name: desc.series.name.clone(),
-                            precision: desc.precision.clone(),
+                            series_name: id.1.series.name.clone(),
+                            precision: id.1.precision.clone(),
                             method_name: "none".to_string(),
                             elapsed_secs: start_time.elapsed().as_secs_f64(),
                             status: Status::Computing,
                         });
                     }
                 }
-                ComputeEvent::AccelDone {
-                    series_desc,
-                    desc,
-                    ..
-                } => {
+                ComputeEvent::AccelDone { id, desc, .. } => {
                     if let Some(ref mut cb) = self.progress {
                         cb(ProgressInfo {
                             current: finished_tasks,
                             total: total_tasks,
-                            series_name: series_desc.series.name.clone(),
-                            precision: series_desc.precision.clone(),
+                            series_name: id.1.series.name.clone(),
+                            precision: id.1.precision.clone(),
                             method_name: desc.accel.name.clone(),
                             elapsed_secs: start_time.elapsed().as_secs_f64(),
                             status: Status::Computing,
@@ -140,7 +132,7 @@ impl HeadlessRunner {
     }
 
     /// Expand ExperimentConfig into individual ComputeTasks.
-    fn expand_tasks(&self) -> Result<Vec<ComputeTask<usize>>> {
+    fn expand_tasks(&self) -> Result<Vec<ComputeTask<(usize, SeriesDesc)>>> {
         let mut tasks = Vec::new();
 
         let n_points = self.config.n_points.unwrap_or(100);
@@ -172,12 +164,15 @@ impl HeadlessRunner {
         for precision in &precisions {
             for series in &series_instances {
                 // Option 1: No noise
-                tasks.push(ComputeTask {
-                    id: task_id,
+                let desc = SeriesDesc {
                     precision: precision.clone(),
                     series: series.clone(),
-                    n_points,
                     noise: None,
+                };
+                tasks.push(ComputeTask {
+                    id: (task_id, desc.clone()),
+                    series: desc,
+                    n_points,
                     algorithms: accel_instances.clone(),
                     filters: filter_instances.clone(),
                 });
@@ -185,12 +180,15 @@ impl HeadlessRunner {
 
                 // Option 2: All noises
                 for noise in &noise_instances {
-                    tasks.push(ComputeTask {
-                        id: task_id,
+                    let desc = SeriesDesc {
                         precision: precision.clone(),
                         series: series.clone(),
-                        n_points,
                         noise: Some(noise.clone()),
+                    };
+                    tasks.push(ComputeTask {
+                        id: (task_id, desc.clone()),
+                        series: desc,
+                        n_points,
                         algorithms: accel_instances.clone(),
                         filters: filter_instances.clone(),
                     });
