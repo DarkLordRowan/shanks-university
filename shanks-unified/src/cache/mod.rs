@@ -192,15 +192,15 @@ impl Cache {
         x_value:    String,
         args_json:  String,
         noise_json: Option<String>,
-    ) -> Result<Option<(i64, u64)>> {
+    ) -> Result<Option<(i64, u64, Option<String>)>> {
         let Some(conn) = &self.conn else { return Ok(None); };
         conn.call(move |c| {
             let res = c.query_row(
-                "SELECT id, n_points FROM series \
+                "SELECT id, n_points, sum_json FROM series \
                  WHERE name=?1 AND precision=?2 AND x_value=?3 \
                    AND args_json=?4 AND noise_json=?5",
                 params![name, precision, x_value, args_json, noise_json.unwrap_or_default()],
-                |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)? as u64)),
+                |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)? as u64, r.get::<_, Option<String>>(2)?)),
             );
             match res {
                 Ok(v)                                    => Ok(Some(v)),

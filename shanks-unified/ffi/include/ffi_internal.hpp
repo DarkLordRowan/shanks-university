@@ -126,13 +126,28 @@ inline ScientificValue to_scientific(T value) {
         return ScientificValue(0.0, 0);
     }
     if (std::isinf(val_d)) {
-        return ScientificValue(val_d > 0 ? 1.7976931348623157 : -1.7976931348623157, 308);
+        // Return a large but finite value for infinity to avoid plot crashes,
+        // using the 308 exponent as a signal for "huge".
+        return ScientificValue(val_d > 0 ? 1.0 : -1.0, 308);
     }
 
     double abs_val = std::abs(val_d);
-    int64_t exp = static_cast<int64_t>(std::floor(std::log10(abs_val)));
-    double mantissa = val_d / std::pow(10.0, exp);
+    // log10 handles the scale
+    double l10 = std::log10(abs_val);
+    int64_t exp = static_cast<int64_t>(std::floor(l10));
+    
+    // Safety check for exponent range to avoid pow() overflow/underflow
+    if (exp < -300) {
+        // Very small: normalize to -300
+        double mantissa = val_d * std::pow(10.0, -exp - 300) / 1e300;
+        return ScientificValue(mantissa, exp);
+    } else if (exp > 300) {
+        // Very large: normalize to 300
+        double mantissa = (val_d / 1e300) / std::pow(10.0, exp - 300);
+        return ScientificValue(mantissa, exp);
+    }
 
+    double mantissa = val_d / std::pow(10.0, exp);
     return ScientificValue(mantissa, exp);
 }
 
@@ -144,7 +159,8 @@ inline ScientificValue to_scientific(mpfr::mpreal value) {
     }
 
     std::ostringstream oss;
-    oss << value;
+    // Force scientific notation with sufficient precision
+    oss << std::scientific << std::setprecision(18) << value;
     std::string s = oss.str();
 
     if (s.find("NaN") != std::string::npos || s.find("nan") != std::string::npos) {
@@ -152,18 +168,27 @@ inline ScientificValue to_scientific(mpfr::mpreal value) {
     }
     if (s.find("Inf") != std::string::npos || s.find("inf") != std::string::npos) {
         bool neg = s.find("-") != std::string::npos;
-        return ScientificValue(neg ? -1.7976931348623157 : 1.7976931348623157, 308);
+        return ScientificValue(neg ? -1.0 : 1.0, 308);
     }
 
-    // Parse scientific notation from mpreal string
+    // Parse scientific notation from mpreal string (format: 1.23e+45)
     size_t e_pos = s.find('e');
     if (e_pos != std::string::npos) {
-        double mantissa = std::stod(s.substr(0, e_pos));
-        int64_t exp = std::stoll(s.substr(e_pos + 1));
-        return ScientificValue(mantissa, exp);
+        try {
+            double mantissa = std::stod(s.substr(0, e_pos));
+            int64_t exp = std::stoll(s.substr(e_pos + 1));
+            return ScientificValue(mantissa, exp);
+        } catch (...) {
+            // Fallback for weirdly formatted strings
+            return ScientificValue(0.0, 0);
+        }
     }
 
-    return ScientificValue(std::stod(s), 0);
+    try {
+        return ScientificValue(std::stod(s), 0);
+    } catch (...) {
+        return ScientificValue(0.0, 0);
+    }
 }
 
 // ============================================================================

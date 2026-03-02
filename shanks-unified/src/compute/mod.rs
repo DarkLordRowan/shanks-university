@@ -12,6 +12,7 @@
 //! ```
 
 use anyhow::Result;
+use log::debug;
 use std::collections::BTreeMap;
 use tokio::sync::mpsc;
 
@@ -169,10 +170,20 @@ where
         .await
         .unwrap_or(None);
 
+    let (cached_id, cached_n, cached_sum_json) = match cached_series {
+        Some((id, n, sum)) => (Some(id), Some(n), sum),
+        None => (None, None, None),
+    };
+
     let mut current_series_data = None;
-    if let Some((sid, _n)) = cached_series {
+    if let Some(sid) = cached_id {
         if let Ok(Some(sd)) = cache.get_series_data(sid).await {
-            let sdata = series_data_from_cache(&sd);
+            let mut sdata = series_data_from_cache(&sd);
+            if let Some(sj) = cached_sum_json {
+                if let Ok(val) = serde_json::from_str(&sj) {
+                    sdata.sum = Some(val);
+                }
+            }
             let _ = tx
                 .send(ComputeEvent::SeriesDone {
                     id: id.clone(),
@@ -187,11 +198,11 @@ where
 
     // Build TODO list for recomputation (Workset)
     let mut todo: Vec<(usize, AccelInstance, bool, Vec<FilterInstance>)> = vec![];
-    let series_short = cached_series.map(|(_, n)| n < n_needed).unwrap_or(true);
+    let series_short = cached_n.map(|n| n < n_needed).unwrap_or(true);
 
     for (a_idx, accel) in task.algorithms.iter().enumerate() {
         let aargs = sorted_args_json(&accel.args)?;
-        let cached_accel = if let Some((sid, _)) = cached_series {
+        let cached_accel = if let Some(sid) = cached_id {
             cache
                 .accel_exists(
                     sid,
@@ -236,7 +247,7 @@ where
         let mut filters_to_do = vec![];
         for filter in &task.filters {
             let fargs = sorted_args_json(&filter.args)?;
-            let cached_filt = if let Some((sid, _)) = cached_series {
+            let cached_filt = if let Some(sid) = cached_id {
                 cache
                     .accel_exists(
                         sid,
@@ -292,26 +303,32 @@ where
     let (internal_tx, mut internal_rx) = mpsc::channel(32);
     let s_id = id.clone();
     let s_desc = desc.clone();
-    let s_name = task.series.name.clone();
-    let s_prec = task.precision.clone();
-    let s_args = args_json.clone();
-    let s_x = task.series.x.to_string();
-    let s_noise = task.noise.clone();
+    let s_name_raw = task.series.name.clone();
+    let s_prec_raw = task.precision.clone();
+    let s_args_raw = args_json.clone();
+    let s_x_raw = task.series.x.to_string();
+    let s_noise_json_raw = noise_json.clone();
     let s_n_needed = task.n_points;
 
     // Ensure series exists in DB for ID mapping
     let series_db_id = cache
         .upsert_series(
-            s_name.clone(),
-            s_prec.clone(),
-            s_x.clone(),
-            s_args.clone(),
-            noise_json.clone(),
+            s_name_raw.clone(),
+            s_prec_raw.clone(),
+            s_x_raw.clone(),
+            s_args_raw.clone(),
+            s_noise_json_raw.clone(),
             s_n_needed,
             None,
         )
         .await
         .unwrap_or(-1);
+
+    let s_name = s_name_raw.clone();
+    let s_prec = s_prec_raw.clone();
+    let s_args = s_args_raw.clone();
+    let s_x = s_x_raw.clone();
+    let s_noise = task.noise.clone();
 
     let blocking_handle = tokio::task::spawn_blocking(move || -> Result<()> {
         let mut lazy_series: Option<cxx::UniquePtr<bridge::CSeries>> = None;
@@ -319,6 +336,7 @@ where
 
         // Ensure series is computed if needed for anything in this block
         if series_short || !todo.is_empty() {
+            debug!("Computing {s_name}");
             let mut ptr = bridge::mk_series(&s_name, &s_prec, &s_args, s_n_needed as usize, &s_x)?;
             if let Some(ref ni) = s_noise {
                 let njson = serde_json::to_string(ni)?;
@@ -332,6 +350,7 @@ where
                 sum: Some(sum.clone()),
             };
             if series_short {
+                debug!("Computing {s_name}");
                 let _ = internal_tx.blocking_send(ComputeEvent::SeriesDone {
                     id: s_id.clone(),
                     series: s_desc.clone(),
@@ -343,10 +362,17 @@ where
             local_series_data = Some(sdata);
         }
 
-        let mut lazy_accels: BTreeMap<usize, (cxx::UniquePtr<bridge::CSeries>, Option<u64>, Vec<SeriesEvent>)> =
-            BTreeMap::new();
+        let mut lazy_accels: BTreeMap<
+            usize,
+            (
+                cxx::UniquePtr<bridge::CSeries>,
+                Option<u64>,
+                Vec<SeriesEvent>,
+            ),
+        > = BTreeMap::new();
 
         for (a_idx, a_inst, need_unfiltered, filters) in todo {
+            debug!("Computing {}", a_inst.name);
             // Lazy compute/fetch the acceleration pointer
             if !lazy_accels.contains_key(&a_idx) {
                 let s_ptr = lazy_series.as_ref().unwrap();
@@ -366,7 +392,11 @@ where
                         let n: u64 = parts.next()?.parse().ok()?;
                         let name = parts.next()?.to_string();
                         let description = parts.next().unwrap_or("").to_string();
-                        Some(SeriesEvent { n, name, description })
+                        Some(SeriesEvent {
+                            n,
+                            name,
+                            description,
+                        })
                     })
                     .collect();
                 let dev = bridge::get_deviation(&*ptr);
@@ -406,6 +436,7 @@ where
             }
 
             for f_inst in filters {
+                debug!("Filtering with {}", f_inst.filter_type);
                 let fargs = sorted_args_json(&f_inst.args)?;
                 let farr =
                     bridge::filter(&**a_ptr, &f_inst.filter_type, &fargs, stop_n.unwrap_or(0));
@@ -456,8 +487,23 @@ where
                         an: arr_to_blobs(&series_data.an),
                         dev: arr_to_blobs(&series_data.deviations),
                     };
+                    let name = s_name_raw.clone();
+                    let prec = s_prec_raw.clone();
+                    let x = s_x_raw.clone();
+                    let args = s_args_raw.clone();
+                    let noise = s_noise_json_raw.clone();
+                    let npts = s_n_needed;
+                    let sum_opt = series_data.sum.clone();
+
                     tokio::spawn(async move {
                         let _ = c.insert_series_data(sid, blobs).await;
+                        if let Some(sum) = sum_opt {
+                            if let Ok(sj) = serde_json::to_string(&sum) {
+                                let _ = c
+                                    .upsert_series(name, prec, x, args, noise, npts, Some(sj))
+                                    .await;
+                            }
+                        }
                     });
                 }
                 ComputeEvent::SeriesDone {
@@ -685,9 +731,7 @@ fn empty_series_data() -> SeriesData {
 // Misc helpers
 // ---------------------------------------------------------------------------
 
-fn sorted_args_json(
-    params: &BTreeMap<String, serde_json::Value>,
-) -> Result<String> {
+fn sorted_args_json(params: &BTreeMap<String, serde_json::Value>) -> Result<String> {
     Ok(serde_json::to_string(params)?)
 }
 

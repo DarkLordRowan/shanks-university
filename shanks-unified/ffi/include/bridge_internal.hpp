@@ -80,11 +80,23 @@ inline CIntervalValue to_civ(const T& v) {
             ComplexValue{to_rv(r.sup()), to_rv(i.sup())}
         };
     } else if constexpr (::shanks::ffi::is_complex_v<T>) {
-        return CIntervalValue{to_cv(v.real()), to_cv(v.imag())};
+        // Point: [re, re] + [im, im]i
+        return CIntervalValue{
+            ComplexValue{to_rv(v.real()), to_rv(v.imag())},
+            ComplexValue{to_rv(v.real()), to_rv(v.imag())}
+        };
     } else if constexpr (::shanks::ffi::is_interval_v<T>) {
-        return CIntervalValue{ComplexValue{to_rv(v.inf()), to_rv(0.0)}, ComplexValue{to_rv(v.sup()), to_rv(0.0)}};
+        // Real Interval: [inf, sup] + [0, 0]i
+        return CIntervalValue{
+            ComplexValue{to_rv(v.inf()), to_rv(0.0)},
+            ComplexValue{to_rv(v.sup()), to_rv(0.0)}
+        };
     } else {
-        return CIntervalValue{to_cv(v), to_cv(v)};
+        // Scalar Point: [v, v] + [0, 0]i
+        return CIntervalValue{
+            ComplexValue{to_rv(v), to_rv(0.0)},
+            ComplexValue{to_rv(v), to_rv(0.0)}
+        };
     }
 }
 

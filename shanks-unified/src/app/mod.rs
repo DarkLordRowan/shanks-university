@@ -9,7 +9,7 @@ use crate::compute::{self, AccelData, ComputeEvent, ComputeTask, SeriesData};
 use crate::experiment::{
     AccelInstance, ExperimentConfig, FilterInstance, NoiseInstance, SeriesInstance,
 };
-use crate::ffi::{Arr, ArrF64, ArrLine, ComplexOf, IntervalOf};
+use crate::ffi::{Arr, ArrF64, ArrLine, ComplexOf, IntervalOf, Value};
 use egui_plot::{Line, LineStyle, PlotPoint, PlotPoints};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::{Arc, Mutex};
@@ -132,6 +132,7 @@ impl ResultKey {
 
 struct BakedLine {
     data: ArrLine,
+    full_name: String, // Full descriptive name for tooltips
     color: egui::Color32,
     width: f32,
     style: LineStyle,
@@ -533,13 +534,63 @@ impl ShanksApp {
             }
         }
 
-        // 2. Shorten all infos
+        // 2. Shorten all infos and prepare full names
         let shortened_names = shorten_line_infos(&all_infos);
+        let full_names: Vec<String> = all_infos.iter().map(|info| {
+            let mut parts = Vec::new();
+            parts.push(info.precision.clone());
+            parts.push(info.series_name.clone());
+            
+            let s_args: Vec<_> = info.series_args.iter().map(|(k,v)| format!("{}={}", k, v)).collect();
+            if !s_args.is_empty() {
+                parts.push(format!("({})", s_args.join(", ")));
+            }
+
+            if let Some((ref nt, ref na)) = info.noise {
+                let n_args: Vec<_> = na.iter().map(|(k,v)| format!("{}={}", k, v)).collect();
+                let mut s = format!("Noise: {}", nt);
+                if !n_args.is_empty() {
+                    s.push_str(&format!(" ({})", n_args.join(", ")));
+                }
+                parts.push(s);
+            }
+
+            if let Some(ref an) = info.accel_name {
+                let a_args: Vec<_> = info.accel_args.iter().map(|(k,v)| format!("{}={}", k, v)).collect();
+                let mut s = format!("Accel: {}", an);
+                if let Some(m) = info.accel_m {
+                    s.push_str(&format!(" m={}", m));
+                }
+                if !a_args.is_empty() {
+                    s.push_str(&format!(" ({})", a_args.join(", ")));
+                }
+                parts.push(s);
+            }
+
+            if let Some((ref ft, ref fa)) = info.filter {
+                let f_args: Vec<_> = fa.iter().map(|(k,v)| format!("{}={}", k, v)).collect();
+                let mut s = format!("Filter: {}", ft);
+                if !f_args.is_empty() {
+                    s.push_str(&format!(" ({})", f_args.join(", ")));
+                }
+                parts.push(s);
+            }
+
+            parts.push(info.line_type.clone());
+            let mut s = parts.join(" | ");
+            if let Some(ref c) = info.component {
+                s.push_str(&format!(" [{}]", c));
+            }
+            s
+        }).collect();
 
         // 3. Build BakedLines
         let mut baked_lines = Vec::new();
         let mut name_idx = 0;
         for (_key, _ltype, data, color, width, style, events) in raw_lines {
+            // Determine full_name (take from the first component of this data)
+            let full_name = full_names[name_idx].clone();
+
             let baked_data = match data {
                 ArrF64::Real(v) => {
                     let name = shortened_names[name_idx].clone();
@@ -679,6 +730,7 @@ impl ShanksApp {
 
             baked_lines.push(BakedLine {
                 data: baked_data,
+                full_name,
                 color,
                 width,
                 style,
@@ -705,6 +757,24 @@ impl ShanksApp {
         let dev_symlog = self.dev_tab_state.symlog;
         let dev_thresh = self.dev_tab_state.log_linthresh;
 
+        let mut max_n = 0usize;
+        for (sdata, adata) in self.results.values() {
+            max_n = max_n.max(match &sdata.sn {
+                Arr::Real(v) => v.len(),
+                Arr::Complex(c) => c.real.len(),
+                Arr::Interval(iv) => iv.inf.len(),
+                Arr::CInterval(ci) => ci.real.inf.len(),
+            });
+            if let Some(adata) = adata {
+                max_n = max_n.max(match &adata.values {
+                    Arr::Real(v) => v.len(),
+                    Arr::Complex(c) => c.real.len(),
+                    Arr::Interval(iv) => iv.inf.len(),
+                    Arr::CInterval(ci) => ci.real.inf.len(),
+                });
+            }
+        }
+
         for (key, (sdata, adata)) in &self.results {
             let base_color = key.color();
 
@@ -722,19 +792,54 @@ impl ShanksApp {
             }
 
             if let Some(adata) = adata {
-                if self.show_sn {
-                    // Also show Sn *with noise* from adata if it's there?
-                    // No, usually sn is just the base.
-                }
-                if self.show_accel {
+                let is_filtered = key.filter.is_some();
+                let show = if is_filtered { self.show_smoothed_estimates } else { self.show_accel };
+
+                if show {
                     main_raw.push((
                         key.clone(),
-                        "Accel".to_string(),
+                        if is_filtered { "Estimated".to_string() } else { "Accel".to_string() },
                         self.arr_to_f64(&adata.values, main_symlog, main_thresh),
-                        base_color,
-                        2.0,
+                        if is_filtered { egui::Color32::from_rgb(240, 230, 140) } else { base_color }, // Khaki-ish
+                        if is_filtered { 3.0 } else { 2.0 },
                         LineStyle::Solid,
                         adata.events.clone(),
+                    ));
+                }
+            }
+
+            // Limits
+            if self.show_limit_lines {
+                if let Some(ref val) = sdata.sum {
+                    let points = match val {
+                        Value::Real(rv) => ArrF64::Real(vec![Self::to_plot_point(rv, main_symlog, main_thresh); max_n + 1]),
+                        Value::Complex(cv) => ArrF64::Complex(ComplexOf {
+                            real: vec![Self::to_plot_point(&cv.real, main_symlog, main_thresh); max_n + 1],
+                            imag: vec![Self::to_plot_point(&cv.imag, main_symlog, main_thresh); max_n + 1],
+                        }),
+                        Value::Interval(iv) => ArrF64::Interval(IntervalOf {
+                            inf: vec![Self::to_plot_point(&iv.inf, main_symlog, main_thresh); max_n + 1],
+                            sup: vec![Self::to_plot_point(&iv.sup, main_symlog, main_thresh); max_n + 1],
+                        }),
+                        Value::CInterval(ci) => ArrF64::CInterval(ComplexOf {
+                            real: IntervalOf {
+                                inf: vec![Self::to_plot_point(&ci.real.inf, main_symlog, main_thresh); max_n + 1],
+                                sup: vec![Self::to_plot_point(&ci.real.sup, main_symlog, main_thresh); max_n + 1],
+                            },
+                            imag: IntervalOf {
+                                inf: vec![Self::to_plot_point(&ci.imag.inf, main_symlog, main_thresh); max_n + 1],
+                                sup: vec![Self::to_plot_point(&ci.imag.sup, main_symlog, main_thresh); max_n + 1],
+                            },
+                        }),
+                    };
+                    main_raw.push((
+                        key.clone(),
+                        "Limit".to_string(),
+                        points,
+                        egui::Color32::RED,
+                        1.0,
+                        LineStyle::Dotted { spacing: 4.0 },
+                        Vec::new(),
                     ));
                 }
             }
@@ -773,7 +878,15 @@ impl ShanksApp {
                         dev_thresh,
                     );
                     for (k, lt, data) in collected {
-                        dev_raw.push((k, lt, data, base_color, 2.0, LineStyle::Solid, adata.events.clone()));
+                        dev_raw.push((
+                            k,
+                            lt,
+                            data,
+                            base_color,
+                            2.0,
+                            LineStyle::Solid,
+                            adata.events.clone(),
+                        ));
                     }
                 }
             }
@@ -943,6 +1056,36 @@ impl eframe::App for ShanksApp {
                 current_tab_state.reset_view = false;
             }
 
+            let name_to_full: HashMap<String, String> = plot_lines.iter().flat_map(|baked| {
+                match &baked.data {
+                    ArrLine::Real((n, _)) => vec![(n.clone(), baked.full_name.clone())],
+                    ArrLine::Complex(c) => vec![(c.real.0.clone(), baked.full_name.clone()), (c.imag.0.clone(), baked.full_name.clone())],
+                    ArrLine::Interval(iv) => vec![(iv.inf.0.clone(), baked.full_name.clone()), (iv.sup.0.clone(), baked.full_name.clone())],
+                    ArrLine::CInterval(ci) => vec![
+                        (ci.real.inf.0.clone(), baked.full_name.clone()),
+                        (ci.real.sup.0.clone(), baked.full_name.clone()),
+                        (ci.imag.inf.0.clone(), baked.full_name.clone()),
+                        (ci.imag.sup.0.clone(), baked.full_name.clone()),
+                    ],
+                }
+            }).collect();
+
+            let symlog = current_tab_state.symlog;
+            let thresh = current_tab_state.log_linthresh;
+
+            plot = plot.label_formatter(move |name, value| {
+                if name.is_empty() {
+                    return format!("n = {:.0}\ny = {:.4e}", value.x, value.y);
+                }
+                let full = name_to_full.get(name).cloned().unwrap_or_else(|| name.to_string());
+                let y_str = if symlog {
+                    crate::plot::symlog_formatter(value.y, thresh)
+                } else {
+                    format!("{:.10e}", value.y)
+                };
+                format!("{}\nn = {:.0}\ny = {}", full, value.x, y_str)
+            });
+
             plot.show(ui, |plot_ui| {
                 for baked in plot_lines {
                     for poly_pts in &baked.shading_polygons {
@@ -1029,21 +1172,43 @@ impl eframe::App for ShanksApp {
 
                     // Draw events as markers
                     // Group events by name + description to minimize drawing calls and legend clutter
-                    let mut grouped_events: BTreeMap<(String, String), Vec<PlotPoint>> = BTreeMap::new();
+                    let mut grouped_events: BTreeMap<(String, String), Vec<PlotPoint>> =
+                        BTreeMap::new();
                     for ev in &baked.events {
-                        if ev.n == 0 { continue; }
+                        if ev.n == 0 {
+                            continue;
+                        }
                         let idx = ev.n as usize - 1;
                         let pts = match &baked.data {
-                            ArrLine::Real((_, v)) => v.get(idx).map(|p| vec![*p]).unwrap_or_default(),
-                            ArrLine::Complex(c) => vec![c.real.1.get(idx), c.imag.1.get(idx)].into_iter().flatten().cloned().collect(),
-                            ArrLine::Interval(iv) => vec![iv.inf.1.get(idx), iv.sup.1.get(idx)].into_iter().flatten().cloned().collect(),
+                            ArrLine::Real((_, v)) => {
+                                v.get(idx).map(|p| vec![*p]).unwrap_or_default()
+                            }
+                            ArrLine::Complex(c) => vec![c.real.1.get(idx), c.imag.1.get(idx)]
+                                .into_iter()
+                                .flatten()
+                                .cloned()
+                                .collect(),
+                            ArrLine::Interval(iv) => vec![iv.inf.1.get(idx), iv.sup.1.get(idx)]
+                                .into_iter()
+                                .flatten()
+                                .cloned()
+                                .collect(),
                             ArrLine::CInterval(ci) => vec![
-                                ci.real.inf.1.get(idx), ci.real.sup.1.get(idx),
-                                ci.imag.inf.1.get(idx), ci.imag.sup.1.get(idx)
-                            ].into_iter().flatten().cloned().collect(),
+                                ci.real.inf.1.get(idx),
+                                ci.real.sup.1.get(idx),
+                                ci.imag.inf.1.get(idx),
+                                ci.imag.sup.1.get(idx),
+                            ]
+                            .into_iter()
+                            .flatten()
+                            .cloned()
+                            .collect(),
                         };
                         if !pts.is_empty() {
-                            grouped_events.entry((ev.name.clone(), ev.description.clone())).or_default().extend(pts);
+                            grouped_events
+                                .entry((ev.name.clone(), ev.description.clone()))
+                                .or_default()
+                                .extend(pts);
                         }
                     }
 
@@ -1051,7 +1216,9 @@ impl eframe::App for ShanksApp {
                         use egui_plot::MarkerShape;
                         let (shape, color) = match name.as_str() {
                             "stop" => (MarkerShape::Square, egui::Color32::RED),
-                            "algo_error" => (MarkerShape::Cross, egui::Color32::from_rgb(255, 140, 0)), // Orange
+                            "algo_error" => {
+                                (MarkerShape::Cross, egui::Color32::from_rgb(255, 140, 0))
+                            } // Orange
                             _ => (MarkerShape::Circle, egui::Color32::YELLOW),
                         };
 
@@ -1060,7 +1227,7 @@ impl eframe::App for ShanksApp {
                             .shape(shape)
                             .color(color)
                             .radius(5.0);
-                        
+
                         plot_ui.points(points);
                     }
                 }
