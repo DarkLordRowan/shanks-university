@@ -27,6 +27,14 @@ struct ResultKey {
     filter: Option<FilterInstance>,
 }
 
+/// Key for grouping multiple (accel, filter) combinations under one series compute task.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct GroupKey {
+    series: SeriesInstance,
+    precision: String,
+    noise: Option<NoiseInstance>,
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, serde::Serialize, serde::Deserialize)]
 pub enum PlotTab {
     Main,
@@ -167,9 +175,9 @@ impl AppState {
 pub struct ShanksApp {
     state: AppState,
     results: HashMap<ResultKey, (SeriesData, Option<AccelData>)>,
-    active_tasks: HashMap<ResultKey, JoinHandle<()>>,
-    event_rx: tokio::sync::mpsc::Receiver<ComputeEvent<ResultKey>>,
-    event_tx: tokio::sync::mpsc::Sender<ComputeEvent<ResultKey>>,
+    active_tasks: HashMap<GroupKey, JoinHandle<()>>,
+    event_rx: tokio::sync::mpsc::Receiver<ComputeEvent<GroupKey>>,
+    event_tx: tokio::sync::mpsc::Sender<ComputeEvent<GroupKey>>,
 
     pub series_tree: Option<SelectionNode>,
     pub accel_tree: Option<SelectionNode>,
@@ -196,7 +204,7 @@ pub struct ShanksApp {
 
 impl ShanksApp {
     pub fn new(state: AppState) -> Self {
-        let (event_tx, event_rx) = tokio::sync::mpsc::channel(256);
+        let (event_tx, event_rx) = tokio::sync::mpsc::channel(512);
 
         let mut app = Self {
             state,
@@ -257,33 +265,109 @@ impl ShanksApp {
 
         let combinations = selection::generate_combinations(s_tree, a_tree, n_tree, f_tree, p_tree);
         let mut requested_keys = HashSet::new();
+        let mut grouped_requests: HashMap<GroupKey, (Vec<AccelInstance>, Vec<FilterInstance>)> =
+            HashMap::new();
 
         for combo in combinations {
             if let Some(key) = ResultKey::from_combo(self, &combo) {
                 requested_keys.insert(key.clone());
 
-                if !self.results.contains_key(&key) && !self.active_tasks.contains_key(&key) {
-                    let task = ComputeTask {
-                        id: key.clone(),
-                        precision: key.precision.clone(),
-                        series: key.series.clone(),
-                        n_points: self.state.n_points,
-                        noise: key.noise.clone(),
-                        algorithms: vec![key.accel.clone().unwrap()], // Safe due to ResultKey definition
-                        filters: key.filter.clone().into_iter().collect(),
-                    };
+                let gkey = GroupKey {
+                    series: key.series.clone(),
+                    precision: key.precision.clone(),
+                    noise: key.noise.clone(),
+                };
 
-                    let tx = self.event_tx.clone();
-                    let cache = self.state.cache.lock().unwrap().clone();
-                    let handle = compute::spawn_task(task, cache, tx);
-                    self.active_tasks.insert(key, handle);
-                    self.status = "Computing...".to_string();
+                let (accels, filters) = grouped_requests.entry(gkey).or_default();
+                if let Some(ref a) = key.accel {
+                    if !accels.contains(a) {
+                        accels.push(a.clone());
+                    }
+                }
+                if let Some(ref f) = key.filter {
+                    if !filters.contains(f) {
+                        filters.push(f.clone());
+                    }
                 }
             }
         }
 
+        // Spawn tasks for groups that have missing data
+        for (gkey, (algos, filters)) in grouped_requests {
+            let mut need_recompute = false;
+            for algo in &algos {
+                // Check if bare algo is missing
+                let rkey_bare = ResultKey {
+                    series: gkey.series.clone(),
+                    precision: gkey.precision.clone(),
+                    noise: gkey.noise.clone(),
+                    accel: Some(algo.clone()),
+                    filter: None,
+                };
+                if !self.results.contains_key(&rkey_bare) {
+                    need_recompute = true;
+                    break;
+                }
+
+                // Check if filtered versions are missing
+                for filter in &filters {
+                    let rkey_filt = ResultKey {
+                        series: gkey.series.clone(),
+                        precision: gkey.precision.clone(),
+                        noise: gkey.noise.clone(),
+                        accel: Some(algo.clone()),
+                        filter: Some(filter.clone()),
+                    };
+                    if !self.results.contains_key(&rkey_filt) {
+                        need_recompute = true;
+                        break;
+                    }
+                }
+                if need_recompute {
+                    break;
+                }
+            }
+
+            // Also check if series itself is missing
+            if !need_recompute {
+                let rkey_series = ResultKey {
+                    series: gkey.series.clone(),
+                    precision: gkey.precision.clone(),
+                    noise: gkey.noise.clone(),
+                    accel: None,
+                    filter: None,
+                };
+                if !self.results.contains_key(&rkey_series) {
+                    need_recompute = true;
+                }
+            }
+
+            if need_recompute && !self.active_tasks.contains_key(&gkey) {
+                let task = ComputeTask {
+                    id: gkey.clone(),
+                    precision: gkey.precision.clone(),
+                    series: gkey.series.clone(),
+                    n_points: self.state.n_points,
+                    noise: gkey.noise.clone(),
+                    algorithms: algos,
+                    filters,
+                };
+
+                let tx = self.event_tx.clone();
+                let cache = self.state.cache.lock().unwrap().clone();
+                let handle = compute::spawn_task(task, cache, tx);
+                self.active_tasks.insert(gkey, handle);
+                self.status = "Computing...".to_string();
+            }
+        }
+
         self.active_tasks.retain(|k, handle| {
-            if !requested_keys.contains(k) {
+            // Check if ANY requested ResultKey matches this GroupKey
+            let requested = requested_keys.iter().any(|rk| {
+                rk.series == k.series && rk.precision == k.precision && rk.noise == k.noise
+            });
+
+            if !requested {
                 handle.abort();
                 false
             } else {
@@ -307,8 +391,16 @@ impl ShanksApp {
                     accel,
                     ..
                 } => {
+                    let rkey = ResultKey {
+                        series: id.series.clone(),
+                        precision: id.precision.clone(),
+                        noise: id.noise.clone(),
+                        accel: accel.as_ref().map(|(ad, _)| ad.accel.clone()),
+                        filter: accel.as_ref().and_then(|(ad, _)| ad.filter.clone()),
+                    };
+
                     let adata = accel.map(|(_, data)| data);
-                    self.results.insert(id, (series_data, adata));
+                    self.results.insert(rkey, (series_data, adata));
                     self.plot_cache.dirty = true;
                 }
                 ComputeEvent::Complete(id) => {
@@ -976,6 +1068,9 @@ impl eframe::App for ShanksApp {
                     }
                     if let Some(ref mut t) = self.noise_tree {
                         tree_ui::draw_tree_with_header(ui, "Noises", t, false);
+                    }
+                    if let Some(ref mut t) = self.filter_tree {
+                        tree_ui::draw_tree_with_header(ui, "Filters", t, false);
                     }
                     if let Some(ref mut t) = self.precision_tree {
                         tree_ui::draw_tree_with_header(ui, "Precisions", t, true);
