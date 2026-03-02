@@ -5,13 +5,11 @@ mod tree_ui;
 mod ui;
 
 use crate::cache::Cache;
-use crate::compute::{
-    self, AccelData, AccelDesc, ComputeEvent, ComputeTask, SeriesData, SeriesDesc,
-};
+use crate::compute::{self, AccelData, ComputeEvent, ComputeTask, SeriesData};
 use crate::experiment::{
     AccelInstance, ExperimentConfig, FilterInstance, NoiseInstance, SeriesInstance,
 };
-use crate::ffi::{Arr, ArrF64, ComplexOf, IntervalOf, RealValue, Value, ValueOf};
+use crate::ffi::{Arr, ArrF64, ArrLine, ComplexOf, IntervalOf};
 use egui_plot::{Line, LineStyle, PlotPoint, PlotPoints};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::{Arc, Mutex};
@@ -26,6 +24,7 @@ struct ResultKey {
     precision: String,
     noise: Option<NoiseInstance>,
     accel: Option<AccelInstance>,
+    filter: Option<FilterInstance>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, serde::Serialize, serde::Deserialize)]
@@ -34,7 +33,9 @@ pub enum PlotTab {
     Deviation,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug, PartialEq, Eq, Hash, Copy, Clone, Default, serde::Serialize, serde::Deserialize,
+)]
 pub enum DeviationMode {
     #[default]
     Magnitude,
@@ -71,18 +72,36 @@ impl ResultKey {
             .noise_idx
             .and_then(|i| exp.noises.get(i).and_then(|d| d.expand().next()));
 
+        let filter = if let Some(ref name) = combo.filter_name {
+            exp.filters
+                .iter()
+                .find(|f| f.filter_type == *name)
+                .and_then(|f| {
+                    f.expand().find(|inst| {
+                        combo.filter_args.iter().all(|(k, v)| {
+                            inst.args
+                                .get(k)
+                                .map(|sv| sv.to_string() == *v)
+                                .unwrap_or(false)
+                        })
+                    })
+                })
+        } else {
+            None
+        };
+
         Some(Self {
             series,
             precision: combo.precision.clone(),
             noise,
             accel: Some(accel),
+            filter,
         })
     }
 }
 
 struct BakedLine {
-    name: String,
-    data: ArrF64,
+    data: ArrLine,
     color: egui::Color32,
     width: f32,
     style: LineStyle,
@@ -122,6 +141,7 @@ pub struct ShanksApp {
     pub series_tree: Option<SelectionNode>,
     pub accel_tree: Option<SelectionNode>,
     pub noise_tree: Option<SelectionNode>,
+    pub filter_tree: Option<SelectionNode>,
     pub precision_tree: Option<SelectionNode>,
 
     plot_cache: PlotCache,
@@ -152,6 +172,7 @@ impl ShanksApp {
             series_tree: None,
             accel_tree: None,
             noise_tree: None,
+            filter_tree: None,
             precision_tree: None,
             plot_cache: PlotCache::default(),
             selected_tab: PlotTab::Main,
@@ -175,27 +196,30 @@ impl ShanksApp {
         if let Some(ref exp) = self.state.experiment {
             let series_instances: Vec<_> = exp.series.iter().flat_map(|s| s.expand()).collect();
             let method_instances: Vec<_> = exp.accels.iter().flat_map(|a| a.expand()).collect();
+            let filter_instances: Vec<_> = exp.filters.iter().flat_map(|f| f.expand()).collect();
             let precisions = exp.precisions.clone().unwrap_or_default();
 
             self.series_tree = Some(selection::build_series_tree(&series_instances));
             self.accel_tree = Some(selection::build_accel_tree(&method_instances));
             self.noise_tree = Some(selection::build_noise_tree(&exp.noises));
+            self.filter_tree = Some(selection::build_filter_tree(&filter_instances));
             self.precision_tree = Some(selection::build_precision_tree(&precisions));
         }
     }
 
     pub fn sync_with_compute(&mut self) {
-        let (s_tree, a_tree, n_tree, p_tree) = match (
+        let (s_tree, a_tree, n_tree, f_tree, p_tree) = match (
             &self.series_tree,
             &self.accel_tree,
             &self.noise_tree,
+            &self.filter_tree,
             &self.precision_tree,
         ) {
-            (Some(s), Some(a), Some(n), Some(p)) => (s, a, n, p),
+            (Some(s), Some(a), Some(n), Some(f), Some(p)) => (s, a, n, f, p),
             _ => return,
         };
 
-        let combinations = selection::generate_combinations(s_tree, a_tree, n_tree, p_tree);
+        let combinations = selection::generate_combinations(s_tree, a_tree, n_tree, f_tree, p_tree);
         let mut requested_keys = HashSet::new();
 
         for combo in combinations {
@@ -210,7 +234,7 @@ impl ShanksApp {
                         n_points: self.state.n_points,
                         noise: key.noise.clone(),
                         algorithms: vec![key.accel.clone().unwrap()], // Safe due to ResultKey definition
-                        filters: vec![],
+                        filters: key.filter.clone().into_iter().collect(),
                     };
 
                     let tx = self.event_tx.clone();
@@ -312,16 +336,14 @@ impl ShanksApp {
         }
     }
 
-    fn bake_deviation_lines(
+    fn collect_deviation_data(
         &self,
-        name: String,
+        key: &ResultKey,
+        line_type: &str,
         arr: &Arr,
-        color: egui::Color32,
-        width: f32,
-        style: LineStyle,
         mode: DeviationMode,
-    ) -> Vec<BakedLine> {
-        let mut lines = Vec::new();
+    ) -> Vec<(ResultKey, String, ArrF64)> {
+        let mut results = Vec::new();
         match (arr, mode) {
             (Arr::Complex(c), DeviationMode::Magnitude) => {
                 let mags = c
@@ -333,53 +355,109 @@ impl ShanksApp {
                         let i = im.to_f64();
                         let mut mag = (r * r + i * i).sqrt();
                         if self.symlog {
-                            mag = crate::plot::Scientific::from_f64(mag)
-                                .symlog(self.log_linthresh);
+                            mag = crate::plot::Scientific::from_f64(mag).symlog(self.log_linthresh);
                         }
                         mag
                     })
                     .collect::<Vec<_>>();
-
-                lines.push(BakedLine {
-                    name: format!("{} (Mag)", name),
-                    data: ArrF64::Real(mags),
-                    color,
-                    width,
-                    style,
-                });
-            }
-            (Arr::Complex(c), DeviationMode::Components) => {
-                lines.push(BakedLine {
-                    name: format!("{} (Re)", name),
-                    data: ArrF64::Real(
-                        c.real.iter().map(|v| self.to_plot_point(v)).collect(),
-                    ),
-                    color,
-                    width,
-                    style,
-                });
-                lines.push(BakedLine {
-                    name: format!("{} (Im)", name),
-                    data: ArrF64::Real(
-                        c.imag.iter().map(|v| self.to_plot_point(v)).collect(),
-                    ),
-                    color: color.gamma_multiply(0.6),
-                    width,
-                    style,
-                });
+                results.push((key.clone(), line_type.to_string(), ArrF64::Real(mags)));
             }
             _ => {
-                let data = self.arr_to_f64(arr);
-                lines.push(BakedLine {
-                    name,
-                    data,
-                    color,
-                    width,
-                    style,
-                });
+                results.push((key.clone(), line_type.to_string(), self.arr_to_f64(arr)));
             }
         }
-        lines
+        results
+    }
+
+    fn process_collected_lines(
+        &self,
+        raw_lines: Vec<(ResultKey, String, ArrF64, egui::Color32, f32, LineStyle)>,
+    ) -> Vec<BakedLine> {
+        if raw_lines.is_empty() {
+            return Vec::new();
+        }
+
+        // 1. Generate all LineInfos for all components
+        let mut all_infos = Vec::new();
+        for (key, ltype, data, _, _, _) in &raw_lines {
+            match data {
+                ArrF64::Real(_) => {
+                    all_infos.push(LineInfo::from_key(key, ltype, None));
+                }
+                ArrF64::Complex(_) => {
+                    all_infos.push(LineInfo::from_key(key, ltype, Some("Re")));
+                    all_infos.push(LineInfo::from_key(key, ltype, Some("Im")));
+                }
+                ArrF64::Interval(_) => {
+                    all_infos.push(LineInfo::from_key(key, ltype, Some("Inf")));
+                    all_infos.push(LineInfo::from_key(key, ltype, Some("Sup")));
+                }
+                ArrF64::CInterval(_) => {
+                    all_infos.push(LineInfo::from_key(key, ltype, Some("Re-Inf")));
+                    all_infos.push(LineInfo::from_key(key, ltype, Some("Re-Sup")));
+                    all_infos.push(LineInfo::from_key(key, ltype, Some("Im-Inf")));
+                    all_infos.push(LineInfo::from_key(key, ltype, Some("Im-Sup")));
+                }
+            }
+        }
+
+        // 2. Shorten all infos
+        let shortened_names = shorten_line_infos(&all_infos);
+
+        // 3. Build BakedLines
+        let mut baked_lines = Vec::new();
+        let mut name_idx = 0;
+        for (_key, _ltype, data, color, width, style) in raw_lines {
+            let baked_data = match data {
+                ArrF64::Real(v) => {
+                    let name = shortened_names[name_idx].clone();
+                    name_idx += 1;
+                    ArrLine::Real((name, v))
+                }
+                ArrF64::Complex(c) => {
+                    let re_name = shortened_names[name_idx].clone();
+                    let im_name = shortened_names[name_idx + 1].clone();
+                    name_idx += 2;
+                    ArrLine::Complex(ComplexOf {
+                        real: (re_name, c.real),
+                        imag: (im_name, c.imag),
+                    })
+                }
+                ArrF64::Interval(iv) => {
+                    let inf_name = shortened_names[name_idx].clone();
+                    let sup_name = shortened_names[name_idx + 1].clone();
+                    name_idx += 2;
+                    ArrLine::Interval(IntervalOf {
+                        inf: (inf_name, iv.inf),
+                        sup: (sup_name, iv.sup),
+                    })
+                }
+                ArrF64::CInterval(ci) => {
+                    let re_inf_name = shortened_names[name_idx].clone();
+                    let re_sup_name = shortened_names[name_idx + 1].clone();
+                    let im_inf_name = shortened_names[name_idx + 2].clone();
+                    let im_sup_name = shortened_names[name_idx + 3].clone();
+                    name_idx += 4;
+                    ArrLine::CInterval(ComplexOf {
+                        real: IntervalOf {
+                            inf: (re_inf_name, ci.real.inf),
+                            sup: (re_sup_name, ci.real.sup),
+                        },
+                        imag: IntervalOf {
+                            inf: (im_inf_name, ci.imag.inf),
+                            sup: (im_sup_name, ci.imag.sup),
+                        },
+                    })
+                }
+            };
+            baked_lines.push(BakedLine {
+                data: baked_data,
+                color,
+                width,
+                style,
+            });
+        }
+        baked_lines
     }
 
     pub fn bake_plot_cache(&mut self) {
@@ -390,58 +468,79 @@ impl ShanksApp {
         self.plot_cache.lines_main.clear();
         self.plot_cache.lines_deviation.clear();
 
+        let mut main_raw = Vec::new();
+        let mut dev_raw = Vec::new();
+
         for (key, (sdata, adata)) in &self.results {
             // Main Plot
             if self.show_sn {
-                let data = self.arr_to_f64(&sdata.sn);
-                self.plot_cache.lines_main.push(BakedLine {
-                    name: format!("{} Sn", key.precision),
-                    data,
-                    color: egui::Color32::DARK_GRAY,
-                    width: 1.0,
-                    style: LineStyle::Dashed { length: 4.0 },
-                });
+                main_raw.push((
+                    key.clone(),
+                    "Sn".to_string(),
+                    self.arr_to_f64(&sdata.sn),
+                    egui::Color32::DARK_GRAY,
+                    1.0,
+                    LineStyle::Dashed { length: 4.0 },
+                ));
             }
 
             if let Some(adata) = adata {
                 if self.show_accel {
-                    let data = self.arr_to_f64(&adata.values);
-                    self.plot_cache.lines_main.push(BakedLine {
-                        name: format!("{} Accel", key.precision),
-                        data,
-                        color: egui::Color32::LIGHT_BLUE,
-                        width: 2.0,
-                        style: LineStyle::Solid,
-                    });
+                    main_raw.push((
+                        key.clone(),
+                        "Accel".to_string(),
+                        self.arr_to_f64(&adata.values),
+                        egui::Color32::LIGHT_BLUE,
+                        2.0,
+                        LineStyle::Solid,
+                    ));
                 }
             }
 
+            // Deviation Plot
             if self.show_partial_sums {
-                let lines = self.bake_deviation_lines(
-                    format!("{} Sn Dev", key.precision),
+                let collected = self.collect_deviation_data(
+                    key,
+                    "Sn Dev",
                     &sdata.deviations,
-                    egui::Color32::from_rgb(100, 100, 255),
-                    1.0,
-                    LineStyle::Dashed { length: 4.0 },
                     self.deviation_mode,
                 );
-                self.plot_cache.lines_deviation.extend(lines);
+                for (k, lt, data) in collected {
+                    dev_raw.push((
+                        k,
+                        lt,
+                        data,
+                        egui::Color32::from_rgb(100, 100, 255),
+                        1.0,
+                        LineStyle::Dashed { length: 4.0 },
+                    ));
+                }
             }
 
             if let Some(adata) = adata {
                 if self.show_accel_values {
-                    let lines = self.bake_deviation_lines(
-                        format!("{} Accel Dev", key.precision),
+                    let collected = self.collect_deviation_data(
+                        key,
+                        "Accel Dev",
                         &adata.deviations,
-                        egui::Color32::from_rgb(255, 100, 100),
-                        2.0,
-                        LineStyle::Solid,
                         self.deviation_mode,
                     );
-                    self.plot_cache.lines_deviation.extend(lines);
+                    for (k, lt, data) in collected {
+                        dev_raw.push((
+                            k,
+                            lt,
+                            data,
+                            egui::Color32::from_rgb(255, 100, 100),
+                            2.0,
+                            LineStyle::Solid,
+                        ));
+                    }
                 }
             }
         }
+
+        self.plot_cache.lines_main = self.process_collected_lines(main_raw);
+        self.plot_cache.lines_deviation = self.process_collected_lines(dev_raw);
 
         self.plot_cache.dirty = false;
     }
@@ -476,24 +575,50 @@ impl eframe::App for ShanksApp {
                         self.plot_cache.dirty = true;
                     }
                     ui.separator();
-                    if ui.checkbox(&mut self.show_partial_sums, "Show Partial Sums").changed() {
+                    if ui
+                        .checkbox(&mut self.show_partial_sums, "Show Partial Sums")
+                        .changed()
+                    {
                         self.plot_cache.dirty = true;
                     }
-                    if ui.checkbox(&mut self.show_accel_values, "Show Accelerated Deviations").changed() {
+                    if ui
+                        .checkbox(&mut self.show_accel_values, "Show Accelerated Deviations")
+                        .changed()
+                    {
                         self.plot_cache.dirty = true;
                     }
-                    if ui.checkbox(&mut self.show_limit_lines, "Show Series Limits").changed() {
+                    if ui
+                        .checkbox(&mut self.show_limit_lines, "Show Series Limits")
+                        .changed()
+                    {
                         self.plot_cache.dirty = true;
                     }
-                    if ui.checkbox(&mut self.show_smoothed_estimates, "Show Smoothed Estimates").changed() {
+                    if ui
+                        .checkbox(&mut self.show_smoothed_estimates, "Show Smoothed Estimates")
+                        .changed()
+                    {
                         self.plot_cache.dirty = true;
                     }
                     ui.separator();
                     ui.label("Deviation Mode:");
-                    if ui.radio_value(&mut self.deviation_mode, DeviationMode::Magnitude, "Magnitude").changed() {
+                    if ui
+                        .radio_value(
+                            &mut self.deviation_mode,
+                            DeviationMode::Magnitude,
+                            "Magnitude",
+                        )
+                        .changed()
+                    {
                         self.plot_cache.dirty = true;
                     }
-                    if ui.radio_value(&mut self.deviation_mode, DeviationMode::Components, "Components").changed() {
+                    if ui
+                        .radio_value(
+                            &mut self.deviation_mode,
+                            DeviationMode::Components,
+                            "Components",
+                        )
+                        .changed()
+                    {
                         self.plot_cache.dirty = true;
                     }
                 });
@@ -534,7 +659,7 @@ impl eframe::App for ShanksApp {
                 if self.symlog {
                     let slider = egui::Slider::new(&mut self.log_linthresh, -100.0..=100.0)
                         .text("Threshold")
-                        .clamp_to_range(false);
+                        .clamping(egui::SliderClamping::Never);
                     if ui.add(slider).changed() {
                         self.plot_cache.dirty = true;
                     }
@@ -550,48 +675,117 @@ impl eframe::App for ShanksApp {
                 .legend(egui_plot::Legend::default())
                 .show(ui, |plot_ui| {
                     for baked in plot_lines {
-                        let points: Vec<PlotPoint> = match &baked.data {
-                            ArrF64::Real(v) => v
-                                .iter()
-                                .enumerate()
-                                .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                .collect(),
-                            ArrF64::Complex(c) => c
-                                .real
-                                .iter()
-                                .enumerate()
-                                .map(|(i, &y)| PlotPoint::new(i as f64, y))
-                                .collect(),
-                            ArrF64::Interval(iv) => iv
-                                .inf
-                                .iter()
-                                .zip(&iv.sup)
-                                .enumerate()
-                                .map(|(i, (&inf, &sup))| {
-                                    PlotPoint::new(i as f64, (inf + sup) / 2.0)
-                                })
-                                .collect(),
-                            ArrF64::CInterval(ci) => ci
-                                .real
-                                .inf
-                                .iter()
-                                .zip(&ci.real.sup)
-                                .enumerate()
-                                .map(|(i, (&inf, &sup))| {
-                                    PlotPoint::new(i as f64, (inf + sup) / 2.0)
-                                })
-                                .collect(),
+                        let lines = match &baked.data {
+                            ArrLine::Real((name, v)) => {
+                                vec![(
+                                    name.clone(),
+                                    v.iter()
+                                        .enumerate()
+                                        .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                        .collect::<Vec<PlotPoint>>(),
+                                )]
+                            }
+                            ArrLine::Complex(c) => {
+                                vec![
+                                    (
+                                        c.real.0.clone(),
+                                        c.real
+                                            .1
+                                            .iter()
+                                            .enumerate()
+                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                            .collect::<Vec<PlotPoint>>(),
+                                    ),
+                                    (
+                                        c.imag.0.clone(),
+                                        c.imag
+                                            .1
+                                            .iter()
+                                            .enumerate()
+                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                            .collect::<Vec<PlotPoint>>(),
+                                    ),
+                                ]
+                            }
+                            ArrLine::Interval(iv) => {
+                                vec![
+                                    (
+                                        iv.inf.0.clone(),
+                                        iv.inf
+                                            .1
+                                            .iter()
+                                            .enumerate()
+                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                            .collect::<Vec<PlotPoint>>(),
+                                    ),
+                                    (
+                                        iv.sup.0.clone(),
+                                        iv.sup
+                                            .1
+                                            .iter()
+                                            .enumerate()
+                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                            .collect::<Vec<PlotPoint>>(),
+                                    ),
+                                ]
+                            }
+                            ArrLine::CInterval(ci) => {
+                                vec![
+                                    (
+                                        ci.real.inf.0.clone(),
+                                        ci.real
+                                            .inf
+                                            .1
+                                            .iter()
+                                            .enumerate()
+                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                            .collect::<Vec<PlotPoint>>(),
+                                    ),
+                                    (
+                                        ci.real.sup.0.clone(),
+                                        ci.real
+                                            .sup
+                                            .1
+                                            .iter()
+                                            .enumerate()
+                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                            .collect::<Vec<PlotPoint>>(),
+                                    ),
+                                    (
+                                        ci.imag.inf.0.clone(),
+                                        ci.imag
+                                            .inf
+                                            .1
+                                            .iter()
+                                            .enumerate()
+                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                            .collect::<Vec<PlotPoint>>(),
+                                    ),
+                                    (
+                                        ci.imag.sup.0.clone(),
+                                        ci.imag
+                                            .sup
+                                            .1
+                                            .iter()
+                                            .enumerate()
+                                            .map(|(i, &y)| PlotPoint::new(i as f64, y))
+                                            .collect::<Vec<PlotPoint>>(),
+                                    ),
+                                ]
+                            }
                         };
 
-                        plot_ui.line(
-                            Line::new(PlotPoints::new(
-                                points.into_iter().map(|p| [p.x, p.y]).collect::<Vec<_>>(),
-                            ))
-                            .name(&baked.name)
-                            .color(baked.color)
-                            .width(baked.width)
-                            .style(baked.style),
-                        );
+                        for (name, points) in lines {
+                            plot_ui.line(
+                                Line::new(PlotPoints::new(
+                                    points.into_iter().map(|p| [p.x, p.y]).collect::<Vec<_>>(),
+                                ))
+                                .name(name)
+                                .color(baked.color)
+                                .width(baked.width)
+                                .style(baked.style),
+                            );
+                        }
                     }
                 });
         });
@@ -600,4 +794,277 @@ impl eframe::App for ShanksApp {
             ctx.request_repaint();
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct LineInfo {
+    precision: String,
+    series_name: String,
+    series_args: BTreeMap<String, String>,
+    noise: Option<(String, BTreeMap<String, String>)>,
+    accel_name: Option<String>,
+    accel_m: Option<i64>,
+    accel_args: BTreeMap<String, String>,
+    filter: Option<(String, BTreeMap<String, String>)>,
+    line_type: String,         // "Sn", "Accel", "Sn Dev", "Accel Dev"
+    component: Option<String>, // "Mag", "Re", "Im", "Inf", "Sup"
+}
+
+impl LineInfo {
+    fn from_key(key: &ResultKey, line_type: &str, component: Option<&str>) -> Self {
+        let series_args = key
+            .series
+            .args
+            .iter()
+            .map(|(k, v)| (k.clone(), v.to_string()))
+            .collect();
+        let noise = key.noise.as_ref().map(|n| {
+            (
+                n.noise_type.clone(),
+                n.args
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.to_string()))
+                    .collect(),
+            )
+        });
+        let accel_name = key.accel.as_ref().map(|a| a.name.clone());
+        let accel_m = key.accel.as_ref().map(|a| a.m);
+        let accel_args = key
+            .accel
+            .as_ref()
+            .map(|a| {
+                a.args
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.to_string()))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let filter = key.filter.as_ref().map(|f| {
+            (
+                f.filter_type.clone(),
+                f.args
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.to_string()))
+                    .collect(),
+            )
+        });
+
+        Self {
+            precision: key.precision.clone(),
+            series_name: key.series.name.clone(),
+            series_args,
+            noise,
+            accel_name,
+            accel_m,
+            accel_args,
+            filter,
+            line_type: line_type.to_string(),
+            component: component.map(|s| s.to_string()),
+        }
+    }
+}
+
+fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
+    if infos.is_empty() {
+        return Vec::new();
+    }
+
+    let mut show_precision = false;
+    let mut show_series_name = false;
+    let mut show_noise_type = false;
+    let mut show_accel_name = false;
+    let mut show_accel_m = false;
+    let mut show_filter_type = false;
+    let mut show_line_type = false;
+    let mut show_component = false;
+
+    // Helper to find differing keys in maps
+    let find_diff_keys =
+        |infos: &[LineInfo], get_map: fn(&LineInfo) -> &BTreeMap<String, String>| {
+            let mut all_keys = HashSet::new();
+            for info in infos {
+                for key in get_map(info).keys() {
+                    all_keys.insert(key);
+                }
+            }
+            let mut diff_keys = HashSet::new();
+            for key in all_keys {
+                let first_val = get_map(&infos[0]).get(key);
+                for i in 1..infos.len() {
+                    if get_map(&infos[i]).get(key) != first_val {
+                        diff_keys.insert(key.clone());
+                        break;
+                    }
+                }
+            }
+            diff_keys
+        };
+
+    // Helper for optional maps (noise, filter, etc.)
+    let find_diff_keys_opt =
+        |infos: &[LineInfo],
+         get_opt: fn(&LineInfo) -> &Option<(String, BTreeMap<String, String>)>| {
+            let mut all_keys = HashSet::new();
+            for info in infos {
+                if let Some((_, map)) = get_opt(info) {
+                    for key in map.keys() {
+                        all_keys.insert(key);
+                    }
+                }
+            }
+            let mut diff_keys = HashSet::new();
+            for key in all_keys {
+                let first_val = get_opt(&infos[0]).as_ref().and_then(|(_, m)| m.get(key));
+                for i in 1..infos.len() {
+                    let current_val = get_opt(&infos[i]).as_ref().and_then(|(_, m)| m.get(key));
+                    if current_val != first_val {
+                        diff_keys.insert(key.clone());
+                        break;
+                    }
+                }
+            }
+            diff_keys
+        };
+
+    for i in 1..infos.len() {
+        show_precision |= infos[i].precision != infos[0].precision;
+        show_series_name |= infos[i].series_name != infos[0].series_name;
+        show_noise_type |=
+            infos[i].noise.as_ref().map(|(t, _)| t) != infos[0].noise.as_ref().map(|(t, _)| t);
+        show_accel_name |= infos[i].accel_name != infos[0].accel_name;
+        show_accel_m |= infos[i].accel_m != infos[0].accel_m;
+        show_filter_type |=
+            infos[i].filter.as_ref().map(|(t, _)| t) != infos[0].filter.as_ref().map(|(t, _)| t);
+        show_line_type |= infos[i].line_type != infos[0].line_type;
+        show_component |= infos[i].component != infos[0].component;
+    }
+
+    let diff_series_args = find_diff_keys(infos, |inf| &inf.series_args);
+    let diff_noise_args = find_diff_keys_opt(infos, |inf| &inf.noise);
+    let diff_accel_args = find_diff_keys(infos, |inf| &inf.accel_args);
+    let diff_filter_args = find_diff_keys_opt(infos, |inf| &inf.filter);
+
+    // If everything is perfectly identical, show at least names/types to distinguish
+    if !show_precision
+        && !show_series_name
+        && diff_series_args.is_empty()
+        && !show_noise_type
+        && diff_noise_args.is_empty()
+        && !show_accel_name
+        && !show_accel_m
+        && diff_accel_args.is_empty()
+        && !show_filter_type
+        && diff_filter_args.is_empty()
+        && !show_line_type
+        && !show_component
+    {
+        show_line_type = true;
+        show_component = true;
+    }
+
+    infos
+        .iter()
+        .map(|info| {
+            let mut parts = Vec::new();
+            if show_precision {
+                parts.push(info.precision.clone());
+            }
+            if show_series_name {
+                parts.push(info.series_name.clone());
+            }
+
+            // Series Args
+            let mut s_args = Vec::new();
+            for key in info.series_args.keys() {
+                if diff_series_args.contains(key) {
+                    s_args.push(format!("{}={}", key, info.series_args[key]));
+                }
+            }
+            if !s_args.is_empty() {
+                parts.push(format!("({})", s_args.join(", ")));
+            }
+
+            // Noise
+            if let Some((ref nt, ref na)) = info.noise {
+                let mut n_args = Vec::new();
+                for key in na.keys() {
+                    if diff_noise_args.contains(key) {
+                        n_args.push(format!("{}={}", key, na[key]));
+                    }
+                }
+                if show_noise_type || !n_args.is_empty() {
+                    let mut s = "Noise".to_string();
+                    if show_noise_type {
+                        s.push_str(&format!(": {}", nt));
+                    }
+                    if !n_args.is_empty() {
+                        s.push_str(&format!(" ({})", n_args.join(", ")));
+                    }
+                    parts.push(s);
+                }
+            } else if show_noise_type {
+                parts.push("No Noise".to_string());
+            }
+
+            // Accel
+            if let Some(ref an) = info.accel_name {
+                let mut a_args = Vec::new();
+                for key in info.accel_args.keys() {
+                    if diff_accel_args.contains(key) {
+                        a_args.push(format!("{}={}", key, info.accel_args[key]));
+                    }
+                }
+                if show_accel_name || show_accel_m || !a_args.is_empty() {
+                    let mut s = String::new();
+                    if show_accel_name {
+                        s.push_str(an);
+                    } else {
+                        s.push_str("Accel");
+                    }
+                    if show_accel_m {
+                        s.push_str(&format!(" m={}", info.accel_m.unwrap_or(0)));
+                    }
+                    if !a_args.is_empty() {
+                        s.push_str(&format!(" ({})", a_args.join(", ")));
+                    }
+                    parts.push(s);
+                }
+            } else if show_accel_name {
+                parts.push("No Accel".to_string());
+            }
+
+            // Filter
+            if let Some((ref ft, ref fa)) = info.filter {
+                let mut f_args = Vec::new();
+                for key in fa.keys() {
+                    if diff_filter_args.contains(key) {
+                        f_args.push(format!("{}={}", key, fa[key]));
+                    }
+                }
+                if show_filter_type || !f_args.is_empty() {
+                    let mut s = "Filter".to_string();
+                    if show_filter_type {
+                        s.push_str(&format!(": {}", ft));
+                    }
+                    if !f_args.is_empty() {
+                        s.push_str(&format!(" ({})", f_args.join(", ")));
+                    }
+                    parts.push(s);
+                }
+            } else if show_filter_type {
+                parts.push("No Filter".to_string());
+            }
+
+            if show_line_type {
+                parts.push(info.line_type.clone());
+            }
+            let mut s = parts.join(" | ");
+            if show_component {
+                if let Some(ref c) = info.component {
+                    s.push_str(&format!(" [{}]", c));
+                }
+            }
+            s
+        })
+        .collect()
 }

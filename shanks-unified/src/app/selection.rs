@@ -328,6 +328,62 @@ pub fn build_precision_tree(precisions: &[String]) -> SelectionNode {
     root
 }
 
+/// Build a filter selection tree from experiment config.
+pub fn build_filter_tree(
+    filter_instances: &[super::super::experiment::FilterInstance],
+) -> SelectionNode {
+    let mut root = SelectionNode::new("filter_root", "ALL FILTERS").with_expandable(true);
+    root.expanded = true;
+
+    let mut filter_nodes: IndexMap<String, SelectionNode> = IndexMap::new();
+
+    for instance in filter_instances {
+        let filter_node = filter_nodes
+            .entry(instance.filter_type.clone())
+            .or_insert_with(|| {
+                SelectionNode::new(format!("filter_{}", instance.filter_type), instance.filter_type.clone())
+                    .with_expandable(true)
+            });
+
+        for (param_name, value) in &instance.args {
+            let value_str = match value {
+                serde_json::Value::Number(n) => n.to_string(),
+                serde_json::Value::String(s) => s.clone(),
+                _ => value.to_string(),
+            };
+
+            let param_node = if let Some(node) = filter_node
+                .children
+                .iter_mut()
+                .find(|c| c.label == *param_name)
+            {
+                node
+            } else {
+                filter_node.children.push(
+                    SelectionNode::new(
+                        format!("{}_{}", filter_node.id, param_name),
+                        param_name.clone(),
+                    )
+                    .with_expandable(true),
+                );
+                filter_node.children.last_mut().unwrap()
+            };
+
+            if !param_node.children.iter().any(|c| c.label == value_str) {
+                param_node.children.push(SelectionNode::new(
+                    format!("{}_{}", param_node.id, value_str),
+                    value_str,
+                ));
+            }
+        }
+    }
+
+    // Add "No filter" option
+    root.children.push(SelectionNode::new("filter_none", "No filter"));
+    root.children.extend(filter_nodes.into_values());
+    root
+}
+
 /// Selected combination for computation.
 #[derive(Debug, Clone)]
 pub struct SelectedCombination {
@@ -343,6 +399,10 @@ pub struct SelectedCombination {
     pub method_args: HashMap<String, String>,
     /// Noise index (None = no noise)
     pub noise_idx: Option<usize>,
+    /// Filter name (None = no filter)
+    pub filter_name: Option<String>,
+    /// Filter args
+    pub filter_args: HashMap<String, String>,
     /// Precision
     pub precision: String,
 }
@@ -352,11 +412,13 @@ pub fn generate_combinations(
     series_tree: &SelectionNode,
     accel_tree: &SelectionNode,
     noise_tree: &SelectionNode,
+    filter_tree: &SelectionNode,
     precision_tree: &SelectionNode,
 ) -> Vec<SelectedCombination> {
     let series_combos = extract_series_combinations(series_tree);
     let accel_combos = extract_accel_combinations(accel_tree);
     let noise_combos = extract_noise_combinations(noise_tree);
+    let filter_combos = extract_filter_combinations(filter_tree);
     let precisions = extract_precisions(precision_tree);
 
     let mut combinations = Vec::new();
@@ -365,15 +427,19 @@ pub fn generate_combinations(
         for series in &series_combos {
             for accel in &accel_combos {
                 for noise in &noise_combos {
-                    combinations.push(SelectedCombination {
-                        series_name: series.0.clone(),
-                        series_params: series.1.clone(),
-                        method_name: accel.0.clone(),
-                        method_m: accel.1,
-                        method_args: accel.2.clone(),
-                        noise_idx: *noise,
-                        precision: precision.clone(),
-                    });
+                    for filter in &filter_combos {
+                        combinations.push(SelectedCombination {
+                            series_name: series.0.clone(),
+                            series_params: series.1.clone(),
+                            method_name: accel.0.clone(),
+                            method_m: accel.1,
+                            method_args: accel.2.clone(),
+                            noise_idx: *noise,
+                            filter_name: filter.0.clone(),
+                            filter_args: filter.1.clone(),
+                            precision: precision.clone(),
+                        });
+                    }
                 }
             }
         }
@@ -384,6 +450,7 @@ pub fn generate_combinations(
 
 type SeriesCombo = (String, HashMap<String, String>);
 type AccelCombo = (String, i64, HashMap<String, String>);
+type FilterCombo = (Option<String>, HashMap<String, String>);
 
 fn extract_series_combinations(tree: &SelectionNode) -> Vec<SeriesCombo> {
     let mut combos = Vec::new();
@@ -522,6 +589,39 @@ fn extract_param_values(node: &SelectionNode) -> HashMap<String, Vec<String>> {
     }
 
     params
+}
+
+fn extract_filter_combinations(tree: &SelectionNode) -> Vec<FilterCombo> {
+    let mut combos = Vec::new();
+
+    for filter_node in &tree.children {
+        if !filter_node.is_selected() {
+            continue;
+        }
+
+        if filter_node.id == "filter_none" {
+            combos.push((None, HashMap::new()));
+            continue;
+        }
+
+        let name = filter_node.label.clone();
+        let params = extract_param_values(filter_node);
+
+        if params.is_empty() {
+            combos.push((Some(name), HashMap::new()));
+        } else {
+            let param_combos = generate_param_combinations(&params);
+            for param_combo in param_combos {
+                combos.push((Some(name.clone()), param_combo));
+            }
+        }
+    }
+
+    if combos.is_empty() {
+        combos.push((None, HashMap::new()));
+    }
+
+    combos
 }
 
 fn generate_param_combinations(
