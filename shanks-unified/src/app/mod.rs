@@ -136,6 +136,7 @@ struct BakedLine {
     width: f32,
     style: LineStyle,
     shading_polygons: Vec<Vec<PlotPoint>>,
+    events: Vec<compute::SeriesEvent>,
 }
 
 #[derive(Default)]
@@ -489,7 +490,15 @@ impl ShanksApp {
 
     fn process_collected_lines(
         &self,
-        raw_lines: Vec<(ResultKey, String, ArrF64, egui::Color32, f32, LineStyle)>,
+        raw_lines: Vec<(
+            ResultKey,
+            String,
+            ArrF64,
+            egui::Color32,
+            f32,
+            LineStyle,
+            Vec<compute::SeriesEvent>,
+        )>,
     ) -> Vec<BakedLine> {
         if raw_lines.is_empty() {
             return Vec::new();
@@ -497,7 +506,7 @@ impl ShanksApp {
 
         // 1. Generate all LineInfos for all components
         let mut all_infos = Vec::new();
-        for (key, ltype, data, _, _, _) in &raw_lines {
+        for (key, ltype, data, _, _, _, _) in &raw_lines {
             match data {
                 ArrF64::Real(_) => {
                     let component = if ltype.contains("Dev") {
@@ -530,7 +539,7 @@ impl ShanksApp {
         // 3. Build BakedLines
         let mut baked_lines = Vec::new();
         let mut name_idx = 0;
-        for (_key, _ltype, data, color, width, style) in raw_lines {
+        for (_key, _ltype, data, color, width, style, events) in raw_lines {
             let baked_data = match data {
                 ArrF64::Real(v) => {
                     let name = shortened_names[name_idx].clone();
@@ -674,6 +683,7 @@ impl ShanksApp {
                 width,
                 style,
                 shading_polygons,
+                events,
             });
         }
         baked_lines
@@ -707,10 +717,15 @@ impl ShanksApp {
                     base_color.gamma_multiply(0.4),
                     1.0,
                     LineStyle::Dashed { length: 4.0 },
+                    Vec::new(), // Series Sn itself has no events usually
                 ));
             }
 
             if let Some(adata) = adata {
+                if self.show_sn {
+                    // Also show Sn *with noise* from adata if it's there?
+                    // No, usually sn is just the base.
+                }
                 if self.show_accel {
                     main_raw.push((
                         key.clone(),
@@ -719,6 +734,7 @@ impl ShanksApp {
                         base_color,
                         2.0,
                         LineStyle::Solid,
+                        adata.events.clone(),
                     ));
                 }
             }
@@ -741,6 +757,7 @@ impl ShanksApp {
                         base_color.gamma_multiply(0.5),
                         1.0,
                         LineStyle::Dashed { length: 4.0 },
+                        Vec::new(),
                     ));
                 }
             }
@@ -756,7 +773,7 @@ impl ShanksApp {
                         dev_thresh,
                     );
                     for (k, lt, data) in collected {
-                        dev_raw.push((k, lt, data, base_color, 2.0, LineStyle::Solid));
+                        dev_raw.push((k, lt, data, base_color, 2.0, LineStyle::Solid, adata.events.clone()));
                     }
                 }
             }
@@ -1008,6 +1025,43 @@ impl eframe::App for ShanksApp {
                                     .style(baked.style),
                             );
                         }
+                    }
+
+                    // Draw events as markers
+                    // Group events by name + description to minimize drawing calls and legend clutter
+                    let mut grouped_events: BTreeMap<(String, String), Vec<PlotPoint>> = BTreeMap::new();
+                    for ev in &baked.events {
+                        if ev.n == 0 { continue; }
+                        let idx = ev.n as usize - 1;
+                        let pts = match &baked.data {
+                            ArrLine::Real((_, v)) => v.get(idx).map(|p| vec![*p]).unwrap_or_default(),
+                            ArrLine::Complex(c) => vec![c.real.1.get(idx), c.imag.1.get(idx)].into_iter().flatten().cloned().collect(),
+                            ArrLine::Interval(iv) => vec![iv.inf.1.get(idx), iv.sup.1.get(idx)].into_iter().flatten().cloned().collect(),
+                            ArrLine::CInterval(ci) => vec![
+                                ci.real.inf.1.get(idx), ci.real.sup.1.get(idx),
+                                ci.imag.inf.1.get(idx), ci.imag.sup.1.get(idx)
+                            ].into_iter().flatten().cloned().collect(),
+                        };
+                        if !pts.is_empty() {
+                            grouped_events.entry((ev.name.clone(), ev.description.clone())).or_default().extend(pts);
+                        }
+                    }
+
+                    for ((name, desc), pts) in grouped_events {
+                        use egui_plot::MarkerShape;
+                        let (shape, color) = match name.as_str() {
+                            "stop" => (MarkerShape::Square, egui::Color32::RED),
+                            "algo_error" => (MarkerShape::Cross, egui::Color32::from_rgb(255, 140, 0)), // Orange
+                            _ => (MarkerShape::Circle, egui::Color32::YELLOW),
+                        };
+
+                        let points = egui_plot::Points::new(PlotPoints::Owned(pts))
+                            .name(format!("{}: {}", name, desc))
+                            .shape(shape)
+                            .color(color)
+                            .radius(5.0);
+                        
+                        plot_ui.points(points);
                     }
                 }
             });
