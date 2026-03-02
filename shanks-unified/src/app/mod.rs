@@ -98,6 +98,16 @@ impl ResultKey {
             filter,
         })
     }
+
+    fn color(&self) -> egui::Color32 {
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        self.hash(&mut hasher);
+        let hash = hasher.finish();
+
+        let hue = (hash % 360) as f32 / 360.0;
+        egui::ecolor::Hsva::new(hue, 0.8, 0.8, 1.0).into()
+    }
 }
 
 struct BakedLine {
@@ -472,13 +482,15 @@ impl ShanksApp {
         let mut dev_raw = Vec::new();
 
         for (key, (sdata, adata)) in &self.results {
+            let base_color = key.color();
+
             // Main Plot
             if self.show_sn {
                 main_raw.push((
                     key.clone(),
                     "Sn".to_string(),
                     self.arr_to_f64(&sdata.sn),
-                    egui::Color32::DARK_GRAY,
+                    base_color.gamma_multiply(0.4),
                     1.0,
                     LineStyle::Dashed { length: 4.0 },
                 ));
@@ -490,7 +502,7 @@ impl ShanksApp {
                         key.clone(),
                         "Accel".to_string(),
                         self.arr_to_f64(&adata.values),
-                        egui::Color32::LIGHT_BLUE,
+                        base_color,
                         2.0,
                         LineStyle::Solid,
                     ));
@@ -510,7 +522,7 @@ impl ShanksApp {
                         k,
                         lt,
                         data,
-                        egui::Color32::from_rgb(100, 100, 255),
+                        base_color.gamma_multiply(0.5),
                         1.0,
                         LineStyle::Dashed { length: 4.0 },
                     ));
@@ -530,7 +542,7 @@ impl ShanksApp {
                             k,
                             lt,
                             data,
-                            egui::Color32::from_rgb(255, 100, 100),
+                            base_color,
                             2.0,
                             LineStyle::Solid,
                         ));
