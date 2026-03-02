@@ -628,53 +628,64 @@ impl ShanksApp {
 
         // 2. Shorten all infos and prepare full names
         let shortened_names = shorten_line_infos(&all_infos);
-        let full_names: Vec<String> = all_infos.iter().map(|info| {
-            let mut parts = Vec::new();
-            parts.push(info.precision.clone());
-            parts.push(info.series_name.clone());
-            
-            let s_args: Vec<_> = info.series_args.iter().map(|(k,v)| format!("{}={}", k, v)).collect();
-            if !s_args.is_empty() {
-                parts.push(format!("({})", s_args.join(", ")));
-            }
+        let full_names: Vec<String> = all_infos
+            .iter()
+            .map(|info| {
+                let mut parts = Vec::new();
+                parts.push(info.precision.clone());
+                parts.push(info.series_name.clone());
 
-            if let Some((ref nt, ref na)) = info.noise {
-                let n_args: Vec<_> = na.iter().map(|(k,v)| format!("{}={}", k, v)).collect();
-                let mut s = format!("Noise: {}", nt);
-                if !n_args.is_empty() {
-                    s.push_str(&format!(" ({})", n_args.join(", ")));
+                let s_args: Vec<_> = info
+                    .series_args
+                    .iter()
+                    .map(|(k, v)| format!("{}={}", k, v))
+                    .collect();
+                if !s_args.is_empty() {
+                    parts.push(format!("({})", s_args.join(", ")));
                 }
-                parts.push(s);
-            }
 
-            if let Some(ref an) = info.accel_name {
-                let a_args: Vec<_> = info.accel_args.iter().map(|(k,v)| format!("{}={}", k, v)).collect();
-                let mut s = format!("Accel: {}", an);
-                if let Some(m) = info.accel_m {
-                    s.push_str(&format!(" m={}", m));
+                if let Some((ref nt, ref na)) = info.noise {
+                    let n_args: Vec<_> = na.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+                    let mut s = format!("Noise: {}", nt);
+                    if !n_args.is_empty() {
+                        s.push_str(&format!(" ({})", n_args.join(", ")));
+                    }
+                    parts.push(s);
                 }
-                if !a_args.is_empty() {
-                    s.push_str(&format!(" ({})", a_args.join(", ")));
-                }
-                parts.push(s);
-            }
 
-            if let Some((ref ft, ref fa)) = info.filter {
-                let f_args: Vec<_> = fa.iter().map(|(k,v)| format!("{}={}", k, v)).collect();
-                let mut s = format!("Filter: {}", ft);
-                if !f_args.is_empty() {
-                    s.push_str(&format!(" ({})", f_args.join(", ")));
+                if let Some(ref an) = info.accel_name {
+                    let a_args: Vec<_> = info
+                        .accel_args
+                        .iter()
+                        .map(|(k, v)| format!("{}={}", k, v))
+                        .collect();
+                    let mut s = format!("Accel: {}", an);
+                    if let Some(m) = info.accel_m {
+                        s.push_str(&format!(" m={}", m));
+                    }
+                    if !a_args.is_empty() {
+                        s.push_str(&format!(" ({})", a_args.join(", ")));
+                    }
+                    parts.push(s);
                 }
-                parts.push(s);
-            }
 
-            parts.push(info.line_type.clone());
-            let mut s = parts.join(" | ");
-            if let Some(ref c) = info.component {
-                s.push_str(&format!(" [{}]", c));
-            }
-            s
-        }).collect();
+                if let Some((ref ft, ref fa)) = info.filter {
+                    let f_args: Vec<_> = fa.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+                    let mut s = format!("Filter: {}", ft);
+                    if !f_args.is_empty() {
+                        s.push_str(&format!(" ({})", f_args.join(", ")));
+                    }
+                    parts.push(s);
+                }
+
+                parts.push(info.line_type.clone());
+                let mut s = parts.join(" | ");
+                if let Some(ref c) = info.component {
+                    s.push_str(&format!(" [{}]", c));
+                }
+                s
+            })
+            .collect();
 
         // 3. Build BakedLines
         let mut baked_lines = Vec::new();
@@ -858,12 +869,15 @@ impl ShanksApp {
                 Arr::CInterval(ci) => ci.real.inf.len(),
             });
             if let Some(adata) = adata {
-                max_n = max_n.max(match &adata.values {
-                    Arr::Real(v) => v.len(),
-                    Arr::Complex(c) => c.real.len(),
-                    Arr::Interval(iv) => iv.inf.len(),
-                    Arr::CInterval(ci) => ci.real.inf.len(),
-                });
+                max_n = max_n.max(
+                    adata.start_offset as usize
+                        + match &adata.values {
+                            Arr::Real(v) => v.len(),
+                            Arr::Complex(c) => c.real.len(),
+                            Arr::Interval(iv) => iv.inf.len(),
+                            Arr::CInterval(ci) => ci.real.inf.len(),
+                        },
+                );
             }
         }
 
@@ -885,14 +899,26 @@ impl ShanksApp {
 
             if let Some(adata) = adata {
                 let is_filtered = key.filter.is_some();
-                let show = if is_filtered { self.show_smoothed_estimates } else { self.show_accel };
+                let show = if is_filtered {
+                    self.show_smoothed_estimates
+                } else {
+                    self.show_accel
+                };
 
                 if show {
                     main_raw.push((
                         key.clone(),
-                        if is_filtered { "Estimated".to_string() } else { "Accel".to_string() },
+                        if is_filtered {
+                            "Estimated".to_string()
+                        } else {
+                            "Accel".to_string()
+                        },
                         self.arr_to_f64(&adata.values, main_symlog, main_thresh),
-                        if is_filtered { egui::Color32::from_rgb(240, 230, 140) } else { base_color }, // Khaki-ish
+                        if is_filtered {
+                            egui::Color32::from_rgb(240, 230, 140)
+                        } else {
+                            base_color
+                        }, // Khaki-ish
                         if is_filtered { 3.0 } else { 2.0 },
                         LineStyle::Solid,
                         adata.events.clone(),
@@ -901,26 +927,71 @@ impl ShanksApp {
             }
 
             // Limits
-            if self.show_limit_lines {
+            if adata.is_none() && self.show_limit_lines {
                 if let Some(ref val) = sdata.sum {
                     let points = match val {
-                        Value::Real(rv) => ArrF64::Real(vec![Self::to_plot_point(rv, main_symlog, main_thresh); max_n + 1]),
+                        Value::Real(rv) => {
+                            ArrF64::Real(vec![
+                                Self::to_plot_point(rv, main_symlog, main_thresh);
+                                max_n + 1
+                            ])
+                        }
                         Value::Complex(cv) => ArrF64::Complex(ComplexOf {
-                            real: vec![Self::to_plot_point(&cv.real, main_symlog, main_thresh); max_n + 1],
-                            imag: vec![Self::to_plot_point(&cv.imag, main_symlog, main_thresh); max_n + 1],
+                            real: vec![
+                                Self::to_plot_point(&cv.real, main_symlog, main_thresh);
+                                max_n + 1
+                            ],
+                            imag: vec![
+                                Self::to_plot_point(&cv.imag, main_symlog, main_thresh);
+                                max_n + 1
+                            ],
                         }),
                         Value::Interval(iv) => ArrF64::Interval(IntervalOf {
-                            inf: vec![Self::to_plot_point(&iv.inf, main_symlog, main_thresh); max_n + 1],
-                            sup: vec![Self::to_plot_point(&iv.sup, main_symlog, main_thresh); max_n + 1],
+                            inf: vec![
+                                Self::to_plot_point(&iv.inf, main_symlog, main_thresh);
+                                max_n + 1
+                            ],
+                            sup: vec![
+                                Self::to_plot_point(&iv.sup, main_symlog, main_thresh);
+                                max_n + 1
+                            ],
                         }),
                         Value::CInterval(ci) => ArrF64::CInterval(ComplexOf {
                             real: IntervalOf {
-                                inf: vec![Self::to_plot_point(&ci.real.inf, main_symlog, main_thresh); max_n + 1],
-                                sup: vec![Self::to_plot_point(&ci.real.sup, main_symlog, main_thresh); max_n + 1],
+                                inf: vec![
+                                    Self::to_plot_point(
+                                        &ci.real.inf,
+                                        main_symlog,
+                                        main_thresh
+                                    );
+                                    max_n + 1
+                                ],
+                                sup: vec![
+                                    Self::to_plot_point(
+                                        &ci.real.sup,
+                                        main_symlog,
+                                        main_thresh
+                                    );
+                                    max_n + 1
+                                ],
                             },
                             imag: IntervalOf {
-                                inf: vec![Self::to_plot_point(&ci.imag.inf, main_symlog, main_thresh); max_n + 1],
-                                sup: vec![Self::to_plot_point(&ci.imag.sup, main_symlog, main_thresh); max_n + 1],
+                                inf: vec![
+                                    Self::to_plot_point(
+                                        &ci.imag.inf,
+                                        main_symlog,
+                                        main_thresh
+                                    );
+                                    max_n + 1
+                                ],
+                                sup: vec![
+                                    Self::to_plot_point(
+                                        &ci.imag.sup,
+                                        main_symlog,
+                                        main_thresh
+                                    );
+                                    max_n + 1
+                                ],
                             },
                         }),
                     };
@@ -1151,19 +1222,26 @@ impl eframe::App for ShanksApp {
                 current_tab_state.reset_view = false;
             }
 
-            let name_to_full: HashMap<String, String> = plot_lines.iter().flat_map(|baked| {
-                match &baked.data {
+            let name_to_full: HashMap<String, String> = plot_lines
+                .iter()
+                .flat_map(|baked| match &baked.data {
                     ArrLine::Real((n, _)) => vec![(n.clone(), baked.full_name.clone())],
-                    ArrLine::Complex(c) => vec![(c.real.0.clone(), baked.full_name.clone()), (c.imag.0.clone(), baked.full_name.clone())],
-                    ArrLine::Interval(iv) => vec![(iv.inf.0.clone(), baked.full_name.clone()), (iv.sup.0.clone(), baked.full_name.clone())],
+                    ArrLine::Complex(c) => vec![
+                        (c.real.0.clone(), baked.full_name.clone()),
+                        (c.imag.0.clone(), baked.full_name.clone()),
+                    ],
+                    ArrLine::Interval(iv) => vec![
+                        (iv.inf.0.clone(), baked.full_name.clone()),
+                        (iv.sup.0.clone(), baked.full_name.clone()),
+                    ],
                     ArrLine::CInterval(ci) => vec![
                         (ci.real.inf.0.clone(), baked.full_name.clone()),
                         (ci.real.sup.0.clone(), baked.full_name.clone()),
                         (ci.imag.inf.0.clone(), baked.full_name.clone()),
                         (ci.imag.sup.0.clone(), baked.full_name.clone()),
                     ],
-                }
-            }).collect();
+                })
+                .collect();
 
             let symlog = current_tab_state.symlog;
             let thresh = current_tab_state.log_linthresh;
@@ -1172,7 +1250,10 @@ impl eframe::App for ShanksApp {
                 if name.is_empty() {
                     return format!("n = {:.0}\ny = {:.4e}", value.x, value.y);
                 }
-                let full = name_to_full.get(name).cloned().unwrap_or_else(|| name.to_string());
+                let full = name_to_full
+                    .get(name)
+                    .cloned()
+                    .unwrap_or_else(|| name.to_string());
                 let y_str = if symlog {
                     crate::plot::symlog_formatter(value.y, thresh)
                 } else {

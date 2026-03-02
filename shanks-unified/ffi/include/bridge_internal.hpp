@@ -257,8 +257,20 @@ public:
     }
 
     RawArr filter(rust::Str name, rust::Str params_json, uint64_t start_n) const override {
-        auto filtered = ::shanks::filters::apply_filter<T>(result.Sn, std::string(name), std::string(params_json), start_n);
-        return convert_vec(filtered);
+        std::string s_name(name);
+        std::string s_params(params_json);
+        try {
+            auto filtered = ::shanks::filters::apply_filter<T>(result.Sn, s_name, s_params, start_n);
+            return convert_vec(filtered);
+        } catch (const std::exception& ex) {
+            throw std::runtime_error(
+                "Filter '" + s_name + "' failed with params " + s_params + ": " + ex.what()
+            );
+        } catch (...) {
+            throw std::runtime_error(
+                "Filter '" + s_name + "' failed with params " + s_params + ": unknown exception"
+            );
+        }
     }
 };
 

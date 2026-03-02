@@ -75,6 +75,7 @@ pub struct SeriesEvent {
 /// The numerical result of one (accel, filter) computation.
 #[derive(Debug, Clone)]
 pub struct AccelData {
+    pub start_offset: u64,
     pub values: Arr,
     pub an: Arr,
     pub deviations: Arr,
@@ -350,7 +351,6 @@ where
                 sum: Some(sum.clone()),
             };
             if series_short {
-                debug!("Computing {s_name}");
                 let _ = internal_tx.blocking_send(ComputeEvent::SeriesDone {
                     id: s_id.clone(),
                     series: s_desc.clone(),
@@ -416,6 +416,7 @@ where
                     });
                 }
                 let adata = AccelData {
+                    start_offset: 0,
                     values: arr_from_raw(bridge::get_sn(&**a_ptr)),
                     an: arr_from_raw(bridge::get_an(&**a_ptr)),
                     deviations: arr_from_raw(bridge::get_deviation(&**a_ptr)),
@@ -438,8 +439,39 @@ where
             for f_inst in filters {
                 debug!("Filtering with {}", f_inst.filter_type);
                 let fargs = sorted_args_json(&f_inst.args)?;
-                let farr =
-                    bridge::filter(&**a_ptr, &f_inst.filter_type, &fargs, stop_n.unwrap_or(0));
+                let farr = match bridge::filter(
+                    &**a_ptr,
+                    &f_inst.filter_type,
+                    &fargs,
+                    stop_n.unwrap_or(0),
+                ) {
+                    Ok(arr) => arr,
+                    Err(e) => {
+                        let _ = internal_tx.blocking_send(ComputeEvent::SeriesDone {
+                            id: s_id.clone(),
+                            series: s_desc.clone(),
+                            series_data: s_data.clone(),
+                            accel: Some((
+                                AccelDesc {
+                                    accel: a_inst.clone(),
+                                    filter: Some(f_inst.clone()),
+                                },
+                                AccelData {
+                                    start_offset: stop_n.unwrap_or(0),
+                                    values: Arr::Real(vec![RealValue::ZERO]),
+                                    an: Arr::Real(vec![RealValue::ZERO]),
+                                    deviations: Arr::Real(vec![RealValue::ZERO]),
+                                    events: vec![SeriesEvent {
+                                        n: stop_n.unwrap_or(0),
+                                        name: "algo_error".to_string(),
+                                        description: e.to_string(),
+                                    }],
+                                },
+                            )),
+                        });
+                        continue;
+                    }
+                };
 
                 let stop_event = stop_n.map(|n| SeriesEvent {
                     n,
@@ -447,6 +479,7 @@ where
                     description: "Divergence detected; stop_action_limit reached.".to_string(),
                 });
                 let adata = AccelData {
+                    start_offset: 0,
                     values: arr_from_raw(farr),
                     an: Arr::Real(Vec::new()),
                     deviations: Arr::Real(Vec::new()),
@@ -522,6 +555,7 @@ where
                         .as_ref()
                         .map(|f| sorted_args_json(&f.args).unwrap_or_default());
                     let ablobs = CachedAccelData {
+                        start_offset: data.start_offset,
                         val: arr_to_blobs(&data.values),
                         an: arr_to_blobs(&data.an),
                         dev: arr_to_blobs(&data.deviations),
@@ -704,6 +738,7 @@ fn series_data_from_cache(sd: &CachedSeriesData) -> SeriesData {
 
 fn accel_data_from_cache(ad: &CachedAccelData, events: Vec<CachedEvent>) -> AccelData {
     AccelData {
+        start_offset: ad.start_offset,
         values: arr_from_blobs(&ad.val),
         an: arr_from_blobs(&ad.an),
         deviations: arr_from_blobs(&ad.dev),

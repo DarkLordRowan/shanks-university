@@ -21,17 +21,14 @@ std::vector<T> apply_filter(const std::vector<T>& data, const std::string& name,
     }
 
     if (name == "kz" || name == "Kolmogorov-Zurbenko") {
-        size_t m = 5, k = 3;
-        try { m = std::stoul(::shanks::utils::get_json_val(params_json, "window_length")); } catch (...) {}
-        try { k = std::stoul(::shanks::utils::get_json_val(params_json, "degree")); } catch (...) {}
+        size_t m = std::stoul(::shanks::utils::get_json_val(params_json, "window_length"));
+        size_t k = std::stoul(::shanks::utils::get_json_val(params_json, "degree"));
         return kolmogorov_zurbenko_filter<T>(tail_data, m, k);
     } else if (name == "sg" || name == "Savitzky-Golay") {
-        size_t wl = 5, po = 2, der = 0;
-        double delta = 1.0;
-        try { wl = std::stoul(::shanks::utils::get_json_val(params_json, "window_length")); } catch (...) {}
-        try { po = std::stoul(::shanks::utils::get_json_val(params_json, "polyorder")); } catch (...) {}
-        try { der = std::stoul(::shanks::utils::get_json_val(params_json, "derive")); } catch (...) {}
-        try { delta = std::stod(::shanks::utils::get_json_val(params_json, "delta")); } catch (...) {}
+        size_t wl = std::stoul(::shanks::utils::get_json_val(params_json, "window_length"));
+        size_t po = std::stoul(::shanks::utils::get_json_val(params_json, "polyorder"));
+        size_t der = std::stoul(::shanks::utils::get_json_val(params_json, "derive"));
+        double delta = std::stod(::shanks::utils::get_json_val(params_json, "delta"));
 
         if constexpr (!is_interval_v<T> && !is_complex_interval_v<T>) {
             return savitzky_golay_filter<T>(tail_data, wl, po, der, T(delta));

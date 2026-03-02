@@ -6,6 +6,10 @@ compile_error!(
 );
 
 impl ffi::RealValue {
+    pub const ZERO: Self = Self {
+        mantissa: 0.0,
+        exponent: 0,
+    };
     #[cfg(target_endian = "little")]
     pub fn to_bytes(slice: &[ffi::RealValue]) -> &[u8] {
         let byte_len = slice.len() * std::mem::size_of::<ffi::RealValue>();
@@ -110,7 +114,7 @@ pub mod ffi {
         fn get_deviation(series: &CSeries) -> RawArr;
         fn get_limit(series: &CSeries) -> RawValue;
 
-        fn filter(series: &CSeries, name: &str, params_json: &str, start_n: u64) -> RawArr;
+        fn filter(series: &CSeries, name: &str, params_json: &str, start_n: u64) -> Result<RawArr>;
 
         /// Returns events from the last `run_algo` call on this series.
         /// Each entry is tab-separated: "n\tname\tdescription".

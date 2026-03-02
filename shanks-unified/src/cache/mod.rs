@@ -34,32 +34,33 @@ use tokio_rusqlite::Connection;
 #[derive(Debug, Clone, Default)]
 pub struct RawArrBlobs {
     pub kind: i64,
-    pub len:  i64,
-    pub m:    [Vec<u8>; 4],
-    pub e:    [Vec<u8>; 4],  // reserved for future exponent storage; currently unused
+    pub len: i64,
+    pub m: [Vec<u8>; 4],
+    pub e: [Vec<u8>; 4], // reserved for future exponent storage; currently unused
 }
 
 /// Plain series data for cache storage.
 #[derive(Debug, Clone, Default)]
 pub struct CachedSeriesData {
-    pub sn:  RawArrBlobs,
-    pub an:  RawArrBlobs,
+    pub sn: RawArrBlobs,
+    pub an: RawArrBlobs,
     pub dev: RawArrBlobs,
 }
 
 /// Plain accel data for cache storage.
 #[derive(Debug, Clone, Default)]
 pub struct CachedAccelData {
+    pub start_offset: u64,
     pub val: RawArrBlobs,
-    pub an:  RawArrBlobs,
+    pub an: RawArrBlobs,
     pub dev: RawArrBlobs,
 }
 
 /// One event row.
 #[derive(Debug, Clone)]
 pub struct CachedEvent {
-    pub n:           u64,
-    pub name:        String,
+    pub n: u64,
+    pub name: String,
     pub description: String,
 }
 
@@ -82,7 +83,8 @@ impl Cache {
             c.execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;")
                 .map_err(tokio_rusqlite::Error::Rusqlite)?;
 
-            c.execute_batch(r#"
+            c.execute_batch(
+                r#"
                 -- v2 schema: drop old tables so we start fresh
                 DROP TABLE IF EXISTS filtered_estimates;
                 DROP TABLE IF EXISTS events;
@@ -145,7 +147,8 @@ impl Cache {
                     an_m0 BLOB,  an_m1 BLOB,  an_m2 BLOB,  an_m3 BLOB,
                     dev_kind  INTEGER NOT NULL DEFAULT 0,
                     dev_len   INTEGER NOT NULL DEFAULT 0,
-                    dev_m0 BLOB, dev_m1 BLOB, dev_m2 BLOB, dev_m3 BLOB
+                    dev_m0 BLOB, dev_m1 BLOB, dev_m2 BLOB, dev_m3 BLOB,
+                    start_n INTEGER NOT NULL DEFAULT 0
                 );
 
                 -- Events emitted during accel computation
@@ -161,7 +164,9 @@ impl Cache {
                 CREATE INDEX IF NOT EXISTS idx_accel_series    ON accelerations(series_id);
                 CREATE INDEX IF NOT EXISTS idx_accel_name      ON accelerations(accel_name);
                 CREATE INDEX IF NOT EXISTS idx_events_accel    ON events(accel_id);
-            "#).map_err(tokio_rusqlite::Error::Rusqlite)?;
+            "#,
+            )
+            .map_err(tokio_rusqlite::Error::Rusqlite)?;
 
             Ok(())
         })
@@ -187,25 +192,39 @@ impl Cache {
     /// Returns `(id, n_points)` if a matching series row exists.
     pub async fn series_exists(
         &self,
-        name:       String,
-        precision:  String,
-        x_value:    String,
-        args_json:  String,
+        name: String,
+        precision: String,
+        x_value: String,
+        args_json: String,
         noise_json: Option<String>,
     ) -> Result<Option<(i64, u64, Option<String>)>> {
-        let Some(conn) = &self.conn else { return Ok(None); };
+        let Some(conn) = &self.conn else {
+            return Ok(None);
+        };
         conn.call(move |c| {
             let res = c.query_row(
                 "SELECT id, n_points, sum_json FROM series \
                  WHERE name=?1 AND precision=?2 AND x_value=?3 \
                    AND args_json=?4 AND noise_json=?5",
-                params![name, precision, x_value, args_json, noise_json.unwrap_or_default()],
-                |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)? as u64, r.get::<_, Option<String>>(2)?)),
+                params![
+                    name,
+                    precision,
+                    x_value,
+                    args_json,
+                    noise_json.unwrap_or_default()
+                ],
+                |r| {
+                    Ok((
+                        r.get::<_, i64>(0)?,
+                        r.get::<_, i64>(1)? as u64,
+                        r.get::<_, Option<String>>(2)?,
+                    ))
+                },
             );
             match res {
-                Ok(v)                                    => Ok(Some(v)),
+                Ok(v) => Ok(Some(v)),
                 Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-                Err(e)                                   => Err(tokio_rusqlite::Error::Rusqlite(e)),
+                Err(e) => Err(tokio_rusqlite::Error::Rusqlite(e)),
             }
         })
         .await
@@ -223,7 +242,9 @@ impl Cache {
         n_points: u64,
         sum_json: Option<String>,
     ) -> Result<i64> {
-        let Some(conn) = &self.conn else { return Ok(-1); };
+        let Some(conn) = &self.conn else {
+            return Ok(-1);
+        };
         conn.call(move |c| {
             let tx = c.transaction()?;
             tx.execute(
@@ -233,13 +254,27 @@ impl Cache {
                  DO UPDATE SET
                      n_points = MAX(excluded.n_points, series.n_points),
                      sum_json = COALESCE(excluded.sum_json, series.sum_json)",
-                params![name, precision, x_value, args_json, noise_json.clone().unwrap_or_default(), n_points, sum_json],
+                params![
+                    name,
+                    precision,
+                    x_value,
+                    args_json,
+                    noise_json.clone().unwrap_or_default(),
+                    n_points,
+                    sum_json
+                ],
             )?;
             let id: i64 = tx.query_row(
                 "SELECT id FROM series \
                  WHERE name=?1 AND precision=?2 AND x_value=?3 \
                    AND args_json=?4 AND noise_json=?5",
-                params![name, precision, x_value, args_json, noise_json.unwrap_or_default()],
+                params![
+                    name,
+                    precision,
+                    x_value,
+                    args_json,
+                    noise_json.unwrap_or_default()
+                ],
                 |r| r.get(0),
             )?;
             tx.commit()?;
@@ -251,7 +286,9 @@ impl Cache {
 
     /// Load series blob data.
     pub async fn get_series_data(&self, series_id: i64) -> Result<Option<CachedSeriesData>> {
-        let Some(conn) = &self.conn else { return Ok(None); };
+        let Some(conn) = &self.conn else {
+            return Ok(None);
+        };
         conn.call(move |c| {
             let res = c.query_row(
                 "SELECT sn_kind,sn_len,sn_m0,sn_m1,sn_m2,sn_m3,
@@ -263,7 +300,7 @@ impl Cache {
                     let load = |base: usize| -> rusqlite::Result<RawArrBlobs> {
                         Ok(RawArrBlobs {
                             kind: r.get(base)?,
-                            len:  r.get(base + 1)?,
+                            len: r.get(base + 1)?,
                             m: [
                                 r.get::<_, Vec<u8>>(base + 2).unwrap_or_default(),
                                 r.get::<_, Vec<u8>>(base + 3).unwrap_or_default(),
@@ -274,16 +311,16 @@ impl Cache {
                         })
                     };
                     Ok(CachedSeriesData {
-                        sn:  load(0)?,
-                        an:  load(6)?,
+                        sn: load(0)?,
+                        an: load(6)?,
                         dev: load(12)?,
                     })
                 },
             );
             match res {
-                Ok(d)                                    => Ok(Some(d)),
+                Ok(d) => Ok(Some(d)),
                 Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-                Err(e)                                   => Err(tokio_rusqlite::Error::Rusqlite(e)),
+                Err(e) => Err(tokio_rusqlite::Error::Rusqlite(e)),
             }
         })
         .await
@@ -292,7 +329,9 @@ impl Cache {
 
     /// Store (replace) series blob data.
     pub async fn insert_series_data(&self, series_id: i64, data: CachedSeriesData) -> Result<()> {
-        let Some(conn) = &self.conn else { return Ok(()); };
+        let Some(conn) = &self.conn else {
+            return Ok(());
+        };
         conn.call(move |c| {
             let d = &data;
             c.execute(
@@ -303,15 +342,12 @@ impl Cache {
                   dev_kind,dev_len,dev_m0,dev_m1,dev_m2,dev_m3)
                  VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19)",
                 params![
-                    series_id,
-                    d.sn.kind,  d.sn.len,
-                    d.sn.m[0],  d.sn.m[1],  d.sn.m[2],  d.sn.m[3],
-                    d.an.kind,  d.an.len,
-                    d.an.m[0],  d.an.m[1],  d.an.m[2],  d.an.m[3],
-                    d.dev.kind, d.dev.len,
-                    d.dev.m[0], d.dev.m[1], d.dev.m[2], d.dev.m[3],
+                    series_id, d.sn.kind, d.sn.len, d.sn.m[0], d.sn.m[1], d.sn.m[2], d.sn.m[3],
+                    d.an.kind, d.an.len, d.an.m[0], d.an.m[1], d.an.m[2], d.an.m[3], d.dev.kind,
+                    d.dev.len, d.dev.m[0], d.dev.m[1], d.dev.m[2], d.dev.m[3],
                 ],
-            ).map_err(tokio_rusqlite::Error::Rusqlite)?;
+            )
+            .map_err(tokio_rusqlite::Error::Rusqlite)?;
             Ok(())
         })
         .await
@@ -325,14 +361,16 @@ impl Cache {
     /// Returns `(id, n_points)` if a matching `(accel, filter)` row exists.
     pub async fn accel_exists(
         &self,
-        series_id:        i64,
-        accel_name:       String,
-        m_value:          Option<i64>,
-        args_json:        String,
-        filter_type:      Option<String>,
+        series_id: i64,
+        accel_name: String,
+        m_value: Option<i64>,
+        args_json: String,
+        filter_type: Option<String>,
         filter_args_json: Option<String>,
     ) -> Result<Option<(i64, u64)>> {
-        let Some(conn) = &self.conn else { return Ok(None); };
+        let Some(conn) = &self.conn else {
+            return Ok(None);
+        };
         conn.call(move |c| {
             let res = c.query_row(
                 "SELECT id, n_points FROM accelerations \
@@ -351,9 +389,9 @@ impl Cache {
                 |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)? as u64)),
             );
             match res {
-                Ok(v)                                    => Ok(Some(v)),
+                Ok(v) => Ok(Some(v)),
                 Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-                Err(e)                                   => Err(tokio_rusqlite::Error::Rusqlite(e)),
+                Err(e) => Err(tokio_rusqlite::Error::Rusqlite(e)),
             }
         })
         .await
@@ -371,7 +409,9 @@ impl Cache {
         filter_args_json: Option<String>,
         n_points: u64,
     ) -> Result<i64> {
-        let Some(conn) = &self.conn else { return Ok(-1); };
+        let Some(conn) = &self.conn else {
+            return Ok(-1);
+        };
         conn.call(move |c| {
             let tx = c.transaction()?;
             tx.execute(
@@ -380,8 +420,15 @@ impl Cache {
                  VALUES (?1,?2,?3,?4,?5,?6,?7)
                  ON CONFLICT(series_id,accel_name,m_value,args_json,filter_type,filter_args_json)
                  DO UPDATE SET n_points = MAX(excluded.n_points, accelerations.n_points)",
-                params![series_id, accel_name, m_value.unwrap_or(-1), args_json,
-                        filter_type.clone().unwrap_or_default(), filter_args_json.clone().unwrap_or_default(), n_points],
+                params![
+                    series_id,
+                    accel_name,
+                    m_value.unwrap_or(-1),
+                    args_json,
+                    filter_type.clone().unwrap_or_default(),
+                    filter_args_json.clone().unwrap_or_default(),
+                    n_points
+                ],
             )?;
             let id: i64 = tx.query_row(
                 "SELECT id FROM accelerations \
@@ -389,8 +436,14 @@ impl Cache {
                    AND m_value=?3 AND args_json=?4 \
                    AND filter_type=?5 \
                    AND filter_args_json=?6",
-                params![series_id, accel_name, m_value.unwrap_or(-1), args_json,
-                        filter_type.unwrap_or_default(), filter_args_json.unwrap_or_default()],
+                params![
+                    series_id,
+                    accel_name,
+                    m_value.unwrap_or(-1),
+                    args_json,
+                    filter_type.unwrap_or_default(),
+                    filter_args_json.unwrap_or_default()
+                ],
                 |r| r.get(0),
             )?;
             tx.commit()?;
@@ -402,19 +455,21 @@ impl Cache {
 
     /// Load accel blob data.
     pub async fn get_accel_data(&self, accel_id: i64) -> Result<Option<CachedAccelData>> {
-        let Some(conn) = &self.conn else { return Ok(None); };
+        let Some(conn) = &self.conn else {
+            return Ok(None);
+        };
         conn.call(move |c| {
             let res = c.query_row(
                 "SELECT val_kind,val_len,val_m0,val_m1,val_m2,val_m3,
                         an_kind,an_len,an_m0,an_m1,an_m2,an_m3,
-                        dev_kind,dev_len,dev_m0,dev_m1,dev_m2,dev_m3
+                        dev_kind,dev_len,dev_m0,dev_m1,dev_m2,dev_m3,start_n
                  FROM accel_data WHERE accel_id=?1",
                 params![accel_id],
                 |r| {
                     let load = |base: usize| -> rusqlite::Result<RawArrBlobs> {
                         Ok(RawArrBlobs {
                             kind: r.get(base)?,
-                            len:  r.get(base + 1)?,
+                            len: r.get(base + 1)?,
                             m: [
                                 r.get::<_, Vec<u8>>(base + 2).unwrap_or_default(),
                                 r.get::<_, Vec<u8>>(base + 3).unwrap_or_default(),
@@ -426,15 +481,16 @@ impl Cache {
                     };
                     Ok(CachedAccelData {
                         val: load(0)?,
-                        an:  load(6)?,
+                        an: load(6)?,
                         dev: load(12)?,
+                        start_offset: r.get::<_, u64>(18).unwrap_or(0),
                     })
                 },
             );
             match res {
-                Ok(d)                                    => Ok(Some(d)),
+                Ok(d) => Ok(Some(d)),
                 Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-                Err(e)                                   => Err(tokio_rusqlite::Error::Rusqlite(e)),
+                Err(e) => Err(tokio_rusqlite::Error::Rusqlite(e)),
             }
         })
         .await
@@ -443,25 +499,41 @@ impl Cache {
 
     /// Store (replace) accel blob data.
     pub async fn insert_accel_data(&self, accel_id: i64, data: CachedAccelData) -> Result<()> {
-        let Some(conn) = &self.conn else { return Ok(()); };
+        let Some(conn) = &self.conn else {
+            return Ok(());
+        };
         conn.call(move |c| {
             c.execute(
                 "INSERT OR REPLACE INTO accel_data
                  (accel_id,
                   val_kind,val_len,val_m0,val_m1,val_m2,val_m3,
                   an_kind,an_len,an_m0,an_m1,an_m2,an_m3,
-                  dev_kind,dev_len,dev_m0,dev_m1,dev_m2,dev_m3)
-                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19)",
+                  dev_kind,dev_len,dev_m0,dev_m1,dev_m2,dev_m3,start_n)
+                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20)",
                 params![
                     accel_id,
-                    data.val.kind, data.val.len,
-                    data.val.m[0], data.val.m[1], data.val.m[2], data.val.m[3],
-                    data.an.kind,  data.an.len,
-                    data.an.m[0],  data.an.m[1],  data.an.m[2],  data.an.m[3],
-                    data.dev.kind, data.dev.len,
-                    data.dev.m[0], data.dev.m[1], data.dev.m[2], data.dev.m[3],
+                    data.val.kind,
+                    data.val.len,
+                    data.val.m[0],
+                    data.val.m[1],
+                    data.val.m[2],
+                    data.val.m[3],
+                    data.an.kind,
+                    data.an.len,
+                    data.an.m[0],
+                    data.an.m[1],
+                    data.an.m[2],
+                    data.an.m[3],
+                    data.dev.kind,
+                    data.dev.len,
+                    data.dev.m[0],
+                    data.dev.m[1],
+                    data.dev.m[2],
+                    data.dev.m[3],
+                    data.start_offset
                 ],
-            ).map_err(tokio_rusqlite::Error::Rusqlite)?;
+            )
+            .map_err(tokio_rusqlite::Error::Rusqlite)?;
             Ok(())
         })
         .await
@@ -474,7 +546,9 @@ impl Cache {
 
     /// Insert events for an accel row (replaces all existing events for that accel).
     pub async fn insert_events(&self, accel_id: i64, events: Vec<CachedEvent>) -> Result<()> {
-        let Some(conn) = &self.conn else { return Ok(()); };
+        let Some(conn) = &self.conn else {
+            return Ok(());
+        };
         conn.call(move |c| {
             let tx = c.transaction()?;
             tx.execute("DELETE FROM events WHERE accel_id=?1", params![accel_id])?;
@@ -493,15 +567,16 @@ impl Cache {
 
     /// Load events for an accel row.
     pub async fn get_events(&self, accel_id: i64) -> Result<Vec<CachedEvent>> {
-        let Some(conn) = &self.conn else { return Ok(Vec::new()); };
+        let Some(conn) = &self.conn else {
+            return Ok(Vec::new());
+        };
         conn.call(move |c| {
-            let mut stmt = c.prepare(
-                "SELECT n, name, description FROM events WHERE accel_id=?1 ORDER BY n",
-            )?;
+            let mut stmt =
+                c.prepare("SELECT n, name, description FROM events WHERE accel_id=?1 ORDER BY n")?;
             let rows = stmt.query_map(params![accel_id], |r| {
                 Ok(CachedEvent {
-                    n:           r.get::<_, i64>(0)? as u64,
-                    name:        r.get(1)?,
+                    n: r.get::<_, i64>(0)? as u64,
+                    name: r.get(1)?,
                     description: r.get::<_, Option<String>>(2)?.unwrap_or_default(),
                 })
             })?;
@@ -517,7 +592,9 @@ impl Cache {
     // -----------------------------------------------------------------------
 
     pub async fn clear_all(&self) -> Result<()> {
-        let Some(conn) = &self.conn else { return Ok(()); };
+        let Some(conn) = &self.conn else {
+            return Ok(());
+        };
         conn.call(|c| {
             c.execute_batch(
                 "DELETE FROM events;

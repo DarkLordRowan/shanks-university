@@ -119,11 +119,7 @@ impl SelectionNode {
     /// Count selected leaf nodes.
     pub fn count_selected(&self) -> usize {
         if self.children.is_empty() {
-            if self.is_selected() {
-                1
-            } else {
-                0
-            }
+            if self.is_selected() { 1 } else { 0 }
         } else {
             self.children.iter().map(|c| c.count_selected()).sum()
         }
@@ -252,9 +248,10 @@ pub fn build_accel_tree(
             .unwrap();
         let m_str = instance.m.to_string();
         if !m_node.children.iter().any(|c| c.label == m_str) {
-            m_node
-                .children
-                .push(SelectionNode::new(format!("{}_{}", m_node.id, m_str), m_str));
+            m_node.children.push(SelectionNode::new(
+                format!("{}_{}", m_node.id, m_str),
+                m_str,
+            ));
         }
 
         // Process additional args
@@ -341,8 +338,11 @@ pub fn build_filter_tree(
         let filter_node = filter_nodes
             .entry(instance.filter_type.clone())
             .or_insert_with(|| {
-                SelectionNode::new(format!("filter_{}", instance.filter_type), instance.filter_type.clone())
-                    .with_expandable(true)
+                SelectionNode::new(
+                    format!("filter_{}", instance.filter_type),
+                    instance.filter_type.clone(),
+                )
+                .with_expandable(true)
             });
 
         for (param_name, value) in &instance.args {
@@ -378,8 +378,6 @@ pub fn build_filter_tree(
         }
     }
 
-    // Add "No filter" option
-    root.children.push(SelectionNode::new("filter_none", "No filter"));
     root.children.extend(filter_nodes.into_values());
     root
 }
@@ -647,7 +645,6 @@ fn generate_param_combinations(
 
     result
 }
-
 
 #[cfg(test)]
 mod tests {
