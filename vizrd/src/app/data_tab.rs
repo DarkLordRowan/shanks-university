@@ -1,5 +1,6 @@
 use crate::app::ResultKey;
 use crate::ffi::Arr;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ArrStats {
@@ -16,9 +17,23 @@ pub struct ComponentStats {
 }
 
 #[derive(Debug, Clone)]
+pub struct SequenceDisplay {
+    pub sn: Arr,
+    pub an: Arr,
+    pub dev: Arr,
+    pub events: HashMap<usize, Vec<String>>,
+    
+    pub sn_stats: Vec<ComponentStats>,
+    pub an_stats: Vec<ComponentStats>,
+    pub dev_stats: Vec<ComponentStats>,
+    
+    pub len: usize,
+}
+
+#[derive(Debug, Clone)]
 pub struct DataNode {
     pub name: String,
-    pub components: Vec<ComponentStats>,
+    pub sequence: Option<SequenceDisplay>,
     pub children: Vec<DataNode>,
 }
 
@@ -28,14 +43,94 @@ pub struct DataCache {
     pub roots: Vec<DataNode>,
 }
 
+fn get_arr_headers(arr: &Arr) -> Vec<&'static str> {
+    match arr {
+        Arr::Real(_) => vec!["Real"],
+        Arr::Complex(_) => vec!["Re", "Im", "Mag"],
+        Arr::Interval(_) => vec!["Inf", "Sup", "Width"],
+        Arr::CInterval(_) => vec!["Re(Inf)", "Re(Sup)", "Im(Inf)", "Im(Sup)"],
+    }
+}
+
+fn extract_at(arr: &Arr, n: usize) -> Vec<String> {
+    match arr {
+        Arr::Real(v) => {
+            if n < v.len() { vec![format!("{:.4e}", v[n].to_f64())] } else { vec!["-".to_string()] }
+        }
+        Arr::Complex(c) => {
+            if n < c.real.len() {
+                let re = c.real[n].to_f64();
+                let im = c.imag[n].to_f64();
+                vec![
+                    format!("{:.4e}", re),
+                    format!("{:.4e}", im),
+                    format!("{:.4e}", re.hypot(im)),
+                ]
+            } else {
+                vec!["-".to_string(), "-".to_string(), "-".to_string()]
+            }
+        }
+        Arr::Interval(i) => {
+            if n < i.inf.len() {
+                let inf = i.inf[n].to_f64();
+                let sup = i.sup[n].to_f64();
+                vec![
+                    format!("{:.4e}", inf),
+                    format!("{:.4e}", sup),
+                    format!("{:.4e}", sup - inf),
+                ]
+            } else {
+                vec!["-".to_string(), "-".to_string(), "-".to_string()]
+            }
+        }
+        Arr::CInterval(c) => {
+            if n < c.real.inf.len() {
+                vec![
+                    format!("{:.4e}", c.real.inf[n].to_f64()),
+                    format!("{:.4e}", c.real.sup[n].to_f64()),
+                    format!("{:.4e}", c.imag.inf[n].to_f64()),
+                    format!("{:.4e}", c.imag.sup[n].to_f64()),
+                ]
+            } else {
+                vec!["-".to_string(), "-".to_string(), "-".to_string(), "-".to_string()]
+            }
+        }
+    }
+}
+
+fn create_sequence_display(sn: &Arr, an: &Arr, dev: &Arr, events: &[crate::compute::SeriesEvent]) -> SequenceDisplay {
+    let mut ev_map: HashMap<usize, Vec<String>> = HashMap::new();
+    for ev in events {
+        ev_map.entry(ev.n as usize).or_default().push(format!("{}: {}", ev.name, ev.description));
+    }
+    
+    let len = match sn {
+        Arr::Real(v) => v.len(),
+        Arr::Complex(c) => c.real.len(),
+        Arr::Interval(i) => i.inf.len(),
+        Arr::CInterval(c) => c.real.inf.len(),
+    };
+    
+    SequenceDisplay {
+        sn: sn.clone(),
+        an: an.clone(),
+        dev: dev.clone(),
+        events: ev_map,
+        sn_stats: compute_arr_stats(sn),
+        an_stats: compute_arr_stats(an),
+        dev_stats: compute_arr_stats(dev),
+        len,
+    }
+}
+
 impl DataCache {
     pub fn rebuild(
         &mut self,
-        series_results: &std::collections::HashMap<
+        series_results: &HashMap<
             crate::compute::SeriesDesc,
             Option<crate::compute::SeriesData>,
         >,
-        accel_results: &std::collections::HashMap<ResultKey, Option<crate::compute::AccelData>>,
+        accel_results: &HashMap<ResultKey, Option<crate::compute::AccelData>>,
     ) {
         if !self.dirty {
             return;
@@ -43,11 +138,10 @@ impl DataCache {
 
         let mut roots = Vec::new();
 
-        // Group keys by series
-        let mut grouped: std::collections::HashMap<
+        let mut grouped: HashMap<
             crate::compute::SeriesDesc,
             Vec<(&ResultKey, &crate::compute::AccelData)>,
-        > = std::collections::HashMap::new();
+        > = HashMap::new();
         for (k, v) in accel_results {
             if let Some(adata) = v {
                 grouped
@@ -61,7 +155,12 @@ impl DataCache {
             if let Some(sdata) = sdata_opt {
                 let mut series_node = DataNode {
                     name: format!("Series: {}", sdesc.series.name),
-                    components: compute_arr_stats(&sdata.result.values),
+                    sequence: Some(create_sequence_display(
+                        &sdata.result.values,
+                        &sdata.result.an,
+                        &sdata.result.deviations,
+                        &[]
+                    )),
                     children: Vec::new(),
                 };
 
@@ -79,7 +178,12 @@ impl DataCache {
 
                         series_node.children.push(DataNode {
                             name,
-                            components: compute_arr_stats(&adata.result.values),
+                            sequence: Some(create_sequence_display(
+                                &adata.result.values,
+                                &adata.result.an,
+                                &adata.result.deviations,
+                                &adata.events
+                            )),
                             children: Vec::new(),
                         });
                     }
@@ -226,39 +330,104 @@ pub fn show(ui: &mut egui::Ui, cache: &DataCache) {
         .auto_shrink([false, false])
         .show(ui, |ui| {
             for root in &cache.roots {
-                show_node(ui, root);
+                show_node(ui, root, "");
             }
         });
 }
 
-fn show_node(ui: &mut egui::Ui, node: &DataNode) {
+fn show_node(ui: &mut egui::Ui, node: &DataNode, parent_id: &str) {
+    let id_source = format!("{}_{}", parent_id, node.name);
     egui::CollapsingHeader::new(&node.name)
+        .id_salt(&id_source)
         .default_open(false)
         .show(ui, |ui| {
-            if !node.components.is_empty() {
-                egui::Grid::new(format!("grid_{}", node.name))
-                    .striped(true)
-                    .show(ui, |ui| {
-                        ui.label("Component");
-                        ui.label("Min");
-                        ui.label("Max");
-                        ui.label("Mean");
-                        ui.label("Median");
-                        ui.end_row();
+            if let Some(seq) = &node.sequence {
+                show_sequence(ui, seq, &id_source);
+            }
 
-                        for comp in &node.components {
-                            ui.label(&comp.name);
+            for child in &node.children {
+                show_node(ui, child, &id_source);
+            }
+        });
+}
+
+fn show_sequence(ui: &mut egui::Ui, seq: &SequenceDisplay, id_source: &str) {
+    // Show overall characteristics first
+    egui::CollapsingHeader::new("Characteristics (Stats)")
+        .id_salt(format!("{}_stats", id_source))
+        .default_open(false)
+        .show(ui, |ui| {
+            egui::Grid::new(format!("{}_sgrid", id_source)).striped(true).show(ui, |ui| {
+                ui.label("Component");
+                ui.label("Min");
+                ui.label("Max");
+                ui.label("Mean");
+                ui.label("Median");
+                ui.end_row();
+
+                let mut show_stats = |title: &str, stats: &[ComponentStats]| {
+                    if !stats.is_empty() {
+                        ui.label(egui::RichText::new(title).strong());
+                        ui.end_row();
+                        for comp in stats {
+                            ui.label(format!("  {}", comp.name));
                             ui.label(format!("{:.4e}", comp.stats.min));
                             ui.label(format!("{:.4e}", comp.stats.max));
                             ui.label(format!("{:.4e}", comp.stats.mean));
                             ui.label(format!("{:.4e}", comp.stats.median));
                             ui.end_row();
                         }
-                    });
-            }
+                    }
+                };
 
-            for child in &node.children {
-                show_node(ui, child);
-            }
+                show_stats("Sn (Values)", &seq.sn_stats);
+                show_stats("An (Terms)", &seq.an_stats);
+                show_stats("Deviations", &seq.dev_stats);
+            });
+        });
+
+    ui.separator();
+
+    let sn_headers = get_arr_headers(&seq.sn);
+    let an_headers = get_arr_headers(&seq.an);
+    let dev_headers = get_arr_headers(&seq.dev);
+
+    // Build table columns definition
+    let mut builder = egui_extras::TableBuilder::new(ui)
+        .striped(true)
+        .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+        .column(egui_extras::Column::auto().at_least(40.0)); // n
+        
+    for _ in &sn_headers { builder = builder.column(egui_extras::Column::auto().at_least(80.0)); }
+    for _ in &an_headers { builder = builder.column(egui_extras::Column::auto().at_least(80.0)); }
+    for _ in &dev_headers { builder = builder.column(egui_extras::Column::auto().at_least(80.0)); }
+    
+    // Events column
+    builder = builder.column(egui_extras::Column::remainder().at_least(100.0));
+
+    builder
+        .header(20.0, |mut header| {
+            header.col(|ui| { ui.strong("n"); });
+            for h in &sn_headers { header.col(|ui| { ui.strong(format!("Sn {}", h)); }); }
+            for h in &an_headers { header.col(|ui| { ui.strong(format!("An {}", h)); }); }
+            for h in &dev_headers { header.col(|ui| { ui.strong(format!("Dev {}", h)); }); }
+            header.col(|ui| { ui.strong("Events"); });
+        })
+        .body(|body| {
+            body.rows(20.0, seq.len, |mut row| {
+                let n = row.index();
+
+                row.col(|ui| { ui.label(n.to_string()); });
+
+                for val in extract_at(&seq.sn, n) { row.col(|ui| { ui.label(val); }); }
+                for val in extract_at(&seq.an, n) { row.col(|ui| { ui.label(val); }); }
+                for val in extract_at(&seq.dev, n) { row.col(|ui| { ui.label(val); }); }
+
+                row.col(|ui| {
+                    if let Some(evs) = seq.events.get(&n) {
+                        ui.label(evs.join(", "));
+                    }
+                });
+            });
         });
 }

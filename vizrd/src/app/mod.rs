@@ -18,7 +18,7 @@ pub use selection::{SelectedCombination, SelectionNode, SelectionState};
 
 /// Stable key for identifying a computation result (series + optional accel).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ResultKey {
+pub struct ResultKey {
     pub series: compute::SeriesDesc,
     pub accel: Option<compute::AccelDesc>,
 }
@@ -63,13 +63,22 @@ impl ResultKey {
     fn from_combo(app: &ShanksApp, combo: &SelectedCombination) -> Option<Self> {
         let exp = app.state.experiment.as_ref()?;
 
+        // Helper to match the string formatting logic used in selection.rs
+        let val_to_str = |val: &serde_json::Value| -> String {
+            match val {
+                serde_json::Value::Number(n) => n.to_string(),
+                serde_json::Value::String(s) => s.clone(),
+                _ => val.to_string(),
+            }
+        };
+
         // Use the build_task logic to resolve instances
         let series_def = exp.series.iter().find(|s| s.name == combo.series_name)?;
         let series = series_def.expand().find(|inst| {
             combo.series_params.iter().all(|(k, v)| {
                 inst.args
                     .get(k)
-                    .map(|sv| sv.to_string() == *v)
+                    .map(|sv| val_to_str(sv) == *v)
                     .unwrap_or(false)
             })
         })?;
@@ -80,7 +89,7 @@ impl ResultKey {
                 && combo.method_args.iter().all(|(k, v)| {
                     inst.args
                         .get(k)
-                        .map(|sv| sv.to_string() == *v)
+                        .map(|sv| val_to_str(sv) == *v)
                         .unwrap_or(false)
                 })
         })?;
@@ -98,7 +107,7 @@ impl ResultKey {
                         combo.filter_args.iter().all(|(k, v)| {
                             inst.args
                                 .get(k)
-                                .map(|sv| sv.to_string() == *v)
+                                .map(|sv| val_to_str(sv) == *v)
                                 .unwrap_or(false)
                         })
                     })

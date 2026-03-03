@@ -312,10 +312,19 @@ where
         // Ensure series is computed if needed for anything in this block
         if series_short || !todo.is_empty() {
             debug!("Computing {s_name}");
-            let mut ptr = bridge::mk_series(&s_name, &s_prec, &s_args, s_n_needed as usize, &s_x)?;
+            let mut ptr = match bridge::mk_series(&s_name, &s_prec, &s_args, s_n_needed as usize, &s_x) {
+                Ok(p) => p,
+                Err(e) => return Err(anyhow::anyhow!("mk_series failed: {}", e)),
+            };
             if let Some(ref ni) = s_noise {
-                let njson = serde_json::to_string(ni)?;
-                ptr = bridge::apply_noise(&*ptr, &ni.noise_type.to_lowercase(), &njson, 0)?;
+                let njson = match serde_json::to_string(ni) {
+                    Ok(j) => j,
+                    Err(e) => return Err(anyhow::anyhow!("serde_json failed: {}", e)),
+                };
+                ptr = match bridge::apply_noise(&*ptr, &ni.noise_type.to_lowercase(), &njson, 0) {
+                    Ok(p) => p,
+                    Err(e) => return Err(anyhow::anyhow!("apply_noise failed: {}", e)),
+                };
             }
             let sum = value_from_raw(&bridge::get_limit(&*ptr));
             let sdata = SeriesData {
@@ -350,14 +359,54 @@ where
             // Lazy compute/fetch the acceleration pointer
             if !lazy_accels.contains_key(&a_idx) {
                 let s_ptr = lazy_series.as_ref().unwrap();
-                let aargs_json = sorted_args_json(&a_inst.args)?;
-                let ptr = bridge::run_algo(
+                let aargs_json = match sorted_args_json(&a_inst.args) {
+                    Ok(j) => j,
+                    Err(e) => {
+                        let _ = internal_tx.blocking_send(ComputeEvent::Error {
+                            id: s_id.clone(),
+                            error: format!("JSON serialization failed for args: {}", e),
+                        });
+                        continue;
+                    }
+                };
+                let ptr = match bridge::run_algo(
                     &**s_ptr,
                     &a_inst.name,
                     &aargs_json,
                     a_inst.m as usize,
                     s_n_needed as usize,
-                )?;
+                ) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        // Produce a synthetic error event for the dataview
+                        let adata = AccelData {
+                            start_offset: 0,
+                            result: ResultData {
+                                values: Arr::Real(Vec::new()),
+                                an: Arr::Real(Vec::new()),
+                                deviations: Arr::Real(Vec::new()),
+                            },
+                            events: vec![SeriesEvent {
+                                n: 0,
+                                name: "error".to_string(),
+                                description: format!("run_algo failed: {}", e),
+                            }],
+                        };
+                        let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
+                            id: s_id.clone(),
+                            desc: AccelDesc {
+                                accel: a_inst.clone(),
+                                filter: None,
+                            },
+                            data: adata,
+                        });
+                        let _ = internal_tx.blocking_send(ComputeEvent::Error {
+                            id: s_id.clone(),
+                            error: format!("Algorithm {} failed: {}", a_inst.name, e),
+                        });
+                        continue;
+                    }
+                };
                 // Collect events emitted by the C++ algorithm (per-step errors)
                 let cpp_events: Vec<SeriesEvent> = bridge::get_events(&*ptr)
                     .iter()
@@ -418,9 +467,30 @@ where
                 ) {
                     Ok(arr) => arr,
                     Err(e) => {
+                        let adata = AccelData {
+                            start_offset: stop_n.unwrap_or(0),
+                            result: ResultData {
+                                values: Arr::Real(Vec::new()),
+                                an: Arr::Real(Vec::new()),
+                                deviations: Arr::Real(Vec::new()),
+                            },
+                            events: vec![SeriesEvent {
+                                n: 0,
+                                name: "error".to_string(),
+                                description: format!("filter failed: {}", e),
+                            }],
+                        };
+                        let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
+                            id: s_id.clone(),
+                            desc: AccelDesc {
+                                accel: a_inst.clone(),
+                                filter: Some(f_inst.clone()),
+                            },
+                            data: adata,
+                        });
                         let _ = internal_tx.blocking_send(ComputeEvent::Error {
                             id: s_id.clone(),
-                            error: e.to_string(),
+                            error: format!("Filter {} failed: {}", f_inst.filter_type, e),
                         });
                         continue;
                     }
