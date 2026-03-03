@@ -20,9 +20,11 @@ std::unique_ptr<CSeries> mk_series(rust::Str name, rust::Str precision, rust::St
     if (!found) throw std::runtime_error("Series not found: " + s_name);
 
     std::unique_ptr<CSeries> res;
+    if ((res = mk_series_f32(idx, pt, s_params, n, s_x))) return res;
     if ((res = mk_series_f64(idx, pt, s_params, n, s_x))) return res;
+    if ((res = mk_series_flong(idx, pt, s_params, n, s_x))) return res;
     if ((res = mk_series_arb(idx, pt, s_params, n, s_x))) return res;
-    
+
     throw std::runtime_error("Precision not yet implemented in bridge: " + s_prec);
 }
 
@@ -58,9 +60,10 @@ rust::Vec<rust::String> list_accels() {
 
 rust::Vec<rust::String> list_precisions() {
     rust::Vec<rust::String> res;
-    res.push_back("F64"); res.push_back("Arb256"); res.push_back("Arb512");
-    res.push_back("CF64"); res.push_back("CArb256");
-    res.push_back("IntervalF64"); res.push_back("CIntervalF64");
+    res.push_back("F32"); res.push_back("F64"); res.push_back("FLong"); res.push_back("Arb");
+    res.push_back("CF32"); res.push_back("CF64"); res.push_back("CFLong"); res.push_back("CArb");
+    res.push_back("IntervalF32"); res.push_back("IntervalF64"); res.push_back("IntervalFLong"); res.push_back("IntervalArb");
+    res.push_back("CIntervalF32"); res.push_back("CIntervalF64"); res.push_back("CIntervalFLong"); res.push_back("CIntervalArb");
     return res;
 }
 
@@ -75,5 +78,9 @@ rust::Vec<rust::String> list_noise_methods() {
     res.push_back("Additive"); res.push_back("Multiplicative");
     return res;
 }
+
+// void set_default_precision(size_t prec) {
+//     mpfr::mpreal::set_default_prec(static_cast<mp_prec_t>(prec));
+// }
 
 } // namespace shanks::ffi::bridge

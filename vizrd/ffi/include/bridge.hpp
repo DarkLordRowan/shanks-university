@@ -61,5 +61,4 @@ RawValue get_limit(const CSeries& series);
 RawArr filter(const CSeries& series, rust::Str name, rust::Str params_json, uint64_t start_n);
 
 rust::Vec<rust::String> get_events(const CSeries& series);
-
 }

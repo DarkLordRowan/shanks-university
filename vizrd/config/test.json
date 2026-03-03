@@ -1,5 +1,14 @@
 {
-  "precisions": ["Arb128", "CArb128", "IntervalArb128", "CIntervalArb128"],
+  "precisions": [
+    "Arb16",
+    "Arb256",
+    "CArb128",
+    "CArb256",
+    "IntervalArb128",
+    "IntervalArb256",
+    "CIntervalArb128",
+    "CIntervalArb256"
+  ],
   "series": [
     {
       "name": "ExpSeries",

@@ -309,7 +309,9 @@ std::unique_ptr<CSeries> mk_typed_series(size_t idx, const std::string& params_j
 
 
 // Declarations of typed factory for split build
+std::unique_ptr<CSeries> mk_series_f32(size_t idx, PrecisionType pt, const std::string& params_json, size_t n, const std::string& x);
 std::unique_ptr<CSeries> mk_series_f64(size_t idx, PrecisionType pt, const std::string& params_json, size_t n, const std::string& x);
+std::unique_ptr<CSeries> mk_series_flong(size_t idx, PrecisionType pt, const std::string& params_json, size_t n, const std::string& x);
 std::unique_ptr<CSeries> mk_series_arb(size_t idx, PrecisionType pt, const std::string& params_json, size_t n, const std::string& x);
 
 } // namespace shanks::ffi::bridge

@@ -24,7 +24,9 @@ fn main() {
     } else {
         build
             .file("ffi/src/bridge_core.cpp")
+            .file("ffi/src/bridge_f32.cpp")
             .file("ffi/src/bridge_f64.cpp")
+            .file("ffi/src/bridge_flong.cpp")
             .file("ffi/src/bridge_arb.cpp")
             .file("ffi/src/series_registry_impl.cpp");
     }
