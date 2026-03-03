@@ -21,12 +21,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1. Install Rust Nightly (GNU version for MSYS2 compatibility)
       - name: Install Rust Nightly
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly
-          targets: x86_64-pc-windows-gnu
+          toolchain: nightly-x86_64-pc-windows-gnu
 
       # 2. Setup MSYS2 with path inheritance
       - name: Setup MSYS2
