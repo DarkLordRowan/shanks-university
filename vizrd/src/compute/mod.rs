@@ -279,7 +279,6 @@ where
     // 2. PASS 2: Lazy Recomputation (spawn_blocking)
     let (internal_tx, mut internal_rx) = mpsc::channel(32);
     let s_id = id.clone();
-    let s_desc = task.series.clone();
     let s_name_raw = task.series.series.name.clone();
     let s_prec_raw = task.series.precision.clone();
     let s_args_raw = args_json.clone();

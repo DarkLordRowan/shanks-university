@@ -1,4 +1,4 @@
 target/
-vizrd.db
+vizrd.db*
 *.log
 *.so

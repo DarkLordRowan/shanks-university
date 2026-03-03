@@ -1,5 +1,6 @@
 //! Application state and UI implementation.
 
+pub mod data_tab;
 mod selection;
 mod tree_ui;
 mod ui;
@@ -18,14 +19,15 @@ pub use selection::{SelectedCombination, SelectionNode, SelectionState};
 /// Stable key for identifying a computation result (series + optional accel).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ResultKey {
-    series: compute::SeriesDesc,
-    accel: Option<compute::AccelDesc>,
+    pub series: compute::SeriesDesc,
+    pub accel: Option<compute::AccelDesc>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, serde::Serialize, serde::Deserialize)]
 pub enum PlotTab {
     Main,
     Deviation,
+    Data,
 }
 
 #[derive(
@@ -174,6 +176,8 @@ pub struct ShanksApp {
     pub filter_tree: Option<SelectionNode>,
     pub precision_tree: Option<SelectionNode>,
 
+    pub data_cache: data_tab::DataCache,
+
     plot_cache: PlotCache,
     pub selected_tab: PlotTab,
     pub main_tab_state: TabState,
@@ -208,6 +212,7 @@ impl ShanksApp {
             noise_tree: None,
             filter_tree: None,
             precision_tree: None,
+            data_cache: data_tab::DataCache::default(),
             plot_cache: PlotCache::default(),
             selected_tab: PlotTab::Main,
             main_tab_state: TabState::default(),
@@ -292,6 +297,7 @@ impl ShanksApp {
             || self.accel_results.len() != old_accel_count
         {
             self.plot_cache.dirty = true;
+            self.data_cache.dirty = true;
         }
 
         // 2. Spawn new tasks
@@ -357,6 +363,7 @@ impl ShanksApp {
                 ComputeEvent::SeriesDone { id, data, .. } => {
                     self.series_results.insert(id, Some(data));
                     self.plot_cache.dirty = true;
+                    self.data_cache.dirty = true;
                 }
                 ComputeEvent::AccelDone { id, desc, data, .. } => {
                     let rkey = ResultKey {
@@ -365,6 +372,7 @@ impl ShanksApp {
                     };
                     self.accel_results.insert(rkey, Some(data));
                     self.plot_cache.dirty = true;
+                    self.data_cache.dirty = true;
                 }
                 ComputeEvent::Complete(id) => {
                     self.active_tasks.remove(&id);
@@ -1129,57 +1137,75 @@ impl eframe::App for ShanksApp {
             ui.horizontal(|ui| {
                 ui.selectable_value(&mut self.selected_tab, PlotTab::Main, "Main Plot");
                 ui.selectable_value(&mut self.selected_tab, PlotTab::Deviation, "Deviations");
+                ui.selectable_value(&mut self.selected_tab, PlotTab::Data, "Data View");
 
                 ui.separator();
 
-                let tab_state = match self.selected_tab {
-                    PlotTab::Main => &mut self.main_tab_state,
-                    PlotTab::Deviation => &mut self.dev_tab_state,
-                };
+                if self.selected_tab != PlotTab::Data {
+                    let tab_state = match self.selected_tab {
+                        PlotTab::Main => &mut self.main_tab_state,
+                        PlotTab::Deviation => &mut self.dev_tab_state,
+                        PlotTab::Data => unreachable!(),
+                    };
 
-                if ui.checkbox(&mut tab_state.symlog, "Symlog").changed() {
-                    self.plot_cache.dirty = true;
-                }
-                if tab_state.symlog {
-                    ui.label("Lihreshold: e^");
-                    let slider = egui::Slider::new(&mut tab_state.log_linthresh, -100.0..=100.0)
-                        .clamping(egui::SliderClamping::Never);
-                    if ui.add(slider).changed() {
+                    if ui.checkbox(&mut tab_state.symlog, "Symlog").changed() {
                         self.plot_cache.dirty = true;
                     }
-                }
+                    if tab_state.symlog {
+                        ui.label("Lihreshold: e^");
+                        let slider =
+                            egui::Slider::new(&mut tab_state.log_linthresh, -100.0..=100.0)
+                                .clamping(egui::SliderClamping::Never);
+                        if ui.add(slider).changed() {
+                            self.plot_cache.dirty = true;
+                        }
+                    }
 
-                if ui.button("Home").clicked() {
-                    tab_state.reset_view = true;
-                }
+                    if ui.button("Home").clicked() {
+                        tab_state.reset_view = true;
+                    }
 
-                ui.separator();
-                ui.label("Aspect Ratio");
-                ui.add(
-                    egui::Slider::new(&mut tab_state.aspect_ratio, 0.1..=100.0).logarithmic(true),
-                );
-
-                if self.selected_tab == PlotTab::Deviation {
                     ui.separator();
-                    ui.label("Dev Mode:");
-                    if ui
-                        .radio_value(&mut self.deviation_mode, DeviationMode::Magnitude, "Mag")
-                        .changed()
-                    {
-                        self.plot_cache.dirty = true;
-                    }
-                    if ui
-                        .radio_value(&mut self.deviation_mode, DeviationMode::Components, "Comp")
-                        .changed()
-                    {
-                        self.plot_cache.dirty = true;
+                    ui.label("Aspect Ratio");
+                    ui.add(
+                        egui::Slider::new(&mut tab_state.aspect_ratio, 0.1..=100.0)
+                            .logarithmic(true),
+                    );
+
+                    if self.selected_tab == PlotTab::Deviation {
+                        ui.separator();
+                        ui.label("Dev Mode:");
+                        if ui
+                            .radio_value(&mut self.deviation_mode, DeviationMode::Magnitude, "Mag")
+                            .changed()
+                        {
+                            self.plot_cache.dirty = true;
+                        }
+                        if ui
+                            .radio_value(
+                                &mut self.deviation_mode,
+                                DeviationMode::Components,
+                                "Comp",
+                            )
+                            .changed()
+                        {
+                            self.plot_cache.dirty = true;
+                        }
                     }
                 }
             });
 
+            if self.selected_tab == PlotTab::Data {
+                self.data_cache
+                    .rebuild(&self.series_results, &self.accel_results);
+                data_tab::show(ui, &self.data_cache);
+                return;
+            }
+
             let (plot_lines, current_tab_state) = match self.selected_tab {
                 PlotTab::Main => (&self.plot_cache.lines_main, &mut self.main_tab_state),
                 PlotTab::Deviation => (&self.plot_cache.lines_deviation, &mut self.dev_tab_state),
+                PlotTab::Data => unreachable!(),
             };
 
             let mut plot = egui_plot::Plot::new("main_plot")
