@@ -207,7 +207,7 @@ inline T wynn_rho_algorithm<T, K>::operator()(const K n, const K order, const se
     // init theta_(0)
     for (K j = static_cast<K>(0); j < base_size; ++j) rho_even[j] = data.Sn.at(n + j);
 
-    K j1, j2;
+    K j1;
 
     for (K level = static_cast<K>(1); level <= order / static_cast<K>(2); ++level) {
         // transform odd vector

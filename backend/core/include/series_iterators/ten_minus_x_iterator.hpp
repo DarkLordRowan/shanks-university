@@ -46,7 +46,7 @@ public:
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @return true if |x - 10| > 5 or x is non-finite, false otherwise.
+     * @return true x is non-finite, false otherwise.
      */
     bool is_invalid() const override {
         return !utils::helpers<T>::isfinite(this->x);

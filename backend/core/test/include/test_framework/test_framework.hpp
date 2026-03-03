@@ -199,7 +199,7 @@ inline void main_testing_function() {
             cmp_sum_and_transform<T, K>(n, order, series.get(), result, transform.get());
             break;
         case test_function_id_t::cmp_a_n_and_transform_id:
-            cmp_a_n_and_transform<T, K>(n, order, series.get(), result, transform.get());
+            cmp_a_n_and_transform<T, K>(n, order, result, transform.get());
             break;
         case test_function_id_t::transformation_remainder_id:
             transformation_remainders<T, K>(n, order, series.get(), result, transform.get());
@@ -216,10 +216,10 @@ inline void main_testing_function() {
             break;
         }
         case test_function_id_t::eval_transform_time_id:
-            eval_transform_time<T, K>(n, order, series.get(), result, transform.get());
+            eval_transform_time<T, K>(n, order, result, transform.get());
             break;
         case test_function_id_t::test_all_transforms_id: {
-            test_all_transforms<T, K>(n, order, series.get(), result);
+            test_all_transforms<T, K>(n, order, result);
             break;
         }
         default:
