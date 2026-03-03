@@ -1,9 +1,11 @@
 {
   "n_points": 100,
+
   "precisions": [
     "F32",
     "F64",
     "FLong",
+    "Arb16",
     "Arb128",
     "Arb256",
     "CF32",
@@ -26,9 +28,38 @@
     {
       "type": "Normal",
       "method": "jitter",
-      "param1": 0.0,
-      "param2": 1e-10,
+      "args": {
+        "param1": 0.0,
+        "param2": 1e-10
+      },
       "seed": 42
+    },
+    {
+      "type": "Uniform",
+      "method": "scaling",
+      "args": {
+        "param1": 0.999,
+        "param2": 1.001
+      },
+      "seed": 42
+    }
+  ],
+  "filters": [
+    {
+      "type": "Savitzky-Golay",
+      "args": {
+        "window_length": 10,
+        "polyorder": 2,
+        "derive": 0,
+        "delta": 1.0
+      }
+    },
+    {
+      "type": "Kolmogorov-Zurbenko",
+      "args": {
+        "window_length": 10,
+        "degree": 3
+      }
     }
   ],
   "series": [
@@ -74,8 +105,8 @@
     },
     {
       "name": "BinSeries",
+      "x": [0.1, 0.5],
       "args": {
-        "x": [0.1, 0.5],
         "alpha": [0.5, 1.5, 2.0]
       }
     },
@@ -220,8 +251,8 @@
     },
     {
       "name": "MFact1MxMp1InverseSeries",
+      "x": [0.1, 0.5],
       "args": {
-        "x": [0.1, 0.5],
         "m": [1, 2, 5]
       }
     },
@@ -450,23 +481,7 @@
       "x": [0.1, 1, 10]
     }
   ],
-  "filters": [
-    {
-      "type": "Savitzky-Golay",
-      "args": {
-        "polyorder": 2,
-        "derive": 0,
-        "delta": 1.0
-      }
-    },
-    {
-      "type": "Kolmogorov-Zurbenko",
-      "args": {
-        "degree": 3
-      }
-    }
-  ],
-  "methods": [
+  "accels": [
     {
       "name": "ShanksAlgorithm",
       "n": {
