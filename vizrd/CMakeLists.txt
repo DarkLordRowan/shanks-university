@@ -11,7 +11,9 @@ find_library(MPFR_LIBRARY mpfr REQUIRED)
 
 add_library(shanks_ffi_cpp STATIC
     ffi/src/bridge_core.cpp
+    ffi/src/bridge_f32.cpp
     ffi/src/bridge_f64.cpp
+    ffi/src/bridge_flong.cpp
     ffi/src/bridge_arb.cpp
     ffi/src/series_registry_impl.cpp
 )
