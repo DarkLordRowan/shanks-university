@@ -1,8 +1,7 @@
 name: Build vizrd
 
 on:
-  push:
-    branches: ["main", "vizrd"]
+  push: branches:["main", "vizrd"]
   pull_request:
     branches: ["main"]
   workflow_dispatch:
@@ -44,24 +43,36 @@ jobs:
             mingw-w64-x86_64-gsl
             mingw-w64-x86_64-ccache
 
-      - name: Cache C++ (ccache)
-        uses: actions/cache@v4
+      - name: Restore C++ (ccache)
+        uses: actions/cache/restore@v4
         with:
           path: .ccache
           key: ${{ runner.os }}-ccache-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-ccache-
-          save-always: true
 
       - name: Cache Rust
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "vizrd"
+          cache-on-failure: true
+
+      - name: Install cxxbridge-cmd
+        run: cargo install cxxbridge-cmd --version 1.0.124
+
+      - name: Build C++ FFI via CMake
+        working-directory: vizrd
+        run: |
+          mkdir build
+          cd build
+          cmake -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build .
 
       - name: Build Rust Frontend (vizrd.exe)
-        run: |
-          cd vizrd
-          cargo build --release
+        working-directory: vizrd
+        env:
+          SHANKS_PREBUILT_FFI_DIR: ${{ github.workspace }}/vizrd/build
+        run: cargo build --release
 
       - name: Prepare Archive Folder
         run: |
@@ -74,3 +85,10 @@ jobs:
         with:
           name: vizrd-windows
           path: vizrd-windows/
+
+      - name: Save C++ (ccache)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-ccache-${{ github.sha }}

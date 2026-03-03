@@ -18,11 +18,18 @@ fn main() {
         }
     }
 
+    if let Ok(ffi_dir) = std::env::var("SHANKS_PREBUILT_FFI_DIR") {
+        println!("cargo:rustc-link-search=native={}", ffi_dir);
+        println!("cargo:rustc-link-lib=static=shanks_ffi_cpp");
+    } else {
+        build
+            .file("ffi/src/bridge_core.cpp")
+            .file("ffi/src/bridge_f64.cpp")
+            .file("ffi/src/bridge_arb.cpp")
+            .file("ffi/src/series_registry_impl.cpp");
+    }
+
     build
-        .file("ffi/src/bridge_core.cpp")
-        .file("ffi/src/bridge_f64.cpp")
-        .file("ffi/src/bridge_arb.cpp")
-        .file("ffi/src/series_registry_impl.cpp")
         .include("ffi/include")
         .include("../backend/core/include")
         .include("/usr/include/eigen3")

@@ -402,6 +402,24 @@ series_registry<std::complex<intprec::interval<mpfr::mpreal>>, size_t>::s_entrie
     };
 }();
 
+// MinGW GCC typeinfo linker bug workaround:
+// explicitly instantiate a dummy derived class of series_base_succ to FORCE 
+// the compiler to emit typeinfo for series_base_succ<CInterval, size_t>.
+template <typename T, typename K>
+class dummy_succ_force_rtti : public series_base_succ<T, K> {
+public:
+    dummy_succ_force_rtti(T x) : series_base_succ<T, K>(x) {}
+    T get_sum() const override { return T(0); }
+    T next(K, T&) const override { return T(0); }
+};
+
+#ifndef SHANKS_SKIP_PRECISION
+template class dummy_succ_force_rtti<std::complex<intprec::interval<float>>, size_t>;
+template class dummy_succ_force_rtti<std::complex<intprec::interval<double>>, size_t>;
+template class dummy_succ_force_rtti<std::complex<intprec::interval<long double>>, size_t>;
+#endif
+template class dummy_succ_force_rtti<std::complex<intprec::interval<mpfr::mpreal>>, size_t>;
+
 }} // namespace shanks::series
 
 #undef SERIES_ENTRY
