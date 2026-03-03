@@ -1,6 +1,8 @@
 {
+  "n_points": 100,
   "precisions": [
     "Arb16",
+    "Arb128",
     "Arb256",
     "CArb128",
     "CArb256",

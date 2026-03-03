@@ -151,7 +151,7 @@ pub struct AppState {
 
 impl AppState {
     pub fn new(experiment: Option<ExperimentConfig>, cache: Cache) -> Self {
-        let n_points = experiment.as_ref().and_then(|e| e.n_points).unwrap_or(33);
+        let n_points = experiment.as_ref().and_then(|e| e.n_points).unwrap_or(100);
         Self {
             cache: Arc::new(Mutex::new(cache)),
             experiment,
@@ -1110,20 +1110,15 @@ impl eframe::App for ShanksApp {
             .resizable(true)
             .show(ctx, |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| {
-                    if let Some(ref mut t) = self.series_tree {
-                        tree_ui::draw_tree_with_header(ui, "Series", t, true);
-                    }
-                    if let Some(ref mut t) = self.accel_tree {
-                        tree_ui::draw_tree_with_header(ui, "Accelerations", t, true);
-                    }
-                    if let Some(ref mut t) = self.noise_tree {
-                        tree_ui::draw_tree_with_header(ui, "Noises", t, false);
-                    }
-                    if let Some(ref mut t) = self.filter_tree {
-                        tree_ui::draw_tree_with_header(ui, "Filters", t, false);
-                    }
-                    if let Some(ref mut t) = self.precision_tree {
-                        tree_ui::draw_tree_with_header(ui, "Precisions", t, true);
+                    for i in [
+                        &mut self.series_tree,
+                        &mut self.accel_tree,
+                        &mut self.noise_tree,
+                        &mut self.filter_tree,
+                        &mut self.precision_tree,
+                    ] {
+                        let Some(t) = i.as_mut() else { continue };
+                        tree_ui::draw_tree_with_header(ui, t);
                     }
                     ui.separator();
                     ui.label(&self.last_error);
@@ -1146,23 +1141,23 @@ impl eframe::App for ShanksApp {
                     self.plot_cache.dirty = true;
                 }
                 if tab_state.symlog {
+                    ui.label("Lihreshold: e^");
                     let slider = egui::Slider::new(&mut tab_state.log_linthresh, -100.0..=100.0)
-                        .text("Log Threshold")
                         .clamping(egui::SliderClamping::Never);
                     if ui.add(slider).changed() {
                         self.plot_cache.dirty = true;
                     }
                 }
 
-                ui.separator();
-                let ar_slider = egui::Slider::new(&mut tab_state.aspect_ratio, 0.1..=100.0)
-                    .text("Aspect Ratio")
-                    .logarithmic(true);
-                ui.add(ar_slider);
-
                 if ui.button("Home").clicked() {
                     tab_state.reset_view = true;
                 }
+
+                ui.separator();
+                ui.label("Aspect Ratio");
+                ui.add(
+                    egui::Slider::new(&mut tab_state.aspect_ratio, 0.1..=100.0).logarithmic(true),
+                );
 
                 if self.selected_tab == PlotTab::Deviation {
                     ui.separator();

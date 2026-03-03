@@ -117,18 +117,8 @@ fn count_all_leaves(node: &SelectionNode) -> usize {
 
 /// Draw a tree with a header that can collapse the entire tree.
 #[allow(dead_code)]
-pub fn draw_tree_with_header(
-    ui: &mut egui::Ui,
-    title: &str,
-    node: &mut SelectionNode,
-    default_open: bool,
-) {
-    // Use a collapsing header for the whole tree
-    egui::CollapsingHeader::new(title)
-        .default_open(default_open)
-        .show(ui, |ui| {
-            draw_tree(ui, node);
-        });
+pub fn draw_tree_with_header(ui: &mut egui::Ui, node: &mut SelectionNode) {
+    draw_tree(ui, node);
 }
 
 #[cfg(test)]

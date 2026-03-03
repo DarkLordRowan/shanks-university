@@ -297,15 +297,16 @@ pub fn build_noise_tree(noises: &[super::super::experiment::NoiseDef]) -> Select
     let mut root = SelectionNode::new("noise_root", "ALL NOISES").with_expandable(true);
     root.expanded = true;
 
-    for (idx, noise) in noises.iter().enumerate() {
-        let label = format!("{} ({:?})", noise.noise_type, noise.method);
+    for (idx, noise) in noises.iter().flat_map(|noises| noises.expand()).enumerate() {
+        let label = format!("{} ({})", noise.noise_type, noise.method);
         let noise_node = SelectionNode::new(format!("noise_{}", idx), label);
         root.children.push(noise_node);
     }
 
     // Add "No noise" option
-    root.children
-        .push(SelectionNode::new("noise_none", "No noise"));
+    let mut no_noise = SelectionNode::new("noise_none", "No noise");
+    no_noise.state = SelectionState::All;
+    root.children.push(no_noise);
 
     root
 }
