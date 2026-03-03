@@ -44,6 +44,7 @@ target_include_directories(shanks_ffi_cpp PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/ffi/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../backend/core/include
     ${CMAKE_CURRENT_BINARY_DIR} # To find vizrd/src/ffi/bridge.rs.h and rust/cxx.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/.. # To resolve include "vizrd/ffi/include/bridge.hpp" from cxx output
     ${EIGEN3_INCLUDE_DIRS}
 )
 
