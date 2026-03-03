@@ -55,7 +55,7 @@ jobs:
       - name: Cache Rust
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: "vizrd"
+          workspaces: "vizrd -> target"
           cache-on-failure: true
 
       - name: Install cxxbridge-cmd
@@ -80,8 +80,8 @@ jobs:
           mkdir vizrd-windows
           cp vizrd/target/release/vizrd.exe vizrd-windows/
           cp -r vizrd/config vizrd-windows/
-          cp /mingw64/bin/libgsl-28.dll vizrd-windows/
-          cp /mingw64/bin/libgslcblas-0.dll vizrd-windows/
+          # Dynamically find and copy all required MSYS2/MinGW DLLs
+          ldd vizrd/target/release/vizrd.exe | grep '\/mingw.*\.dll' -o | xargs -I{} cp "{}" vizrd-windows/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
