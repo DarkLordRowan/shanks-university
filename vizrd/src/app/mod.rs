@@ -1009,9 +1009,6 @@ impl ShanksApp {
                     adata.events.clone(),
                     adata.start_offset,
                 ));
-                if adata.start_offset != 0 {
-                    println!("{}", adata.start_offset);
-                }
             }
 
             if self.show_accel_values {

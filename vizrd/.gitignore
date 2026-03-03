@@ -1,4 +1,4 @@
 target/
-shanks.db
+vizrd.db
 *.log
 *.so

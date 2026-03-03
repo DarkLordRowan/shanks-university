@@ -23,7 +23,7 @@
 #include <string>
 #include <tuple>
 
-#include "shanks-unified/src/ffi/bridge.rs.h"
+#include "vizrd/src/ffi/bridge.rs.h"
 
 namespace shanks::ffi::bridge {
 

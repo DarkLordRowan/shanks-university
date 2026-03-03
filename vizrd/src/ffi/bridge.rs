@@ -80,7 +80,7 @@ pub mod ffi {
     }
 
     unsafe extern "C++" {
-        include!("shanks-unified/ffi/include/bridge.hpp");
+        include!("vizrd/ffi/include/bridge.hpp");
 
         type CSeries;
 

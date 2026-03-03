@@ -1,7 +1,7 @@
 //! Integration tests for FFI layer
 
-use shanks_unified::ffi::ShanksLibrary;
 use std::path::Path;
+use vizrd::ffi::ShanksLibrary;
 
 /// Test that we can load the library and list series
 #[test]
@@ -63,8 +63,14 @@ fn test_series_create_and_generate() {
     );
 
     let result = result.unwrap();
-    assert!(!result.sn.is_empty(), "Series result sn should not be empty");
-    assert!(!result.an.is_empty(), "Series result an should not be empty");
+    assert!(
+        !result.sn.is_empty(),
+        "Series result sn should not be empty"
+    );
+    assert!(
+        !result.an.is_empty(),
+        "Series result an should not be empty"
+    );
 
     // Cleanup
     lib.series_destroy(handle);

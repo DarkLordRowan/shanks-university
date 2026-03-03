@@ -1,4 +1,4 @@
-//! Shanks Unified - Series Acceleration Visualization Tool
+//! Vizrd - Series Acceleration Visualization Tool
 //!
 //! This application provides a unified interface for:
 //! - Computing series partial sums and terms
@@ -14,21 +14,17 @@
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
-/// Shanks Unified - Series Acceleration Visualization Tool
+/// Vizrd - Series Acceleration Visualization Tool
 #[derive(Parser, Debug)]
-#[command(name = "shanks-unified")]
+#[command(name = "vizrd")]
 #[command(about = "A unified tool for series acceleration and visualization")]
 #[command(version)]
 struct Args {
     /// Path to experiment configuration file (Drag & Drop / GUI mode)
     config: Option<PathBuf>,
 
-    /// Path to the C++ library (libshanks_ffi.so / shanks_ffi.dll)
-    #[arg(short, long)]
-    lib_path: Option<PathBuf>,
-
     /// Path to the SQLite database file
-    #[arg(short, long, default_value = "shanks.db")]
+    #[arg(short, long, default_value = "vizrd.db")]
     db_path: PathBuf,
 
     /// Enable verbose logging
@@ -85,18 +81,18 @@ async fn main() -> anyhow::Result<()> {
         _ => log::LevelFilter::Trace,
     };
     env_logger::Builder::new()
-        .filter_module("shanks_unified", log_level)
+        .filter_module("vizrd", log_level)
         .init();
 
-    log::info!("Starting Shanks Unified...");
+    log::info!("Starting Vizrd...");
 
     // Initialize database
     let cache = if args.no_cache {
         log::info!("Cache disabled by --no-cache flag");
-        shanks_unified::cache::Cache::disabled()
+        vizrd::cache::Cache::disabled()
     } else {
         log::info!("Initializing database at {:?}", args.db_path);
-        shanks_unified::cache::Cache::new(&args.db_path).await?
+        vizrd::cache::Cache::new(&args.db_path).await?
     };
 
     match &args.command {
@@ -117,43 +113,43 @@ async fn main() -> anyhow::Result<()> {
             config,
             precisions,
             export,
-        }) => run_headless(
-            cache,
-            config.clone(),
-            precisions.clone(),
-            export.clone(),
-            args.verbose > 0,
-        ).await,
+        }) => {
+            run_headless(
+                cache,
+                config.clone(),
+                precisions.clone(),
+                export.clone(),
+                args.verbose > 0,
+            )
+            .await
+        }
         Some(Commands::List { what }) => run_list(what),
     }
 }
 
-fn run_gui(
-    cache: shanks_unified::cache::Cache,
-    config_path: Option<PathBuf>,
-) -> anyhow::Result<()> {
+fn run_gui(cache: vizrd::cache::Cache, config_path: Option<PathBuf>) -> anyhow::Result<()> {
     // Load experiment config if provided
     let experiment_config = if let Some(path) = config_path {
         log::info!("Loading experiment config from {:?}", path);
-        Some(shanks_unified::experiment::ExperimentConfig::load(&path)?)
+        Some(vizrd::experiment::ExperimentConfig::load(&path)?)
     } else {
         None
     };
 
     // Create application state
-    let app_state = shanks_unified::app::AppState::new(experiment_config, cache);
+    let app_state = vizrd::app::AppState::new(experiment_config, cache);
 
     // Run GUI
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([1200.0, 800.0])
             .with_min_inner_size([800.0, 600.0])
-            .with_title("Shanks Unified"),
+            .with_title("Vizrd"),
         ..Default::default()
     };
 
     let result = eframe::run_native(
-        "Shanks Unified",
+        "Vizrd",
         native_options,
         Box::new(move |cc| {
             // Set up egui style
@@ -161,7 +157,7 @@ fn run_gui(
             style.spacing.item_spacing = egui::vec2(8.0, 6.0);
             cc.egui_ctx.set_style(style);
 
-            Ok(Box::new(shanks_unified::app::ShanksApp::new(app_state)))
+            Ok(Box::new(vizrd::app::ShanksApp::new(app_state)))
         }),
     );
 
@@ -174,7 +170,7 @@ fn run_gui(
 }
 
 async fn run_headless(
-    cache: shanks_unified::cache::Cache,
+    cache: vizrd::cache::Cache,
     config_path: PathBuf,
     precisions: Option<String>,
     export_path: Option<PathBuf>,
@@ -183,7 +179,7 @@ async fn run_headless(
     log::info!("Running in headless mode");
 
     // Load experiment config
-    let mut config = shanks_unified::experiment::ExperimentConfig::load(&config_path)?;
+    let mut config = vizrd::experiment::ExperimentConfig::load(&config_path)?;
 
     // Override precisions if specified
     if let Some(p) = precisions {
@@ -191,7 +187,7 @@ async fn run_headless(
     }
 
     // Create headless runner
-    let mut runner = shanks_unified::headless::HeadlessRunner::new(config, cache, export_path)?;
+    let mut runner = vizrd::headless::HeadlessRunner::new(config, cache, export_path)?;
 
     // Set up progress callback
     let last_print =
@@ -213,9 +209,9 @@ async fn run_headless(
             use std::io::Write;
 
             let status = match info.status {
-                shanks_unified::headless::Status::Computing => "Computing",
-                shanks_unified::headless::Status::Complete => "Complete ",
-                shanks_unified::headless::Status::Error(_) => "Error    ",
+                vizrd::headless::Status::Computing => "Computing",
+                vizrd::headless::Status::Complete => "Complete ",
+                vizrd::headless::Status::Error(_) => "Error    ",
             };
 
             print!(
@@ -261,7 +257,7 @@ async fn run_headless(
 }
 
 fn run_list(what: &str) -> anyhow::Result<()> {
-    use shanks_unified::ffi::bridge::ffi as bridge;
+    use vizrd::ffi::bridge::ffi as bridge;
     let what = what.to_lowercase();
 
     if what == "all" || what == "series" {

@@ -3,7 +3,7 @@
 #![feature(trait_alias)]
 #![feature(map_try_insert)]
 
-//! Shanks Unified - Series Acceleration Visualization Tool
+//! Vizrd - Series Acceleration Visualization Tool
 //!
 //! This library provides:
 //! - FFI bindings to the C++ series acceleration library

@@ -1,6 +1,6 @@
-use shanks_unified::ffi::types::{AccelResult, SeriesPoint, SeriesResult};
-use shanks_unified::ffi::ShanksLibrary;
 use std::path::Path;
+use vizrd::ffi::ShanksLibrary;
+use vizrd::ffi::types::{AccelResult, SeriesPoint, SeriesResult};
 
 #[test]
 fn test_interval_ffi_integration() {

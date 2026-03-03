@@ -1,5 +1,5 @@
 [package]
-name = "shanks-unified"
+name = "vizrd"
 version = "0.1.0"
 edition = "2024"
 description = "Unified Rust application for series acceleration visualization"
@@ -63,7 +63,7 @@ pkg-config = "0.3"
 tempfile = "3.10"
 
 [[bin]]
-name = "shanks-unified"
+name = "vizrd"
 path = "src/main.rs"
 
 [profile.release]
