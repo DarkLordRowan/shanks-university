@@ -137,6 +137,13 @@ impl ResultKey {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LineKind {
+    Sn,
+    An,
+    Limit,
+}
+
 struct BakedLine {
     data: ArrLine,
     full_name: String, // Full descriptive name for tooltips
@@ -145,6 +152,7 @@ struct BakedLine {
     style: LineStyle,
     shading_polygons: Vec<Vec<PlotPoint>>,
     events: Vec<compute::SeriesEvent>,
+    kind: LineKind,
 }
 
 #[derive(Default)]
@@ -194,10 +202,8 @@ pub struct ShanksApp {
 
     pub deviation_mode: DeviationMode,
     pub show_sn: bool,
-    pub show_accel: bool,
-    pub show_partial_sums: bool,
-    pub show_accel_values: bool,
-    pub show_smoothed_estimates: bool,
+    pub show_an: bool,
+    pub show_events: bool,
     pub show_limit_lines: bool,
     pub show_interval_shading: bool,
 
@@ -228,10 +234,8 @@ impl ShanksApp {
             dev_tab_state: TabState::default(),
             deviation_mode: DeviationMode::Magnitude,
             show_sn: true,
-            show_accel: true,
-            show_partial_sums: true,
-            show_accel_values: true,
-            show_smoothed_estimates: true,
+            show_an: false,
+            show_events: true,
             show_limit_lines: true,
             show_interval_shading: true,
             status: "Ready".to_string(),
@@ -573,6 +577,7 @@ impl ShanksApp {
             LineStyle,
             Vec<compute::SeriesEvent>,
             u64, // start_offset
+            LineKind,
         )>,
     ) -> Vec<BakedLine> {
         if raw_lines.is_empty() {
@@ -581,7 +586,7 @@ impl ShanksApp {
 
         // 1. Generate all LineInfos for all components
         let mut all_infos = Vec::new();
-        for (key, ltype, data, _, _, _, _, _) in &raw_lines {
+        for (key, ltype, data, _, _, _, _, _, _) in &raw_lines {
             match data {
                 ArrF64::Real(_) => {
                     let component = if ltype.contains("Dev") {
@@ -672,7 +677,7 @@ impl ShanksApp {
         // 3. Build BakedLines
         let mut baked_lines = Vec::new();
         let mut name_idx = 0;
-        for (_key, _ltype, data, color, width, style, events, offset) in raw_lines {
+        for (_key, _ltype, data, color, width, style, events, offset, kind) in raw_lines {
             // Determine full_name (take from the first component of this data)
             let full_name = full_names[name_idx].clone();
 
@@ -821,6 +826,7 @@ impl ShanksApp {
                 style,
                 shading_polygons,
                 events,
+                kind,
             });
         }
         baked_lines
@@ -845,7 +851,7 @@ impl ShanksApp {
         let mut max_n = 0usize;
         for sdata in self.series_results.values() {
             let Some(sdata) = sdata else { continue };
-            max_n = max_n.max(match &sdata.result.values {
+            max_n = max_n.max(match &sdata.result.sn {
                 Arr::Real(v) => v.len(),
                 Arr::Complex(c) => c.real.len(),
                 Arr::Interval(iv) => iv.inf.len(),
@@ -856,7 +862,7 @@ impl ShanksApp {
             let Some(adata) = adata else { continue };
             max_n = max_n.max(
                 adata.start_offset as usize
-                    + match &adata.result.values {
+                    + match &adata.result.sn {
                         Arr::Real(v) => v.len(),
                         Arr::Complex(c) => c.real.len(),
                         Arr::Interval(iv) => iv.inf.len(),
@@ -874,121 +880,118 @@ impl ShanksApp {
             };
             let base_color = key.color();
 
-            if self.show_sn {
-                main_raw.push((
-                    key.clone(),
-                    "Sn".to_string(),
-                    self.arr_to_f64(&sdata.result.values, main_symlog, main_thresh),
-                    base_color.gamma_multiply(0.4),
-                    1.0,
-                    LineStyle::Dashed { length: 4.0 },
-                    Vec::new(),
-                    0,
-                ));
-            }
+            // Sn for base series
+            main_raw.push((
+                key.clone(),
+                "Sn".to_string(),
+                self.arr_to_f64(&sdata.result.sn, main_symlog, main_thresh),
+                base_color.gamma_multiply(0.4),
+                1.0,
+                LineStyle::Dashed { length: 4.0 },
+                Vec::new(),
+                0,
+                LineKind::Sn,
+            ));
 
-            if self.show_limit_lines {
-                if let Some(ref val) = sdata.sum {
-                    let points = match val {
-                        Value::Real(rv) => {
-                            ArrF64::Real(vec![
-                                Self::to_plot_point(rv, main_symlog, main_thresh);
-                                max_n + 1
-                            ])
-                        }
-                        Value::Complex(cv) => ArrF64::Complex(ComplexOf {
-                            real: vec![
-                                Self::to_plot_point(&cv.real, main_symlog, main_thresh);
-                                max_n + 1
-                            ],
-                            imag: vec![
-                                Self::to_plot_point(&cv.imag, main_symlog, main_thresh);
-                                max_n + 1
-                            ],
-                        }),
-                        Value::Interval(iv) => ArrF64::Interval(IntervalOf {
+            // Limit line
+            if let Some(ref val) = sdata.sum {
+                let points = match val {
+                    Value::Real(rv) => {
+                        ArrF64::Real(vec![
+                            Self::to_plot_point(rv, main_symlog, main_thresh);
+                            max_n + 1
+                        ])
+                    }
+                    Value::Complex(cv) => ArrF64::Complex(ComplexOf {
+                        real: vec![
+                            Self::to_plot_point(&cv.real, main_symlog, main_thresh);
+                            max_n + 1
+                        ],
+                        imag: vec![
+                            Self::to_plot_point(&cv.imag, main_symlog, main_thresh);
+                            max_n + 1
+                        ],
+                    }),
+                    Value::Interval(iv) => ArrF64::Interval(IntervalOf {
+                        inf: vec![
+                            Self::to_plot_point(&iv.inf, main_symlog, main_thresh);
+                            max_n + 1
+                        ],
+                        sup: vec![
+                            Self::to_plot_point(&iv.sup, main_symlog, main_thresh);
+                            max_n + 1
+                        ],
+                    }),
+                    Value::CInterval(ci) => ArrF64::CInterval(ComplexOf {
+                        real: IntervalOf {
                             inf: vec![
-                                Self::to_plot_point(&iv.inf, main_symlog, main_thresh);
+                                Self::to_plot_point(&ci.real.inf, main_symlog, main_thresh);
                                 max_n + 1
                             ],
                             sup: vec![
-                                Self::to_plot_point(&iv.sup, main_symlog, main_thresh);
+                                Self::to_plot_point(&ci.real.sup, main_symlog, main_thresh);
                                 max_n + 1
                             ],
-                        }),
-                        Value::CInterval(ci) => ArrF64::CInterval(ComplexOf {
-                            real: IntervalOf {
-                                inf: vec![
-                                    Self::to_plot_point(
-                                        &ci.real.inf,
-                                        main_symlog,
-                                        main_thresh
-                                    );
-                                    max_n + 1
-                                ],
-                                sup: vec![
-                                    Self::to_plot_point(
-                                        &ci.real.sup,
-                                        main_symlog,
-                                        main_thresh
-                                    );
-                                    max_n + 1
-                                ],
-                            },
-                            imag: IntervalOf {
-                                inf: vec![
-                                    Self::to_plot_point(
-                                        &ci.imag.inf,
-                                        main_symlog,
-                                        main_thresh
-                                    );
-                                    max_n + 1
-                                ],
-                                sup: vec![
-                                    Self::to_plot_point(
-                                        &ci.imag.sup,
-                                        main_symlog,
-                                        main_thresh
-                                    );
-                                    max_n + 1
-                                ],
-                            },
-                        }),
-                    };
-                    main_raw.push((
-                        key.clone(),
-                        "Limit".to_string(),
-                        points,
-                        egui::Color32::RED,
-                        1.0,
-                        LineStyle::Dotted { spacing: 4.0 },
-                        Vec::new(),
-                        0,
-                    ));
-                }
+                        },
+                        imag: IntervalOf {
+                            inf: vec![
+                                Self::to_plot_point(&ci.imag.inf, main_symlog, main_thresh);
+                                max_n + 1
+                            ],
+                            sup: vec![
+                                Self::to_plot_point(&ci.imag.sup, main_symlog, main_thresh);
+                                max_n + 1
+                            ],
+                        },
+                    }),
+                };
+                main_raw.push((
+                    key.clone(),
+                    "Limit".to_string(),
+                    points,
+                    egui::Color32::RED,
+                    1.0,
+                    LineStyle::Dotted { spacing: 4.0 },
+                    Vec::new(),
+                    0,
+                    LineKind::Limit,
+                ));
             }
 
-            if self.show_partial_sums {
-                let collected = self.collect_deviation_data(
-                    &key,
-                    "Sn Dev",
-                    &sdata.result.deviations,
-                    self.deviation_mode,
-                    dev_symlog,
-                    dev_thresh,
-                );
-                for (k, lt, data) in collected {
-                    dev_raw.push((
-                        k,
-                        lt,
-                        data,
-                        base_color.gamma_multiply(0.5),
-                        1.0,
-                        LineStyle::Dashed { length: 4.0 },
-                        Vec::new(),
-                        0,
-                    ));
-                }
+            // An for base series (on main plot)
+            main_raw.push((
+                key.clone(),
+                "An".to_string(),
+                self.arr_to_f64(&sdata.result.deviations, main_symlog, main_thresh),
+                base_color.gamma_multiply(0.8),
+                1.0,
+                LineStyle::Dashed { length: 4.0 },
+                Vec::new(),
+                0,
+                LineKind::An,
+            ));
+
+            // Deviation of base series
+            let collected = self.collect_deviation_data(
+                &key,
+                "Sn",
+                &sdata.result.deviations,
+                self.deviation_mode,
+                dev_symlog,
+                dev_thresh,
+            );
+            for (k, lt, data) in collected {
+                dev_raw.push((
+                    k,
+                    lt,
+                    data,
+                    base_color.gamma_multiply(0.5),
+                    1.0,
+                    LineStyle::Solid,
+                    Vec::new(),
+                    0,
+                    LineKind::Sn,
+                ));
             }
         }
 
@@ -1001,54 +1004,73 @@ impl ShanksApp {
                 .as_ref()
                 .map(|a| a.filter.is_some())
                 .unwrap_or(false);
-            let show = if is_filtered {
-                self.show_smoothed_estimates
-            } else {
-                self.show_accel
-            };
+            // Sn for accel results
+            main_raw.push((
+                key.clone(),
+                if is_filtered {
+                    "Estimated Sn".to_string()
+                } else {
+                    "Accel Sn".to_string()
+                },
+                self.arr_to_f64(&adata.result.sn, main_symlog, main_thresh),
+                if is_filtered {
+                    egui::Color32::from_rgb(240, 230, 140)
+                } else {
+                    base_color
+                },
+                if is_filtered { 3.0 } else { 2.0 },
+                LineStyle::Solid,
+                adata.events.clone(),
+                adata.start_offset,
+                LineKind::Sn,
+            ));
 
-            if show {
-                main_raw.push((
-                    key.clone(),
-                    if is_filtered {
-                        "Estimated".to_string()
-                    } else {
-                        "Accel".to_string()
-                    },
-                    self.arr_to_f64(&adata.result.values, main_symlog, main_thresh),
-                    if is_filtered {
-                        egui::Color32::from_rgb(240, 230, 140)
-                    } else {
-                        base_color
-                    },
-                    if is_filtered { 3.0 } else { 2.0 },
+            // An for accel results (on main plot)
+            main_raw.push((
+                key.clone(),
+                if is_filtered {
+                    "Estimated An".to_string()
+                } else {
+                    "Accel An".to_string()
+                },
+                self.arr_to_f64(&adata.result.deviations, main_symlog, main_thresh),
+                if is_filtered {
+                    egui::Color32::from_rgb(240, 230, 140).gamma_multiply(0.8)
+                } else {
+                    base_color.gamma_multiply(0.8)
+                },
+                if is_filtered { 3.0 } else { 2.0 },
+                LineStyle::Solid,
+                adata.events.clone(),
+                adata.start_offset,
+                LineKind::An,
+            ));
+
+            // Deviation
+            let collected = self.collect_deviation_data(
+                &key,
+                if is_filtered {
+                    "Estimated Sn"
+                } else {
+                    "Accel Sn"
+                },
+                &adata.result.deviations,
+                self.deviation_mode,
+                dev_symlog,
+                dev_thresh,
+            );
+            for (k, lt, data) in collected {
+                dev_raw.push((
+                    k,
+                    lt,
+                    data,
+                    base_color,
+                    2.0,
                     LineStyle::Solid,
                     adata.events.clone(),
                     adata.start_offset,
+                    LineKind::Sn,
                 ));
-            }
-
-            if self.show_accel_values {
-                let collected = self.collect_deviation_data(
-                    key,
-                    "Accel Dev",
-                    &adata.result.deviations,
-                    self.deviation_mode,
-                    dev_symlog,
-                    dev_thresh,
-                );
-                for (k, lt, data) in collected {
-                    dev_raw.push((
-                        k,
-                        lt,
-                        data,
-                        base_color,
-                        2.0,
-                        LineStyle::Solid,
-                        adata.events.clone(),
-                        adata.start_offset,
-                    ));
-                }
             }
         }
         self.plot_cache.lines_main = self.process_collected_lines(main_raw);
@@ -1080,43 +1102,12 @@ impl eframe::App for ShanksApp {
                     }
                 });
                 ui.menu_button("View", |ui| {
-                    if ui.checkbox(&mut self.show_sn, "Show Sn").changed() {
-                        self.plot_cache.dirty = true;
-                    }
-                    if ui.checkbox(&mut self.show_accel, "Show Accel").changed() {
-                        self.plot_cache.dirty = true;
-                    }
+                    ui.checkbox(&mut self.show_sn, "Show Sn");
+                    ui.checkbox(&mut self.show_an, "Show An");
+                    ui.checkbox(&mut self.show_events, "Show Events");
                     ui.separator();
-                    if ui
-                        .checkbox(&mut self.show_partial_sums, "Show Partial Sums")
-                        .changed()
-                    {
-                        self.plot_cache.dirty = true;
-                    }
-                    if ui
-                        .checkbox(&mut self.show_accel_values, "Show Accelerated Deviations")
-                        .changed()
-                    {
-                        self.plot_cache.dirty = true;
-                    }
-                    if ui
-                        .checkbox(&mut self.show_limit_lines, "Show Series Limits")
-                        .changed()
-                    {
-                        self.plot_cache.dirty = true;
-                    }
-                    if ui
-                        .checkbox(&mut self.show_smoothed_estimates, "Show Smoothed Estimates")
-                        .changed()
-                    {
-                        self.plot_cache.dirty = true;
-                    }
-                    if ui
-                        .checkbox(&mut self.show_interval_shading, "Show Interval Shading")
-                        .changed()
-                    {
-                        self.plot_cache.dirty = true;
-                    }
+                    ui.checkbox(&mut self.show_limit_lines, "Show Limit Line");
+                    ui.checkbox(&mut self.show_interval_shading, "Show Interval Shading");
                 });
                 ui.separator();
                 ui.label(format!("Status: {}", self.status));
@@ -1275,12 +1266,22 @@ impl eframe::App for ShanksApp {
 
             plot.show(ui, |plot_ui| {
                 for baked in plot_lines {
-                    for poly_pts in &baked.shading_polygons {
-                        plot_ui.polygon(
-                            egui_plot::Polygon::new(PlotPoints::Borrowed(poly_pts))
-                                .fill_color(baked.color.gamma_multiply(0.2))
-                                .stroke(egui::Stroke::NONE),
-                        );
+                    // Filter by View toggles — no cache rebuild needed
+                    match baked.kind {
+                        LineKind::Sn if !self.show_sn => continue,
+                        LineKind::An if !self.show_an => continue,
+                        LineKind::Limit if !self.show_limit_lines => continue,
+                        _ => {}
+                    }
+
+                    if self.show_interval_shading {
+                        for poly_pts in &baked.shading_polygons {
+                            plot_ui.polygon(
+                                egui_plot::Polygon::new(PlotPoints::Borrowed(poly_pts))
+                                    .fill_color(baked.color.gamma_multiply(0.2))
+                                    .stroke(egui::Stroke::NONE),
+                            );
+                        }
                     }
 
                     match &baked.data {
@@ -1357,65 +1358,68 @@ impl eframe::App for ShanksApp {
                         }
                     }
 
-                    // Draw events as markers
-                    // Group events by name + description to minimize drawing calls and legend clutter
-                    let mut grouped_events: BTreeMap<(String, String), Vec<PlotPoint>> =
-                        BTreeMap::new();
-                    for ev in &baked.events {
-                        if ev.n == 0 {
-                            continue;
-                        }
-                        let idx = ev.n as usize - 1;
-                        let pts = match &baked.data {
-                            ArrLine::Real((_, v)) => {
-                                v.get(idx).map(|p| vec![*p]).unwrap_or_default()
+                    // TODO: Cache.
+                    if self.show_events {
+                        // Draw events as markers
+                        // Group events by name + description to minimize drawing calls and legend clutter
+                        let mut grouped_events: BTreeMap<(String, String), Vec<PlotPoint>> =
+                            BTreeMap::new();
+                        for ev in &baked.events {
+                            if ev.n == 0 {
+                                continue;
                             }
-                            ArrLine::Complex(c) => vec![c.real.1.get(idx), c.imag.1.get(idx)]
+                            let idx = ev.n as usize - 1;
+                            let pts = match &baked.data {
+                                ArrLine::Real((_, v)) => {
+                                    v.get(idx).map(|p| vec![*p]).unwrap_or_default()
+                                }
+                                ArrLine::Complex(c) => vec![c.real.1.get(idx), c.imag.1.get(idx)]
+                                    .into_iter()
+                                    .flatten()
+                                    .cloned()
+                                    .collect(),
+                                ArrLine::Interval(iv) => vec![iv.inf.1.get(idx), iv.sup.1.get(idx)]
+                                    .into_iter()
+                                    .flatten()
+                                    .cloned()
+                                    .collect(),
+                                ArrLine::CInterval(ci) => vec![
+                                    ci.real.inf.1.get(idx),
+                                    ci.real.sup.1.get(idx),
+                                    ci.imag.inf.1.get(idx),
+                                    ci.imag.sup.1.get(idx),
+                                ]
                                 .into_iter()
                                 .flatten()
                                 .cloned()
                                 .collect(),
-                            ArrLine::Interval(iv) => vec![iv.inf.1.get(idx), iv.sup.1.get(idx)]
-                                .into_iter()
-                                .flatten()
-                                .cloned()
-                                .collect(),
-                            ArrLine::CInterval(ci) => vec![
-                                ci.real.inf.1.get(idx),
-                                ci.real.sup.1.get(idx),
-                                ci.imag.inf.1.get(idx),
-                                ci.imag.sup.1.get(idx),
-                            ]
-                            .into_iter()
-                            .flatten()
-                            .cloned()
-                            .collect(),
-                        };
-                        if !pts.is_empty() {
-                            grouped_events
-                                .entry((ev.name.clone(), ev.description.clone()))
-                                .or_default()
-                                .extend(pts);
+                            };
+                            if !pts.is_empty() {
+                                grouped_events
+                                    .entry((ev.name.clone(), ev.description.clone()))
+                                    .or_default()
+                                    .extend(pts);
+                            }
                         }
-                    }
 
-                    for ((name, desc), pts) in grouped_events {
-                        use egui_plot::MarkerShape;
-                        let (shape, color) = match name.as_str() {
-                            "stop" => (MarkerShape::Square, egui::Color32::RED),
-                            "algo_error" => {
-                                (MarkerShape::Cross, egui::Color32::from_rgb(255, 140, 0))
-                            } // Orange
-                            _ => (MarkerShape::Circle, egui::Color32::YELLOW),
-                        };
+                        for ((name, desc), pts) in grouped_events {
+                            use egui_plot::MarkerShape;
+                            let (shape, color) = match name.as_str() {
+                                "stop" => (MarkerShape::Square, egui::Color32::RED),
+                                "algo_error" => {
+                                    (MarkerShape::Cross, egui::Color32::from_rgb(255, 140, 0))
+                                } // Orange
+                                _ => (MarkerShape::Circle, egui::Color32::YELLOW),
+                            };
 
-                        let points = egui_plot::Points::new(PlotPoints::Owned(pts))
-                            .name(format!("{}: {}", name, desc))
-                            .shape(shape)
-                            .color(color)
-                            .radius(5.0);
+                            let points = egui_plot::Points::new(PlotPoints::Owned(pts))
+                                .name(format!("{}: {}", name, desc))
+                                .shape(shape)
+                                .color(color)
+                                .radius(5.0);
 
-                        plot_ui.points(points);
+                            plot_ui.points(points);
+                        }
                     }
                 }
             });

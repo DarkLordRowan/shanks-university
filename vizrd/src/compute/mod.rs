@@ -47,7 +47,7 @@ pub struct SeriesDesc {
 
 #[derive(Debug, Clone)]
 pub struct ResultData {
-    pub values: Arr,
+    pub sn: Arr,
     pub an: Arr,
     pub deviations: Arr,
 }
@@ -312,10 +312,11 @@ where
         // Ensure series is computed if needed for anything in this block
         if series_short || !todo.is_empty() {
             debug!("Computing {s_name}");
-            let mut ptr = match bridge::mk_series(&s_name, &s_prec, &s_args, s_n_needed as usize, &s_x) {
-                Ok(p) => p,
-                Err(e) => return Err(anyhow::anyhow!("mk_series failed: {}", e)),
-            };
+            let mut ptr =
+                match bridge::mk_series(&s_name, &s_prec, &s_args, s_n_needed as usize, &s_x) {
+                    Ok(p) => p,
+                    Err(e) => return Err(anyhow::anyhow!("mk_series failed: {}", e)),
+                };
             if let Some(ref ni) = s_noise {
                 let njson = match serde_json::to_string(ni) {
                     Ok(j) => j,
@@ -329,7 +330,7 @@ where
             let sum = value_from_raw(&bridge::get_limit(&*ptr));
             let sdata = SeriesData {
                 result: ResultData {
-                    values: arr_from_raw(bridge::get_sn(&*ptr)),
+                    sn: arr_from_raw(bridge::get_sn(&*ptr)),
                     an: arr_from_raw(bridge::get_an(&*ptr)),
                     deviations: arr_from_raw(bridge::get_deviation(&*ptr)),
                 },
@@ -382,7 +383,7 @@ where
                         let adata = AccelData {
                             start_offset: 0,
                             result: ResultData {
-                                values: Arr::Real(Vec::new()),
+                                sn: Arr::Real(Vec::new()),
                                 an: Arr::Real(Vec::new()),
                                 deviations: Arr::Real(Vec::new()),
                             },
@@ -440,7 +441,7 @@ where
                 let adata = AccelData {
                     start_offset: 0,
                     result: ResultData {
-                        values: arr_from_raw(bridge::get_sn(&**a_ptr)),
+                        sn: arr_from_raw(bridge::get_sn(&**a_ptr)),
                         an: arr_from_raw(bridge::get_an(&**a_ptr)),
                         deviations: arr_from_raw(bridge::get_deviation(&**a_ptr)),
                     },
@@ -470,7 +471,7 @@ where
                         let adata = AccelData {
                             start_offset: stop_n.unwrap_or(0),
                             result: ResultData {
-                                values: Arr::Real(Vec::new()),
+                                sn: Arr::Real(Vec::new()),
                                 an: Arr::Real(Vec::new()),
                                 deviations: Arr::Real(Vec::new()),
                             },
@@ -504,7 +505,7 @@ where
                 let adata = AccelData {
                     start_offset: stop_n.unwrap_or(0),
                     result: ResultData {
-                        values: arr_from_raw(farr),
+                        sn: arr_from_raw(farr),
                         an: Arr::Real(Vec::new()),
                         deviations: Arr::Real(Vec::new()),
                     },
@@ -534,7 +535,7 @@ where
                     let sid = series_db_id;
                     let blobs = CachedSeriesData {
                         result: CachedResultData {
-                            values: arr_to_blobs(&data.result.values),
+                            values: arr_to_blobs(&data.result.sn),
                             an: arr_to_blobs(&data.result.an),
                             deviations: arr_to_blobs(&data.result.deviations),
                         },
@@ -573,7 +574,7 @@ where
                     let ablobs = CachedAccelData {
                         start_offset: data.start_offset,
                         result: CachedResultData {
-                            values: arr_to_blobs(&data.result.values),
+                            values: arr_to_blobs(&data.result.sn),
                             an: arr_to_blobs(&data.result.an),
                             deviations: arr_to_blobs(&data.result.deviations),
                         },
@@ -748,7 +749,7 @@ fn arr_from_blobs(b: &RawArrBlobs) -> Arr {
 fn series_data_from_cache(sd: &CachedSeriesData) -> SeriesData {
     SeriesData {
         result: ResultData {
-            values: arr_from_blobs(&sd.result.values),
+            sn: arr_from_blobs(&sd.result.values),
             an: arr_from_blobs(&sd.result.an),
             deviations: arr_from_blobs(&sd.result.deviations),
         },
@@ -760,7 +761,7 @@ fn accel_data_from_cache(ad: &CachedAccelData, events: Vec<CachedEvent>) -> Acce
     AccelData {
         start_offset: ad.start_offset,
         result: ResultData {
-            values: arr_from_blobs(&ad.result.values),
+            sn: arr_from_blobs(&ad.result.values),
             an: arr_from_blobs(&ad.result.an),
             deviations: arr_from_blobs(&ad.result.deviations),
         },

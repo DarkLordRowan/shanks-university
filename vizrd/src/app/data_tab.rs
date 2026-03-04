@@ -22,11 +22,11 @@ pub struct SequenceDisplay {
     pub an: Arr,
     pub dev: Arr,
     pub events: HashMap<usize, Vec<String>>,
-    
+
     pub sn_stats: Vec<ComponentStats>,
     pub an_stats: Vec<ComponentStats>,
     pub dev_stats: Vec<ComponentStats>,
-    
+
     pub len: usize,
 }
 
@@ -55,7 +55,11 @@ fn get_arr_headers(arr: &Arr) -> Vec<&'static str> {
 fn extract_at(arr: &Arr, n: usize) -> Vec<String> {
     match arr {
         Arr::Real(v) => {
-            if n < v.len() { vec![format!("{:.4e}", v[n].to_f64())] } else { vec!["-".to_string()] }
+            if n < v.len() {
+                vec![format!("{:.4e}", v[n].to_f64())]
+            } else {
+                vec!["-".to_string()]
+            }
         }
         Arr::Complex(c) => {
             if n < c.real.len() {
@@ -92,25 +96,38 @@ fn extract_at(arr: &Arr, n: usize) -> Vec<String> {
                     format!("{:.4e}", c.imag.sup[n].to_f64()),
                 ]
             } else {
-                vec!["-".to_string(), "-".to_string(), "-".to_string(), "-".to_string()]
+                vec![
+                    "-".to_string(),
+                    "-".to_string(),
+                    "-".to_string(),
+                    "-".to_string(),
+                ]
             }
         }
     }
 }
 
-fn create_sequence_display(sn: &Arr, an: &Arr, dev: &Arr, events: &[crate::compute::SeriesEvent]) -> SequenceDisplay {
+fn create_sequence_display(
+    sn: &Arr,
+    an: &Arr,
+    dev: &Arr,
+    events: &[crate::compute::SeriesEvent],
+) -> SequenceDisplay {
     let mut ev_map: HashMap<usize, Vec<String>> = HashMap::new();
     for ev in events {
-        ev_map.entry(ev.n as usize).or_default().push(format!("{}: {}", ev.name, ev.description));
+        ev_map
+            .entry(ev.n as usize)
+            .or_default()
+            .push(format!("{}: {}", ev.name, ev.description));
     }
-    
+
     let len = match sn {
         Arr::Real(v) => v.len(),
         Arr::Complex(c) => c.real.len(),
         Arr::Interval(i) => i.inf.len(),
         Arr::CInterval(c) => c.real.inf.len(),
     };
-    
+
     SequenceDisplay {
         sn: sn.clone(),
         an: an.clone(),
@@ -126,10 +143,7 @@ fn create_sequence_display(sn: &Arr, an: &Arr, dev: &Arr, events: &[crate::compu
 impl DataCache {
     pub fn rebuild(
         &mut self,
-        series_results: &HashMap<
-            crate::compute::SeriesDesc,
-            Option<crate::compute::SeriesData>,
-        >,
+        series_results: &HashMap<crate::compute::SeriesDesc, Option<crate::compute::SeriesData>>,
         accel_results: &HashMap<ResultKey, Option<crate::compute::AccelData>>,
     ) {
         if !self.dirty {
@@ -156,10 +170,10 @@ impl DataCache {
                 let mut series_node = DataNode {
                     name: format!("Series: {}", sdesc.series.name),
                     sequence: Some(create_sequence_display(
-                        &sdata.result.values,
+                        &sdata.result.sn,
                         &sdata.result.an,
                         &sdata.result.deviations,
-                        &[]
+                        &[],
                     )),
                     children: Vec::new(),
                 };
@@ -179,10 +193,10 @@ impl DataCache {
                         series_node.children.push(DataNode {
                             name,
                             sequence: Some(create_sequence_display(
-                                &adata.result.values,
+                                &adata.result.sn,
                                 &adata.result.an,
                                 &adata.result.deviations,
-                                &adata.events
+                                &adata.events,
                             )),
                             children: Vec::new(),
                         });
@@ -357,33 +371,35 @@ fn show_sequence(ui: &mut egui::Ui, seq: &SequenceDisplay, id_source: &str) {
         .id_salt(format!("{}_stats", id_source))
         .default_open(false)
         .show(ui, |ui| {
-            egui::Grid::new(format!("{}_sgrid", id_source)).striped(true).show(ui, |ui| {
-                ui.label("Component");
-                ui.label("Min");
-                ui.label("Max");
-                ui.label("Mean");
-                ui.label("Median");
-                ui.end_row();
+            egui::Grid::new(format!("{}_sgrid", id_source))
+                .striped(true)
+                .show(ui, |ui| {
+                    ui.label("Component");
+                    ui.label("Min");
+                    ui.label("Max");
+                    ui.label("Mean");
+                    ui.label("Median");
+                    ui.end_row();
 
-                let mut show_stats = |title: &str, stats: &[ComponentStats]| {
-                    if !stats.is_empty() {
-                        ui.label(egui::RichText::new(title).strong());
-                        ui.end_row();
-                        for comp in stats {
-                            ui.label(format!("  {}", comp.name));
-                            ui.label(format!("{:.4e}", comp.stats.min));
-                            ui.label(format!("{:.4e}", comp.stats.max));
-                            ui.label(format!("{:.4e}", comp.stats.mean));
-                            ui.label(format!("{:.4e}", comp.stats.median));
+                    let mut show_stats = |title: &str, stats: &[ComponentStats]| {
+                        if !stats.is_empty() {
+                            ui.label(egui::RichText::new(title).strong());
                             ui.end_row();
+                            for comp in stats {
+                                ui.label(format!("  {}", comp.name));
+                                ui.label(format!("{:.4e}", comp.stats.min));
+                                ui.label(format!("{:.4e}", comp.stats.max));
+                                ui.label(format!("{:.4e}", comp.stats.mean));
+                                ui.label(format!("{:.4e}", comp.stats.median));
+                                ui.end_row();
+                            }
                         }
-                    }
-                };
+                    };
 
-                show_stats("Sn (Values)", &seq.sn_stats);
-                show_stats("An (Terms)", &seq.an_stats);
-                show_stats("Deviations", &seq.dev_stats);
-            });
+                    show_stats("Sn (Values)", &seq.sn_stats);
+                    show_stats("An (Terms)", &seq.an_stats);
+                    show_stats("Deviations", &seq.dev_stats);
+                });
         });
 
     ui.separator();
@@ -397,31 +413,67 @@ fn show_sequence(ui: &mut egui::Ui, seq: &SequenceDisplay, id_source: &str) {
         .striped(true)
         .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
         .column(egui_extras::Column::auto().at_least(40.0)); // n
-        
-    for _ in &sn_headers { builder = builder.column(egui_extras::Column::auto().at_least(80.0)); }
-    for _ in &an_headers { builder = builder.column(egui_extras::Column::auto().at_least(80.0)); }
-    for _ in &dev_headers { builder = builder.column(egui_extras::Column::auto().at_least(80.0)); }
-    
+
+    for _ in &sn_headers {
+        builder = builder.column(egui_extras::Column::auto().at_least(80.0));
+    }
+    for _ in &an_headers {
+        builder = builder.column(egui_extras::Column::auto().at_least(80.0));
+    }
+    for _ in &dev_headers {
+        builder = builder.column(egui_extras::Column::auto().at_least(80.0));
+    }
+
     // Events column
     builder = builder.column(egui_extras::Column::remainder().at_least(100.0));
 
     builder
         .header(20.0, |mut header| {
-            header.col(|ui| { ui.strong("n"); });
-            for h in &sn_headers { header.col(|ui| { ui.strong(format!("Sn {}", h)); }); }
-            for h in &an_headers { header.col(|ui| { ui.strong(format!("An {}", h)); }); }
-            for h in &dev_headers { header.col(|ui| { ui.strong(format!("Dev {}", h)); }); }
-            header.col(|ui| { ui.strong("Events"); });
+            header.col(|ui| {
+                ui.strong("n");
+            });
+            for h in &sn_headers {
+                header.col(|ui| {
+                    ui.strong(format!("Sn {}", h));
+                });
+            }
+            for h in &an_headers {
+                header.col(|ui| {
+                    ui.strong(format!("An {}", h));
+                });
+            }
+            for h in &dev_headers {
+                header.col(|ui| {
+                    ui.strong(format!("Dev {}", h));
+                });
+            }
+            header.col(|ui| {
+                ui.strong("Events");
+            });
         })
         .body(|body| {
             body.rows(20.0, seq.len, |mut row| {
                 let n = row.index();
 
-                row.col(|ui| { ui.label(n.to_string()); });
+                row.col(|ui| {
+                    ui.label(n.to_string());
+                });
 
-                for val in extract_at(&seq.sn, n) { row.col(|ui| { ui.label(val); }); }
-                for val in extract_at(&seq.an, n) { row.col(|ui| { ui.label(val); }); }
-                for val in extract_at(&seq.dev, n) { row.col(|ui| { ui.label(val); }); }
+                for val in extract_at(&seq.sn, n) {
+                    row.col(|ui| {
+                        ui.label(val);
+                    });
+                }
+                for val in extract_at(&seq.an, n) {
+                    row.col(|ui| {
+                        ui.label(val);
+                    });
+                }
+                for val in extract_at(&seq.dev, n) {
+                    row.col(|ui| {
+                        ui.label(val);
+                    });
+                }
 
                 row.col(|ui| {
                     if let Some(evs) = seq.events.get(&n) {

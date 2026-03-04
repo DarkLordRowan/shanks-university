@@ -1,3 +1,11 @@
+* Проверить View (An)!
+* Починить шумы
+* Добавить slider для x
+* TwoLn2Series и проверить иные.
+* Export
+* Добавить возможность вписывать любые настройки в дерево выбора
+
+
 * Complex rendering filters (reals, imags rendering)
 * ~~CInterval~~
 * По умолчанию частичные суммы включить
