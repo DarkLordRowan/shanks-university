@@ -1,6 +1,7 @@
 use crate::app::ResultKey;
 use crate::ffi::Arr;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ArrStats {
@@ -143,8 +144,12 @@ fn create_sequence_display(
 impl DataCache {
     pub fn rebuild(
         &mut self,
-        series_results: &HashMap<crate::compute::SeriesDesc, Option<crate::compute::SeriesData>>,
-        accel_results: &HashMap<ResultKey, Option<crate::compute::AccelData>>,
+        series_results: &HashMap<
+            crate::compute::SeriesDesc,
+            Option<Arc<crate::compute::SeriesData>>,
+        >,
+        accel_results: &HashMap<ResultKey, Option<Arc<crate::compute::AccelData>>>,
+        cancel: std::sync::Arc<std::sync::atomic::AtomicBool>,
     ) {
         if !self.dirty {
             return;
@@ -166,6 +171,9 @@ impl DataCache {
         }
 
         for (sdesc, sdata_opt) in series_results {
+            if cancel.load(std::sync::atomic::Ordering::Relaxed) {
+                return;
+            }
             if let Some(sdata) = sdata_opt {
                 let mut series_node = DataNode {
                     name: format!("Series: {}", sdesc.series.name),

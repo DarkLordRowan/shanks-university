@@ -23,11 +23,12 @@ use super::selection::{SelectionNode, SelectionState};
 ///       [ ] 7
 ///       [+] 8
 /// ```
-pub fn draw_tree(ui: &mut egui::Ui, node: &mut SelectionNode) {
-    draw_tree_node(ui, node, 0);
+pub fn draw_tree(ui: &mut egui::Ui, node: &mut SelectionNode) -> bool {
+    draw_tree_node(ui, node, 0)
 }
 
-fn draw_tree_node(ui: &mut egui::Ui, node: &mut SelectionNode, depth: usize) {
+fn draw_tree_node(ui: &mut egui::Ui, node: &mut SelectionNode, depth: usize) -> bool {
+    let mut changed = false;
     let indent = depth as f32 * 20.0;
 
     ui.horizontal(|ui| {
@@ -76,6 +77,7 @@ fn draw_tree_node(ui: &mut egui::Ui, node: &mut SelectionNode, depth: usize) {
 
         if checkbox_response.clicked() {
             node.toggle();
+            changed = true;
         }
 
         // Label
@@ -97,13 +99,18 @@ fn draw_tree_node(ui: &mut egui::Ui, node: &mut SelectionNode, depth: usize) {
 
     // Draw children if expanded
     if node.expanded {
+        let mut children_changed = false;
         for child in &mut node.children {
-            draw_tree_node(ui, child, depth + 1);
+            if draw_tree_node(ui, child, depth + 1) {
+                changed = true;
+                children_changed = true;
+            }
         }
-        // After drawing children, update this node's state based on children
-        // This ensures parent states stay synchronized with child selections
-        node.update_from_children();
+        if children_changed {
+            node.update_from_children();
+        }
     }
+    changed
 }
 
 /// Count all leaf nodes under a node.
@@ -117,8 +124,8 @@ fn count_all_leaves(node: &SelectionNode) -> usize {
 
 /// Draw a tree with a header that can collapse the entire tree.
 #[allow(dead_code)]
-pub fn draw_tree_with_header(ui: &mut egui::Ui, node: &mut SelectionNode) {
-    draw_tree(ui, node);
+pub fn draw_tree_with_header(ui: &mut egui::Ui, node: &mut SelectionNode) -> bool {
+    draw_tree(ui, node)
 }
 
 #[cfg(test)]

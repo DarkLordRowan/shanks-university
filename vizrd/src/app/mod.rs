@@ -1,18 +1,21 @@
 //! Application state and UI implementation.
 
+pub mod coordinator;
 pub mod data_tab;
 mod selection;
 mod tree_ui;
 mod ui;
 
 use crate::cache::Cache;
-use crate::compute::{self, AccelData, ComputeEvent, SeriesData};
+use crate::compute::{self, AccelData, SeriesData};
 use crate::experiment::ExperimentConfig;
 use crate::ffi::{Arr, ArrF64, ArrLine, ComplexOf, IntervalOf, Value};
+use arc_swap::ArcSwap;
 use egui_plot::{Line, LineStyle, PlotPoint, PlotPoints};
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::sync::{Arc, Mutex};
-use tokio::task::JoinHandle;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use tokio::sync::watch;
 
 pub use selection::{SelectedCombination, SelectionNode, SelectionState};
 
@@ -39,7 +42,7 @@ pub enum DeviationMode {
     Components,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct TabState {
     pub symlog: bool,
     pub log_linthresh: f64,
@@ -60,10 +63,10 @@ impl Default for TabState {
 }
 
 impl ResultKey {
-    fn from_combo(app: &ShanksApp, combo: &SelectedCombination) -> Option<Self> {
-        let exp = app.state.experiment.as_ref()?;
-
-        // Helper to match the string formatting logic used in selection.rs
+    pub fn extract_series(
+        exp: &ExperimentConfig,
+        combo: &SelectedCombination,
+    ) -> Option<compute::SeriesDesc> {
         let val_to_str = |val: &serde_json::Value| -> String {
             match val {
                 serde_json::Value::Number(n) => n.to_string(),
@@ -72,7 +75,6 @@ impl ResultKey {
             }
         };
 
-        // Use the build_task logic to resolve instances
         let series_def = exp.series.iter().find(|s| s.name == combo.series_name)?;
         let series = series_def.expand().find(|inst| {
             combo.series_params.iter().all(|(k, v)| {
@@ -82,6 +84,29 @@ impl ResultKey {
                     .unwrap_or(false)
             })
         })?;
+
+        let noise = combo
+            .noise_idx
+            .and_then(|i| exp.noises.get(i).and_then(|d| d.expand().next()));
+
+        Some(compute::SeriesDesc {
+            precision: combo.precision.clone(),
+            series,
+            noise,
+        })
+    }
+
+    pub fn extract_accel(
+        exp: &ExperimentConfig,
+        combo: &SelectedCombination,
+    ) -> Option<compute::AccelDesc> {
+        let val_to_str = |val: &serde_json::Value| -> String {
+            match val {
+                serde_json::Value::Number(n) => n.to_string(),
+                serde_json::Value::String(s) => s.clone(),
+                _ => val.to_string(),
+            }
+        };
 
         let accel_def = exp.accels.iter().find(|a| a.name == combo.method_name)?;
         let accel = accel_def.expand().find(|inst| {
@@ -93,10 +118,6 @@ impl ResultKey {
                         .unwrap_or(false)
                 })
         })?;
-
-        let noise = combo
-            .noise_idx
-            .and_then(|i| exp.noises.get(i).and_then(|d| d.expand().next()));
 
         let filter = if let Some(ref name) = combo.filter_name {
             exp.filters
@@ -116,14 +137,7 @@ impl ResultKey {
             None
         };
 
-        Some(Self {
-            series: compute::SeriesDesc {
-                precision: combo.precision.clone(),
-                series,
-                noise,
-            },
-            accel: Some(compute::AccelDesc { accel, filter }),
-        })
+        Some(compute::AccelDesc { accel, filter })
     }
 
     fn color(&self) -> egui::Color32 {
@@ -144,6 +158,7 @@ enum LineKind {
     Limit,
 }
 
+#[derive(Clone)]
 struct BakedLine {
     data: ArrLine,
     full_name: String, // Full descriptive name for tooltips
@@ -155,80 +170,91 @@ struct BakedLine {
     kind: LineKind,
 }
 
-#[derive(Default)]
-struct PlotCache {
+#[derive(Default, Clone)]
+pub struct PlotCache {
     lines_main: Vec<BakedLine>,
     lines_deviation: Vec<BakedLine>,
-    dirty: bool,
-}
-
-pub struct AppState {
-    pub cache: Arc<Mutex<Cache>>,
-    pub experiment: Option<ExperimentConfig>,
-    pub n_points: u64,
-}
-
-impl AppState {
-    pub fn new(experiment: Option<ExperimentConfig>, cache: Cache) -> Self {
-        let n_points = experiment.as_ref().and_then(|e| e.n_points).unwrap_or(100);
-        Self {
-            cache: Arc::new(Mutex::new(cache)),
-            experiment,
-            n_points,
-        }
-    }
 }
 
 pub struct ShanksApp {
-    state: AppState,
-    series_results: HashMap<compute::SeriesDesc, Option<SeriesData>>,
-    accel_results: HashMap<ResultKey, Option<AccelData>>,
-    active_tasks: HashMap<compute::SeriesDesc, JoinHandle<()>>,
-    event_rx: tokio::sync::mpsc::Receiver<ComputeEvent<compute::SeriesDesc>>,
-    event_tx: tokio::sync::mpsc::Sender<ComputeEvent<compute::SeriesDesc>>,
+    cfg: Option<ExperimentConfig>,
+    cache: Cache,
+    config_tx: watch::Sender<Config>,
+    combos_tx: watch::Sender<Vec<SelectedCombination>>,
+    status_rx: watch::Receiver<String>,
 
-    pub series_tree: Option<SelectionNode>,
-    pub accel_tree: Option<SelectionNode>,
-    pub noise_tree: Option<SelectionNode>,
-    pub filter_tree: Option<SelectionNode>,
-    pub precision_tree: Option<SelectionNode>,
+    series_tree: Option<SelectionNode>,
+    accel_tree: Option<SelectionNode>,
+    noise_tree: Option<SelectionNode>,
+    filter_tree: Option<SelectionNode>,
+    precision_tree: Option<SelectionNode>,
 
-    pub data_cache: data_tab::DataCache,
+    data_cache: Arc<ArcSwap<data_tab::DataCache>>,
 
-    plot_cache: PlotCache,
-    pub selected_tab: PlotTab,
+    plot_cache: Arc<ArcSwap<PlotCache>>,
+    selected_tab: PlotTab,
+    main_tab_state: TabState,
+    dev_tab_state: TabState,
+
+    deviation_mode: DeviationMode,
+    show_sn: bool,
+    show_an: bool,
+    show_events: bool,
+    show_limit_lines: bool,
+    show_interval_shading: bool,
+
+    n_points: u64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Config {
+    pub n_points: u64,
     pub main_tab_state: TabState,
     pub dev_tab_state: TabState,
-
     pub deviation_mode: DeviationMode,
-    pub show_sn: bool,
-    pub show_an: bool,
-    pub show_events: bool,
-    pub show_limit_lines: bool,
     pub show_interval_shading: bool,
-
-    pub status: String,
-    pub last_error: String,
+    pub upd_data: bool,
 }
 
 impl ShanksApp {
-    pub fn new(state: AppState) -> Self {
-        let (event_tx, event_rx) = tokio::sync::mpsc::channel(100);
+    pub fn new(experiment: Option<ExperimentConfig>, cache: Cache) -> Self {
+        let n_points = experiment.as_ref().and_then(|e| e.n_points).unwrap_or(100);
+        let plot_cache = Arc::new(ArcSwap::from_pointee(PlotCache::default()));
+        let data_cache = Arc::new(ArcSwap::from_pointee(data_tab::DataCache::default()));
+        let (status_tx, status_rx) = watch::channel("Ready".to_string());
+        let (config_tx, config_rx) = watch::channel(Config {
+            n_points,
+            main_tab_state: TabState::default(),
+            dev_tab_state: TabState::default(),
+            deviation_mode: DeviationMode::Magnitude,
+            show_interval_shading: true,
+            upd_data: false,
+        });
+        let (combos_tx, combos_rx) = watch::channel(Vec::new());
+
+        coordinator::Coordinator::spawn(
+            experiment.clone(),
+            cache.clone(),
+            plot_cache.clone(),
+            data_cache.clone(),
+            status_tx,
+            config_rx,
+            combos_rx,
+        );
 
         let mut app = Self {
-            state,
-            series_results: HashMap::new(),
-            accel_results: HashMap::new(),
-            active_tasks: HashMap::new(),
-            event_rx,
-            event_tx,
+            cfg: experiment,
+            cache,
+            config_tx,
+            combos_tx,
+            status_rx,
             series_tree: None,
             accel_tree: None,
             noise_tree: None,
             filter_tree: None,
             precision_tree: None,
-            data_cache: data_tab::DataCache::default(),
-            plot_cache: PlotCache::default(),
+            data_cache,
+            plot_cache,
             selected_tab: PlotTab::Main,
             main_tab_state: TabState::default(),
             dev_tab_state: TabState::default(),
@@ -238,16 +264,26 @@ impl ShanksApp {
             show_events: true,
             show_limit_lines: true,
             show_interval_shading: true,
-            status: "Ready".to_string(),
-            last_error: String::default(),
+            n_points,
         };
 
         app.rebuild_trees();
         app
     }
 
+    fn trigger_config_update(&self) {
+        let _ = self.config_tx.send(Config {
+            n_points: self.n_points,
+            main_tab_state: self.main_tab_state.clone(),
+            dev_tab_state: self.dev_tab_state.clone(),
+            deviation_mode: self.deviation_mode,
+            show_interval_shading: self.show_interval_shading,
+            upd_data: self.selected_tab == PlotTab::Data,
+        });
+    }
+
     fn rebuild_trees(&mut self) {
-        if let Some(ref exp) = self.state.experiment {
+        if let Some(ref exp) = self.cfg {
             let series_instances: Vec<_> = exp.series.iter().flat_map(|s| s.expand()).collect();
             let method_instances: Vec<_> = exp.accels.iter().flat_map(|a| a.expand()).collect();
             let filter_instances: Vec<_> = exp.filters.iter().flat_map(|f| f.expand()).collect();
@@ -259,148 +295,23 @@ impl ShanksApp {
             self.filter_tree = Some(selection::build_filter_tree(&filter_instances));
             self.precision_tree = Some(selection::build_precision_tree(&precisions));
         }
+        self.trigger_combinations();
     }
 
-    pub fn sync_with_compute(&mut self) {
-        let (s_tree, a_tree, n_tree, f_tree, p_tree) = match (
-            &self.series_tree,
-            &self.accel_tree,
-            &self.noise_tree,
-            &self.filter_tree,
-            &self.precision_tree,
-        ) {
-            (Some(s), Some(a), Some(n), Some(f), Some(p)) => (s, a, n, f, p),
-            _ => return,
-        };
-
-        let combinations = selection::generate_combinations(s_tree, a_tree, n_tree, f_tree, p_tree);
-
-        // Group combos by SeriesDesc to avoid redundant base series compute
-        let mut grouped: HashMap<compute::SeriesDesc, Vec<SelectedCombination>> = HashMap::new();
-        let mut requested_series = HashSet::new();
-        let mut requested_accels = HashSet::new();
-
-        for combo in combinations {
-            if let Some(rk) = ResultKey::from_combo(self, &combo) {
-                requested_series.insert(rk.series.clone());
-                requested_accels.insert(rk.clone());
-                grouped.entry(rk.series).or_default().push(combo);
-            }
-        }
-
-        // 1. Cleanup old results and tasks
-        self.active_tasks.retain(|desc, handle| {
-            if !requested_series.contains(desc) {
-                handle.abort();
-                false
-            } else {
-                true
-            }
-        });
-
-        let old_series_count = self.series_results.len();
-        self.series_results
-            .retain(|desc, _| requested_series.contains(desc));
-
-        let old_accel_count = self.accel_results.len();
-        self.accel_results
-            .retain(|rk, _| requested_accels.contains(rk));
-
-        if self.series_results.len() != old_series_count
-            || self.accel_results.len() != old_accel_count
-        {
-            self.plot_cache.dirty = true;
-            self.data_cache.dirty = true;
-        }
-
-        // 2. Spawn new tasks
-        for (s_desc, s_combos) in grouped {
-            if self.active_tasks.contains_key(&s_desc) {
-                continue;
-            }
-
-            // Check if we already have ALL results for this series in memory
-            let mut all_present = self.series_results.contains_key(&s_desc);
-            if all_present {
-                for combo in &s_combos {
-                    if let Some(rk) = ResultKey::from_combo(self, combo) {
-                        if !self.accel_results.contains_key(&rk) {
-                            all_present = false;
-                            break;
+    fn trigger_combinations(&self) {
+        let mut combinations = Vec::new();
+        if let Some(st) = &self.series_tree {
+            if let Some(at) = &self.accel_tree {
+                if let Some(nt) = &self.noise_tree {
+                    if let Some(ft) = &self.filter_tree {
+                        if let Some(pt) = &self.precision_tree {
+                            combinations = selection::generate_combinations(st, at, nt, ft, pt);
                         }
                     }
                 }
             }
-
-            if all_present {
-                continue;
-            }
-
-            // Start new task
-            let mut task = compute::ComputeTask {
-                id: s_desc.clone(),
-                series: s_desc.clone(),
-                n_points: self.state.n_points,
-                algorithms: Vec::new(),
-                filters: Vec::new(),
-            };
-
-            let mut algos = HashSet::new();
-            let mut filters = HashSet::new();
-            for combo in s_combos {
-                if let Some(rk) = ResultKey::from_combo(self, &combo) {
-                    if let Some(ref ad) = rk.accel {
-                        algos.insert(ad.accel.clone());
-                        if let Some(ref fd) = ad.filter {
-                            filters.insert(fd.clone());
-                        }
-                    }
-                }
-            }
-            task.algorithms = algos.into_iter().collect();
-            task.filters = filters.into_iter().collect();
-
-            let handle = compute::spawn_task(
-                task,
-                self.state.cache.lock().unwrap().clone(),
-                self.event_tx.clone(),
-            );
-            self.active_tasks.insert(s_desc, handle);
-            self.status = "Computing...".to_string();
         }
-    }
-
-    pub fn process_events(&mut self) {
-        while let Ok(event) = self.event_rx.try_recv() {
-            match event {
-                ComputeEvent::SeriesDone { id, data, .. } => {
-                    self.series_results.insert(id, Some(data));
-                    self.plot_cache.dirty = true;
-                    self.data_cache.dirty = true;
-                }
-                ComputeEvent::AccelDone { id, desc, data, .. } => {
-                    let rkey = ResultKey {
-                        series: id,
-                        accel: Some(desc),
-                    };
-                    self.accel_results.insert(rkey, Some(data));
-                    self.plot_cache.dirty = true;
-                    self.data_cache.dirty = true;
-                }
-                ComputeEvent::Complete(id) => {
-                    self.active_tasks.remove(&id);
-                    if self.active_tasks.is_empty() {
-                        self.status = "Complete".to_string();
-                    }
-                }
-                ComputeEvent::Error { id, error } => {
-                    self.active_tasks.remove(&id);
-                    // ~> Welcome to the race condition zone <~
-                    let _ = self.series_results.try_insert(id, None);
-                    self.last_error = error;
-                }
-            }
-        }
+        let _ = self.combos_tx.send(combinations);
     }
 
     fn to_plot_point(val: &crate::ffi::RealValue, symlog: bool, log_linthresh: f64) -> f64 {
@@ -423,7 +334,7 @@ impl ShanksApp {
         }
     }
 
-    fn arr_to_f64(&self, arr: &Arr, symlog: bool, log_linthresh: f64) -> ArrF64 {
+    fn arr_to_f64(arr: &Arr, symlog: bool, log_linthresh: f64) -> ArrF64 {
         match arr {
             Arr::Real(v) => ArrF64::Real(
                 v.iter()
@@ -488,7 +399,6 @@ impl ShanksApp {
     }
 
     fn collect_deviation_data(
-        &self,
         key: &ResultKey,
         line_type: &str,
         arr: &Arr,
@@ -560,14 +470,13 @@ impl ShanksApp {
             results.push((
                 key.clone(),
                 line_type.to_string(),
-                self.arr_to_f64(arr, symlog, log_linthresh),
+                Self::arr_to_f64(arr, symlog, log_linthresh),
             ));
         }
         results
     }
 
     fn process_collected_lines(
-        &self,
         raw_lines: Vec<(
             ResultKey,
             String,
@@ -782,40 +691,38 @@ impl ShanksApp {
             };
 
             let mut shading_polygons = Vec::new();
-            if self.show_interval_shading {
-                let gen_shading = |inf: &[PlotPoint], sup: &[PlotPoint]| {
-                    if inf.len() == sup.len() && inf.len() >= 2 {
-                        let mut polys = Vec::with_capacity(inf.len() - 1);
-                        for i in 0..inf.len() - 1 {
-                            let p_inf0 = inf[i];
-                            let p_inf1 = inf[i + 1];
-                            let p_sup0 = sup[i];
-                            let p_sup1 = sup[i + 1];
+            let gen_shading = |inf: &[PlotPoint], sup: &[PlotPoint]| {
+                if inf.len() == sup.len() && inf.len() >= 2 {
+                    let mut polys = Vec::with_capacity(inf.len() - 1);
+                    for i in 0..inf.len() - 1 {
+                        let p_inf0 = inf[i];
+                        let p_inf1 = inf[i + 1];
+                        let p_sup0 = sup[i];
+                        let p_sup1 = sup[i + 1];
 
-                            if p_inf0.y.is_finite()
-                                && p_inf1.y.is_finite()
-                                && p_sup0.y.is_finite()
-                                && p_sup1.y.is_finite()
-                            {
-                                polys.push(vec![p_inf0, p_inf1, p_sup1, p_sup0]);
-                            }
+                        if p_inf0.y.is_finite()
+                            && p_inf1.y.is_finite()
+                            && p_sup0.y.is_finite()
+                            && p_sup1.y.is_finite()
+                        {
+                            polys.push(vec![p_inf0, p_inf1, p_sup1, p_sup0]);
                         }
-                        polys
-                    } else {
-                        Vec::new()
                     }
-                };
-
-                match &baked_data {
-                    ArrLine::Interval(iv) => {
-                        shading_polygons.extend(gen_shading(&iv.inf.1, &iv.sup.1));
-                    }
-                    ArrLine::CInterval(ci) => {
-                        shading_polygons.extend(gen_shading(&ci.real.inf.1, &ci.real.sup.1));
-                        shading_polygons.extend(gen_shading(&ci.imag.inf.1, &ci.imag.sup.1));
-                    }
-                    _ => {}
+                    polys
+                } else {
+                    Vec::new()
                 }
+            };
+
+            match &baked_data {
+                ArrLine::Interval(iv) => {
+                    shading_polygons.extend(gen_shading(&iv.inf.1, &iv.sup.1));
+                }
+                ArrLine::CInterval(ci) => {
+                    shading_polygons.extend(gen_shading(&ci.real.inf.1, &ci.real.sup.1));
+                    shading_polygons.extend(gen_shading(&ci.imag.inf.1, &ci.imag.sup.1));
+                }
+                _ => {}
             }
 
             baked_lines.push(BakedLine {
@@ -832,24 +739,24 @@ impl ShanksApp {
         baked_lines
     }
 
-    pub fn bake_plot_cache(&mut self) {
-        if !self.plot_cache.dirty {
-            return;
-        }
-
-        self.plot_cache.lines_main.clear();
-        self.plot_cache.lines_deviation.clear();
-
+    pub fn bake_plot_cache_task(
+        series_results: &HashMap<compute::SeriesDesc, Option<Arc<SeriesData>>>,
+        accel_results: &HashMap<ResultKey, Option<Arc<AccelData>>>,
+        main_tab_state: &TabState,
+        dev_tab_state: &TabState,
+        deviation_mode: DeviationMode,
+        cancel: Arc<AtomicBool>,
+    ) -> PlotCache {
         let mut main_raw = Vec::new();
         let mut dev_raw = Vec::new();
 
-        let main_symlog = self.main_tab_state.symlog;
-        let main_thresh = self.main_tab_state.log_linthresh;
-        let dev_symlog = self.dev_tab_state.symlog;
-        let dev_thresh = self.dev_tab_state.log_linthresh;
+        let main_symlog = main_tab_state.symlog;
+        let main_thresh = main_tab_state.log_linthresh;
+        let dev_symlog = dev_tab_state.symlog;
+        let dev_thresh = dev_tab_state.log_linthresh;
 
         let mut max_n = 0usize;
-        for sdata in self.series_results.values() {
+        for sdata in series_results.values() {
             let Some(sdata) = sdata else { continue };
             max_n = max_n.max(match &sdata.result.sn {
                 Arr::Real(v) => v.len(),
@@ -858,7 +765,10 @@ impl ShanksApp {
                 Arr::CInterval(ci) => ci.real.inf.len(),
             });
         }
-        for (_key, adata) in &self.accel_results {
+        for (_key, adata) in accel_results {
+            if cancel.load(Ordering::Relaxed) {
+                return PlotCache::default();
+            }
             let Some(adata) = adata else { continue };
             max_n = max_n.max(
                 adata.start_offset as usize
@@ -872,7 +782,10 @@ impl ShanksApp {
         }
 
         // 1. Process Base Series Results
-        for (s_desc, sdata) in &self.series_results {
+        for (s_desc, sdata) in series_results {
+            if cancel.load(Ordering::Relaxed) {
+                return PlotCache::default();
+            }
             let Some(sdata) = sdata else { continue };
             let key = ResultKey {
                 series: s_desc.clone(),
@@ -884,7 +797,7 @@ impl ShanksApp {
             main_raw.push((
                 key.clone(),
                 "Sn".to_string(),
-                self.arr_to_f64(&sdata.result.sn, main_symlog, main_thresh),
+                Self::arr_to_f64(&sdata.result.sn, main_symlog, main_thresh),
                 base_color.gamma_multiply(0.4),
                 1.0,
                 LineStyle::Dashed { length: 4.0 },
@@ -962,7 +875,7 @@ impl ShanksApp {
             main_raw.push((
                 key.clone(),
                 "An".to_string(),
-                self.arr_to_f64(&sdata.result.deviations, main_symlog, main_thresh),
+                Self::arr_to_f64(&sdata.result.deviations, main_symlog, main_thresh),
                 base_color.gamma_multiply(0.8),
                 1.0,
                 LineStyle::Dashed { length: 4.0 },
@@ -972,11 +885,11 @@ impl ShanksApp {
             ));
 
             // Deviation of base series
-            let collected = self.collect_deviation_data(
+            let collected = Self::collect_deviation_data(
                 &key,
                 "Sn",
                 &sdata.result.deviations,
-                self.deviation_mode,
+                deviation_mode,
                 dev_symlog,
                 dev_thresh,
             );
@@ -996,7 +909,7 @@ impl ShanksApp {
         }
 
         // 2. Process Accelerated Results
-        for (key, adata) in &self.accel_results {
+        for (key, adata) in accel_results {
             let Some(adata) = adata else { continue };
             let base_color = key.color();
             let is_filtered = key
@@ -1012,7 +925,7 @@ impl ShanksApp {
                 } else {
                     "Accel Sn".to_string()
                 },
-                self.arr_to_f64(&adata.result.sn, main_symlog, main_thresh),
+                Self::arr_to_f64(&adata.result.sn, main_symlog, main_thresh),
                 if is_filtered {
                     egui::Color32::from_rgb(240, 230, 140)
                 } else {
@@ -1033,7 +946,7 @@ impl ShanksApp {
                 } else {
                     "Accel An".to_string()
                 },
-                self.arr_to_f64(&adata.result.deviations, main_symlog, main_thresh),
+                Self::arr_to_f64(&adata.result.deviations, main_symlog, main_thresh),
                 if is_filtered {
                     egui::Color32::from_rgb(240, 230, 140).gamma_multiply(0.8)
                 } else {
@@ -1047,15 +960,15 @@ impl ShanksApp {
             ));
 
             // Deviation
-            let collected = self.collect_deviation_data(
-                &key,
+            let collected = Self::collect_deviation_data(
+                key,
                 if is_filtered {
                     "Estimated Sn"
                 } else {
                     "Accel Sn"
                 },
                 &adata.result.deviations,
-                self.deviation_mode,
+                deviation_mode,
                 dev_symlog,
                 dev_thresh,
             );
@@ -1073,24 +986,20 @@ impl ShanksApp {
                 ));
             }
         }
-        self.plot_cache.lines_main = self.process_collected_lines(main_raw);
-        self.plot_cache.lines_deviation = self.process_collected_lines(dev_raw);
-
-        self.plot_cache.dirty = false;
+        PlotCache {
+            lines_main: Self::process_collected_lines(main_raw),
+            lines_deviation: Self::process_collected_lines(dev_raw),
+        }
     }
 }
 
 impl eframe::App for ShanksApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        self.process_events();
-        self.sync_with_compute();
-        self.bake_plot_cache();
-
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Clear Cache").clicked() {
-                        let cache = self.state.cache.lock().unwrap().clone();
+                        let cache = self.cache.clone();
                         tokio::spawn(async move {
                             if let Err(e) = cache.clear_all().await {
                                 log::error!("Failed to clear cache: {}", e);
@@ -1109,8 +1018,7 @@ impl eframe::App for ShanksApp {
                     ui.checkbox(&mut self.show_limit_lines, "Show Limit Line");
                     ui.checkbox(&mut self.show_interval_shading, "Show Interval Shading");
                 });
-                ui.separator();
-                ui.label(format!("Status: {}", self.status));
+                ui.label(format!("Status: {}", *self.status_rx.borrow()));
             });
         });
 
@@ -1118,6 +1026,7 @@ impl eframe::App for ShanksApp {
             .resizable(true)
             .show(ctx, |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| {
+                    let mut trees_changed = false;
                     for i in [
                         &mut self.series_tree,
                         &mut self.accel_tree,
@@ -1126,10 +1035,20 @@ impl eframe::App for ShanksApp {
                         &mut self.precision_tree,
                     ] {
                         let Some(t) = i.as_mut() else { continue };
-                        tree_ui::draw_tree_with_header(ui, t);
+                        if tree_ui::draw_tree_with_header(ui, t) {
+                            trees_changed = true;
+                        }
+                    }
+                    if trees_changed {
+                        self.trigger_combinations();
                     }
                     ui.separator();
-                    ui.label(&self.last_error);
+                    ui.label("N:");
+                    let n = egui::Slider::new(&mut self.n_points, 0..=1000)
+                        .clamping(egui::SliderClamping::Never);
+                    if ui.add(n).changed() {
+                        self.trigger_config_update();
+                    }
                 });
             });
 
@@ -1137,40 +1056,52 @@ impl eframe::App for ShanksApp {
             ui.horizontal(|ui| {
                 ui.selectable_value(&mut self.selected_tab, PlotTab::Main, "Main Plot");
                 ui.selectable_value(&mut self.selected_tab, PlotTab::Deviation, "Deviations");
-                ui.selectable_value(&mut self.selected_tab, PlotTab::Data, "Data View");
+                if ui
+                    .selectable_value(&mut self.selected_tab, PlotTab::Data, "Data View")
+                    .changed()
+                {
+                    println!("{:?}", self.selected_tab);
+                    self.trigger_config_update();
+                };
 
                 ui.separator();
 
                 if self.selected_tab != PlotTab::Data {
-                    let tab_state = match self.selected_tab {
-                        PlotTab::Main => &mut self.main_tab_state,
-                        PlotTab::Deviation => &mut self.dev_tab_state,
-                        PlotTab::Data => unreachable!(),
-                    };
+                    let mut config_changed = false;
+                    {
+                        let tab_state = match self.selected_tab {
+                            PlotTab::Main => &mut self.main_tab_state,
+                            PlotTab::Deviation => &mut self.dev_tab_state,
+                            PlotTab::Data => unreachable!(),
+                        };
 
-                    if ui.checkbox(&mut tab_state.symlog, "Symlog").changed() {
-                        self.plot_cache.dirty = true;
-                    }
-                    if tab_state.symlog {
-                        ui.label("Lihreshold: e^");
-                        let slider =
-                            egui::Slider::new(&mut tab_state.log_linthresh, -100.0..=100.0)
-                                .clamping(egui::SliderClamping::Never);
-                        if ui.add(slider).changed() {
-                            self.plot_cache.dirty = true;
+                        if ui.checkbox(&mut tab_state.symlog, "Symlog").changed() {
+                            config_changed = true;
                         }
-                    }
+                        if tab_state.symlog {
+                            ui.label("Log Linthresh: e^");
+                            let slider =
+                                egui::Slider::new(&mut tab_state.log_linthresh, -100.0..=100.0)
+                                    .clamping(egui::SliderClamping::Never);
+                            if ui.add(slider).changed() {
+                                config_changed = true;
+                            }
+                        }
 
-                    if ui.button("Home").clicked() {
-                        tab_state.reset_view = true;
-                    }
+                        if ui.button("Home").clicked() {
+                            tab_state.reset_view = true;
+                        }
 
-                    ui.separator();
-                    ui.label("Aspect Ratio");
-                    ui.add(
-                        egui::Slider::new(&mut tab_state.aspect_ratio, 0.1..=100.0)
-                            .logarithmic(true),
-                    );
+                        ui.separator();
+                        ui.label("Aspect Ratio");
+                        ui.add(
+                            egui::Slider::new(&mut tab_state.aspect_ratio, 0.1..=100.0)
+                                .logarithmic(true),
+                        );
+                    }
+                    if config_changed {
+                        self.trigger_config_update();
+                    }
 
                     if self.selected_tab == PlotTab::Deviation {
                         ui.separator();
@@ -1179,7 +1110,7 @@ impl eframe::App for ShanksApp {
                             .radio_value(&mut self.deviation_mode, DeviationMode::Magnitude, "Mag")
                             .changed()
                         {
-                            self.plot_cache.dirty = true;
+                            self.trigger_config_update();
                         }
                         if ui
                             .radio_value(
@@ -1189,22 +1120,22 @@ impl eframe::App for ShanksApp {
                             )
                             .changed()
                         {
-                            self.plot_cache.dirty = true;
+                            self.trigger_config_update();
                         }
                     }
                 }
             });
 
             if self.selected_tab == PlotTab::Data {
-                self.data_cache
-                    .rebuild(&self.series_results, &self.accel_results);
-                data_tab::show(ui, &self.data_cache);
+                let dlock = self.data_cache.load();
+                data_tab::show(ui, &*dlock);
                 return;
             }
 
+            let cache_lock = self.plot_cache.load();
             let (plot_lines, current_tab_state) = match self.selected_tab {
-                PlotTab::Main => (&self.plot_cache.lines_main, &mut self.main_tab_state),
-                PlotTab::Deviation => (&self.plot_cache.lines_deviation, &mut self.dev_tab_state),
+                PlotTab::Main => (&cache_lock.lines_main, &mut self.main_tab_state),
+                PlotTab::Deviation => (&cache_lock.lines_deviation, &mut self.dev_tab_state),
                 PlotTab::Data => unreachable!(),
             };
 
@@ -1264,6 +1195,15 @@ impl eframe::App for ShanksApp {
                 format!("{}\nn = {:.0}\ny = {}", full, value.x, y_str)
             });
 
+            fn limit_pts_slice<'a>(pts: &'a [PlotPoint], max_x: f64) -> &'a [PlotPoint] {
+                let mut end = pts.len();
+                while end > 0 && pts[end - 1].x > max_x {
+                    end -= 1;
+                }
+                &pts[..end]
+            }
+
+            let max_x = self.n_points as f64;
             plot.show(ui, |plot_ui| {
                 for baked in plot_lines {
                     // Filter by View toggles — no cache rebuild needed
@@ -1277,9 +1217,11 @@ impl eframe::App for ShanksApp {
                     if self.show_interval_shading {
                         for poly_pts in &baked.shading_polygons {
                             plot_ui.polygon(
-                                egui_plot::Polygon::new(PlotPoints::Borrowed(poly_pts))
-                                    .fill_color(baked.color.gamma_multiply(0.2))
-                                    .stroke(egui::Stroke::NONE),
+                                egui_plot::Polygon::new(PlotPoints::Borrowed(limit_pts_slice(
+                                    poly_pts, max_x,
+                                )))
+                                .fill_color(baked.color.gamma_multiply(0.2))
+                                .stroke(egui::Stroke::NONE),
                             );
                         }
                     }
@@ -1287,7 +1229,7 @@ impl eframe::App for ShanksApp {
                     match &baked.data {
                         ArrLine::Real((name, v)) => {
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(v))
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(v, max_x)))
                                     .name(name)
                                     .color(baked.color)
                                     .width(baked.width)
@@ -1296,14 +1238,14 @@ impl eframe::App for ShanksApp {
                         }
                         ArrLine::Complex(c) => {
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(&c.real.1))
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(&c.real.1, max_x)))
                                     .name(&c.real.0)
                                     .color(baked.color)
                                     .width(baked.width)
                                     .style(baked.style),
                             );
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(&c.imag.1))
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(&c.imag.1, max_x)))
                                     .name(&c.imag.0)
                                     .color(baked.color)
                                     .width(baked.width)
@@ -1312,14 +1254,14 @@ impl eframe::App for ShanksApp {
                         }
                         ArrLine::Interval(iv) => {
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(&iv.inf.1))
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(&iv.inf.1, max_x)))
                                     .name(&iv.inf.0)
                                     .color(baked.color)
                                     .width(baked.width)
                                     .style(baked.style),
                             );
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(&iv.sup.1))
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(&iv.sup.1, max_x)))
                                     .name(&iv.sup.0)
                                     .color(baked.color)
                                     .width(baked.width)
@@ -1328,32 +1270,44 @@ impl eframe::App for ShanksApp {
                         }
                         ArrLine::CInterval(ci) => {
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(&ci.real.inf.1))
-                                    .name(&ci.real.inf.0)
-                                    .color(baked.color)
-                                    .width(baked.width)
-                                    .style(baked.style),
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
+                                    &ci.real.inf.1,
+                                    max_x,
+                                )))
+                                .name(&ci.real.inf.0)
+                                .color(baked.color)
+                                .width(baked.width)
+                                .style(baked.style),
                             );
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(&ci.real.sup.1))
-                                    .name(&ci.real.sup.0)
-                                    .color(baked.color)
-                                    .width(baked.width)
-                                    .style(baked.style),
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
+                                    &ci.real.sup.1,
+                                    max_x,
+                                )))
+                                .name(&ci.real.sup.0)
+                                .color(baked.color)
+                                .width(baked.width)
+                                .style(baked.style),
                             );
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(&ci.imag.inf.1))
-                                    .name(&ci.imag.inf.0)
-                                    .color(baked.color)
-                                    .width(baked.width)
-                                    .style(baked.style),
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
+                                    &ci.imag.inf.1,
+                                    max_x,
+                                )))
+                                .name(&ci.imag.inf.0)
+                                .color(baked.color)
+                                .width(baked.width)
+                                .style(baked.style),
                             );
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(&ci.imag.sup.1))
-                                    .name(&ci.imag.sup.0)
-                                    .color(baked.color)
-                                    .width(baked.width)
-                                    .style(baked.style),
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
+                                    &ci.imag.sup.1,
+                                    max_x,
+                                )))
+                                .name(&ci.imag.sup.0)
+                                .color(baked.color)
+                                .width(baked.width)
+                                .style(baked.style),
                             );
                         }
                     }
@@ -1425,9 +1379,7 @@ impl eframe::App for ShanksApp {
             });
         });
 
-        if !self.active_tasks.is_empty() || self.plot_cache.dirty {
-            ctx.request_repaint();
-        }
+        ctx.request_repaint();
     }
 }
 

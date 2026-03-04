@@ -136,9 +136,6 @@ fn run_gui(cache: vizrd::cache::Cache, config_path: Option<PathBuf>) -> anyhow::
         None
     };
 
-    // Create application state
-    let app_state = vizrd::app::AppState::new(experiment_config, cache);
-
     // Run GUI
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -157,7 +154,10 @@ fn run_gui(cache: vizrd::cache::Cache, config_path: Option<PathBuf>) -> anyhow::
             style.spacing.item_spacing = egui::vec2(8.0, 6.0);
             cc.egui_ctx.set_style(style);
 
-            Ok(Box::new(vizrd::app::ShanksApp::new(app_state)))
+            Ok(Box::new(vizrd::app::ShanksApp::new(
+                experiment_config,
+                cache,
+            )))
         }),
     );
 
