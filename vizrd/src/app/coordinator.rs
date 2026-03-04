@@ -1,12 +1,11 @@
 use crate::app::{Config, PlotCache, ResultKey, SelectedCombination};
 use crate::cache::Cache;
-use crate::compute::{self, AccelData, ComputeEvent, SeriesData};
+use crate::compute::{self, AccelData, Cancellable, ComputeEvent, SeriesData};
 use arc_swap::ArcSwap;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::watch;
-use tokio::task::JoinHandle;
 
 // Removed UiMsg in favor of watch channels
 
@@ -15,13 +14,13 @@ pub struct Coordinator {
     cache: Cache,
     series_results: HashMap<compute::SeriesDesc, Option<Arc<SeriesData>>>,
     accel_results: HashMap<ResultKey, Option<Arc<AccelData>>>,
-    active_tasks: HashMap<compute::SeriesDesc, JoinHandle<()>>,
+    active_tasks: HashMap<compute::SeriesDesc, Cancellable>,
     n_points_cached: u64,
 
     // State
     last_config: Config,
     last_combinations: Vec<crate::app::SelectedCombination>,
-    bake_handle: Option<JoinHandle<()>>,
+    bake_handle: Option<Cancellable>,
     cancel_flag: Option<Arc<AtomicBool>>,
 
     // Outbound state pointers
@@ -193,7 +192,7 @@ impl Coordinator {
         // 1. Cleanup old results and tasks
         self.active_tasks.retain(|desc, handle| {
             if !requested_series.contains(desc) {
-                handle.abort();
+                handle.cancel();
                 false
             } else {
                 true
@@ -272,10 +271,7 @@ impl Coordinator {
 
     fn trigger_bake(&mut self) {
         if let Some(handle) = self.bake_handle.take() {
-            if let Some(flag) = &self.cancel_flag {
-                flag.store(true, Ordering::Relaxed);
-            }
-            handle.abort();
+            handle.cancel();
         }
 
         let cancel_flag = Arc::new(AtomicBool::new(false));
@@ -287,32 +283,34 @@ impl Coordinator {
         let plot_cache_ref = self.plot_cache.clone();
         let data_cache_ref = self.data_cache.clone();
 
-        self.bake_handle = Some(tokio::task::spawn_blocking(move || {
-            let new_cache = crate::app::ShanksApp::bake_plot_cache_task(
-                &series_results,
-                &accel_results,
-                &config.main_tab_state,
-                &config.dev_tab_state,
-                config.deviation_mode,
-                cancel_flag.clone(),
-            );
+        self.bake_handle = Some(Cancellable::new(|is_cancelled| {
+            tokio::task::spawn_blocking(move || {
+                let new_cache = crate::app::ShanksApp::bake_plot_cache_task(
+                    &series_results,
+                    &accel_results,
+                    &config.main_tab_state,
+                    &config.dev_tab_state,
+                    config.deviation_mode,
+                    is_cancelled.clone(),
+                );
 
-            if cancel_flag.load(Ordering::Relaxed) {
-                return;
-            }
-            plot_cache_ref.store(Arc::new(new_cache));
-
-            if config.upd_data {
-                let mut new_data_cache = crate::app::data_tab::DataCache {
-                    dirty: true,
-                    ..Default::default()
-                };
-                new_data_cache.rebuild(&series_results, &accel_results, cancel_flag.clone());
-                if cancel_flag.load(Ordering::Relaxed) {
+                if is_cancelled.cancelled() {
                     return;
                 }
-                data_cache_ref.store(Arc::new(new_data_cache));
-            }
+                plot_cache_ref.store(Arc::new(new_cache));
+
+                if config.upd_data {
+                    let mut new_data_cache = crate::app::data_tab::DataCache {
+                        dirty: true,
+                        ..Default::default()
+                    };
+                    new_data_cache.rebuild(&series_results, &accel_results, cancel_flag.clone());
+                    if cancel_flag.load(Ordering::Relaxed) {
+                        return;
+                    }
+                    data_cache_ref.store(Arc::new(new_data_cache));
+                }
+            })
         }));
     }
 }

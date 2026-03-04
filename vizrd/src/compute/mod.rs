@@ -13,8 +13,14 @@
 
 use anyhow::Result;
 use log::debug;
-use std::collections::BTreeMap;
-use tokio::sync::mpsc;
+use std::{
+    collections::BTreeMap,
+    sync::{
+        Arc,
+        atomic::{Atomic, Ordering},
+    },
+};
+use tokio::{sync::mpsc, task::JoinHandle};
 
 use crate::{
     cache::{Cache, CachedAccelData, CachedEvent, CachedResultData, CachedSeriesData, RawArrBlobs},
@@ -24,6 +30,34 @@ use crate::{
         bridge::ffi::{self as bridge, ArrKind, RawArr, RawValue, RealValue, ValueKind},
     },
 };
+
+pub struct Cancellable {
+    handle: JoinHandle<()>,
+    cancelled: Arc<Atomic<bool>>,
+}
+
+#[derive(Clone)]
+pub struct IsCancelled(Arc<Atomic<bool>>);
+
+impl Cancellable {
+    pub fn new(f: impl FnOnce(IsCancelled) -> JoinHandle<()>) -> Self {
+        let cancelled = Arc::new(Atomic::<bool>::new(false));
+        Self {
+            handle: f(IsCancelled(cancelled.clone())),
+            cancelled,
+        }
+    }
+    pub fn cancel(&self) {
+        self.handle.abort();
+        self.cancelled.store(true, Ordering::Relaxed);
+    }
+}
+
+impl IsCancelled {
+    pub fn cancelled(&self) -> bool {
+        self.0.load(Ordering::Relaxed)
+    }
+}
 
 /// A computation request.
 #[derive(Debug, Clone)]
@@ -111,19 +145,23 @@ pub fn spawn_task<T>(
     task: ComputeTask<T>,
     cache: Cache,
     tx: mpsc::Sender<ComputeEvent<T>>,
-) -> tokio::task::JoinHandle<()>
+) -> Cancellable
 where
     T: Clone + Send + 'static,
 {
-    tokio::spawn(execute(task, cache, tx))
+    Cancellable::new(move |is_cancelled| tokio::spawn(execute(is_cancelled, task, cache, tx)))
 }
 
-async fn execute<T>(task: ComputeTask<T>, cache: Cache, tx: mpsc::Sender<ComputeEvent<T>>)
-where
+async fn execute<T>(
+    is_cancelled: IsCancelled,
+    task: ComputeTask<T>,
+    cache: Cache,
+    tx: mpsc::Sender<ComputeEvent<T>>,
+) where
     T: Clone + Send + 'static,
 {
     let id = task.id.clone();
-    if let Err(e) = run_task(task, cache, &tx).await {
+    if let Err(e) = run_task(is_cancelled, task, cache, &tx).await {
         let _ = tx
             .send(ComputeEvent::Error {
                 id: id.clone(),
@@ -135,6 +173,7 @@ where
 }
 
 async fn run_task<T>(
+    is_cancelled: IsCancelled,
     task: ComputeTask<T>,
     cache: Cache,
     tx: &mpsc::Sender<ComputeEvent<T>>,
@@ -272,7 +311,7 @@ where
         }
     }
 
-    if !series_short && todo.is_empty() {
+    if is_cancelled.cancelled() || (!series_short && todo.is_empty()) {
         return Ok(());
     }
 
@@ -306,6 +345,7 @@ where
     let s_x = s_x_raw.clone();
     let s_noise = task.series.noise.clone();
 
+    let is_cancelled2 = is_cancelled.clone();
     let blocking_handle = tokio::task::spawn_blocking(move || -> Result<()> {
         let mut lazy_series: Option<cxx::UniquePtr<bridge::CSeries>> = None;
 
@@ -356,6 +396,9 @@ where
         > = BTreeMap::new();
 
         for (a_idx, a_inst, need_unfiltered, filters) in todo {
+            if is_cancelled.cancelled() {
+                return Ok(());
+            };
             debug!("Computing {}", a_inst.name);
             // Lazy compute/fetch the acceleration pointer
             if !lazy_accels.contains_key(&a_idx) {
@@ -526,6 +569,9 @@ where
 
     // Forward internal events and handle cache writes
     while let Some(event) = internal_rx.recv().await {
+        if is_cancelled2.cancelled() {
+            return Ok(());
+        };
         let _ = tx.send(event.clone()).await;
 
         if series_db_id != -1 {

@@ -7,14 +7,13 @@ mod tree_ui;
 mod ui;
 
 use crate::cache::Cache;
-use crate::compute::{self, AccelData, SeriesData};
+use crate::compute::{self, AccelData, IsCancelled, SeriesData};
 use crate::experiment::ExperimentConfig;
 use crate::ffi::{Arr, ArrF64, ArrLine, ComplexOf, IntervalOf, Value};
 use arc_swap::ArcSwap;
 use egui_plot::{Line, LineStyle, PlotPoint, PlotPoints};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::watch;
 
 pub use selection::{SelectedCombination, SelectionNode, SelectionState};
@@ -745,7 +744,7 @@ impl ShanksApp {
         main_tab_state: &TabState,
         dev_tab_state: &TabState,
         deviation_mode: DeviationMode,
-        cancel: Arc<AtomicBool>,
+        is_cancelled: IsCancelled,
     ) -> PlotCache {
         let mut main_raw = Vec::new();
         let mut dev_raw = Vec::new();
@@ -766,7 +765,7 @@ impl ShanksApp {
             });
         }
         for (_key, adata) in accel_results {
-            if cancel.load(Ordering::Relaxed) {
+            if is_cancelled.cancelled() {
                 return PlotCache::default();
             }
             let Some(adata) = adata else { continue };
@@ -783,7 +782,7 @@ impl ShanksApp {
 
         // 1. Process Base Series Results
         for (s_desc, sdata) in series_results {
-            if cancel.load(Ordering::Relaxed) {
+            if is_cancelled.cancelled() {
                 return PlotCache::default();
             }
             let Some(sdata) = sdata else { continue };

@@ -2,6 +2,7 @@
 #![feature(yield_expr)]
 #![feature(trait_alias)]
 #![feature(map_try_insert)]
+#![feature(generic_atomic)]
 
 //! Vizrd - Series Acceleration Visualization Tool
 //!
