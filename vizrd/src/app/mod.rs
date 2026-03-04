@@ -1054,13 +1054,18 @@ impl eframe::App for ShanksApp {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.selected_tab, PlotTab::Main, "Main Plot");
-                ui.selectable_value(&mut self.selected_tab, PlotTab::Deviation, "Deviations");
-                if ui
+                let mut changed_tab = false;
+                changed_tab |= ui
+                    .selectable_value(&mut self.selected_tab, PlotTab::Main, "Main Plot")
+                    .changed();
+                changed_tab |= ui
+                    .selectable_value(&mut self.selected_tab, PlotTab::Deviation, "Deviations")
+                    .changed();
+                changed_tab |= ui
                     .selectable_value(&mut self.selected_tab, PlotTab::Data, "Data View")
-                    .changed()
-                {
-                    println!("{:?}", self.selected_tab);
+                    .changed();
+
+                if changed_tab {
                     self.trigger_config_update();
                 };
 
