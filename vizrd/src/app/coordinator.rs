@@ -184,25 +184,23 @@ impl Coordinator {
                             task_info.0.insert(accel.clone());
                             task_info.1.insert(filter.clone());
                         }
-                        // No-filter variant
-                        if filters.is_empty() {
-                            let a_desc = compute::AccelDesc {
-                                accel: accel.clone(),
-                                filter: None,
-                            };
-                            let rk = ResultKey {
-                                series: s_desc.clone(),
-                                accel: Some(a_desc),
-                            };
-                            requested_accels.insert(rk);
-                            task_info.0.insert(accel.clone());
-                        }
+                        let a_desc = compute::AccelDesc {
+                            accel: accel.clone(),
+                            filter: None,
+                        };
+                        let rk = ResultKey {
+                            series: s_desc.clone(),
+                            accel: Some(a_desc),
+                        };
+                        requested_accels.insert(rk);
+                        task_info.0.insert(accel.clone());
                     }
                 }
             }
         }
 
         // 1. Cleanup old results and tasks
+        let was_empty = self.active_tasks.is_empty();
         self.active_tasks.retain(|desc, handle| {
             if !requested_series.contains(desc) {
                 handle.cancel();
@@ -211,6 +209,9 @@ impl Coordinator {
                 true
             }
         });
+        if !was_empty && self.active_tasks.is_empty() {
+            let _ = self.status_tx.send("Cancelled".to_string());
+        }
 
         let old_series_count = self.series_results.len();
         self.series_results
