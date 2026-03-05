@@ -5,7 +5,9 @@ use crate::compute::{self, ComputeEvent, ComputeTask, SeriesDesc};
 use crate::experiment::{
     AccelInstance, ExperimentConfig, FilterInstance, NoiseInstance, SeriesInstance,
 };
+use crate::export::parquet::{AccelExportRow, ExportData, ParquetExporter, SeriesExportRow};
 use anyhow::Result;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::sync::mpsc;
 
@@ -78,6 +80,9 @@ impl HeadlessRunner {
         let mut summary = RunSummary::default();
         summary.total_trials = total_tasks;
 
+        let mut series_results = Vec::new();
+        let mut accel_results = Vec::new();
+
         let (tx, mut rx) = mpsc::channel(32);
 
         for task in tasks {
@@ -88,7 +93,25 @@ impl HeadlessRunner {
         let mut finished_tasks = 0;
         while let Some(event) = rx.recv().await {
             match event {
-                ComputeEvent::SeriesDone { id, .. } => {
+                ComputeEvent::SeriesDone { id, data } => {
+                    let mut arguments = HashMap::new();
+                    for (k, v) in &id.1.series.args {
+                        arguments.insert(k.clone(), v.to_string());
+                    }
+                    if let Some(ref noise) = id.1.noise {
+                        for (k, v) in &noise.args {
+                            arguments.insert(format!("noise_{}", k), v.to_string());
+                        }
+                    }
+
+                    series_results.push(SeriesExportRow {
+                        series_id: id.0 as i64,
+                        series_name: id.1.series.name.clone(),
+                        precision: id.1.precision.clone(),
+                        arguments,
+                        data,
+                    });
+
                     if let Some(ref mut cb) = self.progress {
                         cb(ProgressInfo {
                             current: finished_tasks,
@@ -101,7 +124,29 @@ impl HeadlessRunner {
                         });
                     }
                 }
-                ComputeEvent::AccelDone { id, desc, .. } => {
+                ComputeEvent::AccelDone { id, desc, data } => {
+                    let mut arguments = HashMap::new();
+                    for (k, v) in &id.1.series.args {
+                        arguments.insert(k.clone(), v.to_string());
+                    }
+                    if let Some(ref noise) = id.1.noise {
+                        for (k, v) in &noise.args {
+                            arguments.insert(format!("noise_{}", k), v.to_string());
+                        }
+                    }
+                    for (k, v) in &desc.accel.args {
+                        arguments.insert(k.clone(), v.to_string());
+                    }
+
+                    accel_results.push(AccelExportRow {
+                        series_id: id.0 as i64,
+                        series_name: id.1.series.name.clone(),
+                        m_value: desc.accel.m,
+                        accel_name: desc.accel.name.clone(),
+                        arguments,
+                        data,
+                    });
+
                     if let Some(ref mut cb) = self.progress {
                         cb(ProgressInfo {
                             current: finished_tasks,
@@ -124,6 +169,16 @@ impl HeadlessRunner {
                     summary.errors.push(error);
                 }
             }
+        }
+
+        if let Some(ref path) = self.export {
+            ParquetExporter::export(
+                ExportData {
+                    series_results,
+                    accel_results,
+                },
+                path,
+            )?;
         }
 
         summary.total_time_secs = start_time.elapsed().as_secs_f64();
@@ -179,21 +234,21 @@ impl HeadlessRunner {
                 task_id += 1;
 
                 // Option 2: All noises
-                for noise in &noise_instances {
-                    let desc = SeriesDesc {
-                        precision: precision.clone(),
-                        series: series.clone(),
-                        noise: Some(noise.clone()),
-                    };
-                    tasks.push(ComputeTask {
-                        id: (task_id, desc.clone()),
-                        series: desc,
-                        n_points,
-                        algorithms: accel_instances.clone(),
-                        filters: filter_instances.clone(),
-                    });
-                    task_id += 1;
-                }
+                // for noise in &noise_instances {
+                //     let desc = SeriesDesc {
+                //         precision: precision.clone(),
+                //         series: series.clone(),
+                //         noise: Some(noise.clone()),
+                //     };
+                //     tasks.push(ComputeTask {
+                //         id: (task_id, desc.clone()),
+                //         series: desc,
+                //         n_points,
+                //         algorithms: accel_instances.clone(),
+                //         filters: filter_instances.clone(),
+                //     });
+                //     task_id += 1;
+                // }
             }
         }
 
