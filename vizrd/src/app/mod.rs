@@ -66,7 +66,7 @@ impl ResultKey {
         exp: &ExperimentConfig,
         precision: &str,
         series_combo: &(String, HashMap<String, String>),
-        noise_idx: Option<usize>,
+        noise_combo: &Option<selection::NoiseCombo>,
     ) -> Option<compute::SeriesDesc> {
         let val_to_str = |val: &serde_json::Value| -> String {
             match val {
@@ -87,7 +87,21 @@ impl ResultKey {
             })
         })?;
 
-        let noise = noise_idx.and_then(|i| exp.noises.iter().flat_map(|d| d.expand()).nth(i));
+        let noise = if let Some((ntype, nmethod, nargs, nseed)) = noise_combo {
+            exp.noises.iter().flat_map(|d| d.expand()).find(|inst| {
+                inst.noise_type == *ntype
+                    && inst.method == *nmethod
+                    && inst.seed == *nseed
+                    && nargs.iter().all(|(k, v)| {
+                        inst.args
+                            .get(k)
+                            .map(|sv| val_to_str(sv) == *v)
+                            .unwrap_or(false)
+                    })
+            })
+        } else {
+            None
+        };
 
         Some(compute::SeriesDesc {
             precision: precision.to_string(),
@@ -298,7 +312,8 @@ impl ShanksApp {
 
             self.series_tree = Some(selection::build_series_tree(&series_instances));
             self.accel_tree = Some(selection::build_accel_tree(&method_instances));
-            self.noise_tree = Some(selection::build_noise_tree(&exp.noises));
+            let noise_instances: Vec<_> = exp.noises.iter().flat_map(|n| n.expand()).collect();
+            self.noise_tree = Some(selection::build_noise_tree(&noise_instances));
             self.filter_tree = Some(selection::build_filter_tree(&filter_instances));
             self.precision_tree = Some(selection::build_precision_tree(&precisions));
         }
@@ -547,12 +562,13 @@ impl ShanksApp {
                     parts.push(format!("({})", s_args.join(", ")));
                 }
 
-                if let Some((ref nt, ref na)) = info.noise {
+                if let Some((ref nt, ref nm, ref na, ref ns)) = info.noise {
                     let n_args: Vec<_> = na.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
-                    let mut s = format!("Noise: {}", nt);
+                    let mut s = format!("Noise: {} ({})", nt, nm);
                     if !n_args.is_empty() {
                         s.push_str(&format!(" ({})", n_args.join(", ")));
                     }
+                    s.push_str(&format!(" seed={}", ns));
                     parts.push(s);
                 }
 
@@ -1409,7 +1425,7 @@ struct LineInfo {
     precision: String,
     series_name: String,
     series_args: BTreeMap<String, String>,
-    noise: Option<(String, BTreeMap<String, String>)>,
+    noise: Option<(String, String, BTreeMap<String, String>, i64)>, // Type, Method, Args, Seed
     accel_name: Option<String>,
     accel_m: Option<i64>,
     accel_args: BTreeMap<String, String>,
@@ -1430,10 +1446,12 @@ impl LineInfo {
         let noise = key.series.noise.as_ref().map(|n| {
             (
                 n.noise_type.clone(),
+                n.method.clone(),
                 n.args
                     .iter()
                     .map(|(k, v)| (k.clone(), v.to_string()))
                     .collect(),
+                n.seed,
             )
         });
         let accel_name = key.accel.as_ref().map(|a| a.accel.name.clone());
@@ -1484,6 +1502,8 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
     let mut show_precision = false;
     let mut show_series_name = false;
     let mut show_noise_type = false;
+    let mut show_noise_method = false;
+    let mut show_noise_seed = false;
     let mut show_accel_name = false;
     let mut show_accel_m = false;
     let mut show_filter_type = false;
@@ -1511,6 +1531,29 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
             }
             diff_keys
         };
+    // Helper for noise (4-tuple)
+    let find_diff_keys_opt_noise = |infos: &[LineInfo]| {
+        let mut all_keys = HashSet::new();
+        for info in infos {
+            if let Some((_, _, map, _)) = &info.noise {
+                for key in map.keys() {
+                    all_keys.insert(key);
+                }
+            }
+        }
+        let mut diff_keys = HashSet::new();
+        for key in all_keys {
+            let first_val = infos[0].noise.as_ref().and_then(|(_, _, m, _)| m.get(key));
+            for i in 1..infos.len() {
+                let current_val = infos[i].noise.as_ref().and_then(|(_, _, m, _)| m.get(key));
+                if current_val != first_val {
+                    diff_keys.insert(key.clone());
+                    break;
+                }
+            }
+        }
+        diff_keys
+    };
 
     // Helper for optional maps (noise, filter, etc.)
     let find_diff_keys_opt =
@@ -1541,8 +1584,12 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
     for i in 1..infos.len() {
         show_precision |= infos[i].precision != infos[0].precision;
         show_series_name |= infos[i].series_name != infos[0].series_name;
-        show_noise_type |=
-            infos[i].noise.as_ref().map(|(t, _)| t) != infos[0].noise.as_ref().map(|(t, _)| t);
+        show_noise_type |= infos[i].noise.as_ref().map(|(t, _, _, _)| t)
+            != infos[0].noise.as_ref().map(|(t, _, _, _)| t);
+        show_noise_method |= infos[i].noise.as_ref().map(|(_, m, _, _)| m)
+            != infos[0].noise.as_ref().map(|(_, m, _, _)| m);
+        show_noise_seed |= infos[i].noise.as_ref().map(|(_, _, _, s)| s)
+            != infos[0].noise.as_ref().map(|(_, _, _, s)| s);
         show_accel_name |= infos[i].accel_name != infos[0].accel_name;
         show_accel_m |= infos[i].accel_m != infos[0].accel_m;
         show_filter_type |=
@@ -1552,7 +1599,7 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
     }
 
     let diff_series_args = find_diff_keys(infos, |inf| &inf.series_args);
-    let diff_noise_args = find_diff_keys_opt(infos, |inf| &inf.noise);
+    let diff_noise_args = find_diff_keys_opt_noise(infos);
     let diff_accel_args = find_diff_keys(infos, |inf| &inf.accel_args);
     let diff_filter_args = find_diff_keys_opt(infos, |inf| &inf.filter);
 
@@ -1561,6 +1608,8 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
         && !show_series_name
         && diff_series_args.is_empty()
         && !show_noise_type
+        && !show_noise_method
+        && !show_noise_seed
         && diff_noise_args.is_empty()
         && !show_accel_name
         && !show_accel_m
@@ -1597,17 +1646,23 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
             }
 
             // Noise
-            if let Some((ref nt, ref na)) = info.noise {
+            if let Some((ref nt, ref nm, ref na, ref ns)) = info.noise {
                 let mut n_args = Vec::new();
                 for key in na.keys() {
                     if diff_noise_args.contains(key) {
                         n_args.push(format!("{}={}", key, na[key]));
                     }
                 }
-                if show_noise_type || !n_args.is_empty() {
+                if show_noise_type || show_noise_method || show_noise_seed || !n_args.is_empty() {
                     let mut s = "Noise".to_string();
                     if show_noise_type {
                         s.push_str(&format!(": {}", nt));
+                    }
+                    if show_noise_method {
+                        s.push_str(&format!(" ({})", nm));
+                    }
+                    if show_noise_seed {
+                        s.push_str(&format!(" seed={}", ns));
                     }
                     if !n_args.is_empty() {
                         s.push_str(&format!(" ({})", n_args.join(", ")));

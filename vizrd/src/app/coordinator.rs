@@ -163,8 +163,8 @@ impl Coordinator {
 
         for prec in &selection.precisions {
             for s_combo in &selection.series {
-                for noise_idx in &selection.noises {
-                    if let Some(s_desc) = ResultKey::resolve_series(exp, prec, s_combo, *noise_idx)
+                for noise_combo in &selection.noises {
+                    if let Some(s_desc) = ResultKey::resolve_series(exp, prec, s_combo, noise_combo)
                     {
                         requested_series.insert(s_desc.clone());
 

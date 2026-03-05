@@ -293,21 +293,101 @@ pub fn build_accel_tree(
 }
 
 /// Build a noise selection tree from experiment config.
-pub fn build_noise_tree(noises: &[super::super::experiment::NoiseDef]) -> SelectionNode {
+pub fn build_noise_tree(
+    noise_instances: &[super::super::experiment::NoiseInstance],
+) -> SelectionNode {
     let mut root = SelectionNode::new("noise_root", "ALL NOISES").with_expandable(true);
     root.expanded = true;
-
-    for (idx, noise) in noises.iter().flat_map(|noises| noises.expand()).enumerate() {
-        let label = format!("{} ({})", noise.noise_type, noise.method);
-        let noise_node = SelectionNode::new(format!("noise_{}", idx), label);
-        root.children.push(noise_node);
-    }
 
     // Add "No noise" option
     let mut no_noise = SelectionNode::new("noise_none", "No noise");
     no_noise.state = SelectionState::All;
     root.children.push(no_noise);
 
+    let mut type_nodes: IndexMap<String, SelectionNode> = IndexMap::new();
+
+    for instance in noise_instances {
+        let type_node = type_nodes
+            .entry(instance.noise_type.clone())
+            .or_insert_with(|| {
+                SelectionNode::new(
+                    format!("noise_{}", instance.noise_type),
+                    instance.noise_type.clone(),
+                )
+                .with_expandable(true)
+            });
+
+        let method_node = if let Some(node) = type_node
+            .children
+            .iter_mut()
+            .find(|c| c.label == instance.method)
+        {
+            node
+        } else {
+            type_node.children.push(
+                SelectionNode::new(
+                    format!("{}_{}", type_node.id, instance.method),
+                    instance.method.clone(),
+                )
+                .with_expandable(true),
+            );
+            type_node.children.last_mut().unwrap()
+        };
+
+        // Seed node
+        if !method_node.children.iter().any(|c| c.label == "seed") {
+            method_node.children.push(
+                SelectionNode::new(format!("{}_seed", method_node.id), "seed").with_expandable(true),
+            );
+        }
+        let seed_node = method_node
+            .children
+            .iter_mut()
+            .find(|c| c.label == "seed")
+            .unwrap();
+        let seed_str = instance.seed.to_string();
+        if !seed_node.children.iter().any(|c| c.label == seed_str) {
+            seed_node.children.push(SelectionNode::new(
+                format!("{}_{}", seed_node.id, seed_str),
+                seed_str,
+            ));
+        }
+
+        // Params
+        for (param_name, value) in &instance.args {
+            let value_str = match value {
+                serde_json::Value::Number(n) => n.to_string(),
+                serde_json::Value::String(s) => s.clone(),
+                _ => value.to_string(),
+            };
+
+            let param_node = if let Some(node) = method_node
+                .children
+                .iter_mut()
+                .find(|c| c.label == *param_name)
+            {
+                node
+            } else {
+                method_node.children.push(
+                    SelectionNode::new(
+                        format!("{}_{}", method_node.id, param_name),
+                        param_name.clone(),
+                    )
+                    .with_expandable(true),
+                );
+                method_node.children.last_mut().unwrap()
+            };
+
+            if !param_node.children.iter().any(|c| c.label == value_str) {
+                param_node.children.push(SelectionNode::new(
+                    format!("{}_{}", param_node.id, value_str),
+                    value_str,
+                ));
+            }
+        }
+    }
+
+    root.children.extend(type_nodes.into_values());
     root
 }
 
@@ -388,7 +468,7 @@ pub fn build_filter_tree(
 pub struct AppSelection {
     pub precisions: Vec<String>,
     pub series: Vec<SeriesCombo>,
-    pub noises: Vec<Option<usize>>,
+    pub noises: Vec<Option<NoiseCombo>>,
     pub accels: Vec<AccelCombo>,
     pub filters: Vec<FilterCombo>,
 }
@@ -413,6 +493,7 @@ pub fn extract_selection(
 type SeriesCombo = (String, HashMap<String, String>);
 type AccelCombo = (String, i64, HashMap<String, String>);
 type FilterCombo = (Option<String>, HashMap<String, String>);
+pub type NoiseCombo = (String, String, HashMap<String, String>, i64);
 
 fn extract_series_combinations(tree: &SelectionNode) -> Vec<SeriesCombo> {
     let mut combos = Vec::new();
@@ -502,15 +583,76 @@ fn extract_accel_combinations(tree: &SelectionNode) -> Vec<AccelCombo> {
     combos
 }
 
-fn extract_noise_combinations(tree: &SelectionNode) -> Vec<Option<usize>> {
+fn extract_noise_combinations(tree: &SelectionNode) -> Vec<Option<NoiseCombo>> {
     let mut combos = Vec::new();
 
-    for (idx, noise_node) in tree.children.iter().enumerate() {
-        if noise_node.is_selected() {
-            if noise_node.id == "noise_none" {
-                combos.push(None);
+    for type_node in &tree.children {
+        if !type_node.is_selected() {
+            continue;
+        }
+
+        if type_node.id == "noise_none" {
+            combos.push(None);
+            continue;
+        }
+
+        let noise_type = type_node.label.clone();
+
+        for method_node in &type_node.children {
+            if !method_node.is_selected() {
+                continue;
+            }
+
+            let method = method_node.label.clone();
+            let mut seed_values = Vec::new();
+            let mut args: HashMap<String, Vec<String>> = HashMap::new();
+
+            for param_node in &method_node.children {
+                if !param_node.is_selected() {
+                    continue;
+                }
+
+                if param_node.label == "seed" {
+                    for value_node in &param_node.children {
+                        if value_node.is_selected() {
+                            if let Ok(s) = value_node.label.parse::<i64>() {
+                                seed_values.push(s);
+                            }
+                        }
+                    }
+                } else {
+                    let mut values = Vec::new();
+                    for value_node in &param_node.children {
+                        if value_node.is_selected() {
+                            values.push(value_node.label.clone());
+                        }
+                    }
+                    if !values.is_empty() {
+                        args.insert(param_node.label.clone(), values);
+                    }
+                }
+            }
+
+            let seed_values = if seed_values.is_empty() {
+                vec![0]
             } else {
-                combos.push(Some(idx));
+                seed_values
+            };
+            let arg_combos = if args.is_empty() {
+                vec![HashMap::new()]
+            } else {
+                generate_param_combinations(&args)
+            };
+
+            for seed in &seed_values {
+                for arg_combo in &arg_combos {
+                    combos.push(Some((
+                        noise_type.clone(),
+                        method.clone(),
+                        arg_combo.clone(),
+                        *seed,
+                    )));
+                }
             }
         }
     }
