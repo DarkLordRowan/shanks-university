@@ -3,7 +3,6 @@
 pub mod coordinator;
 pub mod data_tab;
 mod selection;
-mod tree_ui;
 mod ui;
 
 use crate::cache::Cache;
@@ -16,7 +15,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::watch;
 
-pub use selection::{AppSelection, SelectionNode, SelectionState};
+pub use selection::{AppSelect, AppSelection};
 
 /// Stable key for identifying a computation result (series + optional accel).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -62,101 +61,6 @@ impl Default for TabState {
 }
 
 impl ResultKey {
-    pub fn resolve_series(
-        exp: &ExperimentConfig,
-        precision: &str,
-        series_combo: &(String, HashMap<String, String>),
-        noise_combo: &Option<selection::NoiseCombo>,
-    ) -> Option<compute::SeriesDesc> {
-        let val_to_str = |val: &serde_json::Value| -> String {
-            match val {
-                serde_json::Value::Number(n) => n.to_string(),
-                serde_json::Value::String(s) => s.clone(),
-                _ => val.to_string(),
-            }
-        };
-
-        let (series_name, series_params) = series_combo;
-        let series_def = exp.series.iter().find(|s| s.name == *series_name)?;
-        let series = series_def.expand().find(|inst| {
-            series_params.iter().all(|(k, v)| {
-                inst.args
-                    .get(k)
-                    .map(|sv| val_to_str(sv) == *v)
-                    .unwrap_or(false)
-            })
-        })?;
-
-        let noise = if let Some((ntype, nmethod, nargs, nseed)) = noise_combo {
-            exp.noises.iter().flat_map(|d| d.expand()).find(|inst| {
-                inst.noise_type == *ntype
-                    && inst.method == *nmethod
-                    && inst.seed == *nseed
-                    && nargs.iter().all(|(k, v)| {
-                        inst.args
-                            .get(k)
-                            .map(|sv| val_to_str(sv) == *v)
-                            .unwrap_or(false)
-                    })
-            })
-        } else {
-            None
-        };
-
-        Some(compute::SeriesDesc {
-            precision: precision.to_string(),
-            series,
-            noise,
-        })
-    }
-
-    pub fn resolve_accel(
-        exp: &ExperimentConfig,
-        accel_combo: &(String, i64, HashMap<String, String>),
-        filter_combo: &(Option<String>, HashMap<String, String>),
-    ) -> Option<compute::AccelDesc> {
-        let val_to_str = |val: &serde_json::Value| -> String {
-            match val {
-                serde_json::Value::Number(n) => n.to_string(),
-                serde_json::Value::String(s) => s.clone(),
-                _ => val.to_string(),
-            }
-        };
-
-        let (method_name, method_m, method_args) = accel_combo;
-        let accel_def = exp.accels.iter().find(|a| a.name == *method_name)?;
-        let accel = accel_def.expand().find(|inst| {
-            inst.m == *method_m
-                && method_args.iter().all(|(k, v)| {
-                    inst.args
-                        .get(k)
-                        .map(|sv| val_to_str(sv) == *v)
-                        .unwrap_or(false)
-                })
-        })?;
-
-        let (filter_name, filter_args) = filter_combo;
-        let filter = if let Some(name) = filter_name {
-            exp.filters
-                .iter()
-                .find(|f| f.filter_type == *name)
-                .and_then(|f| {
-                    f.expand().find(|inst| {
-                        filter_args.iter().all(|(k, v)| {
-                            inst.args
-                                .get(k)
-                                .map(|sv| val_to_str(sv) == *v)
-                                .unwrap_or(false)
-                        })
-                    })
-                })
-        } else {
-            None
-        };
-
-        Some(compute::AccelDesc { accel, filter })
-    }
-
     fn color(&self) -> egui::Color32 {
         use std::hash::{Hash, Hasher};
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -201,11 +105,7 @@ pub struct ShanksApp {
     status_rx: watch::Receiver<String>,
     last_err_rx: watch::Receiver<String>,
 
-    series_tree: Option<SelectionNode>,
-    accel_tree: Option<SelectionNode>,
-    noise_tree: Option<SelectionNode>,
-    filter_tree: Option<SelectionNode>,
-    precision_tree: Option<SelectionNode>,
+    app_select: Option<selection::AppSelect>,
 
     data_cache: Arc<ArcSwap<data_tab::DataCache>>,
 
@@ -269,11 +169,7 @@ impl ShanksApp {
             combos_tx,
             status_rx,
             last_err_rx,
-            series_tree: None,
-            accel_tree: None,
-            noise_tree: None,
-            filter_tree: None,
-            precision_tree: None,
+            app_select: None,
             data_cache,
             plot_cache,
             selected_tab: PlotTab::Main,
@@ -305,34 +201,17 @@ impl ShanksApp {
 
     fn rebuild_trees(&mut self) {
         if let Some(ref exp) = self.cfg {
-            let series_instances: Vec<_> = exp.series.iter().flat_map(|s| s.expand()).collect();
-            let method_instances: Vec<_> = exp.accels.iter().flat_map(|a| a.expand()).collect();
-            let filter_instances: Vec<_> = exp.filters.iter().flat_map(|f| f.expand()).collect();
-            let precisions = exp.precisions.clone().unwrap_or_default();
-
-            self.series_tree = Some(selection::build_series_tree(&series_instances));
-            self.accel_tree = Some(selection::build_accel_tree(&method_instances));
-            let noise_instances: Vec<_> = exp.noises.iter().flat_map(|n| n.expand()).collect();
-            self.noise_tree = Some(selection::build_noise_tree(&noise_instances));
-            self.filter_tree = Some(selection::build_filter_tree(&filter_instances));
-            self.precision_tree = Some(selection::build_precision_tree(&precisions));
+            self.app_select = Some(selection::AppSelect::from_config(exp));
         }
         self.trigger_combinations();
     }
 
     fn trigger_combinations(&self) {
-        let mut selection = AppSelection::default();
-        if let Some(st) = &self.series_tree {
-            if let Some(at) = &self.accel_tree {
-                if let Some(nt) = &self.noise_tree {
-                    if let Some(ft) = &self.filter_tree {
-                        if let Some(pt) = &self.precision_tree {
-                            selection = selection::extract_selection(st, at, nt, ft, pt);
-                        }
-                    }
-                }
-            }
-        }
+        let selection = self
+            .app_select
+            .as_ref()
+            .map(|a| a.extract())
+            .unwrap_or_default();
         let _ = self.combos_tx.send(selection);
     }
 
@@ -1050,17 +929,8 @@ impl eframe::App for ShanksApp {
             .show(ctx, |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     let mut trees_changed = false;
-                    for i in [
-                        &mut self.series_tree,
-                        &mut self.accel_tree,
-                        &mut self.noise_tree,
-                        &mut self.filter_tree,
-                        &mut self.precision_tree,
-                    ] {
-                        let Some(t) = i.as_mut() else { continue };
-                        if tree_ui::draw_tree_with_header(ui, t) {
-                            trees_changed = true;
-                        }
+                    if let Some(app_select) = &mut self.app_select {
+                        trees_changed = app_select.draw(ui);
                     }
                     if trees_changed {
                         self.trigger_combinations();

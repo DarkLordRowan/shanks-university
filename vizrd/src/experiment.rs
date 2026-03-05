@@ -76,7 +76,7 @@ impl Default for Arg {
 
 impl Arg {
     /// Get iterator of values.
-    fn iter(&self) -> impl Iterator<Item = serde_json::Value> {
+    pub fn iter(&self) -> impl Iterator<Item = serde_json::Value> {
         gen {
             match self {
                 Arg::Single(v) => yield (*v).clone(),
@@ -127,7 +127,7 @@ pub enum ArgStr {
 }
 
 impl ArgStr {
-    fn iter(&self) -> impl Iterator<Item = &str> {
+    pub fn iter(&self) -> impl Iterator<Item = &str> {
         gen {
             match self {
                 ArgStr::Array(xs) => {
@@ -151,7 +151,7 @@ pub enum ArgI {
 
 impl ArgI {
     /// Get iterator of values.
-    fn iter(&self) -> impl Iterator<Item = i64> {
+    pub fn iter(&self) -> impl Iterator<Item = i64> {
         gen {
             match self {
                 ArgI::Single(v) => yield (*v).clone(),

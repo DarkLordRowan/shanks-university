@@ -7,10 +7,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::watch;
 
-// Removed UiMsg in favor of watch channels
-
 pub struct Coordinator {
-    cfg: Option<crate::experiment::ExperimentConfig>,
     cache: Cache,
     series_results: HashMap<compute::SeriesDesc, Option<Arc<SeriesData>>>,
     accel_results: HashMap<ResultKey, Option<Arc<AccelData>>>,
@@ -38,7 +35,7 @@ pub struct Coordinator {
 
 impl Coordinator {
     pub fn spawn(
-        cfg: Option<crate::experiment::ExperimentConfig>,
+        _cfg: Option<crate::experiment::ExperimentConfig>,
         cache: Cache,
         plot_cache: Arc<ArcSwap<PlotCache>>,
         data_cache: Arc<ArcSwap<crate::app::data_tab::DataCache>>,
@@ -53,7 +50,6 @@ impl Coordinator {
         let initial_combos = combos_rx.borrow().clone();
 
         let mut coord = Self {
-            cfg,
             cache,
             series_results: HashMap::new(),
             accel_results: HashMap::new(),
@@ -104,7 +100,7 @@ impl Coordinator {
         if points_grew {
             self.series_results.clear();
             self.accel_results.clear();
-            self.active_tasks.clear(); // Aborts handles on drop
+            self.active_tasks.clear();
             self.n_points_cached = self.last_config.n_points + 10;
             self.sync_with_compute();
         }
@@ -147,46 +143,59 @@ impl Coordinator {
     }
 
     fn sync_with_compute(&mut self) {
-        let selection = self.last_selection.clone();
-        let cfg = self.cfg.clone();
-        let exp = cfg.as_ref().expect("Config required for extraction");
+        let selection = &self.last_selection;
 
-        let mut requested_series = HashSet::new();
-        let mut requested_accels = HashSet::new();
-        let mut series_tasks: HashMap<
-            compute::SeriesDesc,
-            (
-                HashSet<crate::experiment::AccelInstance>,
-                HashSet<crate::experiment::FilterInstance>,
-            ),
-        > = HashMap::new();
+        let mut requested_series: HashSet<compute::SeriesDesc> = HashSet::new();
+        let mut requested_accels: HashSet<ResultKey> = HashSet::new();
+
+        // series_tasks maps each SeriesDesc → (set of AccelInstances, set of FilterInstances)
+        type TaskInfo = (
+            HashSet<crate::experiment::AccelInstance>,
+            HashSet<crate::experiment::FilterInstance>,
+        );
+        let mut series_tasks: HashMap<compute::SeriesDesc, TaskInfo> = HashMap::new();
+
+        let accels = &selection.accels;
+        let filters = &selection.filters;
 
         for prec in &selection.precisions {
-            for s_combo in &selection.series {
-                for noise_combo in &selection.noises {
-                    if let Some(s_desc) = ResultKey::resolve_series(exp, prec, s_combo, noise_combo)
-                    {
-                        requested_series.insert(s_desc.clone());
+            for series in &selection.series {
+                for noise in &selection.noises {
+                    let s_desc = compute::SeriesDesc {
+                        precision: prec.clone(),
+                        series: series.clone(),
+                        noise: noise.clone(),
+                    };
+                    requested_series.insert(s_desc.clone());
 
-                        let task_info = series_tasks.entry(s_desc.clone()).or_default();
+                    let task_info = series_tasks.entry(s_desc.clone()).or_default();
 
-                        for a_combo in &selection.accels {
-                            for f_combo in &selection.filters {
-                                if let Some(a_desc) =
-                                    ResultKey::resolve_accel(exp, a_combo, f_combo)
-                                {
-                                    let rk = ResultKey {
-                                        series: s_desc.clone(),
-                                        accel: Some(a_desc.clone()),
-                                    };
-                                    requested_accels.insert(rk);
-
-                                    task_info.0.insert(a_desc.accel.clone());
-                                    if let Some(ref f) = a_desc.filter {
-                                        task_info.1.insert(f.clone());
-                                    }
-                                }
-                            }
+                    for accel in accels {
+                        for filter in filters {
+                            let a_desc = compute::AccelDesc {
+                                accel: accel.clone(),
+                                filter: Some(filter.clone()),
+                            };
+                            let rk = ResultKey {
+                                series: s_desc.clone(),
+                                accel: Some(a_desc.clone()),
+                            };
+                            requested_accels.insert(rk);
+                            task_info.0.insert(accel.clone());
+                            task_info.1.insert(filter.clone());
+                        }
+                        // No-filter variant
+                        if filters.is_empty() {
+                            let a_desc = compute::AccelDesc {
+                                accel: accel.clone(),
+                                filter: None,
+                            };
+                            let rk = ResultKey {
+                                series: s_desc.clone(),
+                                accel: Some(a_desc),
+                            };
+                            requested_accels.insert(rk);
+                            task_info.0.insert(accel.clone());
                         }
                     }
                 }
@@ -223,46 +232,17 @@ impl Coordinator {
                 continue;
             }
 
-            let mut all_present = self.series_results.contains_key(&s_desc);
-            if all_present {
-                // Check if all requested accels for THIS series are present
-                for prec in &selection.precisions {
-                    // Only check for the precision matching this series desc
-                    if prec != &s_desc.precision {
-                        continue;
-                    }
+            // Check if all results for this desc are already present
+            let series_done = self.series_results.contains_key(&s_desc);
+            let accels_done = requested_accels
+                .iter()
+                .filter(|rk| rk.series == s_desc)
+                .all(|rk| self.accel_results.contains_key(rk));
 
-                    // Re-resolve to find which accels belong to this exact s_desc
-                    for a_combo in &selection.accels {
-                        for f_combo in &selection.filters {
-                            if let Some(a_desc) = ResultKey::resolve_accel(exp, a_combo, f_combo) {
-                                let rk = ResultKey {
-                                    series: s_desc.clone(),
-                                    accel: Some(a_desc),
-                                };
-                                if requested_accels.contains(&rk)
-                                    && !self.accel_results.contains_key(&rk)
-                                {
-                                    all_present = false;
-                                    break;
-                                }
-                            }
-                        }
-                        if !all_present {
-                            break;
-                        }
-                    }
-                    if !all_present {
-                        break;
-                    }
-                }
-            }
-
-            if all_present {
+            if series_done && accels_done {
                 continue;
             }
 
-            // Start new task
             let task = compute::ComputeTask {
                 id: s_desc.clone(),
                 series: s_desc.clone(),

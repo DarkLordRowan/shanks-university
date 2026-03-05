@@ -234,21 +234,21 @@ impl HeadlessRunner {
                 task_id += 1;
 
                 // Option 2: All noises
-                // for noise in &noise_instances {
-                //     let desc = SeriesDesc {
-                //         precision: precision.clone(),
-                //         series: series.clone(),
-                //         noise: Some(noise.clone()),
-                //     };
-                //     tasks.push(ComputeTask {
-                //         id: (task_id, desc.clone()),
-                //         series: desc,
-                //         n_points,
-                //         algorithms: accel_instances.clone(),
-                //         filters: filter_instances.clone(),
-                //     });
-                //     task_id += 1;
-                // }
+                for noise in &noise_instances {
+                    let desc = SeriesDesc {
+                        precision: precision.clone(),
+                        series: series.clone(),
+                        noise: Some(noise.clone()),
+                    };
+                    tasks.push(ComputeTask {
+                        id: (task_id, desc.clone()),
+                        series: desc,
+                        n_points,
+                        algorithms: accel_instances.clone(),
+                        filters: filter_instances.clone(),
+                    });
+                    task_id += 1;
+                }
             }
         }
 

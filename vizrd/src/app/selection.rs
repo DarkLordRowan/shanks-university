@@ -1,800 +1,818 @@
-use indexmap::IndexMap;
-use std::collections::HashMap;
+use egui::WidgetText;
 
-/// Selection state for a tree node.
-#[derive(Debug, Clone, PartialEq)]
+use crate::experiment::{
+    Accel, AccelDef, AccelInstance, ExperimentConfig, Filter, FilterDef, FilterInstance, Noise,
+    NoiseDef, NoiseInstance, Series, SeriesDef, SeriesInstance,
+};
+use std::collections::BTreeMap;
+
+// ─── Selection state ────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SelectionState {
-    /// Nothing selected
+    Zero, // monoid identity
     None,
-    /// All children selected
+    Some,
     All,
-    /// Some children selected (contains IDs of selected children)
-    Partial(Vec<String>),
 }
 
-impl Default for SelectionState {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct DrawResult {
+    changed: bool,
+    state: SelectionState,
+}
+
+impl Default for DrawResult {
     fn default() -> Self {
-        SelectionState::None
-    }
-}
-
-/// A node in the selection tree.
-#[derive(Debug, Clone, PartialEq)]
-pub struct SelectionNode {
-    /// Unique identifier
-    pub id: String,
-    /// Display label
-    pub label: String,
-    /// Current selection state
-    pub state: SelectionState,
-    /// Child nodes (parameters or values)
-    pub children: Vec<SelectionNode>,
-    /// Whether this node can be expanded
-    pub expandable: bool,
-    /// Whether currently expanded in UI
-    pub expanded: bool,
-}
-
-impl SelectionNode {
-    /// Create a new selection node.
-    pub fn new(id: impl Into<String>, label: impl Into<String>) -> Self {
         Self {
-            id: id.into(),
-            label: label.into(),
-            state: SelectionState::None,
-            children: Vec::new(),
-            expandable: false,
-            expanded: false,
-        }
-    }
-
-    /// Make this node expandable.
-    pub fn with_expandable(mut self, expandable: bool) -> Self {
-        self.expandable = expandable;
-        self
-    }
-
-    /// Add a child node.
-    pub fn with_child(mut self, child: SelectionNode) -> Self {
-        self.children.push(child);
-        self.expandable = true;
-        self
-    }
-
-    /// Check if this node is selected (all or partial).
-    pub fn is_selected(&self) -> bool {
-        !matches!(self.state, SelectionState::None)
-    }
-
-    /// Get tri-state value for checkbox.
-    /// Returns Some(true) if all selected, Some(false) if none, None if partial.
-    pub fn tri_state(&self) -> Option<bool> {
-        match &self.state {
-            SelectionState::None => Some(false),
-            SelectionState::All => Some(true),
-            SelectionState::Partial(_) => None,
-        }
-    }
-
-    /// Toggle selection state.
-    pub fn toggle(&mut self) {
-        self.state = match &self.state {
-            SelectionState::None => SelectionState::All,
-            SelectionState::All | SelectionState::Partial(_) => SelectionState::None,
-        };
-        // Propagate to children
-        propagate_to_children(&mut self.state, &mut self.children);
-    }
-
-    /// Update state from children.
-    pub fn update_from_children(&mut self) {
-        if self.children.is_empty() {
-            return;
-        }
-
-        let all_selected = self
-            .children
-            .iter()
-            .all(|c| matches!(c.state, SelectionState::All));
-        let none_selected = self
-            .children
-            .iter()
-            .all(|c| matches!(c.state, SelectionState::None));
-
-        self.state = if all_selected {
-            SelectionState::All
-        } else if none_selected {
-            SelectionState::None
-        } else {
-            SelectionState::Partial(
-                self.children
-                    .iter()
-                    .filter(|c| c.is_selected())
-                    .map(|c| c.id.clone())
-                    .collect(),
-            )
-        };
-    }
-
-    /// Count selected leaf nodes.
-    pub fn count_selected(&self) -> usize {
-        if self.children.is_empty() {
-            if self.is_selected() { 1 } else { 0 }
-        } else {
-            self.children.iter().map(|c| c.count_selected()).sum()
-        }
-    }
-
-    /// Get all selected leaf paths.
-    /// Returns a list of paths from root to each selected leaf.
-    pub fn get_selected_paths(&self) -> Vec<Vec<String>> {
-        let mut paths = Vec::new();
-        self.collect_selected_paths(&mut paths, Vec::new());
-        paths
-    }
-
-    fn collect_selected_paths(&self, paths: &mut Vec<Vec<String>>, mut current: Vec<String>) {
-        current.push(self.id.clone());
-
-        if self.children.is_empty() {
-            if self.is_selected() {
-                paths.push(current);
-            }
-        } else {
-            for child in &self.children {
-                if child.is_selected() {
-                    child.collect_selected_paths(paths, current.clone());
-                }
-            }
+            changed: false,
+            state: SelectionState::Zero,
         }
     }
 }
 
-/// Propagate selection state to children.
-fn propagate_to_children(state: &SelectionState, children: &mut [SelectionNode]) {
-    for child in children.iter_mut() {
-        child.state = state.clone();
-        propagate_to_children(state, &mut child.children);
+impl std::ops::BitOr for SelectionState {
+    type Output = Self;
+    fn bitor(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Self::Zero, a) => a,
+            (a, Self::Zero) => a,
+            (Self::None, Self::None) => Self::None,
+            (Self::All, Self::All) => Self::All,
+            _ => Self::Some,
+        }
     }
 }
 
-/// Build a series selection tree from experiment config.
-pub fn build_series_tree(
-    series_instances: &[super::super::experiment::SeriesInstance],
-) -> SelectionNode {
-    let mut root = SelectionNode::new("series_root", "ALL SERIES").with_expandable(true);
-    root.expanded = true;
-
-    // Use IndexMap to preserve order of series and their parameters
-    let mut series_nodes: IndexMap<String, SelectionNode> = IndexMap::new();
-
-    for instance in series_instances {
-        let series_node = series_nodes
-            .entry(instance.name.clone())
-            .or_insert_with(|| {
-                SelectionNode::new(format!("series_{}", instance.name), instance.name.clone())
-                    .with_expandable(true)
-            });
-
-        // Use a temporary IndexMap for parameters to handle values consistently
-        // Note: instance.args is still HashMap, but we'll collect values in discovery order
-        for (param_name, value) in &instance.args {
-            let value_str = match value {
-                serde_json::Value::Number(n) => n.to_string(),
-                serde_json::Value::String(s) => s.clone(),
-                _ => value.to_string(),
-            };
-
-            // Find or create param node using standard Vec position for simplicity as it's already there
-            // or we could use another IndexMap if nested depth was high.
-            let param_node = if let Some(node) = series_node
-                .children
-                .iter_mut()
-                .find(|c| c.label == *param_name)
-            {
-                node
-            } else {
-                series_node.children.push(
-                    SelectionNode::new(
-                        format!("{}_{}", series_node.id, param_name),
-                        param_name.clone(),
-                    )
-                    .with_expandable(true),
-                );
-                series_node.children.last_mut().unwrap()
-            };
-
-            // Add value if not present
-            if !param_node.children.iter().any(|c| c.label == value_str) {
-                param_node.children.push(SelectionNode::new(
-                    format!("{}_{}", param_node.id, value_str),
-                    value_str,
-                ));
-            }
+impl std::ops::BitOr for DrawResult {
+    type Output = Self;
+    fn bitor(self, rhs: Self) -> Self::Output {
+        DrawResult {
+            changed: self.changed | rhs.changed,
+            state: self.state | rhs.state,
         }
     }
-
-    root.children = series_nodes.into_values().collect();
-    root
+}
+impl std::ops::BitOrAssign for DrawResult {
+    fn bitor_assign(&mut self, rhs: Self) {
+        *self = *self | rhs;
+    }
 }
 
-/// Build an acceleration selection tree from experiment config.
-pub fn build_accel_tree(
-    method_instances: &[super::super::experiment::AccelInstance],
-) -> SelectionNode {
-    let mut root = SelectionNode::new("accel_root", "ALL ACCELERATIONS").with_expandable(true);
-    root.expanded = true;
+// ─── Block ──────────────────────────────────────────────────────────────────
 
-    let mut method_nodes: IndexMap<String, SelectionNode> = IndexMap::new();
+#[derive(Debug, Clone)]
+pub struct Block<T> {
+    pub open: bool,
+    pub state: SelectionState,
+    pub val: T,
+}
 
-    for instance in method_instances {
-        let method_node = method_nodes
-            .entry(instance.name.clone())
-            .or_insert_with(|| {
-                SelectionNode::new(format!("method_{}", instance.name), instance.name.clone())
-                    .with_expandable(true)
-            });
-
-        // Ensure "m" node exists
-        if !method_node.children.iter().any(|c| c.label == "m") {
-            method_node.children.push(
-                SelectionNode::new(format!("{}_m", method_node.id), "m").with_expandable(true),
-            );
-        }
-        let m_node = method_node
-            .children
-            .iter_mut()
-            .find(|c| c.label == "m")
-            .unwrap();
-        let m_str = instance.m.to_string();
-        if !m_node.children.iter().any(|c| c.label == m_str) {
-            m_node.children.push(SelectionNode::new(
-                format!("{}_{}", m_node.id, m_str),
-                m_str,
-            ));
-        }
-
-        // Process additional args
-        for (arg_name, value) in &instance.args {
-            let value_str = match value {
-                serde_json::Value::Number(n) => n.to_string(),
-                serde_json::Value::String(s) => s.clone(),
-                _ => value.to_string(),
-            };
-
-            let arg_node = if let Some(node) = method_node
-                .children
-                .iter_mut()
-                .find(|c| c.label == *arg_name)
-            {
-                node
-            } else {
-                method_node.children.push(
-                    SelectionNode::new(
-                        format!("{}_{}", method_node.id, arg_name),
-                        arg_name.clone(),
-                    )
-                    .with_expandable(true),
-                );
-                method_node.children.last_mut().unwrap()
-            };
-
-            if !arg_node.children.iter().any(|c| c.label == value_str) {
-                arg_node.children.push(SelectionNode::new(
-                    format!("{}_{}", arg_node.id, value_str),
-                    value_str,
-                ));
-            }
+impl<T> Block<T> {
+    pub fn new(val: T) -> Self {
+        Self::new_with_state(val, SelectionState::None)
+    }
+    pub fn new_with_state(val: T, state: SelectionState) -> Self {
+        Self {
+            open: false,
+            state,
+            val,
         }
     }
-
-    root.children = method_nodes.into_values().collect();
-    root
 }
 
-/// Build a noise selection tree from experiment config.
-pub fn build_noise_tree(
-    noise_instances: &[super::super::experiment::NoiseInstance],
-) -> SelectionNode {
-    let mut root = SelectionNode::new("noise_root", "ALL NOISES").with_expandable(true);
-    root.expanded = true;
+// ─── Button ─────────────────────────────────────────────────────────────────
 
-    // Add "No noise" option
-    let mut no_noise = SelectionNode::new("noise_none", "No noise");
-    no_noise.state = SelectionState::All;
-    root.children.push(no_noise);
+/// A leaf selectable value. `(checked, value, display_label)`.
+pub(crate) struct Button<T>(bool, T, String);
 
-    let mut type_nodes: IndexMap<String, SelectionNode> = IndexMap::new();
-
-    for instance in noise_instances {
-        let type_node = type_nodes
-            .entry(instance.noise_type.clone())
-            .or_insert_with(|| {
-                SelectionNode::new(
-                    format!("noise_{}", instance.noise_type),
-                    instance.noise_type.clone(),
-                )
-                .with_expandable(true)
-            });
-
-        let method_node = if let Some(node) = type_node
-            .children
-            .iter_mut()
-            .find(|c| c.label == instance.method)
+fn draw_button(ui: &mut egui::Ui, b: &mut bool, label: impl Into<WidgetText>) -> DrawResult {
+    let mut clicked = false;
+    ui.horizontal(|ui| {
+        let icon = if *b { "☑" } else { "☐" };
+        if ui
+            .add(egui::Button::new(icon).small().frame(false))
+            .clicked()
         {
-            node
+            *b = !*b;
+            clicked = true;
+        }
+        ui.label(label);
+    });
+    DrawResult {
+        changed: clicked,
+        state: if *b {
+            SelectionState::All
         } else {
-            type_node.children.push(
-                SelectionNode::new(
-                    format!("{}_{}", type_node.id, instance.method),
-                    instance.method.clone(),
-                )
-                .with_expandable(true),
-            );
-            type_node.children.last_mut().unwrap()
+            SelectionState::None
+        },
+    }
+}
+
+// ─── Selectable trait ───────────────────────────────────────────────────────
+
+pub(crate) trait Selectable {
+    fn force(&mut self, val: bool);
+    fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult;
+}
+
+impl<T> Selectable for Button<T> {
+    fn force(&mut self, val: bool) {
+        self.0 = val;
+    }
+    fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult {
+        draw_button(ui, &mut self.0, &self.2)
+    }
+}
+
+impl<T: Selectable> Selectable for Vec<T> {
+    fn force(&mut self, val: bool) {
+        for i in self {
+            i.force(val);
+        }
+    }
+    fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult {
+        let mut res = DrawResult::default();
+        for i in self {
+            res |= i.draw(ui);
+        }
+        res
+    }
+}
+
+impl<T: Selectable> Block<T> {
+    fn force(&mut self, val: bool) {
+        self.state = if val {
+            SelectionState::All
+        } else {
+            SelectionState::None
         };
+        self.val.force(val);
+    }
+    fn draw<'a>(&'a mut self, label: impl Into<String>, ui: &mut egui::Ui) -> DrawResult {
+        let label: String = label.into();
+        let mut changed = false;
 
-        // Seed node
-        if !method_node.children.iter().any(|c| c.label == "seed") {
-            method_node.children.push(
-                SelectionNode::new(format!("{}_seed", method_node.id), "seed").with_expandable(true),
-            );
-        }
-        let seed_node = method_node
-            .children
-            .iter_mut()
-            .find(|c| c.label == "seed")
-            .unwrap();
-        let seed_str = instance.seed.to_string();
-        if !seed_node.children.iter().any(|c| c.label == seed_str) {
-            seed_node.children.push(SelectionNode::new(
-                format!("{}_{}", seed_node.id, seed_str),
-                seed_str,
-            ));
-        }
-
-        // Params
-        for (param_name, value) in &instance.args {
-            let value_str = match value {
-                serde_json::Value::Number(n) => n.to_string(),
-                serde_json::Value::String(s) => s.clone(),
-                _ => value.to_string(),
-            };
-
-            let param_node = if let Some(node) = method_node
-                .children
-                .iter_mut()
-                .find(|c| c.label == *param_name)
+        // Header row: [▶/▼] [☐/☑/☒] label — all inline.
+        ui.horizontal(|ui| {
+            let icon = if self.open { "v" } else { ">" };
+            if ui
+                .add(egui::Button::new(icon).small().frame(false))
+                .clicked()
             {
-                node
-            } else {
-                method_node.children.push(
-                    SelectionNode::new(
-                        format!("{}_{}", method_node.id, param_name),
-                        param_name.clone(),
-                    )
-                    .with_expandable(true),
-                );
-                method_node.children.last_mut().unwrap()
-            };
-
-            if !param_node.children.iter().any(|c| c.label == value_str) {
-                param_node.children.push(SelectionNode::new(
-                    format!("{}_{}", param_node.id, value_str),
-                    value_str,
-                ));
+                self.open = !self.open;
+                changed = true;
             }
-        }
-    }
+            let icon = match self.state {
+                SelectionState::Zero => "☐",
+                SelectionState::None => "☒",
+                SelectionState::Some => "~",
+                SelectionState::All => "☑",
+            };
+            if ui
+                .add(egui::Button::new(icon).small().frame(false))
+                .clicked()
+            {
+                changed = true;
+                self.force(self.state == SelectionState::None);
+            }
+            ui.label(&label);
+        });
 
-    root.children.extend(type_nodes.into_values());
-    root
-}
-
-/// Build a precision selection tree.
-pub fn build_precision_tree(precisions: &[String]) -> SelectionNode {
-    let mut root = SelectionNode::new("precision_root", "ALL PRECISIONS").with_expandable(true);
-    root.expanded = true;
-
-    for precision in precisions {
-        root.children.push(SelectionNode::new(
-            format!("precision_{}", precision),
-            precision.clone(),
-        ));
-    }
-
-    root
-}
-
-/// Build a filter selection tree from experiment config.
-pub fn build_filter_tree(
-    filter_instances: &[super::super::experiment::FilterInstance],
-) -> SelectionNode {
-    let mut root = SelectionNode::new("filter_root", "ALL FILTERS").with_expandable(true);
-    root.expanded = true;
-
-    let mut filter_nodes: IndexMap<String, SelectionNode> = IndexMap::new();
-
-    for instance in filter_instances {
-        let filter_node = filter_nodes
-            .entry(instance.filter_type.clone())
-            .or_insert_with(|| {
-                SelectionNode::new(
-                    format!("filter_{}", instance.filter_type),
-                    instance.filter_type.clone(),
-                )
-                .with_expandable(true)
+        // Children, indented under the header.
+        if self.open {
+            let indent_id = egui::Id::new(&label).with(ui.next_auto_id());
+            ui.indent(indent_id, |ui| {
+                let sub = self.val.draw(ui);
+                if sub.changed {
+                    self.state = sub.state;
+                    changed = true;
+                }
             });
-
-        for (param_name, value) in &instance.args {
-            let value_str = match value {
-                serde_json::Value::Number(n) => n.to_string(),
-                serde_json::Value::String(s) => s.clone(),
-                _ => value.to_string(),
-            };
-
-            let param_node = if let Some(node) = filter_node
-                .children
-                .iter_mut()
-                .find(|c| c.label == *param_name)
-            {
-                node
-            } else {
-                filter_node.children.push(
-                    SelectionNode::new(
-                        format!("{}_{}", filter_node.id, param_name),
-                        param_name.clone(),
-                    )
-                    .with_expandable(true),
-                );
-                filter_node.children.last_mut().unwrap()
-            };
-
-            if !param_node.children.iter().any(|c| c.label == value_str) {
-                param_node.children.push(SelectionNode::new(
-                    format!("{}_{}", param_node.id, value_str),
-                    value_str,
-                ));
-            }
         }
-    }
 
-    root.children.extend(filter_nodes.into_values());
-    root
-}
-
-/// Structured selection from the UI trees.
-#[derive(Debug, Clone, Default)]
-pub struct AppSelection {
-    pub precisions: Vec<String>,
-    pub series: Vec<SeriesCombo>,
-    pub noises: Vec<Option<NoiseCombo>>,
-    pub accels: Vec<AccelCombo>,
-    pub filters: Vec<FilterCombo>,
-}
-
-/// Extract all selected values from trees without combinatorial expansion.
-pub fn extract_selection(
-    series_tree: &SelectionNode,
-    accel_tree: &SelectionNode,
-    noise_tree: &SelectionNode,
-    filter_tree: &SelectionNode,
-    precision_tree: &SelectionNode,
-) -> AppSelection {
-    AppSelection {
-        precisions: extract_precisions(precision_tree),
-        series: extract_series_combinations(series_tree),
-        noises: extract_noise_combinations(noise_tree),
-        accels: extract_accel_combinations(accel_tree),
-        filters: extract_filter_combinations(filter_tree),
+        DrawResult {
+            changed,
+            state: self.state,
+        }
     }
 }
 
-type SeriesCombo = (String, HashMap<String, String>);
-type AccelCombo = (String, i64, HashMap<String, String>);
-type FilterCombo = (Option<String>, HashMap<String, String>);
-pub type NoiseCombo = (String, String, HashMap<String, String>, i64);
+// ─── Arg select types ───────────────────────────────────────────────────────
 
-fn extract_series_combinations(tree: &SelectionNode) -> Vec<SeriesCombo> {
-    let mut combos = Vec::new();
+type ArgSelect = Block<Vec<Button<serde_json::Value>>>;
+type ArgStrSelect = Block<Vec<Button<String>>>;
+type ArgISelect = Block<Vec<Button<i64>>>;
 
-    for series_node in &tree.children {
-        if !series_node.is_selected() {
-            continue;
-        }
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-        let name = series_node.label.clone();
-        let params = extract_param_values(series_node);
-
-        // Generate all parameter combinations
-        if params.is_empty() {
-            combos.push((name, HashMap::new()));
-        } else {
-            let param_combos = generate_param_combinations(&params);
-            for param_combo in param_combos {
-                combos.push((name.clone(), param_combo));
-            }
-        }
+/// Cartesian product of per-key value lists → `Vec<BTreeMap<key, val>>`.
+fn cartesian_combos<V: Clone>(sets: &[(&str, Vec<V>)]) -> Vec<BTreeMap<String, V>> {
+    if sets.is_empty() {
+        return vec![BTreeMap::new()];
     }
-
-    combos
-}
-
-fn extract_accel_combinations(tree: &SelectionNode) -> Vec<AccelCombo> {
-    let mut combos = Vec::new();
-
-    for method_node in &tree.children {
-        if !method_node.is_selected() {
-            continue;
-        }
-
-        let name = method_node.label.clone();
-        let mut m_values = Vec::new();
-        let mut args: HashMap<String, Vec<String>> = HashMap::new();
-
-        for param_node in &method_node.children {
-            if !param_node.is_selected() {
-                continue;
-            }
-
-            match param_node.label.as_str() {
-                "m" => {
-                    for value_node in &param_node.children {
-                        if value_node.is_selected() {
-                            if let Ok(m) = value_node.label.parse::<i64>() {
-                                m_values.push(m);
-                            }
-                        }
-                    }
-                }
-                _ => {
-                    let mut values = Vec::new();
-                    for value_node in &param_node.children {
-                        if value_node.is_selected() {
-                            values.push(value_node.label.clone());
-                        }
-                    }
-                    if !values.is_empty() {
-                        args.insert(param_node.label.clone(), values);
-                    }
-                }
-            }
-        }
-
-        let m_values = if m_values.is_empty() {
-            vec![4]
-        } else {
-            m_values
-        };
-
-        let arg_combos = if args.is_empty() {
-            vec![HashMap::new()]
-        } else {
-            generate_param_combinations(&args)
-        };
-
-        for m in &m_values {
-            for arg_combo in &arg_combos {
-                combos.push((name.clone(), *m, arg_combo.clone()));
-            }
-        }
-    }
-
-    combos
-}
-
-fn extract_noise_combinations(tree: &SelectionNode) -> Vec<Option<NoiseCombo>> {
-    let mut combos = Vec::new();
-
-    for type_node in &tree.children {
-        if !type_node.is_selected() {
-            continue;
-        }
-
-        if type_node.id == "noise_none" {
-            combos.push(None);
-            continue;
-        }
-
-        let noise_type = type_node.label.clone();
-
-        for method_node in &type_node.children {
-            if !method_node.is_selected() {
-                continue;
-            }
-
-            let method = method_node.label.clone();
-            let mut seed_values = Vec::new();
-            let mut args: HashMap<String, Vec<String>> = HashMap::new();
-
-            for param_node in &method_node.children {
-                if !param_node.is_selected() {
-                    continue;
-                }
-
-                if param_node.label == "seed" {
-                    for value_node in &param_node.children {
-                        if value_node.is_selected() {
-                            if let Ok(s) = value_node.label.parse::<i64>() {
-                                seed_values.push(s);
-                            }
-                        }
-                    }
-                } else {
-                    let mut values = Vec::new();
-                    for value_node in &param_node.children {
-                        if value_node.is_selected() {
-                            values.push(value_node.label.clone());
-                        }
-                    }
-                    if !values.is_empty() {
-                        args.insert(param_node.label.clone(), values);
-                    }
-                }
-            }
-
-            let seed_values = if seed_values.is_empty() {
-                vec![0]
-            } else {
-                seed_values
-            };
-            let arg_combos = if args.is_empty() {
-                vec![HashMap::new()]
-            } else {
-                generate_param_combinations(&args)
-            };
-
-            for seed in &seed_values {
-                for arg_combo in &arg_combos {
-                    combos.push(Some((
-                        noise_type.clone(),
-                        method.clone(),
-                        arg_combo.clone(),
-                        *seed,
-                    )));
-                }
-            }
-        }
-    }
-
-    combos
-}
-
-fn extract_precisions(tree: &SelectionNode) -> Vec<String> {
-    let mut precisions = Vec::new();
-
-    for precision_node in &tree.children {
-        if precision_node.is_selected() {
-            precisions.push(precision_node.label.clone());
-        }
-    }
-
-    precisions
-}
-
-fn extract_param_values(node: &SelectionNode) -> HashMap<String, Vec<String>> {
-    let mut params = HashMap::new();
-
-    for param_node in &node.children {
-        if !param_node.is_selected() {
-            continue;
-        }
-
-        let mut values = Vec::new();
-        for value_node in &param_node.children {
-            if value_node.is_selected() {
-                values.push(value_node.label.clone());
-            }
-        }
-
-        if !values.is_empty() {
-            params.insert(param_node.label.clone(), values);
-        }
-    }
-
-    params
-}
-
-fn extract_filter_combinations(tree: &SelectionNode) -> Vec<FilterCombo> {
-    let mut combos = Vec::new();
-
-    combos.push((None, HashMap::new()));
-    for filter_node in &tree.children {
-        if !filter_node.is_selected() {
-            continue;
-        }
-
-        let name = filter_node.label.clone();
-        let params = extract_param_values(filter_node);
-
-        if params.is_empty() {
-            combos.push((Some(name), HashMap::new()));
-        } else {
-            let param_combos = generate_param_combinations(&params);
-            for param_combo in param_combos {
-                combos.push((Some(name.clone()), param_combo));
-            }
-        }
-    }
-
-    if combos.is_empty() {
-        combos.push((None, HashMap::new()));
-    }
-
-    combos
-}
-
-fn generate_param_combinations(
-    params: &HashMap<String, Vec<String>>,
-) -> Vec<HashMap<String, String>> {
-    if params.is_empty() {
-        return vec![HashMap::new()];
-    }
-
-    let mut result = vec![HashMap::new()];
-
-    for (key, values) in params {
-        let mut new_result = Vec::new();
+    let mut result: Vec<BTreeMap<String, V>> = vec![BTreeMap::new()];
+    for (key, values) in sets {
+        let mut next = Vec::new();
         for existing in &result {
-            for value in values {
-                let mut new_map = existing.clone();
-                new_map.insert(key.clone(), value.clone());
-                new_result.push(new_map);
+            for val in values {
+                let mut map = existing.clone();
+                map.insert(key.to_string(), val.clone());
+                next.push(map);
             }
         }
-        result = new_result;
+        result = next;
     }
-
     result
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// ─── SeriesSelect ───────────────────────────────────────────────────────────
 
-    #[test]
-    fn test_selection_node_toggle() {
-        let mut node = SelectionNode::new("test", "Test")
-            .with_child(SelectionNode::new("child1", "Child 1"))
-            .with_child(SelectionNode::new("child2", "Child 2"));
+pub type SeriesSelect = Series<ArgSelect>;
 
-        assert_eq!(node.state, SelectionState::None);
-
-        node.toggle();
-        assert_eq!(node.state, SelectionState::All);
-        assert_eq!(node.children[0].state, SelectionState::All);
-        assert_eq!(node.children[1].state, SelectionState::All);
-
-        node.toggle();
-        assert_eq!(node.state, SelectionState::None);
-        assert_eq!(node.children[0].state, SelectionState::None);
-        assert_eq!(node.children[1].state, SelectionState::None);
+impl Selectable for SeriesSelect {
+    fn force(&mut self, val: bool) {
+        self.x.force(val);
+        for arg in &mut self.args {
+            arg.1.force(val);
+        }
     }
 
-    #[test]
-    fn test_update_from_children() {
-        let mut node = SelectionNode::new("test", "Test")
-            .with_child(SelectionNode::new("child1", "Child 1"))
-            .with_child(SelectionNode::new("child2", "Child 2"));
+    fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult {
+        let mut result = self.x.draw("x", ui);
+        for (k, v) in &mut self.args {
+            result |= v.draw(k.as_str(), ui);
+        }
+        result
+    }
+}
 
-        node.children[0].toggle();
-        node.update_from_children();
+impl Block<SeriesSelect> {
+    /// Expand the checked selections into `SeriesInstance`s.
+    /// x and each arg dimension are treated as independent cartesian axes.
+    pub fn selected_instances(&self) -> Vec<SeriesInstance> {
+        if self.state == SelectionState::None {
+            return vec![];
+        }
+        let s = &self.val;
 
-        assert!(matches!(node.state, SelectionState::Partial(_)));
+        let x_vals: Vec<serde_json::Value> =
+            s.x.val
+                .iter()
+                .filter(|b| b.0)
+                .map(|b| b.1.clone())
+                .collect();
+
+        let arg_sets: Vec<(&str, Vec<serde_json::Value>)> = s
+            .args
+            .iter()
+            .filter_map(|(k, ab)| {
+                let vals: Vec<_> = ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect();
+                if vals.is_empty() {
+                    None
+                } else {
+                    Some((k.as_str(), vals))
+                }
+            })
+            .collect();
+
+        let arg_combos = cartesian_combos(&arg_sets);
+
+        // Cartesian product: each x × each arg combo.
+        let mut out = Vec::new();
+        for x in &x_vals {
+            for args in &arg_combos {
+                out.push(SeriesInstance {
+                    name: s.name.clone(),
+                    x: x.clone(),
+                    args: args.clone(),
+                });
+            }
+        }
+        // Edge case: no x values selected but some args are — one instance per arg combo (x=null).
+        if x_vals.is_empty() && !arg_combos.is_empty() {
+            for args in arg_combos {
+                out.push(SeriesInstance {
+                    name: s.name.clone(),
+                    x: serde_json::Value::Null,
+                    args,
+                });
+            }
+        }
+        out
+    }
+}
+
+/// Convert a `SeriesDef` into a `SeriesSelect` (all values start unchecked).
+fn series_def_to_select(def: &SeriesDef) -> SeriesSelect {
+    let x = Block::new(
+        def.x
+            .iter()
+            .map(|v| Button(false, v.clone(), v.to_string()))
+            .collect(),
+    );
+    let args = def
+        .args
+        .iter()
+        .map(|(k, arg)| {
+            let block = Block::new(
+                arg.iter()
+                    .map(|v| Button(false, v.clone(), v.to_string()))
+                    .collect(),
+            );
+            (k.clone(), block)
+        })
+        .collect();
+    SeriesSelect {
+        name: def.name.clone(),
+        x,
+        args,
+    }
+}
+
+// ─── NoiseSelect ────────────────────────────────────────────────────────────
+
+pub type NoiseSelect = Noise<ArgStrSelect, ArgSelect, ArgISelect>;
+
+impl Selectable for NoiseSelect {
+    fn force(&mut self, val: bool) {
+        self.method.force(val);
+        for arg in &mut self.args {
+            arg.1.force(val);
+        }
+        self.seed.force(val);
     }
 
-    #[test]
-    fn test_count_selected() {
-        let mut node = SelectionNode::new("test", "Test")
-            .with_child(SelectionNode::new("child1", "Child 1"))
-            .with_child(SelectionNode::new("child2", "Child 2"));
+    fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult {
+        let mut result = self.method.draw("Methods", ui);
+        for (k, v) in &mut self.args {
+            result |= v.draw(k.as_str(), ui);
+        }
+        result |= self.seed.draw("seed", ui);
+        result
+    }
+}
 
-        assert_eq!(node.count_selected(), 0);
+impl Block<NoiseSelect> {
+    /// Cartesian product of (method × args × seed) → `NoiseInstance`s.
+    pub fn selected_instances(&self) -> Vec<NoiseInstance> {
+        if self.state == SelectionState::None {
+            return vec![];
+        }
 
-        node.children[0].toggle();
-        assert_eq!(node.count_selected(), 1);
+        let n = &self.val;
 
-        node.toggle();
-        assert_eq!(node.count_selected(), 2);
+        let methods: Vec<String> = n
+            .method
+            .val
+            .iter()
+            .filter(|b| b.0)
+            .map(|b| b.1.clone())
+            .collect();
+        let seeds: Vec<i64> = n.seed.val.iter().filter(|b| b.0).map(|b| b.1).collect();
+
+        let arg_sets: Vec<(&str, Vec<serde_json::Value>)> = n
+            .args
+            .iter()
+            .filter_map(|(k, ab)| {
+                let vals: Vec<_> = ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect();
+                if vals.is_empty() {
+                    None
+                } else {
+                    Some((k.as_str(), vals))
+                }
+            })
+            .collect();
+        let arg_combos = cartesian_combos(&arg_sets);
+
+        let mut out = Vec::new();
+        for method in &methods {
+            for seed in &seeds {
+                for args in &arg_combos {
+                    out.push(NoiseInstance {
+                        noise_type: n.noise_type.clone(),
+                        method: method.clone(),
+                        args: args.clone(),
+                        seed: *seed,
+                    });
+                }
+                if arg_combos.is_empty() {
+                    out.push(NoiseInstance {
+                        noise_type: n.noise_type.clone(),
+                        method: method.clone(),
+                        args: BTreeMap::new(),
+                        seed: *seed,
+                    });
+                }
+            }
+        }
+        out
+    }
+}
+
+/// Convert a `NoiseDef` into a `NoiseSelect`.
+fn noise_def_to_select(def: &NoiseDef) -> NoiseSelect {
+    let method = Block::new(
+        def.method
+            .iter()
+            .map(|s| Button(false, s.to_string(), s.to_string()))
+            .collect(),
+    );
+    let args = def
+        .args
+        .iter()
+        .map(|(k, arg)| {
+            let block = Block::new(
+                arg.iter()
+                    .map(|v| Button(false, v.clone(), v.to_string()))
+                    .collect(),
+            );
+            (k.clone(), block)
+        })
+        .collect();
+    let seed_vals: Vec<i64> = def
+        .seed
+        .as_ref()
+        .map(|s| s.iter().collect())
+        .unwrap_or_else(|| vec![0]);
+    let seed = Block::new(
+        seed_vals
+            .into_iter()
+            .map(|s| Button(false, s, s.to_string()))
+            .collect(),
+    );
+    NoiseSelect {
+        noise_type: def.noise_type.clone(),
+        method,
+        args,
+        seed,
+    }
+}
+
+// ─── FilterSelect ───────────────────────────────────────────────────────────
+
+pub type FilterSelect = Filter<ArgSelect>;
+
+impl Selectable for FilterSelect {
+    fn force(&mut self, val: bool) {
+        for arg in &mut self.args {
+            arg.1.force(val);
+        }
+    }
+
+    fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult {
+        let mut result = DrawResult::default();
+        for (k, v) in &mut self.args {
+            result |= v.draw(k.as_str(), ui);
+        }
+        result
+    }
+}
+
+impl Block<FilterSelect> {
+    /// Cartesian product of args → `FilterInstance`s.
+    pub fn selected_instances(&self) -> Vec<FilterInstance> {
+        if self.state == SelectionState::None {
+            return vec![];
+        }
+        let f = &self.val;
+        let arg_sets: Vec<(&str, Vec<serde_json::Value>)> = f
+            .args
+            .iter()
+            .filter_map(|(k, ab)| {
+                let vals: Vec<_> = ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect();
+                if vals.is_empty() {
+                    None
+                } else {
+                    Some((k.as_str(), vals))
+                }
+            })
+            .collect();
+        cartesian_combos(&arg_sets)
+            .into_iter()
+            .map(|args| FilterInstance {
+                filter_type: f.filter_type.clone(),
+                args,
+            })
+            .collect()
+    }
+}
+
+/// Convert a `FilterDef` into a `FilterSelect`.
+fn filter_def_to_select(def: &FilterDef) -> FilterSelect {
+    let args = def
+        .args
+        .iter()
+        .map(|(k, arg)| {
+            let block = Block::new(
+                arg.iter()
+                    .map(|v| Button(false, v.clone(), v.to_string()))
+                    .collect(),
+            );
+            (k.clone(), block)
+        })
+        .collect();
+    FilterSelect {
+        filter_type: def.filter_type.clone(),
+        args,
+    }
+}
+
+// ─── AccelSelect ────────────────────────────────────────────────────────────
+
+pub type AccelSelect = Accel<ArgISelect, ArgSelect>;
+
+impl Selectable for AccelSelect {
+    fn force(&mut self, val: bool) {
+        self.m.force(val);
+        for (_, v) in &mut self.args {
+            v.force(val);
+        }
+    }
+
+    fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult {
+        let mut result = self.m.draw("m", ui);
+        for (k, v) in &mut self.args {
+            result |= v.draw(k, ui);
+        }
+        result
+    }
+}
+
+impl Block<AccelSelect> {
+    /// Cartesian product of (m × args) → `AccelInstance`s.
+    pub fn selected_instances(&self) -> Vec<AccelInstance> {
+        if self.state == SelectionState::None {
+            return vec![];
+        }
+        let a = &self.val;
+        let ms: Vec<i64> = a.m.val.iter().filter(|b| b.0).map(|b| b.1).collect();
+        let arg_sets: Vec<(&str, Vec<serde_json::Value>)> = a
+            .args
+            .iter()
+            .filter_map(|(k, ab)| {
+                let vals: Vec<_> = ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect();
+                if vals.is_empty() {
+                    None
+                } else {
+                    Some((k.as_str(), vals))
+                }
+            })
+            .collect();
+        let arg_combos = cartesian_combos(&arg_sets);
+
+        let mut out = Vec::new();
+        for m in &ms {
+            for args in &arg_combos {
+                out.push(AccelInstance {
+                    name: a.name.clone(),
+                    m: *m,
+                    args: args.clone(),
+                    events: a.events.clone(),
+                });
+            }
+            if arg_combos.is_empty() {
+                out.push(AccelInstance {
+                    name: a.name.clone(),
+                    m: *m,
+                    args: BTreeMap::new(),
+                    events: a.events.clone(),
+                });
+            }
+        }
+        out
+    }
+}
+
+/// Convert an `AccelDef` into an `AccelSelect`.
+fn accel_def_to_select(def: &AccelDef) -> AccelSelect {
+    let m = Block::new(
+        def.m
+            .iter()
+            .map(|v| Button(false, v, v.to_string()))
+            .collect(),
+    );
+    let args = def
+        .args
+        .iter()
+        .map(|(k, arg)| {
+            let block = Block::new(
+                arg.iter()
+                    .map(|v| Button(false, v.clone(), v.to_string()))
+                    .collect(),
+            );
+            (k.clone(), block)
+        })
+        .collect();
+    AccelSelect {
+        name: def.name.clone(),
+        m,
+        args,
+        events: def.events.clone(),
+    }
+}
+
+struct NoiseVecSelect(Vec<Block<NoiseSelect>>, bool);
+impl Selectable for NoiseVecSelect {
+    fn force(&mut self, val: bool) {
+        self.1 = val;
+        self.0.force(val);
+    }
+
+    fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult {
+        let mut res = draw_button(ui, &mut self.1, "No noise");
+        res | self.0.draw(ui)
+    }
+}
+
+// ─── Blockable (UI helper) ───────────────────────────────────────────────────
+
+impl<T: Selectable> Selectable for Option<T> {
+    fn force(&mut self, val: bool) {
+        self.as_mut().map(|x| x.force(val));
+    }
+
+    fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult {
+        self.as_mut().map_or(DrawResult::default(), |x| x.draw(ui))
+    }
+}
+
+trait Blockable: Selectable {
+    fn name(&self) -> &str;
+}
+impl Blockable for SeriesSelect {
+    fn name(&self) -> &str {
+        &self.name
+    }
+}
+impl Blockable for FilterSelect {
+    fn name(&self) -> &str {
+        &self.filter_type
+    }
+}
+impl Blockable for NoiseSelect {
+    fn name(&self) -> &str {
+        &self.noise_type
+    }
+}
+impl Blockable for AccelSelect {
+    fn name(&self) -> &str {
+        &self.name
+    }
+}
+impl<T: Blockable> Selectable for Block<T> {
+    fn force(&mut self, val: bool) {
+        self.force(val);
+    }
+    fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult {
+        self.draw(self.val.name().to_owned(), ui)
+    }
+}
+
+// ─── AppSelection (coordinator-facing) ──────────────────────────────────────
+
+/// The set of instances the coordinator should compute.
+/// `noises` contains `None` to represent "no noise" (plain series).
+#[derive(Debug, Clone, Default)]
+pub struct AppSelection {
+    pub precisions: Vec<String>,
+    pub series: Vec<SeriesInstance>,
+    pub noises: Vec<Option<NoiseInstance>>,
+    pub accels: Vec<AccelInstance>,
+    pub filters: Vec<FilterInstance>,
+}
+
+// ─── AppSelect (UI owning tree) ──────────────────────────────────────────────
+
+pub struct AppSelect {
+    series: Block<Vec<Block<SeriesSelect>>>,
+    noise: Block<NoiseVecSelect>,
+    filter: Block<Vec<Block<FilterSelect>>>,
+    accel: Block<Vec<Block<AccelSelect>>>,
+    precision: Block<Vec<Button<String>>>,
+}
+
+impl AppSelect {
+    /// Build from an `ExperimentConfig`. All values start deselected.
+    pub fn from_config(exp: &ExperimentConfig) -> Self {
+        let series = Block::new(
+            exp.series
+                .iter()
+                .map(|def| Block::new(series_def_to_select(def)))
+                .collect(),
+        );
+        let noises: Vec<Block<NoiseSelect>> = exp
+            .noises
+            .iter()
+            .map(|def| Block::new(noise_def_to_select(def)))
+            .collect();
+        let no_noises = noises.is_empty();
+        let noise = Block::new_with_state(
+            NoiseVecSelect(noises, true),
+            if no_noises {
+                SelectionState::All
+            } else {
+                SelectionState::Some
+            },
+        );
+        let filter = Block::new(
+            exp.filters
+                .iter()
+                .map(|def| Block::new(filter_def_to_select(def)))
+                .collect(),
+        );
+        let accel = Block::new(
+            exp.accels
+                .iter()
+                .map(|def| Block::new(accel_def_to_select(def)))
+                .collect(),
+        );
+        let precisions = exp.precisions.clone().unwrap_or_default();
+        let precision = Block::new(
+            precisions
+                .into_iter()
+                .map(|p| Button(false, p.clone(), p))
+                .collect(),
+        );
+        Self {
+            series,
+            noise,
+            filter,
+            accel,
+            precision,
+        }
+    }
+
+    /// Draw the UI panel and return whether anything changed.
+    pub fn draw(&mut self, ui: &mut egui::Ui) -> bool {
+        let mut changed = false;
+        if self.series.draw("Series", ui).changed {
+            changed = true;
+        }
+        if self.noise.draw("Noise", ui).changed {
+            changed = true;
+        }
+        if self.filter.draw("Filter", ui).changed {
+            changed = true;
+        }
+        if self.accel.draw("Accel", ui).changed {
+            changed = true;
+        }
+        if self.precision.draw("Precision", ui).changed {
+            changed = true;
+        }
+        changed
+    }
+
+    /// Extract the current checked state as typed instances for the coordinator.
+    pub fn extract(&self) -> AppSelection {
+        let series: Vec<SeriesInstance> = self
+            .series
+            .val
+            .iter()
+            .flat_map(|b| b.selected_instances())
+            .collect();
+
+        let mut noises: Vec<Option<NoiseInstance>> = self
+            .noise
+            .val
+            .0
+            .iter()
+            .flat_map(|b| b.selected_instances().into_iter())
+            .map(Some)
+            .collect();
+        if self.noise.val.1 {
+            noises.push(None);
+        }
+
+        let filters: Vec<FilterInstance> = self
+            .filter
+            .val
+            .iter()
+            .flat_map(|b| b.selected_instances())
+            .collect();
+
+        let accels: Vec<AccelInstance> = self
+            .accel
+            .val
+            .iter()
+            .flat_map(|b| b.selected_instances())
+            .collect();
+
+        let precisions: Vec<String> = self
+            .precision
+            .val
+            .iter()
+            .filter(|b| b.0)
+            .map(|b| b.1.clone())
+            .collect();
+
+        AppSelection {
+            precisions,
+            series,
+            noises,
+            accels,
+            filters,
+        }
     }
 }
