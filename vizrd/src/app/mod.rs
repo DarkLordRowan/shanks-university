@@ -82,7 +82,6 @@ enum LineKind {
 #[derive(Clone)]
 struct BakedLine {
     data: ArrLine,
-    full_name: String, // Full descriptive name for tooltips
     color: egui::Color32,
     width: f32,
     style: LineStyle,
@@ -423,74 +422,13 @@ impl ShanksApp {
             }
         }
 
-        // 2. Shorten all infos and prepare full names
+        // 2. Shorten all infos into display names
         let shortened_names = shorten_line_infos(&all_infos);
-        let full_names: Vec<String> = all_infos
-            .iter()
-            .map(|info| {
-                let mut parts = Vec::new();
-                parts.push(info.precision.clone());
-                parts.push(info.series_name.clone());
-
-                let s_args: Vec<_> = info
-                    .series_args
-                    .iter()
-                    .map(|(k, v)| format!("{}={}", k, v))
-                    .collect();
-                if !s_args.is_empty() {
-                    parts.push(format!("({})", s_args.join(", ")));
-                }
-
-                if let Some((ref nt, ref nm, ref na, ref ns)) = info.noise {
-                    let n_args: Vec<_> = na.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
-                    let mut s = format!("Noise: {} ({})", nt, nm);
-                    if !n_args.is_empty() {
-                        s.push_str(&format!(" ({})", n_args.join(", ")));
-                    }
-                    s.push_str(&format!(" seed={}", ns));
-                    parts.push(s);
-                }
-
-                if let Some(ref an) = info.accel_name {
-                    let a_args: Vec<_> = info
-                        .accel_args
-                        .iter()
-                        .map(|(k, v)| format!("{}={}", k, v))
-                        .collect();
-                    let mut s = format!("Accel: {}", an);
-                    if let Some(m) = info.accel_m {
-                        s.push_str(&format!(" m={}", m));
-                    }
-                    if !a_args.is_empty() {
-                        s.push_str(&format!(" ({})", a_args.join(", ")));
-                    }
-                    parts.push(s);
-                }
-
-                if let Some((ref ft, ref fa)) = info.filter {
-                    let f_args: Vec<_> = fa.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
-                    let mut s = format!("Filter: {}", ft);
-                    if !f_args.is_empty() {
-                        s.push_str(&format!(" ({})", f_args.join(", ")));
-                    }
-                    parts.push(s);
-                }
-
-                parts.push(info.line_type.clone());
-                let mut s = parts.join(" | ");
-                if let Some(ref c) = info.component {
-                    s.push_str(&format!(" [{}]", c));
-                }
-                s
-            })
-            .collect();
 
         // 3. Build BakedLines
         let mut baked_lines = Vec::new();
         let mut name_idx = 0;
         for (_key, _ltype, data, color, width, style, events, offset, kind) in raw_lines {
-            // Determine full_name (take from the first component of this data)
-            let full_name = full_names[name_idx].clone();
 
             let baked_data = match data {
                 ArrF64::Real(v) => {
@@ -629,7 +567,6 @@ impl ShanksApp {
 
             baked_lines.push(BakedLine {
                 data: baked_data,
-                full_name,
                 color,
                 width,
                 style,
@@ -1054,27 +991,6 @@ impl eframe::App for ShanksApp {
                 current_tab_state.reset_view = false;
             }
 
-            let name_to_full: HashMap<String, String> = plot_lines
-                .iter()
-                .flat_map(|baked| match &baked.data {
-                    ArrLine::Real((n, _)) => vec![(n.clone(), baked.full_name.clone())],
-                    ArrLine::Complex(c) => vec![
-                        (c.real.0.clone(), baked.full_name.clone()),
-                        (c.imag.0.clone(), baked.full_name.clone()),
-                    ],
-                    ArrLine::Interval(iv) => vec![
-                        (iv.inf.0.clone(), baked.full_name.clone()),
-                        (iv.sup.0.clone(), baked.full_name.clone()),
-                    ],
-                    ArrLine::CInterval(ci) => vec![
-                        (ci.real.inf.0.clone(), baked.full_name.clone()),
-                        (ci.real.sup.0.clone(), baked.full_name.clone()),
-                        (ci.imag.inf.0.clone(), baked.full_name.clone()),
-                        (ci.imag.sup.0.clone(), baked.full_name.clone()),
-                    ],
-                })
-                .collect();
-
             let symlog = current_tab_state.symlog;
             let thresh = current_tab_state.log_linthresh;
 
@@ -1082,16 +998,12 @@ impl eframe::App for ShanksApp {
                 if name.is_empty() {
                     return format!("n = {:.0}\ny = {:.4e}", value.x, value.y);
                 }
-                let full = name_to_full
-                    .get(name)
-                    .cloned()
-                    .unwrap_or_else(|| name.to_string());
                 let y_str = if symlog {
                     crate::plot::symlog_formatter(value.y, thresh)
                 } else {
                     format!("{:.10e}", value.y)
                 };
-                format!("{}\nn = {:.0}\ny = {}", full, value.x, y_str)
+                format!("{}\nn = {:.0}\ny = {}", name, value.x, y_str)
             });
 
             fn limit_pts_slice<'a>(pts: &'a [PlotPoint], max_n: u64) -> &'a [PlotPoint] {
@@ -1294,6 +1206,7 @@ impl eframe::App for ShanksApp {
 struct LineInfo {
     precision: String,
     series_name: String,
+    series_x: String,
     series_args: BTreeMap<String, String>,
     noise: Option<(String, String, BTreeMap<String, String>, i64)>, // Type, Method, Args, Seed
     accel_name: Option<String>,
@@ -1306,6 +1219,7 @@ struct LineInfo {
 
 impl LineInfo {
     fn from_key(key: &ResultKey, line_type: &str, component: Option<&str>) -> Self {
+        let series_x = key.series.series.x.to_string();
         let series_args = key
             .series
             .series
@@ -1352,6 +1266,7 @@ impl LineInfo {
         Self {
             precision: key.series.precision.clone(),
             series_name: key.series.series.name.clone(),
+            series_x,
             series_args,
             noise,
             accel_name,
@@ -1369,116 +1284,65 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
         return Vec::new();
     }
 
-    let mut show_precision = false;
-    let mut show_series_name = false;
-    let mut show_noise_type = false;
-    let mut show_noise_method = false;
-    let mut show_noise_seed = false;
-    let mut show_accel_name = false;
-    let mut show_accel_m = false;
-    let mut show_filter_type = false;
-    let mut show_line_type = false;
-    let mut show_component = false;
-
-    // Helper to find differing keys in maps
-    let find_diff_keys =
-        |infos: &[LineInfo], get_map: fn(&LineInfo) -> &BTreeMap<String, String>| {
-            let mut all_keys = HashSet::new();
-            for info in infos {
-                for key in get_map(info).keys() {
-                    all_keys.insert(key);
-                }
-            }
-            let mut diff_keys = HashSet::new();
-            for key in all_keys {
-                let first_val = get_map(&infos[0]).get(key);
-                for i in 1..infos.len() {
-                    if get_map(&infos[i]).get(key) != first_val {
-                        diff_keys.insert(key.clone());
-                        break;
-                    }
-                }
-            }
-            diff_keys
-        };
-    // Helper for noise (4-tuple)
-    let find_diff_keys_opt_noise = |infos: &[LineInfo]| {
-        let mut all_keys = HashSet::new();
-        for info in infos {
-            if let Some((_, _, map, _)) = &info.noise {
-                for key in map.keys() {
-                    all_keys.insert(key);
-                }
-            }
-        }
-        let mut diff_keys = HashSet::new();
-        for key in all_keys {
-            let first_val = infos[0].noise.as_ref().and_then(|(_, _, m, _)| m.get(key));
-            for i in 1..infos.len() {
-                let current_val = infos[i].noise.as_ref().and_then(|(_, _, m, _)| m.get(key));
-                if current_val != first_val {
-                    diff_keys.insert(key.clone());
-                    break;
-                }
-            }
-        }
-        diff_keys
-    };
-
-    // Helper for optional maps (noise, filter, etc.)
-    let find_diff_keys_opt =
-        |infos: &[LineInfo],
-         get_opt: fn(&LineInfo) -> &Option<(String, BTreeMap<String, String>)>| {
-            let mut all_keys = HashSet::new();
-            for info in infos {
-                if let Some((_, map)) = get_opt(info) {
-                    for key in map.keys() {
-                        all_keys.insert(key);
-                    }
-                }
-            }
-            let mut diff_keys = HashSet::new();
-            for key in all_keys {
-                let first_val = get_opt(&infos[0]).as_ref().and_then(|(_, m)| m.get(key));
-                for i in 1..infos.len() {
-                    let current_val = get_opt(&infos[i]).as_ref().and_then(|(_, m)| m.get(key));
-                    if current_val != first_val {
-                        diff_keys.insert(key.clone());
-                        break;
-                    }
-                }
-            }
-            diff_keys
-        };
-
-    for i in 1..infos.len() {
-        show_precision |= infos[i].precision != infos[0].precision;
-        show_series_name |= infos[i].series_name != infos[0].series_name;
-        show_noise_type |= infos[i].noise.as_ref().map(|(t, _, _, _)| t)
-            != infos[0].noise.as_ref().map(|(t, _, _, _)| t);
-        show_noise_method |= infos[i].noise.as_ref().map(|(_, m, _, _)| m)
-            != infos[0].noise.as_ref().map(|(_, m, _, _)| m);
-        show_noise_seed |= infos[i].noise.as_ref().map(|(_, _, _, s)| s)
-            != infos[0].noise.as_ref().map(|(_, _, _, s)| s);
-        show_accel_name |= infos[i].accel_name != infos[0].accel_name;
-        show_accel_m |= infos[i].accel_m != infos[0].accel_m;
-        show_filter_type |=
-            infos[i].filter.as_ref().map(|(t, _)| t) != infos[0].filter.as_ref().map(|(t, _)| t);
-        show_line_type |= infos[i].line_type != infos[0].line_type;
-        show_component |= infos[i].component != infos[0].component;
+    fn varies<T: PartialEq>(infos: &[LineInfo], f: impl Fn(&LineInfo) -> T) -> bool {
+        let first = f(&infos[0]);
+        infos[1..].iter().any(|i| f(i) != first)
     }
 
-    let diff_series_args = find_diff_keys(infos, |inf| &inf.series_args);
-    let diff_noise_args = find_diff_keys_opt_noise(infos);
-    let diff_accel_args = find_diff_keys(infos, |inf| &inf.accel_args);
-    let diff_filter_args = find_diff_keys_opt(infos, |inf| &inf.filter);
+    fn diff_keys<'a>(
+        infos: &'a [LineInfo],
+        f: impl Fn(&'a LineInfo) -> Option<&'a BTreeMap<String, String>>,
+    ) -> HashSet<String> {
+        infos
+            .iter()
+            .flat_map(|i| f(i).into_iter().flat_map(|m| m.keys().cloned()))
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .filter(|k| {
+                let first = f(&infos[0]).and_then(|m| m.get(k.as_str()));
+                infos[1..]
+                    .iter()
+                    .any(|i| f(i).and_then(|m| m.get(k.as_str())) != first)
+            })
+            .collect()
+    }
 
-    // If everything is perfectly identical, show at least names/types to distinguish
+    let fmt_args = |map: &BTreeMap<String, String>, diff: &HashSet<String>| -> Option<String> {
+        let args: Vec<_> = map
+            .keys()
+            .filter(|k| diff.contains(*k))
+            .map(|k| format!("{}={}", k, map[k]))
+            .collect();
+        if args.is_empty() {
+            None
+        } else {
+            Some(format!("({})", args.join(", ")))
+        }
+    };
+
+    let show_precision   = varies(infos, |i| i.precision.clone());
+    let show_series_name = varies(infos, |i| i.series_name.clone());
+    let show_series_x    = varies(infos, |i| i.series_x.clone());
+    let show_noise_type  = varies(infos, |i| i.noise.as_ref().map(|(t, _, _, _)| t.clone()));
+    let show_noise_meth  = varies(infos, |i| i.noise.as_ref().map(|(_, m, _, _)| m.clone()));
+    let show_noise_seed  = varies(infos, |i| i.noise.as_ref().map(|(_, _, _, s)| *s));
+    let show_accel_name  = varies(infos, |i| i.accel_name.clone());
+    let show_accel_m     = varies(infos, |i| i.accel_m);
+    let show_filter_type = varies(infos, |i| i.filter.as_ref().map(|(t, _)| t.clone()));
+    let mut show_line_type = varies(infos, |i| i.line_type.clone());
+    let mut show_component = varies(infos, |i| i.component.clone());
+
+    let diff_series_args = diff_keys(infos, |i| Some(&i.series_args));
+    let diff_noise_args = diff_keys(infos, |i| i.noise.as_ref().map(|(_, _, m, _)| m));
+    let diff_accel_args = diff_keys(infos, |i| Some(&i.accel_args));
+    let diff_filter_args = diff_keys(infos, |i| i.filter.as_ref().map(|(_, m)| m));
+
     if !show_precision
         && !show_series_name
+        && !show_series_x
         && diff_series_args.is_empty()
         && !show_noise_type
-        && !show_noise_method
+        && !show_noise_meth
         && !show_noise_seed
         && diff_noise_args.is_empty()
         && !show_accel_name
@@ -1496,46 +1360,48 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
     infos
         .iter()
         .map(|info| {
-            let mut parts = Vec::new();
+            let mut parts: Vec<String> = Vec::new();
+
             if show_precision {
                 parts.push(info.precision.clone());
             }
-            if show_series_name {
-                parts.push(info.series_name.clone());
-            }
 
-            // Series Args
-            let mut s_args = Vec::new();
-            for key in info.series_args.keys() {
-                if diff_series_args.contains(key) {
-                    s_args.push(format!("{}={}", key, info.series_args[key]));
-                }
+            // Series: name and args grouped together (bug fix: args were floating solo before)
+            let mut s_args = fmt_args(&info.series_args, &diff_series_args);
+            if show_series_x {
+                let x_str = format!("x={}", info.series_x);
+                s_args = match s_args {
+                    Some(mut args) => {
+                        args.insert_str(1, &format!("{}, ", x_str));
+                        Some(args)
+                    }
+                    None => Some(format!("({})", x_str)),
+                };
             }
-            if !s_args.is_empty() {
-                parts.push(format!("({})", s_args.join(", ")));
+            if show_series_name || s_args.is_some() {
+                let mut s = info.series_name.clone();
+                if let Some(a) = s_args {
+                    s += &format!(" {}", a);
+                }
+                parts.push(s);
             }
 
             // Noise
-            if let Some((ref nt, ref nm, ref na, ref ns)) = info.noise {
-                let mut n_args = Vec::new();
-                for key in na.keys() {
-                    if diff_noise_args.contains(key) {
-                        n_args.push(format!("{}={}", key, na[key]));
-                    }
-                }
-                if show_noise_type || show_noise_method || show_noise_seed || !n_args.is_empty() {
+            if let Some((nt, nm, na, ns)) = &info.noise {
+                let a = fmt_args(na, &diff_noise_args);
+                if show_noise_type || show_noise_meth || show_noise_seed || a.is_some() {
                     let mut s = "Noise".to_string();
                     if show_noise_type {
-                        s.push_str(&format!(": {}", nt));
+                        s += &format!(": {}", nt);
                     }
-                    if show_noise_method {
-                        s.push_str(&format!(" ({})", nm));
+                    if show_noise_meth {
+                        s += &format!(" ({})", nm);
                     }
                     if show_noise_seed {
-                        s.push_str(&format!(" seed={}", ns));
+                        s += &format!(" seed={}", ns);
                     }
-                    if !n_args.is_empty() {
-                        s.push_str(&format!(" ({})", n_args.join(", ")));
+                    if let Some(a) = a {
+                        s += &format!(" {}", a);
                     }
                     parts.push(s);
                 }
@@ -1544,25 +1410,19 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
             }
 
             // Accel
-            if let Some(ref an) = info.accel_name {
-                let mut a_args = Vec::new();
-                for key in info.accel_args.keys() {
-                    if diff_accel_args.contains(key) {
-                        a_args.push(format!("{}={}", key, info.accel_args[key]));
-                    }
-                }
-                if show_accel_name || show_accel_m || !a_args.is_empty() {
-                    let mut s = String::new();
-                    if show_accel_name {
-                        s.push_str(an);
+            if let Some(an) = &info.accel_name {
+                let a = fmt_args(&info.accel_args, &diff_accel_args);
+                if show_accel_name || show_accel_m || a.is_some() {
+                    let mut s = if show_accel_name {
+                        an.clone()
                     } else {
-                        s.push_str("Accel");
-                    }
+                        "Accel".to_string()
+                    };
                     if show_accel_m {
-                        s.push_str(&format!(" m={}", info.accel_m.unwrap_or(0)));
+                        s += &format!(" m={}", info.accel_m.unwrap_or(0));
                     }
-                    if !a_args.is_empty() {
-                        s.push_str(&format!(" ({})", a_args.join(", ")));
+                    if let Some(a) = a {
+                        s += &format!(" {}", a);
                     }
                     parts.push(s);
                 }
@@ -1571,20 +1431,15 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
             }
 
             // Filter
-            if let Some((ref ft, ref fa)) = info.filter {
-                let mut f_args = Vec::new();
-                for key in fa.keys() {
-                    if diff_filter_args.contains(key) {
-                        f_args.push(format!("{}={}", key, fa[key]));
-                    }
-                }
-                if show_filter_type || !f_args.is_empty() {
+            if let Some((ft, fa)) = &info.filter {
+                let a = fmt_args(fa, &diff_filter_args);
+                if show_filter_type || a.is_some() {
                     let mut s = "Filter".to_string();
                     if show_filter_type {
-                        s.push_str(&format!(": {}", ft));
+                        s += &format!(": {}", ft);
                     }
-                    if !f_args.is_empty() {
-                        s.push_str(&format!(" ({})", f_args.join(", ")));
+                    if let Some(a) = a {
+                        s += &format!(" {}", a);
                     }
                     parts.push(s);
                 }
@@ -1597,8 +1452,8 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
             }
             let mut s = parts.join(" | ");
             if show_component {
-                if let Some(ref c) = info.component {
-                    s.push_str(&format!(" [{}]", c));
+                if let Some(c) = &info.component {
+                    s += &format!(" [{}]", c);
                 }
             }
             s
