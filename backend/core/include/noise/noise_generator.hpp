@@ -205,38 +205,39 @@ series_result<T> apply_noise(const series_result<T>& result, const std::string& 
     else if (name == "poisson") nt = NoiseType::poisson;
 
     NoiseMethod nm = NoiseMethod::jitter;
-    auto method_str = ::shanks::utils::get_json_val(params_json, "method");
+    auto method_str = ::shanks::utils_json::get_json_val(params_json, "method");
     if (method_str == "scaling") nm = NoiseMethod::scaling;
 
     // 3. Parse Seed
     unsigned long long seed = 0;
-    try {
-        auto seed_str = ::shanks::utils::get_json_val(params_json, "seed");
-        if (!seed_str.empty()) seed = std::stoull(seed_str);
-    } catch (...) {}
+    auto seed_str = ::shanks::utils_json::get_json_val(params_json, "seed");
+    if (!seed_str.empty()) {
+        try {
+            seed = std::stoull(seed_str);
+        } catch (const std::exception& ex) {
+            throw std::runtime_error("Invalid seed value '" + seed_str + "': " + ex.what());
+        }
+    }
 
     // 4. Validate and Dispatch to specific noise implementations
     if (nt == NoiseType::uniform) {
-        double min = 0, max = 0;
-        try { min = std::stod(::shanks::utils::get_json_val(params_json, "min")); } catch (...) {}
-        try { max = std::stod(::shanks::utils::get_json_val(params_json, "max")); } catch (...) {}
+        double min = std::stod(::shanks::utils_json::get_json_val_required(params_json, "min"));
+        double max = std::stod(::shanks::utils_json::get_json_val_required(params_json, "max"));
         
         if (min >= max) {
             throw std::invalid_argument("uniform noise: min must be less than max (min=" + std::to_string(min) + ", max=" + std::to_string(max) + ")");
         }
         return apply_uniform_noise<T>(tail_res, nm, seed, min, max);
     } else if (nt == NoiseType::normal) {
-        double mean = 0, stddev = 0;
-        try { mean = std::stod(::shanks::utils::get_json_val(params_json, "mean")); } catch (...) {}
-        try { stddev = std::stod(::shanks::utils::get_json_val(params_json, "stddev")); } catch (...) {}
+        double mean = std::stod(::shanks::utils_json::get_json_val_required(params_json, "mean"));
+        double stddev = std::stod(::shanks::utils_json::get_json_val_required(params_json, "stddev"));
         
         if (stddev <= 0) {
             throw std::invalid_argument("normal noise: stddev must be positive (stddev=" + std::to_string(stddev) + ")");
         }
         return apply_normal_noise<T>(tail_res, nm, seed, mean, stddev);
     } else if (nt == NoiseType::poisson) {
-        double lambda = 0;
-        try { lambda = std::stod(::shanks::utils::get_json_val(params_json, "lambda")); } catch (...) {}
+        double lambda = std::stod(::shanks::utils_json::get_json_val_required(params_json, "lambda"));
         
         if (lambda <= 0) {
             throw std::invalid_argument("poisson noise: lambda must be positive (lambda=" + std::to_string(lambda) + ")");

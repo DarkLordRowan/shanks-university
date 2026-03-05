@@ -217,7 +217,7 @@ public:
         }
         if (!found) throw std::runtime_error("Algorithm not found: " + s_name);
 
-        auto algo = ::shanks::algos::transformation_registry<T, size_t>::create_by_index(idx);
+        auto algo = ::shanks::algos::transformation_registry<T, size_t>::create_by_index(idx, s_params);
 
         ::series_result<T> acc_res;
         acc_res.Sn.reserve(n);
@@ -290,19 +290,17 @@ std::unique_ptr<CSeries> mk_typed_series(size_t idx, const std::string& params_j
     // These map to the addTParameter / addKParameter accepted by series_registry::create,
     // which then dispatches bin_iterator(x, alpha), incomplete_Gamma_func_iterator(x, alpha),
     // m_fact_1mx_mp1_inverse_iterator(x, k), etc. via if-constexpr in the factory lambda.
-    double alpha_d = 1.0;
+    const auto& entry = ::shanks::series::series_registry<T, size_t>::get_entries()[idx];
+    T t_param = ::utils::cast<T, int>()(1);
     size_t k_param = 1;
-    try {
-        auto s = ::shanks::utils::get_json_val(params_json, "alpha");
-        if (!s.empty()) alpha_d = std::stod(s);
-    } catch (...) {}
-    try {
-        auto s = ::shanks::utils::get_json_val(params_json, "m");
-        if (!s.empty()) k_param = std::stoul(s);
-    } catch (...) {}
 
-    // ::utils::cast is the project's type-safe numeric cast functor (same namespace as in series iterators).
-    T t_param = ::utils::cast<T, double>()(alpha_d);
+    if (entry.needsT) {
+        t_param = ::utils::cast<T, double>()(std::stod(::shanks::utils_json::get_json_val_required(params_json, "alpha")));
+    }
+    if (entry.needsK) {
+        k_param = std::stoul(::shanks::utils_json::get_json_val_required(params_json, "m"));
+    }
+
     auto series = ::shanks::series::series_registry<T, size_t>::create(idx, x, t_param, k_param);
     return std::make_unique<CSeriesImpl<T, P>>(series->generate(n), series->get_sum());
 }

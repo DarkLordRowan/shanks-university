@@ -4,7 +4,7 @@
 #include <string>
 #include <cctype>
 
-namespace shanks::utils {
+namespace shanks::utils_json {
 
 /**
  * @brief Simple JSON value extractor for basic parameter parsing.
@@ -26,6 +26,21 @@ inline std::string get_json_val(const std::string& json, const std::string& key)
     return json.substr(pos, end - pos);
 }
 
-} // namespace shanks::utils
+inline std::string get_json_val_required(const std::string& json, const std::string& key) {
+    auto val = get_json_val(json, key);
+    if (val.empty()) {
+        throw std::runtime_error("Missing required JSON parameter: " + key);
+    }
+    return val;
+}
+
+inline bool parse_bool(const std::string& json, const std::string& key) {
+    auto val = get_json_val_required(json, key);
+    if (val == "true") return true;
+    if (val == "false") return false;
+    throw std::runtime_error("Invalid boolean value for " + key + ": " + val);
+}
+
+} // namespace shanks::utils_json
 
 #endif // SHANKS_UTILS_JSON_HPP

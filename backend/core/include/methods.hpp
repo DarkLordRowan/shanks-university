@@ -35,6 +35,7 @@ enum class transformation_id_t {
 // clang-format off
 // Critical section
 #include "utils.hpp"
+#include "utils/json.hpp"
 #include "wynn_numerators.hpp"
 #include "remainders.hpp"
 #include "series_acceleration.hpp"
@@ -73,7 +74,7 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class transformation_registry {
 public:
-    using Factory = std::function<std::unique_ptr<series_acceleration<T, K>>()>;
+    using Factory = std::function<std::unique_ptr<series_acceleration<T, K>>(const std::string& params_json)>;
 
     struct entry {
         transformation_id_t id;
@@ -89,7 +90,7 @@ public:
     static const std::vector<entry>& get_entries() {
         static const std::vector<entry> entries = {
 #define TRANSFORMATION_ENTRY(id, name, camel, cls, binding, ...) \
-    {transformation_id_t::id, name, []()->std::unique_ptr<series_acceleration<T, K>> __VA_ARGS__},
+    {transformation_id_t::id, name, [](const std::string& params_json)->std::unique_ptr<series_acceleration<T, K>> __VA_ARGS__},
 #include "transformation_registry.def"
 #undef TRANSFORMATION_ENTRY
         };
@@ -99,24 +100,26 @@ public:
     /**
      * @brief Create unique_ptr of a transformation with given id
      * @param id transformation_id_t
+     * @param params_json The JSON parameters for the transformation.
      * @throws std::domain_error if an invalid transformation ID given
      * @return std::unique_ptr<series_acceleration<T, K>>
      */
-    static std::unique_ptr<series_acceleration<T, K>> create(transformation_id_t id) {
+    static std::unique_ptr<series_acceleration<T, K>> create(transformation_id_t id, const std::string& params_json) {
         for (const auto& e : get_entries())
-            if (e.id == id) return e.factory();
+            if (e.id == id) return e.factory(params_json);
         throw std::domain_error("Invalid transformation ID");
     }
 
     /**
      * @brief Returns unique_ptr of a transformation created by an index in transformation_registry.def
      * @param index
+     * @param params_json The JSON parameters for the transformation.
      * @return std::unique_ptr<series_acceleration<T, K>>
      */
-    static std::unique_ptr<series_acceleration<T, K>> create_by_index(size_t index) {
+    static std::unique_ptr<series_acceleration<T, K>> create_by_index(size_t index, const std::string& params_json) {
         const auto& entries = get_entries();
         if (index >= entries.size()) throw std::out_of_range("Transformation index out of range");
-        return entries[index].factory();
+        return entries[index].factory(params_json);
     }
 };
 
