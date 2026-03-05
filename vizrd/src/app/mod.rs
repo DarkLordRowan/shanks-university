@@ -119,6 +119,7 @@ pub struct ShanksApp {
     show_events: bool,
     show_limit_lines: bool,
     show_interval_shading: bool,
+    show_legend: bool,
 
     n_points: u64,
 }
@@ -180,6 +181,7 @@ impl ShanksApp {
             show_events: true,
             show_limit_lines: true,
             show_interval_shading: true,
+            show_legend: true,
             n_points,
         };
 
@@ -429,7 +431,6 @@ impl ShanksApp {
         let mut baked_lines = Vec::new();
         let mut name_idx = 0;
         for (_key, _ltype, data, color, width, style, events, offset, kind) in raw_lines {
-
             let baked_data = match data {
                 ArrF64::Real(v) => {
                     let name = shortened_names[name_idx].clone();
@@ -856,6 +857,8 @@ impl eframe::App for ShanksApp {
                     ui.separator();
                     ui.checkbox(&mut self.show_limit_lines, "Show Limit Line");
                     ui.checkbox(&mut self.show_interval_shading, "Show Interval Shading");
+                    ui.separator();
+                    ui.checkbox(&mut self.show_legend, "Show Legend");
                 });
                 ui.label(format!("Status: {}", *self.status_rx.borrow()));
             });
@@ -975,9 +978,11 @@ impl eframe::App for ShanksApp {
                 PlotTab::Data => unreachable!(),
             };
 
-            let mut plot = egui_plot::Plot::new("main_plot")
-                .legend(egui_plot::Legend::default())
-                .data_aspect(current_tab_state.aspect_ratio);
+            let mut plot =
+                egui_plot::Plot::new("main_plot").data_aspect(current_tab_state.aspect_ratio);
+            if self.show_legend {
+                plot = plot.legend(egui_plot::Legend::default());
+            }
 
             if current_tab_state.symlog {
                 let thresh = current_tab_state.log_linthresh;
@@ -1320,14 +1325,14 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
         }
     };
 
-    let show_precision   = varies(infos, |i| i.precision.clone());
+    let show_precision = varies(infos, |i| i.precision.clone());
     let show_series_name = varies(infos, |i| i.series_name.clone());
-    let show_series_x    = varies(infos, |i| i.series_x.clone());
-    let show_noise_type  = varies(infos, |i| i.noise.as_ref().map(|(t, _, _, _)| t.clone()));
-    let show_noise_meth  = varies(infos, |i| i.noise.as_ref().map(|(_, m, _, _)| m.clone()));
-    let show_noise_seed  = varies(infos, |i| i.noise.as_ref().map(|(_, _, _, s)| *s));
-    let show_accel_name  = varies(infos, |i| i.accel_name.clone());
-    let show_accel_m     = varies(infos, |i| i.accel_m);
+    let show_series_x = varies(infos, |i| i.series_x.clone());
+    let show_noise_type = varies(infos, |i| i.noise.as_ref().map(|(t, _, _, _)| t.clone()));
+    let show_noise_meth = varies(infos, |i| i.noise.as_ref().map(|(_, m, _, _)| m.clone()));
+    let show_noise_seed = varies(infos, |i| i.noise.as_ref().map(|(_, _, _, s)| *s));
+    let show_accel_name = varies(infos, |i| i.accel_name.clone());
+    let show_accel_m = varies(infos, |i| i.accel_m);
     let show_filter_type = varies(infos, |i| i.filter.as_ref().map(|(t, _)| t.clone()));
     let mut show_line_type = varies(infos, |i| i.line_type.clone());
     let mut show_component = varies(infos, |i| i.component.clone());
