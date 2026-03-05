@@ -16,7 +16,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::watch;
 
-pub use selection::{SelectedCombination, SelectionNode, SelectionState};
+pub use selection::{AppSelection, SelectionNode, SelectionState};
 
 /// Stable key for identifying a computation result (series + optional accel).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -62,9 +62,11 @@ impl Default for TabState {
 }
 
 impl ResultKey {
-    pub fn extract_series(
+    pub fn resolve_series(
         exp: &ExperimentConfig,
-        combo: &SelectedCombination,
+        precision: &str,
+        series_combo: &(String, HashMap<String, String>),
+        noise_idx: Option<usize>,
     ) -> Option<compute::SeriesDesc> {
         let val_to_str = |val: &serde_json::Value| -> String {
             match val {
@@ -74,9 +76,10 @@ impl ResultKey {
             }
         };
 
-        let series_def = exp.series.iter().find(|s| s.name == combo.series_name)?;
+        let (series_name, series_params) = series_combo;
+        let series_def = exp.series.iter().find(|s| s.name == *series_name)?;
         let series = series_def.expand().find(|inst| {
-            combo.series_params.iter().all(|(k, v)| {
+            series_params.iter().all(|(k, v)| {
                 inst.args
                     .get(k)
                     .map(|sv| val_to_str(sv) == *v)
@@ -84,20 +87,20 @@ impl ResultKey {
             })
         })?;
 
-        let noise = combo
-            .noise_idx
+        let noise = noise_idx
             .and_then(|i| exp.noises.get(i).and_then(|d| d.expand().next()));
 
         Some(compute::SeriesDesc {
-            precision: combo.precision.clone(),
+            precision: precision.to_string(),
             series,
             noise,
         })
     }
 
-    pub fn extract_accel(
+    pub fn resolve_accel(
         exp: &ExperimentConfig,
-        combo: &SelectedCombination,
+        accel_combo: &(String, i64, HashMap<String, String>),
+        filter_combo: &(Option<String>, HashMap<String, String>),
     ) -> Option<compute::AccelDesc> {
         let val_to_str = |val: &serde_json::Value| -> String {
             match val {
@@ -107,10 +110,11 @@ impl ResultKey {
             }
         };
 
-        let accel_def = exp.accels.iter().find(|a| a.name == combo.method_name)?;
+        let (method_name, method_m, method_args) = accel_combo;
+        let accel_def = exp.accels.iter().find(|a| a.name == *method_name)?;
         let accel = accel_def.expand().find(|inst| {
-            inst.m == combo.method_m
-                && combo.method_args.iter().all(|(k, v)| {
+            inst.m == *method_m
+                && method_args.iter().all(|(k, v)| {
                     inst.args
                         .get(k)
                         .map(|sv| val_to_str(sv) == *v)
@@ -118,13 +122,14 @@ impl ResultKey {
                 })
         })?;
 
-        let filter = if let Some(ref name) = combo.filter_name {
+        let (filter_name, filter_args) = filter_combo;
+        let filter = if let Some(name) = filter_name {
             exp.filters
                 .iter()
                 .find(|f| f.filter_type == *name)
                 .and_then(|f| {
                     f.expand().find(|inst| {
-                        combo.filter_args.iter().all(|(k, v)| {
+                        filter_args.iter().all(|(k, v)| {
                             inst.args
                                 .get(k)
                                 .map(|sv| val_to_str(sv) == *v)
@@ -179,7 +184,7 @@ pub struct ShanksApp {
     cfg: Option<ExperimentConfig>,
     cache: Cache,
     config_tx: watch::Sender<Config>,
-    combos_tx: watch::Sender<Vec<SelectedCombination>>,
+    combos_tx: watch::Sender<AppSelection>,
     status_rx: watch::Receiver<String>,
 
     series_tree: Option<SelectionNode>,
@@ -229,7 +234,7 @@ impl ShanksApp {
             show_interval_shading: true,
             upd_data: false,
         });
-        let (combos_tx, combos_rx) = watch::channel(Vec::new());
+        let (combos_tx, combos_rx) = watch::channel(AppSelection::default());
 
         coordinator::Coordinator::spawn(
             experiment.clone(),
@@ -298,19 +303,19 @@ impl ShanksApp {
     }
 
     fn trigger_combinations(&self) {
-        let mut combinations = Vec::new();
+        let mut selection = AppSelection::default();
         if let Some(st) = &self.series_tree {
             if let Some(at) = &self.accel_tree {
                 if let Some(nt) = &self.noise_tree {
                     if let Some(ft) = &self.filter_tree {
                         if let Some(pt) = &self.precision_tree {
-                            combinations = selection::generate_combinations(st, at, nt, ft, pt);
+                            selection = selection::extract_selection(st, at, nt, ft, pt);
                         }
                     }
                 }
             }
         }
-        let _ = self.combos_tx.send(combinations);
+        let _ = self.combos_tx.send(selection);
     }
 
     fn to_plot_point(val: &crate::ffi::RealValue, symlog: bool, log_linthresh: f64) -> f64 {

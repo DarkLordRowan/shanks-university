@@ -6,7 +6,6 @@ fn main() {
         .map(|o| o.status.success())
         .unwrap_or(false);
 
-    // Skip unnecessary precisions in debug build to save time
     let is_debug = std::env::var("PROFILE").unwrap_or_default() == "debug";
 
     let mut build = cxx_build::bridge("src/ffi/bridge.rs");
@@ -37,11 +36,10 @@ fn main() {
         .include("/usr/include/eigen3")
         .flag_if_supported("-std=gnu++20")
         .flag_if_supported("-DSHANKS_ENABLE_PROFILING");
-    // .flag_if_supported("-O3");
 
-    // if is_debug {
-    // build.define("SHANKS_SKIP_PRECISION", None);
-    // }
+    if !is_debug {
+        build.flag_if_supported("-O3");
+    }
 
     build.compile("shanks_ffi");
 

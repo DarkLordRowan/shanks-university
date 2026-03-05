@@ -1,8 +1,8 @@
-use crate::app::{Config, PlotCache, ResultKey, SelectedCombination};
+use crate::app::{AppSelection, Config, PlotCache, ResultKey};
 use crate::cache::Cache;
 use crate::compute::{self, AccelData, Cancellable, ComputeEvent, SeriesData};
 use arc_swap::ArcSwap;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::watch;
@@ -19,7 +19,7 @@ pub struct Coordinator {
 
     // State
     last_config: Config,
-    last_combinations: Vec<crate::app::SelectedCombination>,
+    last_selection: AppSelection,
     bake_handle: Option<Cancellable>,
     cancel_flag: Option<Arc<AtomicBool>>,
 
@@ -30,7 +30,7 @@ pub struct Coordinator {
 
     // Channels
     config_rx: watch::Receiver<Config>,
-    combos_rx: watch::Receiver<Vec<crate::app::SelectedCombination>>,
+    combos_rx: watch::Receiver<AppSelection>,
     event_tx: tokio::sync::mpsc::Sender<ComputeEvent<compute::SeriesDesc>>,
     event_rx: tokio::sync::mpsc::Receiver<ComputeEvent<compute::SeriesDesc>>,
 }
@@ -43,7 +43,7 @@ impl Coordinator {
         data_cache: Arc<ArcSwap<crate::app::data_tab::DataCache>>,
         status_tx: watch::Sender<String>,
         config_rx: watch::Receiver<Config>,
-        combos_rx: watch::Receiver<Vec<crate::app::SelectedCombination>>,
+        combos_rx: watch::Receiver<AppSelection>,
     ) {
         let (event_tx, event_rx) = tokio::sync::mpsc::channel(100);
 
@@ -58,7 +58,7 @@ impl Coordinator {
             active_tasks: HashMap::new(),
             n_points_cached: initial_config.n_points + 10,
             last_config: initial_config,
-            last_combinations: initial_combos,
+            last_selection: initial_combos,
             bake_handle: None,
             cancel_flag: None,
             plot_cache,
@@ -83,8 +83,8 @@ impl Coordinator {
                     self.handle_config_update(cfg);
                 }
                 Ok(_) = self.combos_rx.changed() => {
-                    let combos = self.combos_rx.borrow().clone();
-                    self.handle_combinations_update(combos);
+                    let selection = self.combos_rx.borrow().clone();
+                    self.handle_selection_update(selection);
                 }
                 Some(event) = self.event_rx.recv() => {
                     self.handle_compute_event(event);
@@ -108,8 +108,8 @@ impl Coordinator {
         self.trigger_bake();
     }
 
-    fn handle_combinations_update(&mut self, combos: Vec<crate::app::SelectedCombination>) {
-        self.last_combinations = combos;
+    fn handle_selection_update(&mut self, selection: AppSelection) {
+        self.last_selection = selection;
         self.sync_with_compute();
         self.trigger_bake();
     }
@@ -143,49 +143,40 @@ impl Coordinator {
     }
 
     fn sync_with_compute(&mut self) {
-        let combinations = &self.last_combinations;
-        let mut series_groups: HashMap<
-            (String, BTreeMap<String, String>, String, Option<usize>),
-            Vec<SelectedCombination>,
-        > = HashMap::new();
+        let selection = self.last_selection.clone();
+        let cfg = self.cfg.clone();
+        let exp = cfg.as_ref().expect("Config required for extraction");
 
-        for combo in combinations {
-            let s_key = (
-                combo.series_name.clone(),
-                combo
-                    .series_params
-                    .clone()
-                    .into_iter()
-                    .collect::<BTreeMap<_, _>>(),
-                combo.precision.clone(),
-                combo.noise_idx,
-            );
-            series_groups.entry(s_key).or_default().push(combo.clone());
-        }
-
-        let mut grouped: HashMap<compute::SeriesDesc, Vec<SelectedCombination>> = HashMap::new();
         let mut requested_series = HashSet::new();
         let mut requested_accels = HashSet::new();
+        let mut series_tasks: HashMap<compute::SeriesDesc, (HashSet<crate::experiment::AccelInstance>, HashSet<crate::experiment::FilterInstance>)> = HashMap::new();
 
-        for (_s_key, combos) in series_groups {
-            let Some(first_combo) = combos.first() else {
-                continue;
-            };
-            let exp = self.cfg.as_ref().expect("Config required for extraction");
-            if let Some(series_desc) = ResultKey::extract_series(exp, first_combo) {
-                requested_series.insert(series_desc.clone());
+        for prec in &selection.precisions {
+            for s_combo in &selection.series {
+                for noise_idx in &selection.noises {
+                    if let Some(s_desc) = ResultKey::resolve_series(exp, prec, s_combo, *noise_idx) {
+                        requested_series.insert(s_desc.clone());
+                        
+                        let task_info = series_tasks.entry(s_desc.clone()).or_default();
 
-                for combo in &combos {
-                    let exp = self.cfg.as_ref().expect("Config required for extraction");
-                    if let Some(accel_desc) = ResultKey::extract_accel(exp, combo) {
-                        let rk = ResultKey {
-                            series: series_desc.clone(),
-                            accel: Some(accel_desc),
-                        };
-                        requested_accels.insert(rk);
+                        for a_combo in &selection.accels {
+                            for f_combo in &selection.filters {
+                                if let Some(a_desc) = ResultKey::resolve_accel(exp, a_combo, f_combo) {
+                                    let rk = ResultKey {
+                                        series: s_desc.clone(),
+                                        accel: Some(a_desc.clone()),
+                                    };
+                                    requested_accels.insert(rk);
+                                    
+                                    task_info.0.insert(a_desc.accel.clone());
+                                    if let Some(ref f) = a_desc.filter {
+                                        task_info.1.insert(f.clone());
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-                grouped.insert(series_desc, combos);
             }
         }
 
@@ -214,25 +205,35 @@ impl Coordinator {
         }
 
         // 2. Spawn new tasks
-        for (s_desc, s_combos) in grouped {
+        for (s_desc, (algos, filters)) in series_tasks {
             if self.active_tasks.contains_key(&s_desc) {
                 continue;
             }
 
             let mut all_present = self.series_results.contains_key(&s_desc);
             if all_present {
-                for combo in &s_combos {
-                    let exp = self.cfg.as_ref().expect("Config required for extraction");
-                    if let Some(accel_desc) = ResultKey::extract_accel(exp, combo) {
-                        let rk = ResultKey {
-                            series: s_desc.clone(),
-                            accel: Some(accel_desc),
-                        };
-                        if !self.accel_results.contains_key(&rk) {
-                            all_present = false;
-                            break;
+                // Check if all requested accels for THIS series are present
+                for prec in &selection.precisions {
+                    // Only check for the precision matching this series desc
+                    if prec != &s_desc.precision { continue; }
+
+                    // Re-resolve to find which accels belong to this exact s_desc
+                    for a_combo in &selection.accels {
+                        for f_combo in &selection.filters {
+                            if let Some(a_desc) = ResultKey::resolve_accel(exp, a_combo, f_combo) {
+                                let rk = ResultKey {
+                                    series: s_desc.clone(),
+                                    accel: Some(a_desc),
+                                };
+                                if requested_accels.contains(&rk) && !self.accel_results.contains_key(&rk) {
+                                    all_present = false;
+                                    break;
+                                }
+                            }
                         }
+                        if !all_present { break; }
                     }
+                    if !all_present { break; }
                 }
             }
 
@@ -241,27 +242,13 @@ impl Coordinator {
             }
 
             // Start new task
-            let mut task = compute::ComputeTask {
+            let task = compute::ComputeTask {
                 id: s_desc.clone(),
                 series: s_desc.clone(),
                 n_points: self.n_points_cached,
-                algorithms: Vec::new(),
-                filters: Vec::new(),
+                algorithms: algos.into_iter().collect(),
+                filters: filters.into_iter().collect(),
             };
-
-            let mut algos = HashSet::new();
-            let mut filters = HashSet::new();
-            for combo in s_combos {
-                let exp = self.cfg.as_ref().expect("Config required for extraction");
-                if let Some(ad) = ResultKey::extract_accel(exp, &combo) {
-                    algos.insert(ad.accel.clone());
-                    if let Some(ref fd) = ad.filter {
-                        filters.insert(fd.clone());
-                    }
-                }
-            }
-            task.algorithms = algos.into_iter().collect();
-            task.filters = filters.into_iter().collect();
 
             let handle = compute::spawn_task(task, self.cache.clone(), self.event_tx.clone());
             self.active_tasks.insert(s_desc, handle);

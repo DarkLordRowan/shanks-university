@@ -383,68 +383,31 @@ pub fn build_filter_tree(
     root
 }
 
-/// Selected combination for computation.
-#[derive(Debug, Clone)]
-pub struct SelectedCombination {
-    /// Series name
-    pub series_name: String,
-    /// Series parameters
-    pub series_params: HashMap<String, String>,
-    /// Method name
-    pub method_name: String,
-    /// Method m value
-    pub method_m: i64,
-    /// Method additional args
-    pub method_args: HashMap<String, String>,
-    /// Noise index (None = no noise)
-    pub noise_idx: Option<usize>,
-    /// Filter name (None = no filter)
-    pub filter_name: Option<String>,
-    /// Filter args
-    pub filter_args: HashMap<String, String>,
-    /// Precision
-    pub precision: String,
+/// Structured selection from the UI trees.
+#[derive(Debug, Clone, Default)]
+pub struct AppSelection {
+    pub precisions: Vec<String>,
+    pub series: Vec<SeriesCombo>,
+    pub noises: Vec<Option<usize>>,
+    pub accels: Vec<AccelCombo>,
+    pub filters: Vec<FilterCombo>,
 }
 
-/// Generate all selected combinations from trees.
-pub fn generate_combinations(
+/// Extract all selected values from trees without combinatorial expansion.
+pub fn extract_selection(
     series_tree: &SelectionNode,
     accel_tree: &SelectionNode,
     noise_tree: &SelectionNode,
     filter_tree: &SelectionNode,
     precision_tree: &SelectionNode,
-) -> Vec<SelectedCombination> {
-    let series_combos = extract_series_combinations(series_tree);
-    let accel_combos = extract_accel_combinations(accel_tree);
-    let noise_combos = extract_noise_combinations(noise_tree);
-    let filter_combos = extract_filter_combinations(filter_tree);
-    let precisions = extract_precisions(precision_tree);
-
-    let mut combinations = Vec::new();
-
-    for precision in &precisions {
-        for series in &series_combos {
-            for accel in &accel_combos {
-                for noise in &noise_combos {
-                    for filter in &filter_combos {
-                        combinations.push(SelectedCombination {
-                            series_name: series.0.clone(),
-                            series_params: series.1.clone(),
-                            method_name: accel.0.clone(),
-                            method_m: accel.1,
-                            method_args: accel.2.clone(),
-                            noise_idx: *noise,
-                            filter_name: filter.0.clone(),
-                            filter_args: filter.1.clone(),
-                            precision: precision.clone(),
-                        });
-                    }
-                }
-            }
-        }
+) -> AppSelection {
+    AppSelection {
+        precisions: extract_precisions(precision_tree),
+        series: extract_series_combinations(series_tree),
+        noises: extract_noise_combinations(noise_tree),
+        accels: extract_accel_combinations(accel_tree),
+        filters: extract_filter_combinations(filter_tree),
     }
-
-    combinations
 }
 
 type SeriesCombo = (String, HashMap<String, String>);
