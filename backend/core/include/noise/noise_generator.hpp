@@ -5,6 +5,7 @@
 
 #include <cstdlib>
 #include <random>
+#include <stdexcept>
 #include <vector>
 
 #include "normal_noise.hpp"
@@ -214,20 +215,32 @@ series_result<T> apply_noise(const series_result<T>& result, const std::string& 
         if (!seed_str.empty()) seed = std::stoull(seed_str);
     } catch (...) {}
 
-    // 4. Dispatch to specific noise implementations
+    // 4. Validate and Dispatch to specific noise implementations
     if (nt == NoiseType::uniform) {
         double min = 0, max = 0;
         try { min = std::stod(::shanks::utils::get_json_val(params_json, "min")); } catch (...) {}
         try { max = std::stod(::shanks::utils::get_json_val(params_json, "max")); } catch (...) {}
+        
+        if (min >= max) {
+            throw std::invalid_argument("uniform noise: min must be less than max (min=" + std::to_string(min) + ", max=" + std::to_string(max) + ")");
+        }
         return apply_uniform_noise<T>(tail_res, nm, seed, min, max);
     } else if (nt == NoiseType::normal) {
         double mean = 0, stddev = 0;
         try { mean = std::stod(::shanks::utils::get_json_val(params_json, "mean")); } catch (...) {}
         try { stddev = std::stod(::shanks::utils::get_json_val(params_json, "stddev")); } catch (...) {}
+        
+        if (stddev <= 0) {
+            throw std::invalid_argument("normal noise: stddev must be positive (stddev=" + std::to_string(stddev) + ")");
+        }
         return apply_normal_noise<T>(tail_res, nm, seed, mean, stddev);
     } else if (nt == NoiseType::poisson) {
         double lambda = 0;
         try { lambda = std::stod(::shanks::utils::get_json_val(params_json, "lambda")); } catch (...) {}
+        
+        if (lambda <= 0) {
+            throw std::invalid_argument("poisson noise: lambda must be positive (lambda=" + std::to_string(lambda) + ")");
+        }
         return apply_poisson_noise<T>(tail_res, nm, seed, lambda);
     }
     return tail_res;

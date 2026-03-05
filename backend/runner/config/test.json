@@ -36,15 +36,27 @@
     {
       "type": "Normal",
       "method": "jitter",
-      "param1": 0.0,
-      "param2": 1e-10,
+      "args": {
+        "mean": 0.0,
+        "stddev": 1e-10
+      },
       "seed": 42
     },
     {
       "type": "Uniform",
       "method": "scaling",
-      "param1": 0.999,
-      "param2": 1.001,
+      "args": {
+        "min": -1e-10,
+        "max": 1e-10
+      },
+      "seed": 42
+    },
+    {
+      "type": "Poisson",
+      "method": "jitter",
+      "args": {
+        "lambda": 0.001
+      },
       "seed": 42
     }
   ],

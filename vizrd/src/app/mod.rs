@@ -87,8 +87,7 @@ impl ResultKey {
             })
         })?;
 
-        let noise = noise_idx
-            .and_then(|i| exp.noises.get(i).and_then(|d| d.expand().next()));
+        let noise = noise_idx.and_then(|i| exp.noises.iter().flat_map(|d| d.expand()).nth(i));
 
         Some(compute::SeriesDesc {
             precision: precision.to_string(),
@@ -186,6 +185,7 @@ pub struct ShanksApp {
     config_tx: watch::Sender<Config>,
     combos_tx: watch::Sender<AppSelection>,
     status_rx: watch::Receiver<String>,
+    last_err_rx: watch::Receiver<String>,
 
     series_tree: Option<SelectionNode>,
     accel_tree: Option<SelectionNode>,
@@ -226,6 +226,7 @@ impl ShanksApp {
         let plot_cache = Arc::new(ArcSwap::from_pointee(PlotCache::default()));
         let data_cache = Arc::new(ArcSwap::from_pointee(data_tab::DataCache::default()));
         let (status_tx, status_rx) = watch::channel("Ready".to_string());
+        let (last_err_tx, last_err_rx) = watch::channel("".to_string());
         let (config_tx, config_rx) = watch::channel(Config {
             n_points,
             main_tab_state: TabState::default(),
@@ -242,6 +243,7 @@ impl ShanksApp {
             plot_cache.clone(),
             data_cache.clone(),
             status_tx,
+            last_err_tx,
             config_rx,
             combos_rx,
         );
@@ -252,6 +254,7 @@ impl ShanksApp {
             config_tx,
             combos_tx,
             status_rx,
+            last_err_rx,
             series_tree: None,
             accel_tree: None,
             noise_tree: None,
@@ -1053,6 +1056,7 @@ impl eframe::App for ShanksApp {
                     if ui.add(n).changed() {
                         self.trigger_config_update();
                     }
+                    ui.label(self.last_err_rx.borrow().as_str());
                 });
             });
 

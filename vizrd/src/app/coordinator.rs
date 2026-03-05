@@ -27,6 +27,7 @@ pub struct Coordinator {
     plot_cache: Arc<ArcSwap<PlotCache>>,
     data_cache: Arc<ArcSwap<crate::app::data_tab::DataCache>>,
     status_tx: watch::Sender<String>,
+    last_err_tx: watch::Sender<String>,
 
     // Channels
     config_rx: watch::Receiver<Config>,
@@ -42,6 +43,7 @@ impl Coordinator {
         plot_cache: Arc<ArcSwap<PlotCache>>,
         data_cache: Arc<ArcSwap<crate::app::data_tab::DataCache>>,
         status_tx: watch::Sender<String>,
+        last_err_tx: watch::Sender<String>,
         config_rx: watch::Receiver<Config>,
         combos_rx: watch::Receiver<AppSelection>,
     ) {
@@ -64,6 +66,7 @@ impl Coordinator {
             plot_cache,
             data_cache,
             status_tx,
+            last_err_tx,
             config_rx,
             combos_rx,
             event_tx,
@@ -138,6 +141,7 @@ impl Coordinator {
                 self.active_tasks.remove(&id);
                 self.series_results.entry(id).or_insert(None);
                 let _ = self.status_tx.send(format!("Error: {}", error));
+                let _ = self.last_err_tx.send(error);
             }
         }
     }
@@ -149,25 +153,34 @@ impl Coordinator {
 
         let mut requested_series = HashSet::new();
         let mut requested_accels = HashSet::new();
-        let mut series_tasks: HashMap<compute::SeriesDesc, (HashSet<crate::experiment::AccelInstance>, HashSet<crate::experiment::FilterInstance>)> = HashMap::new();
+        let mut series_tasks: HashMap<
+            compute::SeriesDesc,
+            (
+                HashSet<crate::experiment::AccelInstance>,
+                HashSet<crate::experiment::FilterInstance>,
+            ),
+        > = HashMap::new();
 
         for prec in &selection.precisions {
             for s_combo in &selection.series {
                 for noise_idx in &selection.noises {
-                    if let Some(s_desc) = ResultKey::resolve_series(exp, prec, s_combo, *noise_idx) {
+                    if let Some(s_desc) = ResultKey::resolve_series(exp, prec, s_combo, *noise_idx)
+                    {
                         requested_series.insert(s_desc.clone());
-                        
+
                         let task_info = series_tasks.entry(s_desc.clone()).or_default();
 
                         for a_combo in &selection.accels {
                             for f_combo in &selection.filters {
-                                if let Some(a_desc) = ResultKey::resolve_accel(exp, a_combo, f_combo) {
+                                if let Some(a_desc) =
+                                    ResultKey::resolve_accel(exp, a_combo, f_combo)
+                                {
                                     let rk = ResultKey {
                                         series: s_desc.clone(),
                                         accel: Some(a_desc.clone()),
                                     };
                                     requested_accels.insert(rk);
-                                    
+
                                     task_info.0.insert(a_desc.accel.clone());
                                     if let Some(ref f) = a_desc.filter {
                                         task_info.1.insert(f.clone());
@@ -215,7 +228,9 @@ impl Coordinator {
                 // Check if all requested accels for THIS series are present
                 for prec in &selection.precisions {
                     // Only check for the precision matching this series desc
-                    if prec != &s_desc.precision { continue; }
+                    if prec != &s_desc.precision {
+                        continue;
+                    }
 
                     // Re-resolve to find which accels belong to this exact s_desc
                     for a_combo in &selection.accels {
@@ -225,15 +240,21 @@ impl Coordinator {
                                     series: s_desc.clone(),
                                     accel: Some(a_desc),
                                 };
-                                if requested_accels.contains(&rk) && !self.accel_results.contains_key(&rk) {
+                                if requested_accels.contains(&rk)
+                                    && !self.accel_results.contains_key(&rk)
+                                {
                                     all_present = false;
                                     break;
                                 }
                             }
                         }
-                        if !all_present { break; }
+                        if !all_present {
+                            break;
+                        }
                     }
-                    if !all_present { break; }
+                    if !all_present {
+                        break;
+                    }
                 }
             }
 
