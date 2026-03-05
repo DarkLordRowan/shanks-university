@@ -98,21 +98,22 @@ void bind_algos(pybind11::module_& m, const char* suffix) {
         py::arg("remainder") = shanks::remainders::remainder_type::u_type, py::arg("useRecurrentFormula") = false, \
         py::arg("beta") = RealT(1.0))
 
-#define BIND_F_BASE(cls, name)                                                                                     \
-    m.def(                                                                                                         \
-        create_name(name, suffix).c_str(),                                                                         \
-        [](K n, K order, const series_result<T>& data, shanks::remainders::remainder_type remainder                \
-        ){ return shanks::algos::cls<T, K>(remainder)(n, order, data); },                                          \
-        py::arg("n"), py::arg("order"), py::arg("data"),                                                           \
+#define BIND_F_BASE(cls, name)                                                                         \
+    m.def(                                                                                             \
+        create_name(name, suffix).c_str(),                                                             \
+        [](K n, K order, const series_result<T>& data, shanks::remainders::remainder_type remainder) { \
+            return shanks::algos::cls<T, K>(remainder)(n, order, data);                                \
+        },                                                                                             \
+        py::arg("n"), py::arg("order"), py::arg("data"),                                               \
         py::arg("remainder") = shanks::remainders::remainder_type::u_type)
 
-#define BIND_PJ_BASE(cls, name)                                                                                    \
-    m.def(                                                                                                         \
-        create_name(name, suffix).c_str(),                                                                         \
-        [](K n, K order, const series_result<T>& data, shanks::remainders::remainder_type remainder, int p,        \
-           RealT beta) { return shanks::algos::cls<T, K>(remainder, p, beta)(n, order, data); },                   \
-        py::arg("n"), py::arg("order"), py::arg("data"),                                                           \
-        py::arg("remainder") = shanks::remainders::remainder_type::u_type, py::arg("p") = 2,                       \
+#define BIND_PJ_BASE(cls, name)                                                                             \
+    m.def(                                                                                                  \
+        create_name(name, suffix).c_str(),                                                                  \
+        [](K n, K order, const series_result<T>& data, shanks::remainders::remainder_type remainder, int p, \
+           RealT beta) { return shanks::algos::cls<T, K>(remainder, p, beta)(n, order, data); },            \
+        py::arg("n"), py::arg("order"), py::arg("data"),                                                    \
+        py::arg("remainder") = shanks::remainders::remainder_type::u_type, py::arg("p") = 2,                \
         py::arg("beta") = RealT(1.0))
 
 #define BIND_RHO(cls, name)                                                                                       \

@@ -118,6 +118,7 @@ enum class series_iterator_id_t {
 #include "series_iterators/rump_seq4_iterator.hpp"
 #include "series_iterators/rump_seq5_iterator.hpp"
 #include "series_iterators/rump_seq6_iterator.hpp"
+#include "series_iterators/rump_seq7_iterator.hpp"
 #include "series_iterators/si_x_iterator.hpp"
 #include "series_iterators/sin_iterator.hpp"
 #include "series_iterators/sin_x2_iterator.hpp"

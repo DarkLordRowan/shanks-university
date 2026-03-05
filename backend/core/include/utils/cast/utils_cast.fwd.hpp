@@ -16,7 +16,7 @@ struct utils::cast {
 };
 
 template <typename To, typename From>
-To utils::cast<To, From>::operator()(const From& x, [[maybe_unused]] std::size_t precision ) {
+To utils::cast<To, From>::operator()(const From& x, [[maybe_unused]] std::size_t precision) {
     return static_cast<To>(x);
 }
 

@@ -152,23 +152,27 @@ public:
      * @return std::string The name and current parameter configuration of the algorithm.
      */
     std::string get_name() override {
-        series_acceleration<T, K>::acceleration_name = "wynn rho algorithm ";
+        series_acceleration<T, K>::acceleration_name = "wynn rho algorithm";
         switch (numerator_type_in_use) {
             case shanks::numerators::numerator_type::rho_type: {
-                series_acceleration<T, K>::acceleration_name += "with rho-numerator ";
+                series_acceleration<T, K>::acceleration_name += "with rho-numerator";
                 break;
             }
             case shanks::numerators::numerator_type::generalized_type: {
-                series_acceleration<T, K>::acceleration_name += "with generalized-numerator ";
+                series_acceleration<T, K>::acceleration_name += "with generalized-numerator";
                 break;
             }
             case shanks::numerators::numerator_type::gamma_rho_type: {
-                series_acceleration<T, K>::acceleration_name += "with v-numerator ";
+                series_acceleration<T, K>::acceleration_name += "with v-numerator";
                 break;
             }
         }
-        series_acceleration<T, K>::acceleration_name += ", gamma = " + utils::helpers<T>::to_string(gamma_in_use);
-        series_acceleration<T, K>::acceleration_name += ", rho = " + utils::helpers<T>::to_string(rho_in_use);
+        if (shanks::numerators::numerator_type::generalized_type == numerator_type_in_use)
+            series_acceleration<T, K>::acceleration_name += " gamma = " + utils::helpers<T>::to_string(gamma_in_use);
+        if (shanks::numerators::numerator_type::gamma_rho_type == numerator_type_in_use) {
+            series_acceleration<T, K>::acceleration_name += " gamma = " + utils::helpers<T>::to_string(gamma_in_use);
+            series_acceleration<T, K>::acceleration_name += " rho = " + utils::helpers<T>::to_string(rho_in_use);
+        }
 
         return series_acceleration<T, K>::acceleration_name;
     }

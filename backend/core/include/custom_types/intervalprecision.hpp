@@ -784,7 +784,7 @@ inline std::string interval<IT>::toString() const {
 
 // copy constructor
 template <FloatLike IT>
-inline interval<IT>::interval(const interval<IT>& rhs){
+inline interval<IT>::interval(const interval<IT>& rhs) {
     left = rhs.left;
     right = rhs.right;
     type = rhs.type;
@@ -793,10 +793,10 @@ inline interval<IT>::interval(const interval<IT>& rhs){
 
 // move constructor
 template <FloatLike IT>
-inline interval<IT>::interval(interval<IT>&& rhs){
-    left       = std::move(rhs.left);
-    right      = std::move(rhs.right);
-    type       = std::move(rhs.type);
+inline interval<IT>::interval(interval<IT>&& rhs) {
+    left = std::move(rhs.left);
+    right = std::move(rhs.right);
+    type = std::move(rhs.type);
     decoration = std::move(rhs.decoration);
 }
 
@@ -2528,8 +2528,10 @@ constexpr interval<IT> e_interval(const std::size_t precision) {
         return interval<IT>(IT(2.718'281'828'459'045'1), IT(2.718'281'828'459'045'5));
 #ifdef __MPREAL_H__
     else if constexpr (std::is_same<IT, mpfr::mpreal>::value)
-        return interval<IT>(mpfr::const_euler(mpfr::digits2bits(precision)), utils::helpers<IT>::nextafter(
-                                                     mpfr::const_euler(mpfr::digits2bits(precision)), mpfr::const_euler(mpfr::digits2bits(precision)) + mpfr::mpreal(1.0f)));
+        return interval<IT>(
+            mpfr::const_euler(mpfr::digits2bits(precision)),
+            utils::helpers<IT>::nextafter(mpfr::const_euler(mpfr::digits2bits(precision)),
+                                          mpfr::const_euler(mpfr::digits2bits(precision)) + mpfr::mpreal(1.0f)));
 #endif
 #ifdef SHANKS_ENABLE_PROFILING
     else if constexpr (is_profiling<IT>::value) {
@@ -2554,8 +2556,10 @@ constexpr interval<IT> ln2_interval(const std::size_t precision) {
         return interval<IT>(IT(0.693'147'180'559'945'29), IT(0.693'147'180'559'945'40));
 #ifdef __MPREAL_H__
     else if constexpr (std::is_same<IT, mpfr::mpreal>::value)
-        return interval<IT>(mpfr::const_log2(mpfr::digits2bits(precision)),
-                            utils::helpers<IT>::nextafter(mpfr::const_log2(mpfr::digits2bits(precision)), mpfr::const_log2(mpfr::digits2bits(precision)) + mpfr::mpreal(1.0f)));
+        return interval<IT>(
+            mpfr::const_log2(mpfr::digits2bits(precision)),
+            utils::helpers<IT>::nextafter(mpfr::const_log2(mpfr::digits2bits(precision)),
+                                          mpfr::const_log2(mpfr::digits2bits(precision)) + mpfr::mpreal(1.0f)));
 #endif
 #ifdef SHANKS_ENABLE_PROFILING
     else if constexpr (is_profiling<IT>::value) {
@@ -2580,9 +2584,10 @@ constexpr interval<IT> ln10_interval(const std::size_t precision) {
         return interval<IT>(IT(2.302'585'092'994'045'5), IT(2.302'585'092'994'045'9));
 #ifdef __MPREAL_H__
     else if constexpr (std::is_same<IT, mpfr::mpreal>::value)
-        return interval<IT>(mpfr::log(mpfr::mpreal("10",mpfr::digits2bits(precision))),
-                            utils::helpers<IT>::nextafter(mpfr::log(mpfr::mpreal("10", mpfr::digits2bits(precision))),
-                                                          mpfr::log(mpfr::mpreal("10", mpfr::digits2bits(precision))) + mpfr::mpreal(1.0f)));
+        return interval<IT>(mpfr::log(mpfr::mpreal("10", mpfr::digits2bits(precision))),
+                            utils::helpers<IT>::nextafter(
+                                mpfr::log(mpfr::mpreal("10", mpfr::digits2bits(precision))),
+                                mpfr::log(mpfr::mpreal("10", mpfr::digits2bits(precision))) + mpfr::mpreal(1.0f)));
 #endif
 #ifdef SHANKS_ENABLE_PROFILING
     else if constexpr (is_profiling<IT>::value) {

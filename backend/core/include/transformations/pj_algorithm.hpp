@@ -29,7 +29,6 @@ protected:
     const float_type beta;
 
 public:
-
     /**
      * @brief Parameterized constructor to initialize pJ-transformation
      * @param variant Type of remainder estimator to use
@@ -48,7 +47,7 @@ public:
         : series_acceleration<T, K>(), p(p), beta(beta) {
         update_type(remainder_type_to_use);
     };
-    
+
     /**
      * @brief Executes pJ-transformation to accelerate series convergence.
      *
@@ -117,26 +116,26 @@ public:
      * @return std::string A string containing the variant name and configuration details.
      */
     std::string get_name() override {
-        series_acceleration<T, K>::acceleration_name = "pj_algorithm ";
+        series_acceleration<T, K>::acceleration_name = std::to_string(p) + std::string("j_algorithm ");
         switch (remainder_type_in_use) {
             case shanks::remainders::remainder_type::u_type: {
-                series_acceleration<T, K>::acceleration_name += "with u-variant ";
+                series_acceleration<T, K>::acceleration_name += "with u-variant";
                 break;
             }
             case shanks::remainders::remainder_type::t_type: {
-                series_acceleration<T, K>::acceleration_name += "with t-variant ";
+                series_acceleration<T, K>::acceleration_name += "with t-variant";
                 break;
             }
             case shanks::remainders::remainder_type::v_type: {
-                series_acceleration<T, K>::acceleration_name += "with v-variant ";
+                series_acceleration<T, K>::acceleration_name += "with v-variant";
                 break;
             }
             case shanks::remainders::remainder_type::t_wave_type: {
-                series_acceleration<T, K>::acceleration_name += "with t-wave-variant ";
+                series_acceleration<T, K>::acceleration_name += "with t-wave-variant";
                 break;
             }
             case shanks::remainders::remainder_type::v_wave_type: {
-                series_acceleration<T, K>::acceleration_name += "with v-wave-variant ";
+                series_acceleration<T, K>::acceleration_name += "with v-wave-variant";
                 break;
             }
             default: {
@@ -144,6 +143,7 @@ public:
                 remainder.reset(new shanks::remainders::u_transform<T, K>());
             }
         }
+        series_acceleration<T, K>::acceleration_name += "and beta = " + utils::helpers<T>::to_string(beta);
 
         return series_acceleration<T, K>::acceleration_name;
     }
@@ -186,13 +186,13 @@ T pj_algorithm<T, K>::operator()(const K n, const K order, const series_result<T
                 utils::cast<float_type, K>()(n + k, precision) + beta - utils::cast<float_type, int>()(-1, precision);
             const float_type denom = num + utils::cast<float_type, int>()(2, precision);
             return utils::math<float_type>::pow(num / denom, utils::cast<float_type, K>()(k, precision));
-        }; //
+        };  //
     } else {
         psi = [&precision, this](K n, K k) {
             if (k == static_cast<K>(0)) return utils::cast<float_type, int>()(1, precision);
             const float_type num = (utils::cast<float_type, K>()(n + k, precision) + beta -
-                           utils::cast<float_type, int>()(-1, precision)) /
-                          utils::cast<float_type, int>()(p - 2, precision);
+                                    utils::cast<float_type, int>()(-1, precision)) /
+                                   utils::cast<float_type, int>()(p - 2, precision);
             const float_type denom =
                 (utils::cast<float_type, K>()(n + k, precision) + beta - utils::cast<float_type, int>()(1, precision)) /
                 utils::cast<float_type, int>()(p - 2, precision);
@@ -204,7 +204,8 @@ T pj_algorithm<T, K>::operator()(const K n, const K order, const series_result<T
         };
     }
 
-    // Implement recursive scheme, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS [98, p. 17]
+    // Implement recursive scheme, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS [98, p.
+    // 17]
     for (K i = static_cast<K>(1); i <= order; ++i)
         for (K j = static_cast<K>(0); j <= order - i; ++j) {
             const T right = utils::cast<T, float_type>()(psi(n + j, i));
@@ -213,6 +214,7 @@ T pj_algorithm<T, K>::operator()(const K n, const K order, const series_result<T
         }
 
     Num[0] /= Denom[0];
+    if (!utils::helpers<T>::isfinite(Num[0])) throw std::overflow_error("division by zero");
     return Num[0];
 }
 

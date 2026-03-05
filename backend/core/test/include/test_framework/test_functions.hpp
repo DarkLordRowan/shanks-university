@@ -23,7 +23,8 @@
  * @param test The type of transformation that is being used
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void cmp_sum_and_transform(const K n, const K order, shanks::series::series_base<T, K>* series, series_result<T>& result, shanks::algos::series_acceleration<T, K>* test) {
+void cmp_sum_and_transform(const K n, const K order, shanks::series::series_base<T, K>* series,
+                           series_result<T>& result, shanks::algos::series_acceleration<T, K>* test) {
     std::cout << "transformation : " << test->get_name() << "\n";
     for (K i = 1; i <= n; ++i) {
         try {
@@ -58,8 +59,8 @@ void cmp_sum_and_transform(const K n, const K order, shanks::series::series_base
  * @param test The type of transformation that is being used
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void cmp_a_n_and_transform(const K n, const K order,
-                           series_result<T>& result, shanks::algos::series_acceleration<T, K>* test) {
+void cmp_a_n_and_transform(const K n, const K order, series_result<T>& result,
+                           shanks::algos::series_acceleration<T, K>* test) {
     std::cout << "transformation : " << test->get_name() << "\n";
     for (K i = 1; i <= n; ++i) {
         try {

@@ -48,9 +48,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true x is non-finite, false otherwise.
      */
-    bool is_invalid() const override {
-        return !utils::helpers<T>::isfinite(this->x);
-    }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the Fourier expansion of 10 - x.

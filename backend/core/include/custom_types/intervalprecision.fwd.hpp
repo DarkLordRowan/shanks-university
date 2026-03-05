@@ -65,7 +65,7 @@ public:
     explicit interval(const IT&, const IT&, const enum interval_type t = CLOSE);
     // copy constructor
     interval(const interval<IT>&);
-    //move constructor
+    // move constructor
     interval(interval<IT>&&);
 
     // Implicit promotion constructors from integer types to allow Eigen traits to instantiate Scalar(1) or Scalar(0)
@@ -132,7 +132,7 @@ public:
     operator float() const;
 
     // Essential operators
-    interval<IT>& operator=(const interval<IT>&); // assign operator
+    interval<IT>& operator=(const interval<IT>&);  // assign operator
     interval<IT>& operator+=(const interval<IT>&);
     interval<IT>& operator-=(const interval<IT>&);
     interval<IT>& operator*=(const interval<IT>&);

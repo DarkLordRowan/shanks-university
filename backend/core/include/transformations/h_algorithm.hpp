@@ -16,7 +16,6 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class h_algorithm final : public series_acceleration<T, K> {
 protected:
-
     using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /// Unique pointer to the remainder estimator strategy being used.
@@ -47,8 +46,7 @@ public:
     explicit h_algorithm(
         const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
         const float_type beta = utils::cast<float_type, int>()(1),
-        const T alpha = utils::cast<T, double>()(std::numbers::pi * 0.25)
-    )
+        const T alpha = utils::cast<T, double>()(std::numbers::pi * 0.25))
         : series_acceleration<T, K>(), beta(beta), alpha(alpha) {
         update_type(remainder_type_to_use);
     };
@@ -148,6 +146,8 @@ public:
                 remainder.reset(new shanks::remainders::u_transform<T, K>());
             }
         }
+        series_acceleration<T, K>::acceleration_name += "and beta = " + utils::helpers<T>::to_string(beta);
+        series_acceleration<T, K>::acceleration_name += "and alpha = " + utils::helpers<T>::to_string(alpha);
 
         return series_acceleration<T, K>::acceleration_name;
     }
@@ -157,7 +157,7 @@ template <AcceptedLike T, UnsignedIntLike K>
 T h_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Calculate minimum required size based on the chosen remainder variant
     const K required_size =
-        n + 2*order + static_cast<K>(1) +
+        n + 2 * order + static_cast<K>(1) +
         static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
                        remainder_type_in_use == shanks::remainders::remainder_type::v_type) +
         static_cast<K>(2) * static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
@@ -172,24 +172,30 @@ T h_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>
     const size_t precision =
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
-    std::vector<T> Num = std::vector<T>(2*order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
-    std::vector<T> Denom = std::vector<T>(2*order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
+    std::vector<T> Num = std::vector<T>(2 * order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
+    std::vector<T> Denom = std::vector<T>(2 * order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
 
     // Initialize base values
     for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
-        Denom[i] += remainder->operator()(n + i, n + i, data.an) / utils::cast<T, float_type>()(utils::cast<float_type,K>()(n + i) + beta, precision);
+        Denom[i] += remainder->operator()(n + i, n + i, data.an) /
+                    utils::cast<T, float_type>()(utils::cast<float_type, K>()(n + i) + beta, precision);
         Num[i] += data.Sn.at(n + i) * Denom[i];
     }
 
-    // Implement recursive scheme, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS [155, p. 24]
+    // Implement recursive scheme, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS [155, p.
+    // 24]
     for (K i = static_cast<K>(1); i <= order; ++i)
         for (K j = static_cast<K>(0); j <= order - i; ++j) {
-            const T left   = utils::cast<T, float_type>()( utils::cast<float_type,K>()(n + j        , precision) + beta, precision); /// n+β
-            const T middle = utils::cast<T, float_type>()( utils::cast<float_type,K>()(n + j + 2 * i, precision) + beta, precision); /// n+2k+β
-            const T right  = utils::cast<T, float_type>()( utils::cast<float_type,K>()(n + j +     i, precision) + beta, precision) 
-                * utils::math<T>::cos(alpha) * utils::cast<T,int>()(2); /// n+k+β
-            const T DenomTmp = Denom[j] * left + Denom[j + static_cast<K>(2)] * middle - Denom[j + static_cast<K>(1)] * right;
-            const T   NumTmp =   Num[j] * left +   Num[j + static_cast<K>(2)] * middle -   Num[j + static_cast<K>(1)] * right;
+            const T left =
+                utils::cast<T, float_type>()(utils::cast<float_type, K>()(n + j, precision) + beta, precision);  /// n+β
+            const T middle = utils::cast<T, float_type>()(utils::cast<float_type, K>()(n + j + 2 * i, precision) + beta,
+                                                          precision);  /// n+2k+β
+            const T right =
+                utils::cast<T, float_type>()(utils::cast<float_type, K>()(n + j + i, precision) + beta, precision) *
+                utils::math<T>::cos(alpha) * utils::cast<T, int>()(2);  /// n+k+β
+            const T DenomTmp =
+                Denom[j] * left + Denom[j + static_cast<K>(2)] * middle - Denom[j + static_cast<K>(1)] * right;
+            const T NumTmp = Num[j] * left + Num[j + static_cast<K>(2)] * middle - Num[j + static_cast<K>(1)] * right;
             Denom[j] =
                 (utils::helpers<T>::isfinite(DenomTmp) && utils::helpers<T>::isfinite(NumTmp) ? DenomTmp : Denom[j]);
             Num[j] = (utils::helpers<T>::isfinite(DenomTmp) && utils::helpers<T>::isfinite(NumTmp) ? NumTmp : Num[j]);
@@ -197,6 +203,9 @@ T h_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>
 
     // Final result: D_n^{(order)} = N_0^{(order)} / D_0^{(order)}
     Num[0] /= Denom[0];
+
+    if (!utils::helpers<T>::isfinite(Num[0])) throw std::overflow_error("division by zero");
+
     return Num[0];
 }
 
