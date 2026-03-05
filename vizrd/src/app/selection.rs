@@ -251,50 +251,16 @@ impl Block<SeriesSelect> {
     /// Expand the checked selections into `SeriesInstance`s.
     /// x and each arg dimension are treated as independent cartesian axes.
     pub fn selected_instances(&self) -> Vec<SeriesInstance> {
-        if self.state == SelectionState::None {
-            return vec![];
-        }
         let s = &self.val;
+        let x_vals: Vec<_> = s.x.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect();
+        let arg_sets: Vec<_> = s.args.iter().map(|(k, ab)| (k.as_str(), ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect())).collect();
 
-        let x_vals: Vec<serde_json::Value> =
-            s.x.val
-                .iter()
-                .filter(|b| b.0)
-                .map(|b| b.1.clone())
-                .collect();
-
-        let arg_sets: Vec<(&str, Vec<serde_json::Value>)> = s
-            .args
-            .iter()
-            .filter_map(|(k, ab)| {
-                let vals: Vec<_> = ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect();
-                if vals.is_empty() {
-                    None
-                } else {
-                    Some((k.as_str(), vals))
-                }
-            })
-            .collect();
-
-        let arg_combos = cartesian_combos(&arg_sets);
-
-        // Cartesian product: each x × each arg combo.
         let mut out = Vec::new();
         for x in &x_vals {
-            for args in &arg_combos {
+            for args in cartesian_combos(&arg_sets) {
                 out.push(SeriesInstance {
                     name: s.name.clone(),
                     x: x.clone(),
-                    args: args.clone(),
-                });
-            }
-        }
-        // Edge case: no x values selected but some args are — one instance per arg combo (x=null).
-        if x_vals.is_empty() && !arg_combos.is_empty() {
-            for args in arg_combos {
-                out.push(SeriesInstance {
-                    name: s.name.clone(),
-                    x: serde_json::Value::Null,
                     args,
                 });
             }
@@ -356,51 +322,19 @@ impl Selectable for NoiseSelect {
 impl Block<NoiseSelect> {
     /// Cartesian product of (method × args × seed) → `NoiseInstance`s.
     pub fn selected_instances(&self) -> Vec<NoiseInstance> {
-        if self.state == SelectionState::None {
-            return vec![];
-        }
-
         let n = &self.val;
-
-        let methods: Vec<String> = n
-            .method
-            .val
-            .iter()
-            .filter(|b| b.0)
-            .map(|b| b.1.clone())
-            .collect();
-        let seeds: Vec<i64> = n.seed.val.iter().filter(|b| b.0).map(|b| b.1).collect();
-
-        let arg_sets: Vec<(&str, Vec<serde_json::Value>)> = n
-            .args
-            .iter()
-            .filter_map(|(k, ab)| {
-                let vals: Vec<_> = ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect();
-                if vals.is_empty() {
-                    None
-                } else {
-                    Some((k.as_str(), vals))
-                }
-            })
-            .collect();
-        let arg_combos = cartesian_combos(&arg_sets);
+        let methods: Vec<_> = n.method.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect();
+        let seeds: Vec<_> = n.seed.val.iter().filter(|b| b.0).map(|b| b.1).collect();
+        let arg_sets: Vec<_> = n.args.iter().map(|(k, ab)| (k.as_str(), ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect())).collect();
 
         let mut out = Vec::new();
         for method in &methods {
             for seed in &seeds {
-                for args in &arg_combos {
+                for args in cartesian_combos(&arg_sets) {
                     out.push(NoiseInstance {
                         noise_type: n.noise_type.clone(),
                         method: method.clone(),
-                        args: args.clone(),
-                        seed: *seed,
-                    });
-                }
-                if arg_combos.is_empty() {
-                    out.push(NoiseInstance {
-                        noise_type: n.noise_type.clone(),
-                        method: method.clone(),
-                        args: BTreeMap::new(),
+                        args,
                         seed: *seed,
                     });
                 }
@@ -472,22 +406,9 @@ impl Selectable for FilterSelect {
 impl Block<FilterSelect> {
     /// Cartesian product of args → `FilterInstance`s.
     pub fn selected_instances(&self) -> Vec<FilterInstance> {
-        if self.state == SelectionState::None {
-            return vec![];
-        }
         let f = &self.val;
-        let arg_sets: Vec<(&str, Vec<serde_json::Value>)> = f
-            .args
-            .iter()
-            .filter_map(|(k, ab)| {
-                let vals: Vec<_> = ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect();
-                if vals.is_empty() {
-                    None
-                } else {
-                    Some((k.as_str(), vals))
-                }
-            })
-            .collect();
+        let arg_sets: Vec<_> = f.args.iter().map(|(k, ab)| (k.as_str(), ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect())).collect();
+
         cartesian_combos(&arg_sets)
             .into_iter()
             .map(|args| FilterInstance {
@@ -542,40 +463,17 @@ impl Selectable for AccelSelect {
 impl Block<AccelSelect> {
     /// Cartesian product of (m × args) → `AccelInstance`s.
     pub fn selected_instances(&self) -> Vec<AccelInstance> {
-        if self.state == SelectionState::None {
-            return vec![];
-        }
         let a = &self.val;
-        let ms: Vec<i64> = a.m.val.iter().filter(|b| b.0).map(|b| b.1).collect();
-        let arg_sets: Vec<(&str, Vec<serde_json::Value>)> = a
-            .args
-            .iter()
-            .filter_map(|(k, ab)| {
-                let vals: Vec<_> = ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect();
-                if vals.is_empty() {
-                    None
-                } else {
-                    Some((k.as_str(), vals))
-                }
-            })
-            .collect();
-        let arg_combos = cartesian_combos(&arg_sets);
+        let ms: Vec<_> = a.m.val.iter().filter(|b| b.0).map(|b| b.1).collect();
+        let arg_sets: Vec<_> = a.args.iter().map(|(k, ab)| (k.as_str(), ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect())).collect();
 
         let mut out = Vec::new();
         for m in &ms {
-            for args in &arg_combos {
+            for args in cartesian_combos(&arg_sets) {
                 out.push(AccelInstance {
                     name: a.name.clone(),
                     m: *m,
-                    args: args.clone(),
-                    events: a.events.clone(),
-                });
-            }
-            if arg_combos.is_empty() {
-                out.push(AccelInstance {
-                    name: a.name.clone(),
-                    m: *m,
-                    args: BTreeMap::new(),
+                    args,
                     events: a.events.clone(),
                 });
             }
@@ -620,7 +518,7 @@ impl Selectable for NoiseVecSelect {
     }
 
     fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult {
-        let mut res = draw_button(ui, &mut self.1, "No noise");
+        let res = draw_button(ui, &mut self.1, "No noise");
         res | self.0.draw(ui)
     }
 }
