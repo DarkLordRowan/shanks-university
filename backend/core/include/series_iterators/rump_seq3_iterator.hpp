@@ -24,13 +24,13 @@ namespace series {
  * On recurrences converging to the wrong limit infnite precision and some new examples (14), limit = 1.6666667
  */
 template <AcceptedLike T, UnsignedIntLike K>
-class rump_seq3_iterator final : public series_base_iter<T, K, std::pair<T, T>> {
+class rump_seq3_iterator final : public series_base_seq_iter<T, K, std::pair<T, T>> {
 public:
     /**
      * @brief Default constructor for rump_seq3_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-    explicit rump_seq3_iterator(T x) : series_base_iter<T, K, std::pair<T, T>>(x) {
+    explicit rump_seq3_iterator(T x) : series_base_seq_iter<T, K, std::pair<T, T>>(x) {
         if (this->is_invalid()) throw std::invalid_argument("Invalid series argument");
     }
 

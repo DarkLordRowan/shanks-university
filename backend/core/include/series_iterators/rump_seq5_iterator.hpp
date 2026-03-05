@@ -21,13 +21,13 @@ namespace series {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template <AcceptedLike T, UnsignedIntLike K>
-class rump_seq5_iterator final : public series_base_iter<T, K, std::pair<T, T>> {
+class rump_seq5_iterator final : public series_base_seq_iter<T, K, std::pair<T, T>> {
 public:
     /**
      * @brief Default constructor for rump_seq5_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-    explicit rump_seq5_iterator(T x) : series_base_iter<T, K, std::pair<T, T>>(x) {
+    explicit rump_seq5_iterator(T x) : series_base_seq_iter<T, K, std::pair<T, T>>(x) {
         if (this->is_invalid()) throw std::invalid_argument("Invalid series argument");
     }
 
