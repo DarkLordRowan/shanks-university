@@ -16,14 +16,6 @@ struct utils::math<intprec::interval<T>> {
     static intprec::interval<T> log(const intprec::interval<T>& x);
     static intprec::interval<T> log10(const intprec::interval<T>& x);
     static intprec::interval<T> hypot(const intprec::interval<T>& a, const intprec::interval<T>& b);
-    static intprec::interval<T> erf(const intprec::interval<T>& x);
-    static intprec::interval<T> zeta(const intprec::interval<T>& x);
-    static intprec::interval<T> ci_x(const intprec::interval<T>& x);
-    static intprec::interval<T> si_x(const intprec::interval<T>& x);
-    static intprec::interval<T> e_x(const intprec::interval<T>& x);
-    static intprec::interval<T> k_x(const intprec::interval<T>& x);
-    static intprec::interval<T> inc_gamma(const intprec::interval<T>& x, const intprec::interval<T>& alpha);
-    static intprec::interval<T> lambertW0(const intprec::interval<T>& x);
     static intprec::interval<T> sin(const intprec::interval<T>& x);
     static intprec::interval<T> asin(const intprec::interval<T>& x);
     static intprec::interval<T> cos(const intprec::interval<T>& x);
@@ -87,39 +79,6 @@ template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::hypot(const intprec::interval<T>& a,
                                                               const intprec::interval<T>& b) {
     return intprec::sqrt(a.sqr() + b.sqr);
-}
-template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::erf(const intprec::interval<T>& x) {
-    static_assert(std::false_type{}, "utils::math::erf not implemented for type");
-}
-template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::zeta(const intprec::interval<T>& x) {
-    static_assert(std::false_type{}, "utils::math::zeta not implemented for type");
-}
-template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::ci_x(const intprec::interval<T>& x) {
-    static_assert(std::false_type{}, "utils::math::ci_x not implemented for type");
-}
-template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::si_x(const intprec::interval<T>& x) {
-    static_assert(std::false_type{}, "utils::math::si_x not implemented for type");
-}
-template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::e_x(const intprec::interval<T>& x) {
-    static_assert(std::false_type{}, "utils::math::e_x not implemented for type");
-}
-template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::k_x(const intprec::interval<T>& x) {
-    static_assert(std::false_type{}, "utils::math::k_x not implemented for type");
-}
-template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::inc_gamma(const intprec::interval<T>& x,
-                                                                  const intprec::interval<T>& alpha) {
-    static_assert(std::false_type{}, "utils::math::inc_gamma not implemented for type");
-}
-template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::lambertW0(const intprec::interval<T>& x) {
-    static_assert(std::false_type{}, "utils::math::lambertW0 not implemented for type");
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::sin(const intprec::interval<T>& x) {

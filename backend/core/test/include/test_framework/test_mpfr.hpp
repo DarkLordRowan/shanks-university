@@ -34,10 +34,10 @@ void build_one_var_functions() {
     table1 << "function,x,precision_givven,bits_allocated,f_x,f_x_len,abs_f_x_1000-f_x, abs_f_x_{n}-f_x_{n-1}\n";
     for (std::size_t precision = 15; precision <= 1000; ++precision) {
         for (const auto& x : arr_x_values) {
-            mpfr::mpreal the_x(x, mpfr::digits2bits(1000));
+            mpfr::mpreal the_x(x, mp_prec_t(1000));
             for (const auto& f : x_functions) {
-                mpfr::mpreal _x(x, mpfr::digits2bits(precision));
-                mpfr::mpreal _y(x, mpfr::digits2bits(precision - 1ull));
+                mpfr::mpreal _x(x, mp_prec_t(precision));
+                mpfr::mpreal _y(x, mp_prec_t(precision - 1ull));
                 table1 << std::get<0>(f) << ","                                           // function
                        << utils::helpers<T>::to_string(_x) << ","                         // x
                        << precision << ","                                                // precision givven
