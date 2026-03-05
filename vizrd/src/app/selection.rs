@@ -252,8 +252,22 @@ impl Block<SeriesSelect> {
     /// x and each arg dimension are treated as independent cartesian axes.
     pub fn selected_instances(&self) -> Vec<SeriesInstance> {
         let s = &self.val;
-        let x_vals: Vec<_> = s.x.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect();
-        let arg_sets: Vec<_> = s.args.iter().map(|(k, ab)| (k.as_str(), ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect())).collect();
+        let x_vals: Vec<_> =
+            s.x.val
+                .iter()
+                .filter(|b| b.0)
+                .map(|b| b.1.clone())
+                .collect();
+        let arg_sets: Vec<_> = s
+            .args
+            .iter()
+            .map(|(k, ab)| {
+                (
+                    k.as_str(),
+                    ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect(),
+                )
+            })
+            .collect();
 
         let mut out = Vec::new();
         for x in &x_vals {
@@ -323,9 +337,24 @@ impl Block<NoiseSelect> {
     /// Cartesian product of (method × args × seed) → `NoiseInstance`s.
     pub fn selected_instances(&self) -> Vec<NoiseInstance> {
         let n = &self.val;
-        let methods: Vec<_> = n.method.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect();
+        let methods: Vec<_> = n
+            .method
+            .val
+            .iter()
+            .filter(|b| b.0)
+            .map(|b| b.1.clone())
+            .collect();
         let seeds: Vec<_> = n.seed.val.iter().filter(|b| b.0).map(|b| b.1).collect();
-        let arg_sets: Vec<_> = n.args.iter().map(|(k, ab)| (k.as_str(), ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect())).collect();
+        let arg_sets: Vec<_> = n
+            .args
+            .iter()
+            .map(|(k, ab)| {
+                (
+                    k.as_str(),
+                    ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect(),
+                )
+            })
+            .collect();
 
         let mut out = Vec::new();
         for method in &methods {
@@ -407,7 +436,16 @@ impl Block<FilterSelect> {
     /// Cartesian product of args → `FilterInstance`s.
     pub fn selected_instances(&self) -> Vec<FilterInstance> {
         let f = &self.val;
-        let arg_sets: Vec<_> = f.args.iter().map(|(k, ab)| (k.as_str(), ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect())).collect();
+        let arg_sets: Vec<_> = f
+            .args
+            .iter()
+            .map(|(k, ab)| {
+                (
+                    k.as_str(),
+                    ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect(),
+                )
+            })
+            .collect();
 
         cartesian_combos(&arg_sets)
             .into_iter()
@@ -465,7 +503,16 @@ impl Block<AccelSelect> {
     pub fn selected_instances(&self) -> Vec<AccelInstance> {
         let a = &self.val;
         let ms: Vec<_> = a.m.val.iter().filter(|b| b.0).map(|b| b.1).collect();
-        let arg_sets: Vec<_> = a.args.iter().map(|(k, ab)| (k.as_str(), ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect())).collect();
+        let arg_sets: Vec<_> = a
+            .args
+            .iter()
+            .map(|(k, ab)| {
+                (
+                    k.as_str(),
+                    ab.val.iter().filter(|b| b.0).map(|b| b.1.clone()).collect(),
+                )
+            })
+            .collect();
 
         let mut out = Vec::new();
         for m in &ms {
@@ -644,19 +691,19 @@ impl AppSelect {
     /// Draw the UI panel and return whether anything changed.
     pub fn draw(&mut self, ui: &mut egui::Ui) -> bool {
         let mut changed = false;
+        if self.precision.draw("Precision", ui).changed {
+            changed = true;
+        }
         if self.series.draw("Series", ui).changed {
             changed = true;
         }
         if self.noise.draw("Noise", ui).changed {
             changed = true;
         }
-        if self.filter.draw("Filter", ui).changed {
-            changed = true;
-        }
         if self.accel.draw("Accel", ui).changed {
             changed = true;
         }
-        if self.precision.draw("Precision", ui).changed {
+        if self.filter.draw("Filter", ui).changed {
             changed = true;
         }
         changed
