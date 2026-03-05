@@ -2,11 +2,7 @@
 #define UNIFORM_NOISE_HPP
 
 template <typename T>
-struct uniform_noise {
-    static T generate(const T& left, const T& right, std::mt19937_64& rng) {
-        static_assert(std::false_type{}, "uniform_noise::generate isn't implemented for this type");
-    }
-};
+struct uniform_noise;
 
 template <typename T>
 struct uniform_noise<shanks::profiling::OperationCounting<T>> {

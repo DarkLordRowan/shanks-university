@@ -147,7 +147,8 @@ class t_transform : public transform_base<T, K> {
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 template <AcceptedLike T, UnsignedIntLike K>
-T t_transform<T, K>::operator()([[maybe_unused]] const K n, const K index, const std::vector<T>& an,[[maybe_unused]] const T& scale) const {
+T t_transform<T, K>::operator()([[maybe_unused]] const K n, const K index, const std::vector<T>& an,
+                                [[maybe_unused]] const T& scale) const {
     // For theory, see: Levin (1973), Eq. (3.2) - t transform
     // ωₙ = aₙ, where aₙ = ΔSₙ₋₁
     const T result = utils::cast<T, int>()(1) / an.at(index);
@@ -191,7 +192,8 @@ class t_wave_transform : public transform_base<T, K> {
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 template <AcceptedLike T, UnsignedIntLike K>
-T t_wave_transform<T, K>::operator()([[maybe_unused]] const K n, const K index, const std::vector<T>& an,[[maybe_unused]] const T& scale) const {
+T t_wave_transform<T, K>::operator()([[maybe_unused]] const K n, const K index, const std::vector<T>& an,
+                                     [[maybe_unused]] const T& scale) const {
     // For theory, see: Smith & Ford (1979), Eq. (2.4) - d variant
     // ωₙ = aₙ₊₁ (shifted t-variant)
     const T result = utils::cast<T, int>()(1) / an.at(index + static_cast<K>(1));
@@ -231,7 +233,8 @@ class v_transform : public transform_base<T, K> {
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 template <AcceptedLike T, UnsignedIntLike K>
-T v_transform<T, K>::operator()([[maybe_unused]] const K n, const K index, const std::vector<T>& an,[[maybe_unused]] const T& scale) const {
+T v_transform<T, K>::operator()([[maybe_unused]] const K n, const K index, const std::vector<T>& an,
+                                [[maybe_unused]] const T& scale) const {
     // For theory, see: Levin (1973), Eq. (3.4) - v transform
     // ωₙ = (aₙ * aₙ₊₁)/(aₙ₊₁ - aₙ)
     const T a1 = an.at(index), a2 = an.at(index + static_cast<K>(1));
@@ -276,7 +279,8 @@ class v_wave_transform : public transform_base<T, K> {
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 template <AcceptedLike T, UnsignedIntLike K>
-T v_wave_transform<T, K>::operator()([[maybe_unused]] const K n, const K index, const std::vector<T>& an,[[maybe_unused]] const T& scale) const {
+T v_wave_transform<T, K>::operator()([[maybe_unused]] const K n, const K index, const std::vector<T>& an,
+                                     [[maybe_unused]] const T& scale) const {
     // For theory, see: Modified v-transform with shifted indices
     // ωₙ = (aₙ₊₁ * aₙ₊₂)/(aₙ₊₁ - aₙ₊₂)
     const T a1 = an.at(index + static_cast<K>(1)), a2 = an.at(index + static_cast<K>(2));

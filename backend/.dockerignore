@@ -56,4 +56,3 @@ docker-compose.yml
 # Runner dev dependencies
 runner/install_pyshanks.bat
 runner/install_pyshanks.ps1
-runner/config/

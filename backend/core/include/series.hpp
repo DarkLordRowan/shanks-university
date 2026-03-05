@@ -14,7 +14,8 @@ inline bool is_seq(shanks::series::series_iterator_id_t id) {
            id == shanks::series::series_iterator_id_t::rump_seq3_iterator_id ||
            id == shanks::series::series_iterator_id_t::rump_seq4_iterator_id ||
            id == shanks::series::series_iterator_id_t::rump_seq5_iterator_id ||
-           id == shanks::series::series_iterator_id_t::rump_seq6_iterator_id;
+           id == shanks::series::series_iterator_id_t::rump_seq6_iterator_id ||
+           id == shanks::series::series_iterator_id_t::rump_seq7_iterator_id;
 }
 
 /**

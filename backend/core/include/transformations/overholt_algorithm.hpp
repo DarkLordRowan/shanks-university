@@ -17,11 +17,9 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class overholt_algorithm final : public series_acceleration<T, K> {
 protected:
-
     using float_type = real_of<T>::value;  // type in case of complex or interval
 
 public:
-
     /**
      * @brief Parameterized constructor to initialize Overholt Process.
      * @authors Naumov A.U.
@@ -70,10 +68,10 @@ T overholt_algorithm<T, K>::operator()(const K n, const K order, const series_re
 
     for (K i{1}; i <= order; ++i) {
         for (K j{0}; j <= order - i; ++j) {
-            const T delta_left_s = utils::math<T>::pow(data.an.at(n + i + j),
-                                                       utils::cast<T, int>()(i, precision));  /// s_{n + k} - s_{n + k - 1}
-            const T delta_right_s = utils::math<T>::pow(data.an.at(n + i + j + 1),
-                                                        utils::cast<T, int>()(i, precision));  /// s_{n + k + 1} - s_{n + k}
+            const T delta_left_s = utils::math<T>::pow(
+                data.an.at(n + i + j), utils::cast<T, int>()(i, precision));  /// s_{n + k} - s_{n + k - 1}
+            const T delta_right_s = utils::math<T>::pow(
+                data.an.at(n + i + j + 1), utils::cast<T, int>()(i, precision));  /// s_{n + k + 1} - s_{n + k}
             const T tmp = (delta_left_s * V[j + 1] - delta_right_s * V[j]) / (delta_left_s - delta_right_s);
 
             V[j] = (utils::helpers<T>::isfinite(tmp) ? tmp : V[j]);

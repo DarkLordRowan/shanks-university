@@ -6,8 +6,6 @@
 
 template <typename T>
 struct utils::helpers<intprec::interval<T>> {
-    static intprec::interval<T> nextafter(const intprec::interval<T>& x, const intprec::interval<T>& y);
-    static intprec::interval<T> fmod(const intprec::interval<T>& x, const intprec::interval<T>& y);
     static intprec::interval<T> floor(const intprec::interval<T>& x);
     static intprec::interval<T> ceil(const intprec::interval<T>& x);
     static intprec::interval<T> get_nan();
@@ -20,17 +18,6 @@ struct utils::helpers<intprec::interval<T>> {
     static intprec::interval<T> numeric_max(std::size_t precision = std::size_t{0});
 };
 
-template <typename T>
-intprec::interval<T> utils::helpers<intprec::interval<T>>::nextafter(const intprec::interval<T>& x,
-                                                                     const intprec::interval<T>& y) {
-    static_assert(std::false_type{}, "utils::helpers::nextafter not implemented for type");
-}
-
-template <typename T>
-intprec::interval<T> utils::helpers<intprec::interval<T>>::fmod(const intprec::interval<T>& x,
-                                                                const intprec::interval<T>& y) {
-    static_assert(std::false_type{}, "utils::helpers::fmod not implemented for type");
-}
 template <typename T>
 intprec::interval<T> utils::helpers<intprec::interval<T>>::floor(const intprec::interval<T>& x) {
     return intprec::floor(x);

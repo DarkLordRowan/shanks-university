@@ -8,10 +8,6 @@
 
 template <typename T>
 struct utils::math<OpsWrapperMacro(T)> {
-    static OpsWrapperMacro(T) phi(const OpsWrapperMacro(T) n);
-    static OpsWrapperMacro(T) fact(const OpsWrapperMacro(T) n);
-    static OpsWrapperMacro(T) double_fact(const OpsWrapperMacro(T) n);
-    static OpsWrapperMacro(T) binomial_coefficient(const OpsWrapperMacro(T) n, const OpsWrapperMacro(T) k);
     template <std::integral K>
     static OpsWrapperMacro(T) minus_one_raised_to_power_n(const K j);
     static OpsWrapperMacro(T) pow(const OpsWrapperMacro(T) & x, const OpsWrapperMacro(T) & y);
@@ -56,23 +52,6 @@ struct utils::math<OpsWrapperMacro(T)> {
     using has_lambertW0 = utils::math<T>::has_lambertW0;
 };
 
-template <typename T>
-OpsWrapperMacro(T) utils::math<OpsWrapperMacro(T)>::phi(const OpsWrapperMacro(T) n) {
-    static_assert(std::false_type{}, "utils::math::phi not implemented for type");
-}
-template <typename T>
-OpsWrapperMacro(T) utils::math<OpsWrapperMacro(T)>::fact(const OpsWrapperMacro(T) n) {
-    static_assert(std::false_type{}, "utils::math::fact not implemented for type");
-}
-template <typename T>
-OpsWrapperMacro(T) utils::math<OpsWrapperMacro(T)>::double_fact(const OpsWrapperMacro(T) n) {
-    static_assert(std::false_type{}, "utils::math::double_fact not implemented for type");
-}
-template <typename T>
-OpsWrapperMacro(T) utils::math<OpsWrapperMacro(T)>::binomial_coefficient(const OpsWrapperMacro(T) n,
-                                                                         const OpsWrapperMacro(T) k) {
-    static_assert(std::false_type{}, "utils::math::binomial_coefficient not implemented for type");
-}
 template <typename T>
 template <std::integral K>
 OpsWrapperMacro(T) utils::math<OpsWrapperMacro(T)>::minus_one_raised_to_power_n(const K j) {

@@ -3,6 +3,7 @@
 #pragma once
 
 #include <fstream>
+#include <thread>
 
 template <typename T, typename U, typename V>
 const std::vector<
@@ -15,6 +16,98 @@ const std::vector<
         std::make_tuple("SQRT", utils::math<T>::sqrt, utils::math<U>::sqrt, utils::math<V>::sqrt),
         std::make_tuple("LOG", utils::math<T>::log, utils::math<U>::log, utils::math<V>::log),
     };
+
+void build_one_var_functions() {
+    std::ofstream table1("table1.csv");
+    using T = mpfr::mpreal;
+    // build tables for single variable functions
+    std::vector<std::tuple<const char*, std::function<T(const T&)>>> x_functions{
+        std::make_tuple("EXP", utils::math<T>::exp),   std::make_tuple("SIN", utils::math<T>::sin),
+        std::make_tuple("COS", utils::math<T>::cos),   std::make_tuple("SQRT", utils::math<T>::sqrt),
+        std::make_tuple("ZETA", utils::math<T>::zeta), std::make_tuple("ERF", utils::math<T>::erf),
+        std::make_tuple("LOG", utils::math<T>::log),   std::make_tuple("LOG10", utils::math<T>::log10)};
+
+    // array of x vector, from 0.1, 0.5, 1.0, 15.0, 1000.0
+    std::vector<const char*> arr_x_values{"0.13", "0.5732", "1.0452", "15.05235", "1000.0236"};
+
+    // function, x, precision givven, bits_allocated, precision_got, f(x), f(x)_len, abs(f(x)_1000-f(x))
+    table1 << "function,x,precision_givven,bits_allocated,f_x,f_x_len,abs_f_x_1000-f_x, abs_f_x_{n}-f_x_{n-1}\n";
+    for (std::size_t precision = 15; precision <= 1000; ++precision) {
+        for (const auto& x : arr_x_values) {
+            mpfr::mpreal the_x(x, mp_prec_t(1000));
+            for (const auto& f : x_functions) {
+                mpfr::mpreal _x(x, mp_prec_t(precision));
+                mpfr::mpreal _y(x, mp_prec_t(precision - 1ull));
+                table1 << std::get<0>(f) << ","                                           // function
+                       << utils::helpers<T>::to_string(_x) << ","                         // x
+                       << precision << ","                                                // precision givven
+                       << mpfr::digits2bits(precision) << ","                             // bits_allocated
+                       << utils::helpers<T>::to_string(std::get<1>(f)(_x)) << ","         // f(x)
+                       << utils::helpers<T>::to_string(std::get<1>(f)(_x)).size() << ","  // f(x)_len
+                       << utils::math<T>::abs(std::get<1>(f)(the_x) - std::get<1>(f)(_x))
+                       << ","  // abs(f(x,1000) - f(x))
+                       << utils::math<T>::abs(std::get<1>(f)(_x) - std::get<1>(f)(_y))
+                       << "\n";  // abs(f(x,n-1) - f(x,n))
+            }
+        }
+    }
+
+    table1.close();
+}
+
+void build_two_var_functions() {
+    std::ofstream table2("table2.csv");
+    using T = mpfr::mpreal;
+    // build tables for single variable functions
+    std::vector<std::tuple<const char*, std::function<T(const T&, const T&)>>> x_functions{
+        std::make_tuple("POW(X,Y)", utils::math<T>::pow), std::make_tuple("ATAN(X,Y)", utils::math<T>::atan2),
+        // std::make_tuple("INC_GAMMA_MPFR", utils::math<T>::inc_gamma ),
+        std::make_tuple("OPERATOR+", [](const T& rhs, const T& lhs) { return rhs + lhs; }),
+        std::make_tuple("OPERATOR-", [](const T& rhs, const T& lhs) { return rhs - lhs; }),
+        std::make_tuple("OPERATOR*", [](const T& rhs, const T& lhs) { return rhs * lhs; }),
+        std::make_tuple("OPERATOR/", [](const T& rhs, const T& lhs) { return rhs / lhs; })};
+
+    std::vector<std::pair<const char*, const char*>> arr_x_values{{"0.1412", "0.5324"},
+                                                                  {"0.5341", "20.13123"},
+                                                                  {"1.012352", "0.0132425"},
+                                                                  {"2.02345", "3.3333333"},
+                                                                  {"100.02345", "424.13424"},
+                                                                  {"532.1246234", "0.324263246"},
+                                                                  {"0.00000145345", "1000000000000000001"},
+                                                                  {"1000000000000000001", "0.000000000000000013"}};
+
+    // function, x, x_precision_givven, x_bits_allocated, x_precision_got, y, y_precision_givven, y_bits_allocated,
+    // y_precision_got, f(x,y), f(x,y)_len abs(f(x,y)_1000-f(x,y)),"
+    table2 << "function,x,x_precision_givven,x_bits_allocated,x_precision_got,y,y_precision_givven,y_bits_allocated,y_"
+              "precision_got,f_x_Y,f_x_y_len,abs_f_x_y_1000-f_x_y\n";
+    for (std::size_t x_precision = 15; x_precision <= 1000; ++x_precision) {
+        for (std::size_t y_precision = 15; y_precision <= 1000; ++y_precision) {
+            for (const auto& [x, y] : arr_x_values) {
+                mpfr::mpreal the_x(x, mpfr::digits2bits(1000));
+                mpfr::mpreal the_y(y, mpfr::digits2bits(1000));
+                for (const auto& f : x_functions) {
+                    mpfr::mpreal _x(x, mpfr::digits2bits(x_precision));
+                    mpfr::mpreal _y(y, mpfr::digits2bits(y_precision));
+                    table2 << std::get<0>(f) << ","                                               // function
+                           << utils::helpers<T>::to_string(_x) << ","                             // x
+                           << x_precision << ","                                                  // precision givven
+                           << mpfr::digits2bits(x_precision) << ","                               // bits_allocated
+                           << mpfr::bits2digits(_x.get_prec()) << ","                             // precision got
+                           << utils::helpers<T>::to_string(_y) << ","                             // y
+                           << y_precision << ","                                                  // precision givven
+                           << mpfr::digits2bits(y_precision) << ","                               // bits_allocated
+                           << mpfr::bits2digits(_y.get_prec()) << ","                             // precision got
+                           << utils::helpers<T>::to_string(std::get<1>(f)(_x, _y)) << ","         // f(x,y)
+                           << utils::helpers<T>::to_string(std::get<1>(f)(_x, _y)).size() << ","  // f(x,y)_len
+                           << utils::math<T>::abs(std::get<1>(f)(the_x, the_y) - std::get<1>(f)(_x, _y))
+                           << "\n";  // abs(f(x,1000) - f(x))
+                }
+            }
+        }
+    }
+
+    table2.close();
+}
 
 void test_mpreal() {
     float control_x_f = 0.501f;
@@ -65,35 +158,7 @@ void test_mpreal() {
         std::cout << "\n\n";
     }
 
-    std::ofstream fout("mpfr_sin.csv");
-    fout << "precision" << "," << "sin(0.25)_precision" << "," << "sin(0.25)_1000-sin(0.25)_precision" << ","    << "sin(0.25)_precision+1-sin(0.25)_precision" << ","
-                               << "exp(0.25)_precision" << "," << "exp(0.25)_1000-exp(0.25)_precision" << ","    << "exp(0.25)_precision+1-exp(0.25)_precision" << ","
-                               << "sqrt(9.13)_precision" << "," << "sqrt(9.13)_1000-sqrt(9.13)_precision" << "," << "sqrt(9.13)_precision+1-sqrt(9.13)_precision" << ","
-                               << "zeta(2.0)_precision" << "," << "zeta(2.0)_1000-zeta(2.0)_precision" << ","    << "zeta(2.0)_precision+1-zeta(2.0)_precision" << "\n";
-    for(int i{1000}; i > 15; --i){
-        fout << i << ","
-        //sin
-        << utils::helpers<mpfr::mpreal>::to_string(mpfr::sin(mpfr::mpreal("0.25", mp_prec_t(i)))) << "," 
-        << mpfr::sin(mpfr::mpreal("0.25", mp_prec_t(1000))) - mpfr::sin(mpfr::mpreal("0.25", mp_prec_t(i))) << ","
-        << mpfr::sin(mpfr::mpreal("0.25", mp_prec_t(i+1))) -  mpfr::sin(mpfr::mpreal("0.25", mp_prec_t(i))) << ","
-        //exp
-        << utils::helpers<mpfr::mpreal>::to_string(mpfr::exp(mpfr::mpreal("0.25", mp_prec_t(i)))) << "," 
-        << mpfr::exp(mpfr::mpreal("0.25", mp_prec_t(1000)))   - mpfr::exp(mpfr::mpreal("0.25", mp_prec_t(i))) << ","
-        << mpfr::exp(mpfr::mpreal("0.25", mp_prec_t(i+1)))    - mpfr::exp(mpfr::mpreal("0.25", mp_prec_t(i))) << ","
-        //sqrt
-        << utils::helpers<mpfr::mpreal>::to_string(mpfr::sqrt(mpfr::mpreal("9.13", mp_prec_t(i)))) << "," 
-        << mpfr::sqrt(mpfr::mpreal("9.13", mp_prec_t(1000)))   - mpfr::sqrt(mpfr::mpreal("9.13", mp_prec_t(i))) << ","
-        << mpfr::sqrt(mpfr::mpreal("9.13", mp_prec_t(i+1)))    - mpfr::sqrt(mpfr::mpreal("9.13", mp_prec_t(i))) << ","
-        //zeta
-        << utils::helpers<mpfr::mpreal>::to_string(mpfr::zeta(mpfr::mpreal("2", mp_prec_t(i)))) << "," 
-        << mpfr::zeta(mpfr::mpreal("2", mp_prec_t(1000)))   - mpfr::zeta(mpfr::mpreal("2", mp_prec_t(i))) << ","
-        << mpfr::zeta(mpfr::mpreal("2", mp_prec_t(i+1)))    - mpfr::zeta(mpfr::mpreal("2", mp_prec_t(i)))
-        << "\n";
-    }
-
-    fout.close();
-
-
+    build_one_var_functions();
 }
 
 void test_intervals() {

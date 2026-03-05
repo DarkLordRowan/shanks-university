@@ -143,7 +143,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order, const ser
         newelm = k / static_cast<K>(2);
 
         // EPSTAB(N) = OFRN
-        epstab[k] = abs_error;//OFRN;
+        epstab[k] = abs_error;  // OFRN;
 
         // ABSERR = OFRN (Resetting abs_error at each step? The Fortran code does "ABSERR = OFRN" at start of
         // subroutine) Since we are simulating sequential calls, we should likely NOT reset it if we want to track the

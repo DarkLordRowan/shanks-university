@@ -2,11 +2,7 @@
 #define NORMAL_NOISE_HPP
 
 template <typename T>
-struct normal_noise {
-    static T generate(const double mean, const double stddev, std::mt19937_64& rng) {
-        static_assert(std::false_type{}, "normal_noise::generate isn't implemented for this type");
-    }
-};
+struct normal_noise;
 
 template <typename T>
     requires FloatLike<T> || IntervalLike<T>

@@ -179,19 +179,19 @@ public:
                 break;
             }
             case shanks::remainders::remainder_type::t_type: {
-                series_acceleration<T, K>::acceleration_name += "with t-variant ";
+                series_acceleration<T, K>::acceleration_name += "with t-variant";
                 break;
             }
             case shanks::remainders::remainder_type::v_type: {
-                series_acceleration<T, K>::acceleration_name += "with v-variant ";
+                series_acceleration<T, K>::acceleration_name += "with v-variant";
                 break;
             }
             case shanks::remainders::remainder_type::t_wave_type: {
-                series_acceleration<T, K>::acceleration_name += "with t-wave-variant ";
+                series_acceleration<T, K>::acceleration_name += "with t-wave-variant";
                 break;
             }
             case shanks::remainders::remainder_type::v_wave_type: {
-                series_acceleration<T, K>::acceleration_name += "with v-wave-variant ";
+                series_acceleration<T, K>::acceleration_name += "with v-wave-variant";
                 break;
             }
             default: {

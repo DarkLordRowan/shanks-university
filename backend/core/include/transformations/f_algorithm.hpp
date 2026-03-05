@@ -16,7 +16,6 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class f_algorithm final : public series_acceleration<T, K> {
 protected:
-
     /// Unique pointer to the remainder estimator strategy being used.
     std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
     /// The specific type of remainder variant currently active.
@@ -172,14 +171,15 @@ T f_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>
         Num[i] += data.Sn.at(n + i) * Denom[i];
     }
 
-    // Implement recursive scheme, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS [148, p. 23]
+    // Implement recursive scheme, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS [148, p.
+    // 23]
     for (K i = static_cast<K>(1); i <= order; ++i)
         for (K j = static_cast<K>(0); j <= order - i; ++j) {
-            const T left =
-                utils::cast<T, K>()(i, precision) + auxilary_series(n + i + j) - utils::cast<T, int>()(2, precision); /// (x_{n+k}+k-2)
-            const T right =
-                utils::cast<T, K>()(i, precision) + auxilary_series(n + j) - utils::cast<T, int>()(2, precision); /// x_{n} + k -2
-            const T denom = auxilary_series(n + i + j) - auxilary_series(n + j); /// x_{n+k} - x_{n}
+            const T left = utils::cast<T, K>()(i, precision) + auxilary_series(n + i + j) -
+                           utils::cast<T, int>()(2, precision);  /// (x_{n+k}+k-2)
+            const T right = utils::cast<T, K>()(i, precision) + auxilary_series(n + j) -
+                            utils::cast<T, int>()(2, precision);                  /// x_{n} + k -2
+            const T denom = auxilary_series(n + i + j) - auxilary_series(n + j);  /// x_{n+k} - x_{n}
             const T DenomTmp = (Denom[j + static_cast<K>(1)] * left - Denom[j] * right) / denom;
             const T NumTmp = (Num[j + static_cast<K>(1)] * left - Num[j] * right) / denom;
             Denom[j] =
@@ -189,6 +189,9 @@ T f_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>
 
     // Final result: D_n^{(order)} = N_0^{(order)} / D_0^{(order)}
     Num[0] /= Denom[0];
+
+    if (!utils::helpers<T>::isfinite(Num[0])) throw std::overflow_error("division by zero");
+
     return Num[0];
 }
 

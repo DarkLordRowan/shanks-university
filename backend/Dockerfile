@@ -2,29 +2,24 @@ FROM python:3.13-slim-bookworm AS shanks-builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    cmake \
-    make \
-    g++ \
     git \
+    cmake \
+    ninja-build \
+    gcc \
+    libeigen3-dev  \
+    libmpfrc++-dev \
     libgsl-dev \
-    libeigen3-dev \
-    libmpfr-dev \
-    libgmp-dev \
-    pkg-config \
     && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /build
 
 COPY ./cmake ./cmake/
 COPY ./bindings ./bindings/
 COPY ./core ./core/
-COPY ./runner ./runner/
-WORKDIR /build/runner
 
-RUN chmod +x install_pyshanks.sh \
-    && ./install_pyshanks.sh \
-    && mkdir -p /build/output \
-    && cp -v pyshanks/*.so /build/output/ || true
+RUN cmake -S ./bindings -B ./build -DSHANKS_ENABLE_PROFILING=ON -G Ninja
+RUN mkdir -p pyshanks
+RUN touch pyshanks/__init__.py && echo 'from .pyshanks import *' > pyshanks/__init__.py
+RUN cmake --build build --target pyshanks -j$(nproc)
+RUN cp build/*.so pyshanks
 
 FROM python:3.13-slim-bookworm
 
@@ -34,13 +29,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgslcblas0 \
     libmpfr6 \
     libstdc++6 \
+    libgsl27 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY runner/ ./
+COPY runner/config/               ./config
+COPY runner/src/                  ./src
+COPY runner/main.py               ./
+COPY runner/verify_parquet_fix.py ./
 
-COPY --from=shanks-builder /build/output/*.so ./pyshanks/pyshanks.so
-RUN mkdir -p /opt/runner/pyshanks && cp ./pyshanks/pyshanks.so /opt/runner/pyshanks/pyshanks.so
+COPY --from=shanks-builder /pyshanks/ ./pyshanks/
 
 CMD ["/bin/bash"]

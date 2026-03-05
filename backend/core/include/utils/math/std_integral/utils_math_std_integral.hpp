@@ -84,8 +84,7 @@ T utils::math<T>::minus_one_raised_to_power_n(const T j) {
     if constexpr (std::is_signed<T>::value)
         return static_cast<T>(std::abs(j) & 1 ? -1 : 1);
     else
-        static_assert(std::false_type{},
-                      "utils::math::minus_one_raised_to_power_n can't be implemented for unsigned integral type");
+        assert(false && "utils::math::minus_one_raised_to_power_n can't be implemented for unsigned integral type");
 }
 template <std::integral T>
 T utils::math<T>::pow(const T& x, const T& y) {

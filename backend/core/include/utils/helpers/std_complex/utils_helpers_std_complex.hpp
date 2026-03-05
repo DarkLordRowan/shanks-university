@@ -4,10 +4,6 @@
 
 template <typename T>
 struct utils::helpers<std::complex<T>> {
-    static std::complex<T> nextafter(const std::complex<T>& x, const std::complex<T>& y);
-    static std::complex<T> fmod(const std::complex<T>& x, const std::complex<T>& y);
-    static std::complex<T> floor(const std::complex<T>& x);
-    static std::complex<T> ceil(const std::complex<T>& x);
     static std::complex<T> get_nan();
     static std::size_t get_precision(const std::complex<T>& x);
     static std::string to_string(const std::complex<T>& x);
@@ -17,24 +13,6 @@ struct utils::helpers<std::complex<T>> {
     static T epsilon(std::size_t precision = std::size_t{0});
     static T numeric_max(std::size_t precision = std::size_t{0});
 };
-
-template <typename T>
-std::complex<T> utils::helpers<std::complex<T>>::nextafter(const std::complex<T>& x, const std::complex<T>& y) {
-    static_assert(std::false_type{}, "utils::helpers::nextafter not implemented for type");
-}
-
-template <typename T>
-std::complex<T> utils::helpers<std::complex<T>>::fmod(const std::complex<T>& x, const std::complex<T>& y) {
-    static_assert(std::false_type{}, "utils::helpers::fmod not implemented for type");
-}
-template <typename T>
-std::complex<T> utils::helpers<std::complex<T>>::floor(const std::complex<T>& x) {
-    static_assert(std::false_type{}, "utils::helpers::floor not implemented for type");
-}
-template <typename T>
-std::complex<T> utils::helpers<std::complex<T>>::ceil(const std::complex<T>& x) {
-    static_assert(std::false_type{}, "utils::helpers::ceil not implemented for type");
-}
 
 template <typename T>
 std::complex<T> utils::helpers<std::complex<T>>::get_nan() {
