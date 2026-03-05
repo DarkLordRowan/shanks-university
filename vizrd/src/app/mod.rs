@@ -1199,15 +1199,10 @@ impl eframe::App for ShanksApp {
                 format!("{}\nn = {:.0}\ny = {}", full, value.x, y_str)
             });
 
-            fn limit_pts_slice<'a>(pts: &'a [PlotPoint], max_x: f64) -> &'a [PlotPoint] {
-                let mut end = pts.len();
-                while end > 0 && pts[end - 1].x > max_x {
-                    end -= 1;
-                }
-                &pts[..end]
+            fn limit_pts_slice<'a>(pts: &'a [PlotPoint], max_n: u64) -> &'a [PlotPoint] {
+                &pts[0..(max_n as usize).min(pts.len())]
             }
 
-            let max_x = self.n_points as f64;
             plot.show(ui, |plot_ui| {
                 for baked in plot_lines {
                     // Filter by View toggles — no cache rebuild needed
@@ -1222,7 +1217,8 @@ impl eframe::App for ShanksApp {
                         for poly_pts in &baked.shading_polygons {
                             plot_ui.polygon(
                                 egui_plot::Polygon::new(PlotPoints::Borrowed(limit_pts_slice(
-                                    poly_pts, max_x,
+                                    poly_pts,
+                                    self.n_points,
                                 )))
                                 .fill_color(baked.color.gamma_multiply(0.2))
                                 .stroke(egui::Stroke::NONE),
@@ -1233,7 +1229,7 @@ impl eframe::App for ShanksApp {
                     match &baked.data {
                         ArrLine::Real((name, v)) => {
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(v, max_x)))
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(v, self.n_points)))
                                     .name(name)
                                     .color(baked.color)
                                     .width(baked.width)
@@ -1242,41 +1238,53 @@ impl eframe::App for ShanksApp {
                         }
                         ArrLine::Complex(c) => {
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(&c.real.1, max_x)))
-                                    .name(&c.real.0)
-                                    .color(baked.color)
-                                    .width(baked.width)
-                                    .style(baked.style),
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
+                                    &c.real.1,
+                                    self.n_points,
+                                )))
+                                .name(&c.real.0)
+                                .color(baked.color)
+                                .width(baked.width)
+                                .style(baked.style),
                             );
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(&c.imag.1, max_x)))
-                                    .name(&c.imag.0)
-                                    .color(baked.color)
-                                    .width(baked.width)
-                                    .style(baked.style),
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
+                                    &c.imag.1,
+                                    self.n_points,
+                                )))
+                                .name(&c.imag.0)
+                                .color(baked.color)
+                                .width(baked.width)
+                                .style(baked.style),
                             );
                         }
                         ArrLine::Interval(iv) => {
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(&iv.inf.1, max_x)))
-                                    .name(&iv.inf.0)
-                                    .color(baked.color)
-                                    .width(baked.width)
-                                    .style(baked.style),
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
+                                    &iv.inf.1,
+                                    self.n_points,
+                                )))
+                                .name(&iv.inf.0)
+                                .color(baked.color)
+                                .width(baked.width)
+                                .style(baked.style),
                             );
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(&iv.sup.1, max_x)))
-                                    .name(&iv.sup.0)
-                                    .color(baked.color)
-                                    .width(baked.width)
-                                    .style(baked.style),
+                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
+                                    &iv.sup.1,
+                                    self.n_points,
+                                )))
+                                .name(&iv.sup.0)
+                                .color(baked.color)
+                                .width(baked.width)
+                                .style(baked.style),
                             );
                         }
                         ArrLine::CInterval(ci) => {
                             plot_ui.line(
                                 Line::new(PlotPoints::Borrowed(limit_pts_slice(
                                     &ci.real.inf.1,
-                                    max_x,
+                                    self.n_points,
                                 )))
                                 .name(&ci.real.inf.0)
                                 .color(baked.color)
@@ -1286,7 +1294,7 @@ impl eframe::App for ShanksApp {
                             plot_ui.line(
                                 Line::new(PlotPoints::Borrowed(limit_pts_slice(
                                     &ci.real.sup.1,
-                                    max_x,
+                                    self.n_points,
                                 )))
                                 .name(&ci.real.sup.0)
                                 .color(baked.color)
@@ -1296,7 +1304,7 @@ impl eframe::App for ShanksApp {
                             plot_ui.line(
                                 Line::new(PlotPoints::Borrowed(limit_pts_slice(
                                     &ci.imag.inf.1,
-                                    max_x,
+                                    self.n_points,
                                 )))
                                 .name(&ci.imag.inf.0)
                                 .color(baked.color)
@@ -1306,7 +1314,7 @@ impl eframe::App for ShanksApp {
                             plot_ui.line(
                                 Line::new(PlotPoints::Borrowed(limit_pts_slice(
                                     &ci.imag.sup.1,
-                                    max_x,
+                                    self.n_points,
                                 )))
                                 .name(&ci.imag.sup.0)
                                 .color(baked.color)
