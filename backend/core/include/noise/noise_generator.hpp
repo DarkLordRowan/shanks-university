@@ -205,18 +205,17 @@ series_result<T> apply_noise(const series_result<T>& result, const std::string& 
     else if (name == "poisson") nt = NoiseType::poisson;
 
     NoiseMethod nm = NoiseMethod::jitter;
-    auto method_str = ::shanks::utils_json::get_json_val(params_json, "method");
+    auto method_str = ::shanks::utils_json::get_json_val_required(params_json, "method");
     if (method_str == "scaling") nm = NoiseMethod::scaling;
+    else if (method_str != "jitter") throw std::runtime_error("Invalid noise method: " + method_str);
 
     // 3. Parse Seed
     unsigned long long seed = 0;
-    auto seed_str = ::shanks::utils_json::get_json_val(params_json, "seed");
-    if (!seed_str.empty()) {
-        try {
-            seed = std::stoull(seed_str);
-        } catch (const std::exception& ex) {
-            throw std::runtime_error("Invalid seed value '" + seed_str + "': " + ex.what());
-        }
+    auto seed_str = ::shanks::utils_json::get_json_val_required(params_json, "seed");
+    try {
+        seed = std::stoull(seed_str);
+    } catch (const std::exception& ex) {
+        throw std::runtime_error("Invalid seed value '" + seed_str + "': " + ex.what());
     }
 
     // 4. Validate and Dispatch to specific noise implementations
