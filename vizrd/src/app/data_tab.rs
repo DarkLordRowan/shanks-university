@@ -175,8 +175,19 @@ impl DataCache {
                 return;
             }
             if let Some(sdata) = sdata_opt {
+                let mut name = format!(
+                    "Series: {} (prec={}, x={}",
+                    sdesc.series.name, sdesc.precision, sdesc.series.x
+                );
+                let s_args = format_args(&sdesc.series.args);
+                if !s_args.is_empty() {
+                    name.push_str(", ");
+                    name.push_str(&s_args);
+                }
+                name.push(')');
+
                 let mut series_node = DataNode {
-                    name: format!("Series: {}", sdesc.series.name),
+                    name,
                     sequence: Some(create_sequence_display(
                         &sdata.result.sn,
                         &sdata.result.an,
@@ -189,10 +200,22 @@ impl DataCache {
                 if let Some(accels) = grouped.get(sdesc) {
                     for (k, adata) in accels {
                         let name = if let Some(a) = &k.accel {
+                            let mut accel_name = format!("{} (m={}", a.accel.name, a.accel.m);
+                            let aargs = format_args(&a.accel.args);
+                            if !aargs.is_empty() {
+                                accel_name.push_str(", ");
+                                accel_name.push_str(&aargs);
+                            }
+                            accel_name.push(')');
+
                             if let Some(f) = &a.filter {
-                                format!("Filter: {} (on {})", f.filter_type, a.accel.name)
+                                let mut filter_part = format!("Filter: {} (", f.filter_type);
+                                let fargs = format_args(&f.args);
+                                filter_part.push_str(&fargs);
+                                filter_part.push_str(")");
+                                format!("{} on {}", filter_part, accel_name)
                             } else {
-                                format!("Accel: {}", a.accel.name)
+                                format!("Accel: {}", accel_name)
                             }
                         } else {
                             "Unknown".to_string()
@@ -218,6 +241,16 @@ impl DataCache {
         self.roots = roots;
         self.dirty = false;
     }
+}
+
+fn format_args(args: &std::collections::BTreeMap<String, serde_json::Value>) -> String {
+    if args.is_empty() {
+        return String::new();
+    }
+    args.iter()
+        .map(|(k, v)| format!("{}={}", k, v))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn compute_arr_stats(arr: &Arr) -> Vec<ComponentStats> {
@@ -412,82 +445,87 @@ fn show_sequence(ui: &mut egui::Ui, seq: &SequenceDisplay, id_source: &str) {
 
     ui.separator();
 
-    let sn_headers = get_arr_headers(&seq.sn);
-    let an_headers = get_arr_headers(&seq.an);
-    let dev_headers = get_arr_headers(&seq.dev);
+    egui::CollapsingHeader::new("Detailed Table")
+        .id_salt(format!("{}_table", id_source))
+        .default_open(false)
+        .show(ui, |ui| {
+            let sn_headers = get_arr_headers(&seq.sn);
+            let an_headers = get_arr_headers(&seq.an);
+            let dev_headers = get_arr_headers(&seq.dev);
 
-    // Build table columns definition
-    let mut builder = egui_extras::TableBuilder::new(ui)
-        .striped(true)
-        .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-        .column(egui_extras::Column::auto().at_least(40.0)); // n
+            // Build table columns definition
+            let mut builder = egui_extras::TableBuilder::new(ui)
+                .striped(true)
+                .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+                .column(egui_extras::Column::auto().at_least(40.0)); // n
 
-    for _ in &sn_headers {
-        builder = builder.column(egui_extras::Column::auto().at_least(80.0));
-    }
-    for _ in &an_headers {
-        builder = builder.column(egui_extras::Column::auto().at_least(80.0));
-    }
-    for _ in &dev_headers {
-        builder = builder.column(egui_extras::Column::auto().at_least(80.0));
-    }
-
-    // Events column
-    builder = builder.column(egui_extras::Column::remainder().at_least(100.0));
-
-    builder
-        .header(20.0, |mut header| {
-            header.col(|ui| {
-                ui.strong("n");
-            });
-            for h in &sn_headers {
-                header.col(|ui| {
-                    ui.strong(format!("Sn {}", h));
-                });
+            for _ in &sn_headers {
+                builder = builder.column(egui_extras::Column::auto().at_least(80.0));
             }
-            for h in &an_headers {
-                header.col(|ui| {
-                    ui.strong(format!("An {}", h));
-                });
+            for _ in &an_headers {
+                builder = builder.column(egui_extras::Column::auto().at_least(80.0));
             }
-            for h in &dev_headers {
-                header.col(|ui| {
-                    ui.strong(format!("Dev {}", h));
-                });
+            for _ in &dev_headers {
+                builder = builder.column(egui_extras::Column::auto().at_least(80.0));
             }
-            header.col(|ui| {
-                ui.strong("Events");
-            });
-        })
-        .body(|body| {
-            body.rows(20.0, seq.len, |mut row| {
-                let n = row.index();
 
-                row.col(|ui| {
-                    ui.label(n.to_string());
-                });
+            // Events column
+            builder = builder.column(egui_extras::Column::remainder().at_least(100.0));
 
-                for val in extract_at(&seq.sn, n) {
-                    row.col(|ui| {
-                        ui.label(val);
+            builder
+                .header(20.0, |mut header| {
+                    header.col(|ui| {
+                        ui.strong("n");
                     });
-                }
-                for val in extract_at(&seq.an, n) {
-                    row.col(|ui| {
-                        ui.label(val);
-                    });
-                }
-                for val in extract_at(&seq.dev, n) {
-                    row.col(|ui| {
-                        ui.label(val);
-                    });
-                }
-
-                row.col(|ui| {
-                    if let Some(evs) = seq.events.get(&n) {
-                        ui.label(evs.join(", "));
+                    for h in &sn_headers {
+                        header.col(|ui| {
+                            ui.strong(format!("Sn {}", h));
+                        });
                     }
+                    for h in &an_headers {
+                        header.col(|ui| {
+                            ui.strong(format!("An {}", h));
+                        });
+                    }
+                    for h in &dev_headers {
+                        header.col(|ui| {
+                            ui.strong(format!("Dev {}", h));
+                        });
+                    }
+                    header.col(|ui| {
+                        ui.strong("Events");
+                    });
+                })
+                .body(|body| {
+                    body.rows(20.0, seq.len, |mut row| {
+                        let n = row.index();
+
+                        row.col(|ui| {
+                            ui.label(n.to_string());
+                        });
+
+                        for val in extract_at(&seq.sn, n) {
+                            row.col(|ui| {
+                                ui.label(val);
+                            });
+                        }
+                        for val in extract_at(&seq.an, n) {
+                            row.col(|ui| {
+                                ui.label(val);
+                            });
+                        }
+                        for val in extract_at(&seq.dev, n) {
+                            row.col(|ui| {
+                                ui.label(val);
+                            });
+                        }
+
+                        row.col(|ui| {
+                            if let Some(evs) = seq.events.get(&n) {
+                                ui.label(evs.join(", "));
+                            }
+                        });
+                    });
                 });
-            });
         });
 }

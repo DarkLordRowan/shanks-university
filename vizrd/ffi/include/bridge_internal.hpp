@@ -251,7 +251,7 @@ public:
         }
 
         // Build the result object and store events on it
-        auto result_obj = std::make_unique<CSeriesImpl<T, P>>(std::move(acc_res), prev_accel);
+        auto result_obj = std::make_unique<CSeriesImpl<T, P>>(std::move(acc_res), limit);
         result_obj->events_ = std::move(new_events);
         return result_obj;
     }
