@@ -71,23 +71,7 @@ impl Scientific {
 
     /// Format as a human-readable string.
     pub fn format(&self) -> String {
-        if self.0 == 0.0 {
-            return "0".to_string();
-        }
-
-        let mantissa = self.0;
-        let exponent = self.1;
-        let sign_str = if mantissa < 0.0 { "-" } else { "" };
-        let abs_mantissa = mantissa.abs();
-
-        // Use scientific notation for very small or very large numbers
-        if exponent < -2 || exponent > 3 {
-            format!("{}{:.1}e{:.0}", sign_str, abs_mantissa, exponent)
-        } else {
-            // For numbers like 0.5, 0.01, 10.0
-            let real_val = abs_mantissa * 10f64.powi(exponent);
-            format!("{}{:.20}", sign_str, real_val)
-        }
+        format_value(self.approx_f64())
     }
 }
 
@@ -103,35 +87,60 @@ impl From<Scientific> for f64 {
     }
 }
 
+/// Format a value for display, avoiding scientific notation for small exponents.
+pub fn format_value(val: f64) -> String {
+    if val == 0.0 {
+        return "0".to_string();
+    }
+    if !val.is_finite() {
+        return format!("{val}");
+    }
+
+    let abs_val = val.abs();
+    let log10 = abs_val.log10();
+    let exponent = log10.floor() as i32;
+
+    // Avoid scientific notation for 10^-8 to 10^12
+    if exponent >= -7 && exponent <= 7 {
+        // High precision for f64 to avoid truncation
+        let s = format!("{:.18}", val);
+        if s.contains('.') {
+            let trimmed = s.trim_end_matches('0').trim_end_matches('.');
+            if trimmed.is_empty() || trimmed == "-" {
+                "0".to_string()
+            } else {
+                trimmed.to_string()
+            }
+        } else {
+            s
+        }
+    } else {
+        // Use scientific notation with high precision
+        let s = format!("{:.15e}", val);
+        if let Some(e_pos) = s.find('e') {
+            let (mantissa, exp) = s.split_at(e_pos);
+            let trimmed_mantissa = mantissa.trim_end_matches('0').trim_end_matches('.');
+            format!("{}{}", trimmed_mantissa, exp)
+        } else {
+            s
+        }
+    }
+}
+
 /// Convert symlog-transformed value back to a formatted string.
 ///
-/// This is used for axis labels on symlog-scaled plots.
+/// This is used for axis labels on symlog_scaled plots.
 pub fn symlog_formatter(val: f64, log_linthresh: f64) -> String {
     if val == 0.0 {
         return "0".to_string();
     }
 
-    let sign_str = if val < 0.0 { "-" } else { "" };
-
     // Use the EXACT inverse: |x| = L * (10^|y| - 1)
     let linthresh = 10f64.powf(log_linthresh);
     let true_abs_x = linthresh * (10f64.powf(val.abs()) - 1.0);
+    let true_x = true_abs_x * val.signum();
 
-    if true_abs_x == 0.0 {
-        return "0".to_string();
-    }
-
-    let target_log10 = true_abs_x.log10();
-    let exponent = target_log10.floor();
-    let fractional = target_log10 - exponent;
-    let mantissa = 10f64.powf(fractional);
-
-    if exponent < -2.0 || exponent > 3.0 {
-        format!("{}{:.1}e{:.0}", sign_str, mantissa, exponent)
-    } else {
-        let rounded = (true_abs_x * 10_000.0).round() / 10_000.0;
-        format!("{}{}", sign_str, rounded)
-    }
+    format_value(true_x)
 }
 
 #[cfg(test)]

@@ -989,6 +989,10 @@ impl eframe::App for ShanksApp {
                 plot = plot.y_axis_formatter(move |grid_mark, _range| {
                     crate::plot::symlog_formatter(grid_mark.value, thresh)
                 });
+            } else {
+                plot = plot.y_axis_formatter(|grid_mark, _range| {
+                    crate::plot::format_value(grid_mark.value)
+                });
             }
 
             if current_tab_state.reset_view {
@@ -1001,12 +1005,16 @@ impl eframe::App for ShanksApp {
 
             plot = plot.label_formatter(move |name, value| {
                 if name.is_empty() {
-                    return format!("n = {:.0}\ny = {:.4e}", value.x, value.y);
+                    return format!(
+                        "n = {:.0}\ny = {}",
+                        value.x,
+                        crate::plot::format_value(value.y)
+                    );
                 }
                 let y_str = if symlog {
                     crate::plot::symlog_formatter(value.y, thresh)
                 } else {
-                    format!("{:.10e}", value.y)
+                    crate::plot::format_value(value.y)
                 };
                 format!("{}\nn = {:.0}\ny = {}", name, value.x, y_str)
             });

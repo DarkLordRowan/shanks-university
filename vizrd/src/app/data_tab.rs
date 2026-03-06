@@ -57,7 +57,7 @@ fn extract_at(arr: &Arr, n: usize) -> Vec<String> {
     match arr {
         Arr::Real(v) => {
             if n < v.len() {
-                vec![format!("{:.4e}", v[n].to_f64())]
+                vec![crate::plot::format_value(v[n].to_f64())]
             } else {
                 vec!["-".to_string()]
             }
@@ -67,9 +67,9 @@ fn extract_at(arr: &Arr, n: usize) -> Vec<String> {
                 let re = c.real[n].to_f64();
                 let im = c.imag[n].to_f64();
                 vec![
-                    format!("{:.4e}", re),
-                    format!("{:.4e}", im),
-                    format!("{:.4e}", re.hypot(im)),
+                    crate::plot::format_value(re),
+                    crate::plot::format_value(im),
+                    crate::plot::format_value(re.hypot(im)),
                 ]
             } else {
                 vec!["-".to_string(), "-".to_string(), "-".to_string()]
@@ -80,9 +80,9 @@ fn extract_at(arr: &Arr, n: usize) -> Vec<String> {
                 let inf = i.inf[n].to_f64();
                 let sup = i.sup[n].to_f64();
                 vec![
-                    format!("{:.4e}", inf),
-                    format!("{:.4e}", sup),
-                    format!("{:.4e}", sup - inf),
+                    crate::plot::format_value(inf),
+                    crate::plot::format_value(sup),
+                    crate::plot::format_value(sup - inf),
                 ]
             } else {
                 vec!["-".to_string(), "-".to_string(), "-".to_string()]
@@ -91,10 +91,10 @@ fn extract_at(arr: &Arr, n: usize) -> Vec<String> {
         Arr::CInterval(c) => {
             if n < c.real.inf.len() {
                 vec![
-                    format!("{:.4e}", c.real.inf[n].to_f64()),
-                    format!("{:.4e}", c.real.sup[n].to_f64()),
-                    format!("{:.4e}", c.imag.inf[n].to_f64()),
-                    format!("{:.4e}", c.imag.sup[n].to_f64()),
+                    crate::plot::format_value(c.real.inf[n].to_f64()),
+                    crate::plot::format_value(c.real.sup[n].to_f64()),
+                    crate::plot::format_value(c.imag.inf[n].to_f64()),
+                    crate::plot::format_value(c.imag.sup[n].to_f64()),
                 ]
             } else {
                 vec![
@@ -428,10 +428,10 @@ fn show_sequence(ui: &mut egui::Ui, seq: &SequenceDisplay, id_source: &str) {
                             ui.end_row();
                             for comp in stats {
                                 ui.label(format!("  {}", comp.name));
-                                ui.label(format!("{:.4e}", comp.stats.min));
-                                ui.label(format!("{:.4e}", comp.stats.max));
-                                ui.label(format!("{:.4e}", comp.stats.mean));
-                                ui.label(format!("{:.4e}", comp.stats.median));
+                                ui.label(crate::plot::format_value(comp.stats.min));
+                                ui.label(crate::plot::format_value(comp.stats.max));
+                                ui.label(crate::plot::format_value(comp.stats.mean));
+                                ui.label(crate::plot::format_value(comp.stats.median));
                                 ui.end_row();
                             }
                         }
