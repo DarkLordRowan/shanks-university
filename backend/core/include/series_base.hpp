@@ -63,7 +63,8 @@ protected:
 
         for (K i = 1; i < n; ++i) {
             T current = func();
-            an[i] = current - Sn[i - static_cast<K>(1)];
+            // I consider this logic stupid, but I'm not going to say anything against it. Decide for yourselves.
+            an[i] = current;
             Sn[i] = current;
         }
 
