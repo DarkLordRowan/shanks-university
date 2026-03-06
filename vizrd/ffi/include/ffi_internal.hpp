@@ -40,8 +40,8 @@ inline bool parse_precision(const char* precision, PrecisionType& out) {
         out = PrecisionType::Arb;
         if (precision[3] != '\0') {
             try {
-                int bits = std::stoi(precision + 3);
-                if (bits > 0) mpfr::mpreal::set_default_prec(bits);
+                int decimals = std::stoi(precision + 3);
+                if (decimals > 0) mpfr::mpreal::set_default_prec(mpfr::digits2bits(decimals));
             } catch (...) {}
         }
         return true;
@@ -55,8 +55,8 @@ inline bool parse_precision(const char* precision, PrecisionType& out) {
         out = PrecisionType::CArb;
         if (precision[4] != '\0') {
             try {
-                int bits = std::stoi(precision + 4);
-                if (bits > 0) mpfr::mpreal::set_default_prec(bits);
+                int decimals = std::stoi(precision + 4);
+                if (decimals > 0) mpfr::mpreal::set_default_prec(mpfr::digits2bits(decimals));
             } catch (...) {}
         }
         return true;
@@ -70,8 +70,8 @@ inline bool parse_precision(const char* precision, PrecisionType& out) {
         out = PrecisionType::IntervalArb;
         if (precision[11] != '\0') {
             try {
-                int bits = std::stoi(precision + 11);
-                if (bits > 0) mpfr::mpreal::set_default_prec(bits);
+                int decimals = std::stoi(precision + 11);
+                if (decimals > 0) mpfr::mpreal::set_default_prec(mpfr::digits2bits(decimals));
             } catch (...) {}
         }
         return true;
@@ -85,8 +85,8 @@ inline bool parse_precision(const char* precision, PrecisionType& out) {
         out = PrecisionType::CIntervalArb;
         if (precision[12] != '\0') {
             try {
-                int bits = std::stoi(precision + 12);
-                if (bits > 0) mpfr::mpreal::set_default_prec(bits);
+                int decimals = std::stoi(precision + 12);
+                if (decimals > 0) mpfr::mpreal::set_default_prec(mpfr::digits2bits(decimals));
             } catch (...) {}
         }
         return true;
