@@ -9,9 +9,9 @@ sys.path.append("../pyshanks")
 import pyshanks as ps
 
 methods : list[str] = sorted(list(set([
-    re.search(r"(.*Algorithm)", x).group(1)
+    re.search(r"(.*Algorithm[U,T,V]?~?)", x).group(1)
     for x in dir(ps)
-    if not re.search(r"(.*Algorithm)", x) is None
+    if not re.search(r"(.*Algorithm[U,T,V]?~?)", x) is None
 ])))
 
 series : list[str] = sorted(list(set([

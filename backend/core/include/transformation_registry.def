@@ -33,135 +33,135 @@ TRANSFORMATION_ENTRY(chang_wynn_transformation_id, "Chang-Wynn Transformation", 
     throw std::runtime_error("Unknown numerator type: " + s); \
 }(j))
 
-TRANSFORMATION_ENTRY(drummond_d_u_transformation_id, "Drummond D-U Transformation", "DrummondDAlgorithm", drummond_d_algorithm, BIND_REM_BOOL, { 
+TRANSFORMATION_ENTRY(drummond_d_u_transformation_id, "Drummond D-U Transformation", "DrummondDAlgorithmU", drummond_d_algorithm, BIND_REM_BOOL, { 
     return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(drummond_d_t_transformation_id, "Drummond D-T Transformation", "DrummondDAlgorithm", drummond_d_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(drummond_d_t_transformation_id, "Drummond D-T Transformation", "DrummondDAlgorithmT", drummond_d_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(drummond_d_t_wave_transformation_id, "Drummond D-T Wave Transformation", "DrummondDAlgorithm", drummond_d_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(drummond_d_t_wave_transformation_id, "Drummond D-T Wave Transformation", "DrummondDAlgorithmT~", drummond_d_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(drummond_d_v_transformation_id, "Drummond D-V Transformation", "DrummondDAlgorithm", drummond_d_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(drummond_d_v_transformation_id, "Drummond D-V Transformation", "DrummondDAlgorithmV", drummond_d_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(drummond_d_v_wave_transformation_id, "Drummond D-V Wave Transformation", "DrummondDAlgorithm", drummond_d_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(drummond_d_v_wave_transformation_id, "Drummond D-V Wave Transformation", "DrummondDAlgorithmV~", drummond_d_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(recurrent_drummond_d_u_transformation_id, "Recurrent Drummond D-U Transformation", "DrummondDAlgorithm", drummond_d_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_drummond_d_u_transformation_id, "Recurrent Drummond D-U Transformation", "recDrummondDAlgorithmU", drummond_d_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(recurrent_drummond_d_t_transformation_id, "Recurrent Drummond D-T Transformation", "DrummondDAlgorithm", drummond_d_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_drummond_d_t_transformation_id, "Recurrent Drummond D-T Transformation", "recDrummondDAlgorithmT", drummond_d_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(recurrent_drummond_d_v_transformation_id, "Recurrent Drummond D-V Transformation", "DrummondDAlgorithm", drummond_d_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_drummond_d_v_transformation_id, "Recurrent Drummond D-V Transformation", "recDrummondDAlgorithmV", drummond_d_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(recurrent_drummond_d_t_wave_transformation_id, "Recurrent Drummond D-T Wave Transformation", "DrummondDAlgorithm", drummond_d_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_drummond_d_t_wave_transformation_id, "Recurrent Drummond D-T Wave Transformation", "recDrummondDAlgorithmT~", drummond_d_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(recurrent_drummond_d_v_wave_transformation_id, "Recurrent Drummond D-V Wave Transformation", "DrummondDAlgorithm", drummond_d_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_drummond_d_v_wave_transformation_id, "Recurrent Drummond D-V Wave Transformation", "recDrummondDAlgorithmV~", drummond_d_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
 
-TRANSFORMATION_ENTRY(f_u_transformation_id, "F-U Transformation", "FAlgorithm", f_algorithm, BIND_F_BASE, { return std::make_unique<shanks::algos::f_algorithm<T, K>>(PARSE_REM(params_json)); })
-TRANSFORMATION_ENTRY(f_t_transformation_id, "F-T Transformation", "FAlgorithm", f_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::f_algorithm<T, K>>(PARSE_REM(params_json)); })
-TRANSFORMATION_ENTRY(f_t_wave_transformation_id, "F-T Wave Transformation", "FAlgorithm", f_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::f_algorithm<T, K>>(PARSE_REM(params_json)); })
-TRANSFORMATION_ENTRY(f_v_transformation_id, "F-V Transformation", "FAlgorithm", f_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::f_algorithm<T, K>>(PARSE_REM(params_json)); })
-TRANSFORMATION_ENTRY(f_v_wave_transformation_id, "F-V Wave Transformation", "FAlgorithm", f_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::f_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(f_u_transformation_id, "F-U Transformation", "FAlgorithmU", f_algorithm, BIND_F_BASE, { return std::make_unique<shanks::algos::f_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(f_t_transformation_id, "F-T Transformation", "FAlgorithmT", f_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::f_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(f_t_wave_transformation_id, "F-T Wave Transformation", "FAlgorithmT~", f_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::f_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(f_v_transformation_id, "F-V Transformation", "FAlgorithmV", f_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::f_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(f_v_wave_transformation_id, "F-V Wave Transformation", "FAlgorithmV~", f_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::f_algorithm<T, K>>(PARSE_REM(params_json)); })
 
-TRANSFORMATION_ENTRY(h_u_transformation_id, "H-U Transformation", "HAlgorithm", h_algorithm, BIND_REM, { return std::make_unique<shanks::algos::h_algorithm<T, K>>(PARSE_REM(params_json)); })
-TRANSFORMATION_ENTRY(h_t_transformation_id, "H-T Transformation", "HAlgorithm", h_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::h_algorithm<T, K>>(PARSE_REM(params_json)); })
-TRANSFORMATION_ENTRY(h_t_wave_transformation_id, "H-T Wave Transformation", "HAlgorithm", h_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::h_algorithm<T, K>>(PARSE_REM(params_json)); })
-TRANSFORMATION_ENTRY(h_v_transformation_id, "H-V Transformation", "HAlgorithm", h_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::h_algorithm<T, K>>(PARSE_REM(params_json)); })
-TRANSFORMATION_ENTRY(h_v_wave_transformation_id, "H-V Wave Transformation", "HAlgorithm", h_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::h_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(h_u_transformation_id, "H-U Transformation", "HAlgorithmU", h_algorithm, BIND_REM, { return std::make_unique<shanks::algos::h_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(h_t_transformation_id, "H-T Transformation", "HAlgorithmT", h_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::h_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(h_t_wave_transformation_id, "H-T Wave Transformation", "HAlgorithmT~", h_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::h_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(h_v_transformation_id, "H-V Transformation", "HAlgorithmV", h_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::h_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(h_v_wave_transformation_id, "H-V Wave Transformation", "HAlgorithmV~", h_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::h_algorithm<T, K>>(PARSE_REM(params_json)); })
 
 TRANSFORMATION_ENTRY(j_transformation_id, "J transformation", "JTransformationAlgorithm", j_transformation_algorithm, BIND_DEFAULT, { return std::make_unique<shanks::algos::j_transformation_algorithm<T, K>>(); })
 
-TRANSFORMATION_ENTRY(pj_u_transformation_id, "pJ-U Transformation", "pJAlgorithm", pj_algorithm, BIND_PJ_BASE, { 
+TRANSFORMATION_ENTRY(pj_u_transformation_id, "pJ-U Transformation", "pJAlgorithmU", pj_algorithm, BIND_PJ_BASE, { 
     return std::make_unique<shanks::algos::pj_algorithm<T, K>>(PARSE_REM(params_json), std::stoi(::shanks::utils_json::get_json_val_required(params_json, "p")), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(pj_t_transformation_id, "pJ-T Transformation", "pJAlgorithm", pj_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(pj_t_transformation_id, "pJ-T Transformation", "pJAlgorithmT", pj_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::pj_algorithm<T, K>>(PARSE_REM(params_json), std::stoi(::shanks::utils_json::get_json_val_required(params_json, "p")), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(pj_t_wave_transformation_id, "pJ-T Wave Transformation", "pJAlgorithm", pj_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(pj_t_wave_transformation_id, "pJ-T Wave Transformation", "pJAlgorithmT~", pj_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::pj_algorithm<T, K>>(PARSE_REM(params_json), std::stoi(::shanks::utils_json::get_json_val_required(params_json, "p")), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(pj_v_transformation_id, "pJ-V Transformation", "pJAlgorithm", pj_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(pj_v_transformation_id, "pJ-V Transformation", "pJAlgorithmV", pj_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::pj_algorithm<T, K>>(PARSE_REM(params_json), std::stoi(::shanks::utils_json::get_json_val_required(params_json, "p")), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(pj_v_wave_transformation_id, "pJ-V Wave Transformation", "pJAlgorithm", pj_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(pj_v_wave_transformation_id, "pJ-V Wave Transformation", "pJAlgorithmV~", pj_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::pj_algorithm<T, K>>(PARSE_REM(params_json), std::stoi(::shanks::utils_json::get_json_val_required(params_json, "p")), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
 
 TRANSFORMATION_ENTRY(ford_sidi_2_transformation_id, "Ford Sidi-2 Transformation", "FordSidi2Algorithm", ford_sidi_2_algorithm, BIND_DEFAULT, { return std::make_unique<shanks::algos::ford_sidi_2_algorithm<T, K>>(); })
 TRANSFORMATION_ENTRY(ford_sidi_3_transformation_id, "Ford Sidi-3 Transformation", "FordSidi3Algorithm", ford_sidi_3_algorithm, BIND_DEFAULT, { return std::make_unique<shanks::algos::ford_sidi_3_algorithm<T, K>>(); })
 
-TRANSFORMATION_ENTRY(levin_sidi_l_u_transformation_id, "Levin Sidi-L U Transformation", "LevinAlgorithm", levin_algorithm, BIND_LEVIN_BASE, { 
+TRANSFORMATION_ENTRY(levin_sidi_l_u_transformation_id, "Levin Sidi-L U Transformation", "LevinAlgorithmU", levin_algorithm, BIND_LEVIN_BASE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula"), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(levin_sidi_l_t_transformation_id, "Levin Sidi-L T Transformation", "LevinAlgorithm", levin_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(levin_sidi_l_t_transformation_id, "Levin Sidi-L T Transformation", "LevinAlgorithmT", levin_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula"), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(levin_sidi_l_t_wave_transformation_id, "Levin Sidi-L T Wave Transformation", "LevinAlgorithm", levin_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(levin_sidi_l_t_wave_transformation_id, "Levin Sidi-L T Wave Transformation", "LevinAlgorithmT~", levin_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula"), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(levin_sidi_l_v_transformation_id, "Levin Sidi-L V Transformation", "LevinAlgorithm", levin_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(levin_sidi_l_v_transformation_id, "Levin Sidi-L V Transformation", "LevinAlgorithmV", levin_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula"), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(levin_sidi_l_v_wave_transformation_id, "Levin Sidi-L V Wave Transformation", "LevinAlgorithm", levin_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(levin_sidi_l_v_wave_transformation_id, "Levin Sidi-L V Wave Transformation", "LevinAlgorithmV~", levin_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula"), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_u_transformation_id, "Recurrent Levin Sidi-L U Transformation", "LevinAlgorithm", levin_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_u_transformation_id, "Recurrent Levin Sidi-L U Transformation", "recLevinAlgorithmU", levin_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula"), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_t_transformation_id, "Recurrent Levin Sidi-L T Transformation", "LevinAlgorithm", levin_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_t_transformation_id, "Recurrent Levin Sidi-L T Transformation", "recLevinAlgorithmT", levin_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula"), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_v_transformation_id, "Recurrent Levin Sidi-L V Transformation", "LevinAlgorithm", levin_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_v_transformation_id, "Recurrent Levin Sidi-L V Transformation", "recLevinAlgorithmT~", levin_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula"), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_t_wave_transformation_id, "Recurrent Levin Sidi-L T Wave Transformation", "LevinAlgorithm", levin_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_t_wave_transformation_id, "Recurrent Levin Sidi-L T Wave Transformation", "recLevinAlgorithmV", levin_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula"), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_v_wave_transformation_id, "Recurrent Levin Sidi-L V Wave Transformation", "LevinAlgorithm", levin_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_v_wave_transformation_id, "Recurrent Levin Sidi-L V Wave Transformation", "recLevinAlgorithmV~", levin_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula"), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
 
-TRANSFORMATION_ENTRY(levin_sidi_m_u_transformation_id, "Levin Sidi-M U Transformation", "LevinSidiMAlgorithm", levin_sidi_m_algorithm, BIND_REM, { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(PARSE_REM(params_json)); })
-TRANSFORMATION_ENTRY(levin_sidi_m_t_transformation_id, "Levin Sidi-M T Transformation", "LevinSidiMAlgorithm", levin_sidi_m_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(PARSE_REM(params_json)); })
-TRANSFORMATION_ENTRY(levin_sidi_m_t_wave_transformation_id, "Levin Sidi-M T Wave Transformation", "LevinSidiMAlgorithm", levin_sidi_m_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(PARSE_REM(params_json)); })
-TRANSFORMATION_ENTRY(levin_sidi_m_v_transformation_id, "Levin Sidi-M V Transformation", "LevinSidiMAlgorithm", levin_sidi_m_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(PARSE_REM(params_json)); })
-TRANSFORMATION_ENTRY(levin_sidi_m_v_wave_transformation_id, "Levin Sidi-M V Wave Transformation", "LevinSidiMAlgorithm", levin_sidi_m_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(levin_sidi_m_u_transformation_id, "Levin Sidi-M U Transformation", "LevinSidiMAlgorithmU", levin_sidi_m_algorithm, BIND_REM, { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(levin_sidi_m_t_transformation_id, "Levin Sidi-M T Transformation", "LevinSidiMAlgorithmT", levin_sidi_m_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(levin_sidi_m_t_wave_transformation_id, "Levin Sidi-M T Wave Transformation", "LevinSidiMAlgorithmT~", levin_sidi_m_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(levin_sidi_m_v_transformation_id, "Levin Sidi-M V Transformation", "LevinSidiMAlgorithmV", levin_sidi_m_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(PARSE_REM(params_json)); })
+TRANSFORMATION_ENTRY(levin_sidi_m_v_wave_transformation_id, "Levin Sidi-M V Wave Transformation", "LevinSidiMAlgorithmV~", levin_sidi_m_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(PARSE_REM(params_json)); })
 
-TRANSFORMATION_ENTRY(levin_sidi_s_u_transformation_id, "Levin Sidi-S U Transformation", "LevinSidiSAlgorithm", levin_sidi_s_algorithm, BIND_REM_BOOL, { 
+TRANSFORMATION_ENTRY(levin_sidi_s_u_transformation_id, "Levin Sidi-S U Transformation", "LevinSidiSAlgorithmU", levin_sidi_s_algorithm, BIND_REM_BOOL, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(levin_sidi_s_t_transformation_id, "Levin Sidi-S T Transformation", "LevinSidiSAlgorithm", levin_sidi_s_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(levin_sidi_s_t_transformation_id, "Levin Sidi-S T Transformation", "LevinSidiSAlgorithmT", levin_sidi_s_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(levin_sidi_s_t_wave_transformation_id, "Levin Sidi-S T Wave Transformation", "LevinSidiSAlgorithm", levin_sidi_s_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(levin_sidi_s_t_wave_transformation_id, "Levin Sidi-S T Wave Transformation", "LevinSidiSAlgorithmT~", levin_sidi_s_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(levin_sidi_s_v_transformation_id, "Levin Sidi-S V Transformation", "LevinSidiSAlgorithm", levin_sidi_s_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(levin_sidi_s_v_transformation_id, "Levin Sidi-S V Transformation", "LevinSidiSAlgorithmV", levin_sidi_s_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(levin_sidi_s_v_wave_transformation_id, "Levin Sidi-S V Wave Transformation", "LevinSidiSAlgorithm", levin_sidi_s_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(levin_sidi_s_v_wave_transformation_id, "Levin Sidi-S V Wave Transformation", "LevinSidiSAlgorithmV~", levin_sidi_s_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_u_transformation_id, "Recurrent Levin Sidi-S U Transformation", "LevinSidiSAlgorithm", levin_sidi_s_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_u_transformation_id, "Recurrent Levin Sidi-S U Transformation", "recLevinSidiSAlgorithmU", levin_sidi_s_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_t_transformation_id, "Recurrent Levin Sidi-S T Transformation", "LevinSidiSAlgorithm", levin_sidi_s_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_t_transformation_id, "Recurrent Levin Sidi-S T Transformation", "recLevinSidiSAlgorithmT", levin_sidi_s_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_v_transformation_id, "Recurrent Levin Sidi-S V Transformation", "LevinSidiSAlgorithm", levin_sidi_s_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_v_transformation_id, "Recurrent Levin Sidi-S V Transformation", "recLevinSidiSAlgorithmT~", levin_sidi_s_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_t_wave_transformation_id, "Recurrent Levin Sidi-S T Wave Transformation", "LevinSidiSAlgorithm", levin_sidi_s_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_t_wave_transformation_id, "Recurrent Levin Sidi-S T Wave Transformation", "recLevinSidiSAlgorithmV", levin_sidi_s_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_v_wave_transformation_id, "Recurrent Levin Sidi-S V Wave Transformation", "LevinSidiSAlgorithm", levin_sidi_s_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_v_wave_transformation_id, "Recurrent Levin Sidi-S V Wave Transformation", "recLevinSidiSAlgorithmV~", levin_sidi_s_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(PARSE_REM(params_json), ::shanks::utils_json::parse_bool(params_json, "useRecurrentFormula")); 
 })
 
@@ -175,13 +175,13 @@ TRANSFORMATION_ENTRY(wynn_epsilon_1_transformation_id, "Wynn Epsilon-1 Transform
 TRANSFORMATION_ENTRY(wynn_epsilon_2_transformation_id, "Wynn Epsilon-2 Transformation", "WynnEpsilon2Algorithm", wynn_epsilon_2_algorithm, BIND_DEFAULT, { return std::make_unique<shanks::algos::wynn_epsilon_2_algorithm<T, K>>(); })
 TRANSFORMATION_ENTRY(wynn_epsilon_3_transformation_id, "Wynn Epsilon-3 Transformation", "WynnEpsilon3Algorithm", wynn_epsilon_3_algorithm, BIND_DEFAULT, { return std::make_unique<shanks::algos::wynn_epsilon_3_algorithm<T, K>>(); })
 
-TRANSFORMATION_ENTRY(wynn_rho_rho_transformation_id, "Wynn Rho-Rho Transformation", "WynnRhoAlgorithm", wynn_rho_algorithm, BIND_RHO, { 
+TRANSFORMATION_ENTRY(wynn_rho_rho_transformation_id, "Wynn Rho-Rho Transformation", "WynnRhoAlgorithmRho", wynn_rho_algorithm, BIND_RHO, { 
     return std::make_unique<shanks::algos::wynn_rho_algorithm<T, K>>(PARSE_NUM(params_json), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "gamma"))), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "RHO")))); 
 })
-TRANSFORMATION_ENTRY(wynn_rho_generalized_transformation_id, "Wynn Rho Generalized Transformation", "WynnRhoAlgorithm", wynn_rho_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(wynn_rho_generalized_transformation_id, "Wynn Rho Generalized Transformation", "WynnRhoAlgorithmRhoGen", wynn_rho_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::wynn_rho_algorithm<T, K>>(PARSE_NUM(params_json), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "gamma"))), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "RHO")))); 
 })
-TRANSFORMATION_ENTRY(wynn_rho_gamma_rho_transformation_id, "Wynn Rho-Gamma-Rho Transformation", "WynnRhoAlgorithm", wynn_rho_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(wynn_rho_gamma_rho_transformation_id, "Wynn Rho-Gamma-Rho Transformation", "WynnRhoAlgorithmRhoGamma", wynn_rho_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::wynn_rho_algorithm<T, K>>(PARSE_NUM(params_json), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "gamma"))), static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "RHO")))); 
 })
 

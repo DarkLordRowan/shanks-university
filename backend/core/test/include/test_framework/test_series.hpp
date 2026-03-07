@@ -287,7 +287,7 @@ void test_series() {
     for (const auto& x : methods) {
         std::string s = x()->get_name();
         std::replace(std::begin(s), std::end(s), ' ', '_');
-        fout << "," << s;
+        fout << "," << s << ",|An-lim|,|Tn-lim|,|An-lim|>|Tn-lim|";
     }
 
     // one params
@@ -295,7 +295,7 @@ void test_series() {
         for (const auto& x : methods_with_one_param) {
             std::string s = x(beta)->get_name();
             std::replace(std::begin(s), std::end(s), ' ', '_');
-            fout << "," << s;
+            fout << "," << s << ",|An-lim|,|Tn-lim|,|An-lim|>|Tn-lim|";
         }
     }
 
@@ -304,7 +304,7 @@ void test_series() {
         for (const auto& x : methods_with_T_T) {
             std::string s = x(a, b)->get_name();
             std::replace(std::begin(s), std::end(s), ' ', '_');
-            fout << "," << s;
+            fout << "," << s << ",|An-lim|,|Tn-lim|,|An-lim|>|Tn-lim|";
         }
 
     for (const auto& a : ints) {
@@ -312,7 +312,7 @@ void test_series() {
             for (const auto& x : methods_with_int_T) {
                 std::string s = x(a, b)->get_name();
                 std::replace(std::begin(s), std::end(s), ' ', '_');
-                fout << "," << s;
+                fout << "," << s << ",|Sn-lim|,|Tn-lim|,|Sn-lim|>|Tn-lim|";
             }
         }
     }
@@ -326,24 +326,33 @@ void test_series() {
             std::string value;
             try {
                 value = utils::helpers<T>::to_string(x()->operator()(i, order, result));
+                fout << ",\"" << value 
+                     << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[i] - series->get_sum())) 
+                     << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(x()->operator()(i, order, result) - series->get_sum()))
+                     << "\",\"" << (utils::math<T>::abs(result.Sn[i] - series->get_sum()) > utils::math<T>::abs(utils::math<T>::abs(x()->operator()(i, order, result) - series->get_sum())))<< "\"";
             } catch (const std::exception& e) {
                 std::string s = std::string(e.what());
                 std::replace(std::begin(s), std::end(s), ' ', '_');
                 value = s;
+                fout << ",\"" << value << "\",\"" << value << "\",\"" << value << "\",\"" << value << "\"";
             }
-            fout << "," << value;
+            
         }
         for (const auto& beta : betas) {
             for (const auto& x : methods_with_one_param) {
                 std::string value;
                 try {
                     value = utils::helpers<T>::to_string(x(beta)->operator()(i, order, result));
+                    fout << ",\"" << value 
+                     << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[i] - series->get_sum())) 
+                     << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(x(beta)->operator()(i, order, result) - series->get_sum()))
+                     << "\",\"" << (utils::math<T>::abs(result.Sn[i] - series->get_sum()) > utils::math<T>::abs(utils::math<T>::abs(x(beta)->operator()(i, order, result) - series->get_sum())))<< "\"";
                 } catch (const std::exception& e) {
                     std::string s = std::string(e.what());
                     std::replace(std::begin(s), std::end(s), ' ', '_');
                     value = s;
+                    fout << ",\"" << value << "\",\"" << value << "\",\"" << value << "\",\"" << value << "\"";
                 }
-                fout << "," << value;
             }
         }
         for (const auto& [a, b] : T_T) {
@@ -351,12 +360,16 @@ void test_series() {
                 std::string value;
                 try {
                     value = utils::helpers<T>::to_string(x(a, b)->operator()(i, order, result));
+                    fout << ",\"" << value 
+                     << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[i] - series->get_sum())) 
+                     << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum()))
+                     << "\",\"" << (utils::math<T>::abs(result.Sn[i] - series->get_sum()) > utils::math<T>::abs(utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum())))<< "\"";
                 } catch (const std::exception& e) {
                     std::string s = std::string(e.what());
                     std::replace(std::begin(s), std::end(s), ' ', '_');
                     value = s;
+                    fout << ",\"" << value << "\",\"" << value << "\",\"" << value << "\",\"" << value << "\"";
                 }
-                fout << "," << value;
             }
         }
         for (const auto& a : ints) {
@@ -365,12 +378,16 @@ void test_series() {
                     std::string value;
                     try {
                         value = utils::helpers<T>::to_string(x(a, b)->operator()(i, order, result));
+                        fout << ",\"" << value 
+                             << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[i] - series->get_sum())) 
+                             << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum()))
+                             << "\",\"" << (utils::math<T>::abs(result.Sn[i] - series->get_sum()) > utils::math<T>::abs(utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum()))) << "\"";
                     } catch (const std::exception& e) {
                         std::string s = std::string(e.what());
                         std::replace(std::begin(s), std::end(s), ' ', '_');
                         value = s;
+                        fout << ",\"" << value << "\",\"" << value << "\",\"" << value << "\",\"" << value << "\"";
                     }
-                    fout << "," << value;
                 }
             }
         }

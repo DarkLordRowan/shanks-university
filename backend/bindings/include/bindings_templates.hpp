@@ -144,10 +144,19 @@ template <AcceptedLike T>
 void bind_noise(pybind11::module_& m, const char* suffix) {
     m.def(
         create_name("applyNoise", suffix).c_str(),
-        [](const series_result<T>& result, NoiseMethod method, NoiseType type, unsigned long long int seed,
+        [](const series_result<T>& result, shanks::NoiseMethod method, shanks::NoiseType type, unsigned long long int seed,
            const typename GetUnderlyingType<T>::value& p1, const GetUnderlyingType<T>::value& p2) {
             unsigned long long int actual_seed = (seed == 0) ? pseudo_random_seed : seed;
-            return apply_noise(result, method, type, actual_seed, p1, p2);
+            switch (type) {
+                case shanks::uniform:
+                    return shanks::apply_uniform_noise(result, method, seed, utils::cast<double,typename GetUnderlyingType<T>::value>()(p1), utils::cast<double,typename GetUnderlyingType<T>::value>()(p2));
+                case shanks::normal:
+                    return shanks::apply_normal_noise(result, method, seed,  utils::cast<double,typename GetUnderlyingType<T>::value>()(p1), utils::cast<double,typename GetUnderlyingType<T>::value>()(p2));
+                case shanks::poisson:
+                    return shanks::apply_poisson_noise(result, method, seed, utils::cast<double,typename GetUnderlyingType<T>::value>()(p1));
+                default:
+                    throw std::invalid_argument("Invalid noise type");
+            }
         },
         py::arg("result"), py::arg("method"), py::arg("type"), py::arg("seed") = 0, py::arg("param1"),
         py::arg("param2") = T());

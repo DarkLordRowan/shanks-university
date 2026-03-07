@@ -1,15 +1,15 @@
 #include "../include/bindings_templates.hpp"
 
 void bind_noise_all(py::module_& m) {
-    py::enum_<NoiseType>(m, "NoiseType")
-        .value("Uniform", NoiseType::uniform)
-        .value("Normal", NoiseType::normal)
-        .value("Poisson", NoiseType::poisson)
+    py::enum_<shanks::NoiseType>(m, "NoiseType")
+        .value("Uniform", shanks::NoiseType::uniform)
+        .value("Normal",  shanks::NoiseType::normal)
+        .value("Poisson", shanks::NoiseType::poisson)
         .export_values();
 
-    py::enum_<NoiseMethod>(m, "NoiseMethod")
-        .value("Jitter", NoiseMethod::jitter)
-        .value("Scaling", NoiseMethod::scaling)
+    py::enum_<shanks::NoiseMethod>(m, "NoiseMethod")
+        .value("Jitter",  shanks::NoiseMethod::jitter)
+        .value("Scaling", shanks::NoiseMethod::scaling)
         .export_values();
 
     bind_each_type<types_to_bind>(

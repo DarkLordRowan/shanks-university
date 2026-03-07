@@ -66,7 +66,7 @@ public:
      * @return The computed remainder estimate ωₙ
      * @throws std::overflow_error if division by zero or numerical instability occurs
      */
-    virtual T operator()(K n, K index, const std::vector<T>&, const T& scale = utils::cast<T, int>()(0)) const = 0;
+    virtual T operator()(K n, K index, const std::vector<T>&, const T& scale = utils::cast<T, int>()(1)) const = 0;
 };
 
 /**
@@ -106,7 +106,7 @@ template <AcceptedLike T, UnsignedIntLike K>
 T u_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& an, const T& scale) const {
     // For theory, see: Levin (1973), Eq. (3.3) - u transform
     // ωₙ = (β + n) * aₙ, where aₙ = ΔSₙ₋₁
-    const T result = utils::cast<T, int>()(1) / ((scale + utils::cast<T, K>()(n)) * an.at(index));
+    const T result = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(an.at(index))) / ((scale + utils::cast<T, K>()(n)) * an.at(index));
 
     if (!utils::helpers<T>::isfinite(result)) throw std::overflow_error("division by zero");
 

@@ -113,7 +113,7 @@ void cmp_a_n_and_transform(const K n, const K order, series_result<T>& result,
  * @return A new series_result<T> with noise applied
  */
 template <AcceptedLike T, FloatLike ParamType>
-inline series_result<T> apply_noise_interactive(series_result<T>& source, const NoiseType noise_type) {
+inline series_result<T> apply_noise_interactive(series_result<T>& source, const shanks::NoiseType noise_type) {
     ParamType param1;
     ParamType param2;
     unsigned long long seed;
@@ -130,15 +130,15 @@ inline series_result<T> apply_noise_interactive(series_result<T>& source, const 
 
     // Getting noise parameters based on type
     switch (noise_type) {
-        case uniform:
+        case shanks::uniform:
             param1 = console_IO<ParamType>::input("Lower bound");
             param2 = console_IO<ParamType>::input("Upper bound");
             break;
-        case normal:
+        case shanks::normal:
             param1 = console_IO<ParamType>::input("Mean");
             param2 = console_IO<ParamType>::input("Standard deviation");
             break;
-        case poisson:
+        case shanks::poisson:
             param1 = console_IO<ParamType>::input("Lambda");
             param2 = ParamType();  // Not used for poisson
             break;
@@ -148,12 +148,12 @@ inline series_result<T> apply_noise_interactive(series_result<T>& source, const 
 
     // Applying noise
     switch (noise_type) {
-        case uniform:
-            return apply_uniform_noise(source, NoiseMethod::jitter, seed, param1, param2);
-        case normal:
-            return apply_normal_noise(source, NoiseMethod::jitter, seed, param1, param2);
-        case poisson:
-            return apply_poisson_noise(source, NoiseMethod::jitter, seed, param1);
+        case shanks::uniform:
+            return shanks::apply_uniform_noise(source, shanks::NoiseMethod::jitter, seed, utils::cast<double,ParamType>()(param1), utils::cast<double,ParamType>()(param2));
+        case shanks::normal:
+            return shanks::apply_normal_noise(source, shanks::NoiseMethod::jitter, seed,  utils::cast<double,ParamType>()(param1), utils::cast<double,ParamType>()(param2));
+        case shanks::poisson:
+            return shanks::apply_poisson_noise(source, shanks::NoiseMethod::jitter, seed, utils::cast<double,ParamType>()(param1));
         default:
             throw std::invalid_argument("Invalid noise type");
     }
@@ -283,7 +283,7 @@ void test_all_transforms(const K n, const K order, series_result<T>& result) {
     auto entries = shanks::algos::transformation_registry<T, K>::get_entries();
     std::vector<std::unique_ptr<shanks::algos::series_acceleration<T, K>>> algos;
     for (const auto& entry : entries) {
-        algos.push_back(entry.factory());
+        algos.push_back(entry.factory(""));
     }
 
     // Running tests for each algorithm

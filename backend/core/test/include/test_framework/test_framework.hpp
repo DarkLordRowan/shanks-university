@@ -119,7 +119,7 @@ inline void print_test_function_info() {
 template <AcceptedLike T, std::unsigned_integral K>
 inline std::unique_ptr<shanks::algos::series_acceleration<T, K>> create_transformation_by_id(
     shanks::algos::transformation_id_t id) {
-    return shanks::algos::transformation_registry<T, K>::create(id);
+    return shanks::algos::transformation_registry<T, K>::create(id, "");
 }
 
 /**
@@ -187,7 +187,7 @@ inline void main_testing_function() {
 
     if (answer == "Y" || answer == "Yes") {
         std::cout << "Noise type: uniform[0], normal[1], poisson[2]\n";
-        NoiseType noise_type_to_use = console_IO<NoiseType>::input("noise_type");
+        shanks::NoiseType noise_type_to_use = console_IO<shanks::NoiseType>::input("noise_type");
 
         result = apply_noise_interactive<T, typename GetUnderlyingType<T>::value>(result, noise_type_to_use);
     }

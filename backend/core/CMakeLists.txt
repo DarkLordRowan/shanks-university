@@ -34,7 +34,7 @@ include_directories(
 # -------------------------
 
 add_executable(shanks
-    ${CMAKE_SOURCE_DIR}/../ffi/src/series_registry_impl.cpp
+    ${CMAKE_SOURCE_DIR}/../../vizrd/ffi/src/series_registry_impl.cpp
     ${CMAKE_SOURCE_DIR}/test/src/main.cpp
  
 )
