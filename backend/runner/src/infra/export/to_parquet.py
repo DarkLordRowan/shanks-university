@@ -31,20 +31,6 @@ try:
             
             return {"real": str(value), "imag": "0.0"}
 
-        def _format_noise(self, noise: dict) -> str:
-            if not noise:
-                return "None"
-            method = noise.get("method", "Unknown")
-            params = []
-            for k in sorted(noise.keys()):
-                v = noise[k]
-                if k == "method" or v is None:
-                    continue
-                params.append(f"{k}={v}")
-            if not params:
-                return method
-            return f"{method}({', '.join(params)})"
-
         def _get_accel_record(self, result: dict, series_id: int) -> dict[str, Any]:
             accel = result["accel"]
             computed = result["computed"]
@@ -87,17 +73,6 @@ try:
                  desc = error.get("description", "Unknown error")
                  errors_list.append({"n": 0, "message": str(desc)})
 
-            noise_str = "None"
-            if noise:
-                 noise_dict = {
-                     "type": str(noise.get("type", "")),
-                     "method": str(noise.get("method", "")),
-                 "param1": str(noise.get("param1", "")),
-                 "param2": str(noise.get("param2", "")),
-                     "seed": int(noise.get("seed", 0))
-                 }
-                 noise_str = self._format_noise(noise_dict)
-
             filtered_data = None
             if filtered:
                  # filtered is a dict: {start_n, segment_length, methods: {name: {values: [], average: ...}}}
@@ -131,7 +106,6 @@ try:
                 "computed": comp_list,
                 "errors": errors_list,
                 "events": events_list,
-                "noise_str": noise_str,
                 "filtered": filtered_data
             }
 
@@ -152,11 +126,21 @@ try:
                      if found_param:
                          prec_str = str(found_param.precision.value)
                     
+                     args = {k: str(v) for k, v in s_res["arguments"].items()}
+                     noise = result.get("noise")
+                     if noise:
+                         args["noise_type"] = str(noise.get("type", ""))
+                         args["noise_method"] = str(noise.get("method", ""))
+                         args["noise_seed"] = str(noise.get("seed", 0))
+                         for nk in noise.keys():
+                             if nk not in ("type", "method", "seed") and noise[nk] is not None:
+                                 args[f"noise_{nk}"] = str(noise[nk])
+
                      series_records[s_id] = {
                          "series_name": s_res["name"],
                          "series_id": s_id,
                          "precision": prec_str,
-                         "arguments": {k: str(v) for k, v in s_res["arguments"].items()},
+                         "arguments": args,
                          "series_limit": self._sanitize_complex_value(s_res["lim"]),
                          "computed_map": {} # temp map for merging
                      }
@@ -280,7 +264,6 @@ try:
                     )),
                     ("errors", pa.list_(pa.struct([("n", pa.int64()), ("message", pa.string())]))),
                     ("events", pa.list_(pa.struct([("n", pa.int64()), ("name", pa.string()), ("description", pa.string())]))),
-                    ("noise_str", pa.string()),
                     ("filtered", pa.struct([
                         ("start_n", pa.int64()),
                         ("segment_length", pa.int64()),

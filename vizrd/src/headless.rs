@@ -51,6 +51,15 @@ pub struct HeadlessRunner {
 
 impl HeadlessRunner {
     pub fn new(config: ExperimentConfig, cache: Cache, export: Option<PathBuf>) -> Result<Self> {
+        let export = export.map(|p| {
+            let now = chrono::Local::now();
+            let suffix = now.format("%Y-%m-%d_%H-%M-%S").to_string();
+            let mut name = p.file_name().unwrap_or_default().to_os_string();
+            name.push("_");
+            name.push(suffix);
+            p.with_file_name(name)
+        });
+
         Ok(Self {
             config,
             cache,
@@ -96,12 +105,29 @@ impl HeadlessRunner {
             match event {
                 ComputeEvent::SeriesDone { id, data } => {
                     let mut arguments = HashMap::new();
+                    // Explicitly add 'x' because Python previously expected it inside args
+                    arguments.insert("x".to_string(), id.1.series.x.to_string());
                     for (k, v) in &id.1.series.args {
-                        arguments.insert(k.clone(), v.to_string());
+                        let vs = match v {
+                            serde_json::Value::String(s) => s.clone(),
+                            _ => v.to_string(),
+                        };
+                        arguments.insert(k.clone(), vs);
                     }
+                    
                     if let Some(ref noise) = id.1.noise {
+                        arguments.insert("noise_type".to_string(), noise.noise_type.clone());
+                        arguments.insert("noise_method".to_string(), noise.method.clone());
+                        arguments.insert("noise_seed".to_string(), noise.seed.to_string());
+                        
                         for (k, v) in &noise.args {
-                            arguments.insert(format!("noise_{}", k), v.to_string());
+                            let vs = match v {
+                                serde_json::Value::String(s) => s.clone(),
+                                _ => v.to_string(),
+                            };
+                            if vs != "null" {
+                                arguments.insert(format!("noise_{}", k), vs);
+                            }
                         }
                     }
 
@@ -127,43 +153,20 @@ impl HeadlessRunner {
                 }
                 ComputeEvent::AccelDone { id, desc, data } => {
                     let mut arguments = HashMap::new();
-                    for (k, v) in &id.1.series.args {
-                        arguments.insert(k.clone(), v.to_string());
-                    }
-                    let mut noise_str = "None".to_string();
-                    if let Some(ref noise) = id.1.noise {
-                        for (k, v) in &noise.args {
-                            arguments.insert(format!("noise_{}", k), v.to_string());
-                        }
-
-                        let mut params = Vec::new();
-                        for (k, v) in &noise.args {
-                            // Only include non-null values, though rust's v.to_string() yields "null" for json null
-                            let vs = v.to_string();
-                            if vs != "null" {
-                                params.push(format!("{}={}", k, v));
-                            }
-                        }
-                        params.push(format!("seed={}", noise.seed));
-                        params.push(format!("type={}", noise.noise_type));
-                        params.sort();
-
-                        if params.is_empty() {
-                            noise_str = noise.method.clone();
-                        } else {
-                            noise_str = format!("{}({})", noise.method, params.join(", "));
-                        }
-                    }
                     for (k, v) in &desc.accel.args {
-                        arguments.insert(k.clone(), v.to_string());
+                        let vs = match v {
+                            serde_json::Value::String(s) => s.clone(),
+                            _ => v.to_string(),
+                        };
+                        arguments.insert(k.clone(), vs);
                     }
 
                     let entry = pending_accels.entry(id.0).or_insert_with(Vec::new);
                     entry.push(AccelExportRow {
+                        series_id: id.0 as i64,
                         m_value: desc.accel.m,
                         accel_name: desc.accel.name.clone(),
-                        noise_str: noise_str.clone(),
-                        arguments: arguments.clone(),
+                        arguments,
                         data: data.clone(), // we need to clone Arc inside or clone row if needed
                     });
 

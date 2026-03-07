@@ -21,17 +21,17 @@ pub struct SeriesExportRow {
     pub series_id: i64,
     pub series_name: String,
     pub precision: String,
-    /// Flat string map of all arguments (series args + noise args prefixed with "noise_").
+    /// Flat string map of series arguments (x + named args + noise args prefixed with "noise_").
     pub arguments: HashMap<String, String>,
     pub data: SeriesData,
 }
 
 /// A single accel result row ready for export.
 pub struct AccelExportRow {
+    pub series_id: i64,
     pub m_value: i64,
     pub accel_name: String,
-    pub noise_str: String,
-    /// Flat string map of all arguments (accel args).
+    /// Flat string map of accel-specific arguments.
     pub arguments: HashMap<String, String>,
     pub data: AccelData,
 }
@@ -144,15 +144,19 @@ impl ParquetExporter {
             Field::new("profiling", DataType::Struct(profiling_fields.clone().into()), true),
         ];
 
-        // Physical schema — no precision/series_name (they live in the path)
+        // Physical schema matching Python exactly
         let schema = Arc::new(Schema::new(vec![
+            Field::new("series_name",  DataType::Utf8, false),
             Field::new("series_id",    DataType::Int64, false),
+            Field::new("precision",    DataType::Utf8, false),
             Field::new("arguments",    DataType::Struct(arg_fields.clone().into()), false),
             Field::new("series_limit", real_imag_struct.clone(), true),
             Field::new("computed",     list_field("item", &computed_item_fields), false),
         ]));
 
+        let mut name_builder = StringBuilder::new();
         let mut id_builder = Int64Builder::new();
+        let mut prec_builder = StringBuilder::new();
         let mut args_builder = make_args_builder(&arg_fields);
         let mut limit_builder = StructBuilder::new(
             real_imag_fields.clone(),
@@ -169,7 +173,9 @@ impl ParquetExporter {
         ));
 
         for row in rows {
+            name_builder.append_value(&row.series_name);
             id_builder.append_value(row.series_id);
+            prec_builder.append_value(&row.precision);
             append_args_struct(&mut args_builder, arg_keys, &row.arguments);
 
             // series_limit (nullable)
@@ -213,7 +219,9 @@ impl ParquetExporter {
         }
 
         finish_and_write(schema, vec![
+            Arc::new(name_builder.finish()),
             Arc::new(id_builder.finish()),
+            Arc::new(prec_builder.finish()),
             Arc::new(args_builder.finish()),
             Arc::new(limit_builder.finish()),
             Arc::new(computed_builder.finish()),
@@ -264,18 +272,19 @@ impl ParquetExporter {
             Field::new("methods",        DataType::Struct(methods_dummy_fields.clone().into()), true),
         ];
 
-        // Physical schema — no series_id (it lives in the directory name)
+        // Physical schema matching Python exactly
         let schema = Arc::new(Schema::new(vec![
+            Field::new("series_id",       DataType::Int64, false),
             Field::new("accel_name",      DataType::Utf8,  false),
             Field::new("m_value",         DataType::Int64, false),
             Field::new("additional_args", DataType::Struct(arg_fields.clone().into()), false),
             Field::new("computed",  list_field("item", &computed_item_fields), false),
             Field::new("errors",    list_field("item", &error_fields),          false),
             Field::new("events",    list_field("item", &event_fields),           false),
-            Field::new("noise_str", DataType::Utf8, false),
             Field::new("filtered",  DataType::Struct(filtered_fields.clone().into()), true),
         ]));
 
+        let mut sid_builder  = Int64Builder::new();
         let mut name_builder = StringBuilder::new();
         let mut m_builder    = Int64Builder::new();
         let mut args_builder = make_args_builder(&arg_fields);
@@ -300,7 +309,6 @@ impl ParquetExporter {
                 Box::new(StringBuilder::new()),
             ],
         ));
-        let mut noise_builder = StringBuilder::new();
         // filtered is always null in the current pipeline (no filter data yet)
         let mut filtered_builder = StructBuilder::new(
             filtered_fields.clone(),
@@ -321,6 +329,7 @@ impl ParquetExporter {
         );
 
         for row in rows {
+            sid_builder.append_value(row.series_id);
             name_builder.append_value(&row.accel_name);
             m_builder.append_value(row.m_value);
             append_args_struct(&mut args_builder, arg_keys, &row.arguments);
@@ -366,8 +375,6 @@ impl ParquetExporter {
             }
             events_builder.append(true);
 
-            noise_builder.append_value(&row.noise_str);
-
             // filtered — always null
             filtered_builder.field_builder::<Int64Builder>(0).unwrap().append_null();
             filtered_builder.field_builder::<Int64Builder>(1).unwrap().append_null();
@@ -387,13 +394,13 @@ impl ParquetExporter {
         }
 
         finish_and_write(schema, vec![
+            Arc::new(sid_builder.finish()),
             Arc::new(name_builder.finish()),
             Arc::new(m_builder.finish()),
             Arc::new(args_builder.finish()),
             Arc::new(computed_builder.finish()),
             Arc::new(errors_builder.finish()),
             Arc::new(events_builder.finish()),
-            Arc::new(noise_builder.finish()),
             Arc::new(filtered_builder.finish()),
         ], path)
     }
