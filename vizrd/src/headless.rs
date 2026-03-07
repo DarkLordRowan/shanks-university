@@ -81,9 +81,10 @@ impl HeadlessRunner {
         summary.total_trials = total_tasks;
 
         let mut series_results = Vec::new();
-        let mut accel_results = Vec::new();
 
         let (tx, mut rx) = mpsc::channel(32);
+
+        let mut pending_accels: HashMap<usize, Vec<AccelExportRow>> = HashMap::new();
 
         for task in tasks {
             compute::spawn_task(task, self.cache.clone(), tx.clone());
@@ -129,22 +130,41 @@ impl HeadlessRunner {
                     for (k, v) in &id.1.series.args {
                         arguments.insert(k.clone(), v.to_string());
                     }
+                    let mut noise_str = "None".to_string();
                     if let Some(ref noise) = id.1.noise {
                         for (k, v) in &noise.args {
                             arguments.insert(format!("noise_{}", k), v.to_string());
+                        }
+
+                        let mut params = Vec::new();
+                        for (k, v) in &noise.args {
+                            // Only include non-null values, though rust's v.to_string() yields "null" for json null
+                            let vs = v.to_string();
+                            if vs != "null" {
+                                params.push(format!("{}={}", k, v));
+                            }
+                        }
+                        params.push(format!("seed={}", noise.seed));
+                        params.push(format!("type={}", noise.noise_type));
+                        params.sort();
+
+                        if params.is_empty() {
+                            noise_str = noise.method.clone();
+                        } else {
+                            noise_str = format!("{}({})", noise.method, params.join(", "));
                         }
                     }
                     for (k, v) in &desc.accel.args {
                         arguments.insert(k.clone(), v.to_string());
                     }
 
-                    accel_results.push(AccelExportRow {
-                        series_id: id.0 as i64,
-                        series_name: id.1.series.name.clone(),
+                    let entry = pending_accels.entry(id.0).or_insert_with(Vec::new);
+                    entry.push(AccelExportRow {
                         m_value: desc.accel.m,
                         accel_name: desc.accel.name.clone(),
-                        arguments,
-                        data,
+                        noise_str: noise_str.clone(),
+                        arguments: arguments.clone(),
+                        data: data.clone(), // we need to clone Arc inside or clone row if needed
                     });
 
                     if let Some(ref mut cb) = self.progress {
@@ -159,7 +179,17 @@ impl HeadlessRunner {
                         });
                     }
                 }
-                ComputeEvent::Complete(_) => {
+                ComputeEvent::Complete(id) => {
+                    let task_idx = id.0;
+                    if let Some(ref path) = self.export {
+                        if let Some(task_accels) = pending_accels.remove(&task_idx) {
+                            if !task_accels.is_empty() {
+                                if let Err(e) = ParquetExporter::export_incremental_accel_batch(task_idx as i64, &task_accels, path) {
+                                    log::error!("Failed to export incremental accels for task {}: {}", task_idx, e);
+                                }
+                            }
+                        }
+                    }
                     finished_tasks += 1;
                     summary.successful += 1;
                 }
@@ -175,7 +205,6 @@ impl HeadlessRunner {
             ParquetExporter::export(
                 ExportData {
                     series_results,
-                    accel_results,
                 },
                 path,
             )?;

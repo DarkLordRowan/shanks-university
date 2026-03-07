@@ -1192,7 +1192,7 @@ impl eframe::App for ShanksApp {
                             use egui_plot::MarkerShape;
                             let (shape, color) = match name.as_str() {
                                 "stop" => (MarkerShape::Square, egui::Color32::RED),
-                                "algo_error" => {
+                                "error" => {
                                     (MarkerShape::Cross, egui::Color32::from_rgb(255, 140, 0))
                                 } // Orange
                                 _ => (MarkerShape::Circle, egui::Color32::YELLOW),

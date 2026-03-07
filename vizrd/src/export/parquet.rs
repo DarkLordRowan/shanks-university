@@ -28,10 +28,9 @@ pub struct SeriesExportRow {
 
 /// A single accel result row ready for export.
 pub struct AccelExportRow {
-    pub series_id: i64,
-    pub series_name: String,
     pub m_value: i64,
     pub accel_name: String,
+    pub noise_str: String,
     /// Flat string map of all arguments (accel args).
     pub arguments: HashMap<String, String>,
     pub data: AccelData,
@@ -40,7 +39,6 @@ pub struct AccelExportRow {
 /// All data collected during a headless run.
 pub struct ExportData {
     pub series_results: Vec<SeriesExportRow>,
-    pub accel_results: Vec<AccelExportRow>,
 }
 
 // ---------------------------------------------------------------------------
@@ -68,9 +66,26 @@ impl ParquetExporter {
         if !data.series_results.is_empty() {
             Self::export_series_partitioned(&data.series_results, &path.join("series"))?;
         }
-        if !data.accel_results.is_empty() {
-            Self::export_accels_partitioned(&data.accel_results, &path.join("accelerations"))?;
-        }
+        Ok(())
+    }
+
+    /// Incrementally export a batch of acceleration result rows to prevent RAM blowup.
+    /// This writes a unique file (using UUID) to the correct hive partitioned directory.
+    pub fn export_incremental_accel_batch(series_id: i64, rows: &[AccelExportRow], path: &Path) -> Result<()> {
+        if rows.is_empty() { return Ok(()); }
+        let base = path.join("accelerations");
+        let dir = base.join(format!("series_id={}", series_id));
+        std::fs::create_dir_all(&dir)?;
+
+        let id = uuid::Uuid::new_v4().to_string();
+        let file_path = dir.join(format!("{}.parquet", id));
+
+        // Note: For incremental, we may only know the keys present in *these* rows.
+        let arg_keys = collect_arg_keys(rows.iter().map(|r| &r.arguments));
+        
+        let refs: Vec<&AccelExportRow> = rows.iter().collect();
+        Self::write_accel_partition(&refs, &arg_keys, &file_path)?;
+
         Ok(())
     }
 
@@ -209,30 +224,6 @@ impl ParquetExporter {
     // Accelerations — hive partitioned by series_id
     // -----------------------------------------------------------------------
 
-    fn export_accels_partitioned(rows: &[AccelExportRow], base: &Path) -> Result<()> {
-        // Global arg keys for a consistent schema across all partition files.
-        let arg_keys = collect_arg_keys(rows.iter().map(|r| &r.arguments));
-
-        // Group by series_id.
-        let mut partitions: std::collections::BTreeMap<i64, Vec<usize>> =
-            std::collections::BTreeMap::new();
-        for (i, row) in rows.iter().enumerate() {
-            partitions.entry(row.series_id).or_default().push(i);
-        }
-
-        for (series_id, indices) in &partitions {
-            // Hive path: series_id={id}/0.parquet
-            let dir = base.join(format!("series_id={}", series_id));
-            std::fs::create_dir_all(&dir)?;
-
-            let partition_rows: Vec<&AccelExportRow> =
-                indices.iter().map(|&i| &rows[i]).collect();
-
-            Self::write_accel_partition(&partition_rows, &arg_keys, &dir.join("0.parquet"))?;
-        }
-        Ok(())
-    }
-
     /// Write one `accelerations` partition file.
     /// Schema (partition col `series_id` is **not** in the file):
     ///   accel_name, m_value, additional_args, computed, errors, events, noise_str, filtered
@@ -260,8 +251,13 @@ impl ParquetExporter {
             Field::new("name",        DataType::Utf8,  false),
             Field::new("description", DataType::Utf8,  false),
         ];
-        // filtered: nullable struct matching the Python schema
-        let methods_dummy_fields = vec![Field::new("__dummy__", DataType::Utf8, true)];
+        let method_res_type_fields = vec![
+            Field::new("values",  list_field("item", &real_imag_fields), true),
+            Field::new("average", DataType::Struct(real_imag_fields.clone().into()), true),
+        ];
+        let methods_dummy_fields = vec![
+            Field::new("__dummy__", DataType::Struct(method_res_type_fields.clone().into()), true)
+        ];
         let filtered_fields = vec![
             Field::new("start_n",        DataType::Int64, false),
             Field::new("segment_length", DataType::Int64, false),
@@ -313,7 +309,13 @@ impl ParquetExporter {
                 Box::new(Int64Builder::new()),
                 Box::new(StructBuilder::new(
                     methods_dummy_fields.clone(),
-                    vec![Box::new(StringBuilder::new())],
+                    vec![Box::new(StructBuilder::new(
+                        method_res_type_fields.clone(),
+                        vec![
+                            Box::new(ListBuilder::new(make_real_imag_builder(&real_imag_fields))),
+                            Box::new(make_real_imag_builder(&real_imag_fields)),
+                        ]
+                    ))],
                 )),
             ],
         );
@@ -343,9 +345,9 @@ impl ParquetExporter {
             }
             computed_builder.append(true);
 
-            // errors (events named "algo_error") vs regular events
+            // errors (events named "error") vs regular events
             let (algo_errors, events): (Vec<&SeriesEvent>, Vec<&SeriesEvent>) =
-                row.data.events.iter().partition(|e| e.name == "algo_error");
+                row.data.events.iter().partition(|e| e.name == "error");
 
             let err_lb = errors_builder.values();
             for ev in algo_errors {
@@ -364,13 +366,22 @@ impl ParquetExporter {
             }
             events_builder.append(true);
 
-            noise_builder.append_value("None");
+            noise_builder.append_value(&row.noise_str);
 
             // filtered — always null
             filtered_builder.field_builder::<Int64Builder>(0).unwrap().append_null();
             filtered_builder.field_builder::<Int64Builder>(1).unwrap().append_null();
             let methods_sb = filtered_builder.field_builder::<StructBuilder>(2).unwrap();
-            methods_sb.field_builder::<StringBuilder>(0).unwrap().append_null();
+            let dummy_sb = methods_sb.field_builder::<StructBuilder>(0).unwrap();
+            
+            let val_list = dummy_sb.field_builder::<ListBuilder<StructBuilder>>(0).unwrap();
+            val_list.append(false); // list itself is null
+            let avg_sb = dummy_sb.field_builder::<StructBuilder>(1).unwrap();
+            avg_sb.field_builder::<StringBuilder>(0).unwrap().append_null();
+            avg_sb.field_builder::<StringBuilder>(1).unwrap().append_null();
+            avg_sb.append(false);
+            
+            dummy_sb.append(false);
             methods_sb.append(false);
             filtered_builder.append(false);
         }

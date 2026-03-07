@@ -233,14 +233,14 @@ public:
             } catch (const std::exception& ex) {
                 new_events.emplace_back(
                     static_cast<uint64_t>(i),
-                    "algo_error",
+                    "error",
                     std::string(ex.what())
                 );
                 accelerated = prev_accel;
             } catch (...) {
                 new_events.emplace_back(
                     static_cast<uint64_t>(i),
-                    "algo_error",
+                    "error",
                     "Unknown exception in acceleration algorithm"
                 );
                 accelerated = prev_accel;
