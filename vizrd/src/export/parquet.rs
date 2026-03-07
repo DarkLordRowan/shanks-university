@@ -34,6 +34,15 @@ pub struct AccelExportRow {
     /// Flat string map of accel-specific arguments.
     pub arguments: HashMap<String, String>,
     pub data: AccelData,
+    /// Filtered results grouped by filter name/identifier.
+    pub filtered: Option<AccelFilteredData>,
+}
+
+pub struct AccelFilteredData {
+    pub start_n: i64,
+    pub segment_length: i64,
+    /// Map of filter name -> list of complex items.
+    pub methods: HashMap<String, Vec<Value>>,
 }
 
 /// All data collected during a headless run.
@@ -197,7 +206,8 @@ impl ParquetExporter {
             let n_pts = arr_len(&row.data.result.sn);
             let lb = computed_builder.values();
             for idx in 0..n_pts {
-                lb.field_builder::<Int64Builder>(0).unwrap().append_value(idx as i64);
+                // n is 1-based in exported data to match Python and general convention
+                lb.field_builder::<Int64Builder>(0).unwrap().append_value((idx + 1) as i64);
 
                 let (r, i) = arr_index_to_strings(&row.data.result.sn, idx);
                 let val_sb = lb.field_builder::<StructBuilder>(1).unwrap();
@@ -263,25 +273,41 @@ impl ParquetExporter {
             Field::new("values",  list_field("item", &real_imag_fields), true),
             Field::new("average", DataType::Struct(real_imag_fields.clone().into()), true),
         ];
-        let methods_dummy_fields = vec![
-            Field::new("__dummy__", DataType::Struct(method_res_type_fields.clone().into()), true)
-        ];
-        let filtered_fields = vec![
+
+
+        // Determine all method keys present in this batch to build the schema
+        let mut all_method_keys = std::collections::BTreeSet::new();
+        for row in rows {
+            if let Some(ref filt) = row.filtered {
+                for k in filt.methods.keys() {
+                    all_method_keys.insert(k.clone());
+                }
+            }
+        }
+        if all_method_keys.is_empty() {
+            all_method_keys.insert("__dummy__".to_string());
+        }
+        let method_keys: Vec<String> = all_method_keys.into_iter().collect();
+        let method_fields: Vec<Field> = method_keys.iter()
+            .map(|k| Field::new(k, DataType::Struct(method_res_type_fields.clone().into()), true))
+            .collect();
+        
+        let filtered_schema_fields = vec![
             Field::new("start_n",        DataType::Int64, false),
             Field::new("segment_length", DataType::Int64, false),
-            Field::new("methods",        DataType::Struct(methods_dummy_fields.clone().into()), true),
+            Field::new("methods",        DataType::Struct(method_fields.clone().into()), true),
         ];
 
-        // Physical schema matching Python exactly
+        // Re-create the schema with the dynamic methods field
         let schema = Arc::new(Schema::new(vec![
             Field::new("series_id",       DataType::Int64, false),
             Field::new("accel_name",      DataType::Utf8,  false),
             Field::new("m_value",         DataType::Int64, false),
             Field::new("additional_args", DataType::Struct(arg_fields.clone().into()), false),
-            Field::new("computed",  list_field("item", &computed_item_fields), false),
-            Field::new("errors",    list_field("item", &error_fields),          false),
-            Field::new("events",    list_field("item", &event_fields),           false),
-            Field::new("filtered",  DataType::Struct(filtered_fields.clone().into()), true),
+            Field::new("computed",        list_field("item", &computed_item_fields), false),
+            Field::new("errors",          list_field("item", &error_fields),          false),
+            Field::new("events",          list_field("item", &event_fields),           false),
+            Field::new("filtered",        DataType::Struct(filtered_schema_fields.clone().into()), true),
         ]));
 
         let mut sid_builder  = Int64Builder::new();
@@ -309,22 +335,26 @@ impl ParquetExporter {
                 Box::new(StringBuilder::new()),
             ],
         ));
-        // filtered is always null in the current pipeline (no filter data yet)
+
+        // Dynamic methods builder
+        let mut methods_builders = Vec::new();
+        for _ in &method_keys {
+            methods_builders.push(Box::new(StructBuilder::new(
+                method_res_type_fields.clone(),
+                vec![
+                    Box::new(ListBuilder::new(make_real_imag_builder(&real_imag_fields))),
+                    Box::new(make_real_imag_builder(&real_imag_fields)),
+                ]
+            )) as Box<dyn arrow::array::ArrayBuilder>);
+        }
+        let methods_struct_builder = StructBuilder::new(method_fields, methods_builders);
+
         let mut filtered_builder = StructBuilder::new(
-            filtered_fields.clone(),
+            filtered_schema_fields,
             vec![
                 Box::new(Int64Builder::new()),
                 Box::new(Int64Builder::new()),
-                Box::new(StructBuilder::new(
-                    methods_dummy_fields.clone(),
-                    vec![Box::new(StructBuilder::new(
-                        method_res_type_fields.clone(),
-                        vec![
-                            Box::new(ListBuilder::new(make_real_imag_builder(&real_imag_fields))),
-                            Box::new(make_real_imag_builder(&real_imag_fields)),
-                        ]
-                    ))],
-                )),
+                Box::new(methods_struct_builder),
             ],
         );
 
@@ -375,22 +405,50 @@ impl ParquetExporter {
             }
             events_builder.append(true);
 
-            // filtered — always null
-            filtered_builder.field_builder::<Int64Builder>(0).unwrap().append_null();
-            filtered_builder.field_builder::<Int64Builder>(1).unwrap().append_null();
-            let methods_sb = filtered_builder.field_builder::<StructBuilder>(2).unwrap();
-            let dummy_sb = methods_sb.field_builder::<StructBuilder>(0).unwrap();
-            
-            let val_list = dummy_sb.field_builder::<ListBuilder<StructBuilder>>(0).unwrap();
-            val_list.append(false); // list itself is null
-            let avg_sb = dummy_sb.field_builder::<StructBuilder>(1).unwrap();
-            avg_sb.field_builder::<StringBuilder>(0).unwrap().append_null();
-            avg_sb.field_builder::<StringBuilder>(1).unwrap().append_null();
-            avg_sb.append(false);
-            
-            dummy_sb.append(false);
-            methods_sb.append(false);
-            filtered_builder.append(false);
+            // filtered
+            if let Some(ref filt) = row.filtered {
+                filtered_builder.field_builder::<Int64Builder>(0).unwrap().append_value(filt.start_n);
+                filtered_builder.field_builder::<Int64Builder>(1).unwrap().append_value(filt.segment_length);
+                
+                let methods_sb = filtered_builder.field_builder::<StructBuilder>(2).unwrap();
+                for (i, key) in method_keys.iter().enumerate() {
+                    let m_entry_sb = methods_sb.field_builder::<StructBuilder>(i).unwrap();
+                    if let Some(vals) = filt.methods.get(key) {
+                        // values list
+                        let val_list = m_entry_sb.field_builder::<ListBuilder<StructBuilder>>(0).unwrap();
+                        let lb = val_list.values();
+                        for v in vals {
+                            let (r, i) = value_to_strings(v);
+                            lb.field_builder::<StringBuilder>(0).unwrap().append_value(r);
+                            lb.field_builder::<StringBuilder>(1).unwrap().append_value(i);
+                            lb.append(true);
+                        }
+                        val_list.append(true);
+
+                        // average (null for now as we don't have it explicitly stored)
+                        let avg_sb = m_entry_sb.field_builder::<StructBuilder>(1).unwrap();
+                        avg_sb.field_builder::<StringBuilder>(0).unwrap().append_null();
+                        avg_sb.field_builder::<StringBuilder>(1).unwrap().append_null();
+                        avg_sb.append(false);
+
+                        m_entry_sb.append(true);
+                    } else {
+                        m_entry_sb.append(false);
+                    }
+                }
+                methods_sb.append(true);
+                filtered_builder.append(true);
+            } else {
+                // all components null
+                filtered_builder.field_builder::<Int64Builder>(0).unwrap().append_null();
+                filtered_builder.field_builder::<Int64Builder>(1).unwrap().append_null();
+                let methods_sb = filtered_builder.field_builder::<StructBuilder>(2).unwrap();
+                for i in 0..method_keys.len() {
+                    methods_sb.field_builder::<StructBuilder>(i).unwrap().append(false);
+                }
+                methods_sb.append(false);
+                filtered_builder.append(false);
+            }
         }
 
         finish_and_write(schema, vec![
@@ -512,7 +570,7 @@ fn append_args_struct(
 }
 
 /// Number of elements in an `Arr`.
-fn arr_len(arr: &Arr) -> usize {
+pub(crate) fn arr_len(arr: &Arr) -> usize {
     match arr {
         Arr::Real(v)      => v.len(),
         Arr::Complex(c)   => c.real.len(),
@@ -558,6 +616,32 @@ fn arr_index_f64(arr: &Arr, idx: usize) -> Option<f64> {
         Arr::Complex(c)   => c.real.get(idx).map(|rv| rv.to_f64()),
         Arr::Interval(iv) => iv.inf.get(idx).map(|rv| rv.to_f64()),
         Arr::CInterval(c) => c.real.inf.get(idx).map(|rv| rv.to_f64()),
+    }
+}
+
+/// Get the `idx`-th element of an `Arr` as a `Value`.
+pub(crate) fn arr_index_to_value(arr: &Arr, idx: usize) -> Value {
+    let zero = RealValue { mantissa: 0.0, exponent: 0 };
+    match arr {
+        Arr::Real(v) => Value::Real(v.get(idx).copied().unwrap_or(zero)),
+        Arr::Complex(c) => Value::Complex(ComplexOf {
+            real: c.real.get(idx).copied().unwrap_or(zero),
+            imag: c.imag.get(idx).copied().unwrap_or(zero),
+        }),
+        Arr::Interval(iv) => Value::Interval(IntervalOf {
+            inf: iv.inf.get(idx).copied().unwrap_or(zero),
+            sup: iv.sup.get(idx).copied().unwrap_or(zero),
+        }),
+        Arr::CInterval(c) => Value::CInterval(ComplexOf {
+            real: IntervalOf {
+                inf: c.real.inf.get(idx).copied().unwrap_or(zero),
+                sup: c.real.sup.get(idx).copied().unwrap_or(zero),
+            },
+            imag: IntervalOf {
+                inf: c.imag.inf.get(idx).copied().unwrap_or(zero),
+                sup: c.imag.sup.get(idx).copied().unwrap_or(zero),
+            },
+        }),
     }
 }
 

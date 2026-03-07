@@ -5,7 +5,7 @@ use crate::compute::{self, ComputeEvent, ComputeTask, SeriesDesc};
 use crate::experiment::{
     AccelInstance, ExperimentConfig, FilterInstance, NoiseInstance, SeriesInstance,
 };
-use crate::export::parquet::{AccelExportRow, ExportData, ParquetExporter, SeriesExportRow};
+use crate::export::parquet::{AccelExportRow, AccelFilteredData, ExportData, ParquetExporter, SeriesExportRow};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -93,7 +93,8 @@ impl HeadlessRunner {
 
         let (tx, mut rx) = mpsc::channel(32);
 
-        let mut pending_accels: HashMap<usize, Vec<AccelExportRow>> = HashMap::new();
+        // Key: (task_id, accel_name, m, args_json)
+        let mut grouped_accels: HashMap<(usize, String, i64, String), AccelExportRow> = HashMap::new();
 
         for task in tasks {
             compute::spawn_task(task, self.cache.clone(), tx.clone());
@@ -152,23 +153,80 @@ impl HeadlessRunner {
                     }
                 }
                 ComputeEvent::AccelDone { id, desc, data } => {
-                    let mut arguments = HashMap::new();
-                    for (k, v) in &desc.accel.args {
-                        let vs = match v {
-                            serde_json::Value::String(s) => s.clone(),
-                            _ => v.to_string(),
-                        };
-                        arguments.insert(k.clone(), vs);
-                    }
+                    let task_idx = id.0;
+                    let m_value = desc.accel.m as i64;
+                    let accel_name = desc.accel.name.clone();
+                    let args_json = serde_json::to_string(&desc.accel.args).unwrap_or_default();
+                    let key = (task_idx, accel_name.clone(), m_value, args_json);
 
-                    let entry = pending_accels.entry(id.0).or_insert_with(Vec::new);
-                    entry.push(AccelExportRow {
-                        series_id: id.0 as i64,
-                        m_value: desc.accel.m,
-                        accel_name: desc.accel.name.clone(),
-                        arguments,
-                        data: data.clone(), // we need to clone Arc inside or clone row if needed
-                    });
+                    if let Some(filter) = desc.filter {
+                        // This is a filtered result - add to the 'filtered' field of the existing row
+                        let row = grouped_accels.entry(key).or_insert_with(|| {
+                            let mut arguments = HashMap::new();
+                            for (k, v) in &desc.accel.args {
+                                let vs = match v {
+                                    serde_json::Value::String(s) => s.clone(),
+                                    _ => v.to_string(),
+                                };
+                                arguments.insert(k.clone(), vs);
+                            }
+                            AccelExportRow {
+                                series_id: task_idx as i64,
+                                m_value,
+                                accel_name: accel_name.clone(),
+                                arguments,
+                                // Placeholder data, will be updated if/when unfiltered arrives
+                                data: compute::AccelData {
+                                    start_offset: 0,
+                                    result: compute::ResultData {
+                                        sn: crate::ffi::Arr::Real(vec![]),
+                                        an: crate::ffi::Arr::Real(vec![]),
+                                        deviations: crate::ffi::Arr::Real(vec![]),
+                                    },
+                                    events: vec![],
+                                },
+                                filtered: None,
+                            }
+                        });
+
+                        if row.filtered.is_none() {
+                            row.filtered = Some(AccelFilteredData {
+                                start_n: data.start_offset as i64,
+                                segment_length: crate::export::parquet::arr_len(&data.result.sn) as i64,
+                                methods: HashMap::new(),
+                            });
+                        }
+                        
+                        if let Some(ref mut filt) = row.filtered {
+                             // Convert Arr to Vec<Value> for export
+                             let n = crate::export::parquet::arr_len(&data.result.sn);
+                             let mut vals = Vec::with_capacity(n);
+                             for i in 0..n {
+                                 vals.push(crate::export::parquet::arr_index_to_value(&data.result.sn, i));
+                             }
+                             filt.methods.insert(filter.filter_type.clone(), vals);
+                        }
+                    } else {
+                        // This is the main unfiltered result
+                        let mut arguments = HashMap::new();
+                        for (k, v) in &desc.accel.args {
+                            let vs = match v {
+                                serde_json::Value::String(s) => s.clone(),
+                                _ => v.to_string(),
+                            };
+                            arguments.insert(k.clone(), vs);
+                        }
+
+                        let row = grouped_accels.entry(key).or_insert_with(|| AccelExportRow {
+                            series_id: task_idx as i64,
+                            m_value,
+                            accel_name: accel_name.clone(),
+                            arguments,
+                            data: data.clone(),
+                            filtered: None,
+                        });
+                        row.data = data.clone(); // Update main data
+                    }
 
                     if let Some(ref mut cb) = self.progress {
                         cb(ProgressInfo {
@@ -185,11 +243,24 @@ impl HeadlessRunner {
                 ComputeEvent::Complete(id) => {
                     let task_idx = id.0;
                     if let Some(ref path) = self.export {
-                        if let Some(task_accels) = pending_accels.remove(&task_idx) {
-                            if !task_accels.is_empty() {
-                                if let Err(e) = ParquetExporter::export_incremental_accel_batch(task_idx as i64, &task_accels, path) {
-                                    log::error!("Failed to export incremental accels for task {}: {}", task_idx, e);
-                                }
+                        // Find all accels belonging to this task
+                        let mut task_accels = Vec::new();
+                        // This is a bit inefficient (O(N_accels_total)) but simple for now.
+                        // Optimization: keep a map of task_id -> list of keys if needed.
+                        let keys_to_remove: Vec<_> = grouped_accels.keys()
+                            .filter(|k| k.0 == task_idx)
+                            .cloned()
+                            .collect();
+                        
+                        for k in keys_to_remove {
+                            if let Some(row) = grouped_accels.remove(&k) {
+                                task_accels.push(row);
+                            }
+                        }
+
+                        if !task_accels.is_empty() {
+                            if let Err(e) = ParquetExporter::export_incremental_accel_batch(task_idx as i64, &task_accels, path) {
+                                log::error!("Failed to export incremental accels for task {}: {}", task_idx, e);
                             }
                         }
                     }
