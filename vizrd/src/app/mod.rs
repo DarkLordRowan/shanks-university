@@ -80,13 +80,22 @@ enum LineKind {
 }
 
 #[derive(Clone)]
+struct BakedEventGroup {
+    name: String,
+    description: String,
+    points: Vec<PlotPoint>,
+    shape: egui_plot::MarkerShape,
+    color: egui::Color32,
+}
+
+#[derive(Clone)]
 struct BakedLine {
     data: ArrLine,
     color: egui::Color32,
     width: f32,
     style: LineStyle,
     shading_polygons: Vec<Vec<PlotPoint>>,
-    events: Vec<compute::SeriesEvent>,
+    events: Vec<BakedEventGroup>,
     kind: LineKind,
 }
 
@@ -531,6 +540,71 @@ impl ShanksApp {
                 }
             };
 
+            let mut baked_events: Vec<BakedEventGroup> = Vec::new();
+            if !events.is_empty() {
+                let mut grouped_events: BTreeMap<(String, String), Vec<PlotPoint>> =
+                    BTreeMap::new();
+                for ev in &events {
+                    let pts = if let Some(idx) = (ev.n as usize).checked_sub(1) {
+                        let extract_pts =
+                            |v: &[PlotPoint]| v.get(idx).map(|p| vec![*p]).unwrap_or_default();
+                        match &baked_data {
+                            ArrLine::Real((_, v)) => extract_pts(v),
+                            ArrLine::Complex(c) => vec![c.real.1.get(idx), c.imag.1.get(idx)]
+                                .into_iter()
+                                .flatten()
+                                .cloned()
+                                .collect(),
+                            ArrLine::Interval(iv) => vec![iv.inf.1.get(idx), iv.sup.1.get(idx)]
+                                .into_iter()
+                                .flatten()
+                                .cloned()
+                                .collect(),
+                            ArrLine::CInterval(ci) => vec![
+                                ci.real.inf.1.get(idx),
+                                ci.real.sup.1.get(idx),
+                                ci.imag.inf.1.get(idx),
+                                ci.imag.sup.1.get(idx),
+                            ]
+                            .into_iter()
+                            .flatten()
+                            .cloned()
+                            .collect(),
+                        }
+                    } else {
+                        Vec::new()
+                    };
+
+                    if !pts.is_empty() {
+                        grouped_events
+                            .entry((ev.name.clone(), ev.description.clone()))
+                            .or_default()
+                            .extend(pts);
+                    } else {
+                        grouped_events
+                            .entry((ev.name.clone(), ev.description.clone()))
+                            .or_default()
+                            .push(PlotPoint::new(ev.n as f64, 0.0));
+                    }
+                }
+
+                for ((name, desc), pts) in grouped_events {
+                    use egui_plot::MarkerShape;
+                    let (shape, color) = match name.as_str() {
+                        "stop" => (MarkerShape::Square, egui::Color32::RED),
+                        "error" => (MarkerShape::Cross, egui::Color32::from_rgb(255, 140, 0)), // Orange
+                        _ => (MarkerShape::Circle, egui::Color32::YELLOW),
+                    };
+                    baked_events.push(BakedEventGroup {
+                        name,
+                        description: desc,
+                        points: pts,
+                        shape,
+                        color,
+                    });
+                }
+            }
+
             let mut shading_polygons = Vec::new();
             let gen_shading = |inf: &[PlotPoint], sup: &[PlotPoint]| {
                 if inf.len() == sup.len() && inf.len() >= 2 {
@@ -572,7 +646,7 @@ impl ShanksApp {
                 width,
                 style,
                 shading_polygons,
-                events,
+                events: baked_events, // Use the newly processed events
                 kind,
             });
         }
@@ -1144,65 +1218,14 @@ impl eframe::App for ShanksApp {
                         }
                     }
 
-                    // TODO: Cache.
                     if self.show_events {
-                        // Draw events as markers
-                        // Group events by name + description to minimize drawing calls and legend clutter
-                        let mut grouped_events: BTreeMap<(String, String), Vec<PlotPoint>> =
-                            BTreeMap::new();
-                        for ev in &baked.events {
-                            if ev.n == 0 {
-                                continue;
-                            }
-                            let idx = ev.n as usize - 1;
-                            let pts = match &baked.data {
-                                ArrLine::Real((_, v)) => {
-                                    v.get(idx).map(|p| vec![*p]).unwrap_or_default()
-                                }
-                                ArrLine::Complex(c) => vec![c.real.1.get(idx), c.imag.1.get(idx)]
-                                    .into_iter()
-                                    .flatten()
-                                    .cloned()
-                                    .collect(),
-                                ArrLine::Interval(iv) => vec![iv.inf.1.get(idx), iv.sup.1.get(idx)]
-                                    .into_iter()
-                                    .flatten()
-                                    .cloned()
-                                    .collect(),
-                                ArrLine::CInterval(ci) => vec![
-                                    ci.real.inf.1.get(idx),
-                                    ci.real.sup.1.get(idx),
-                                    ci.imag.inf.1.get(idx),
-                                    ci.imag.sup.1.get(idx),
-                                ]
-                                .into_iter()
-                                .flatten()
-                                .cloned()
-                                .collect(),
-                            };
-                            if !pts.is_empty() {
-                                grouped_events
-                                    .entry((ev.name.clone(), ev.description.clone()))
-                                    .or_default()
-                                    .extend(pts);
-                            }
-                        }
-
-                        for ((name, desc), pts) in grouped_events {
-                            use egui_plot::MarkerShape;
-                            let (shape, color) = match name.as_str() {
-                                "stop" => (MarkerShape::Square, egui::Color32::RED),
-                                "error" => {
-                                    (MarkerShape::Cross, egui::Color32::from_rgb(255, 140, 0))
-                                } // Orange
-                                _ => (MarkerShape::Circle, egui::Color32::YELLOW),
-                            };
-
-                            let points = egui_plot::Points::new(PlotPoints::Owned(pts))
-                                .name(format!("{}: {}", name, desc))
-                                .shape(shape)
-                                .color(color)
-                                .radius(5.0);
+                        for ev_group in &baked.events {
+                            let points =
+                                egui_plot::Points::new(PlotPoints::Borrowed(&ev_group.points))
+                                    .name(format!("{}: {}", ev_group.name, ev_group.description))
+                                    .shape(ev_group.shape)
+                                    .color(ev_group.color)
+                                    .radius(5.0);
 
                             plot_ui.points(points);
                         }

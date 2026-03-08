@@ -1,6 +1,6 @@
 {
   "n_points": 100,
-  "precisions": ["F32", "Arb16", "CArb16"],
+  "precisions": ["F32", "Arb16", "CArb16", "CArbInterval16"],
   "series": [
     {
       "name": "ExpSeries",
