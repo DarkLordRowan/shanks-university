@@ -23,6 +23,12 @@ function formatArgs(args: Record<string, any> | null | undefined): string {
     return entries.map(([k, v]) => `${k}=${typeof v === "string" ? v : String(v)}`).join(", ");
 }
 
+function formatArgsMultiline(args: Record<string, any> | null | undefined): string {
+    const inline = formatArgs(args);
+    if (!inline) return "";
+    return inline.replace(/,\s*/g, ",\n");
+}
+
 export interface MatrixAlgorithmSeriesViewProps
     extends Omit<
         React.ComponentProps<typeof MatrixPaged<AlgoRowMeta, SeriesColMeta>>,
@@ -62,7 +68,7 @@ export function MatrixAlgorithmSeriesView(props: MatrixAlgorithmSeriesViewProps)
         accelList,
         seriesList,
         rowWidth = 160,
-        colWidth = 50,
+        colWidth = 100,
         renderCell,
         renderAlgoHeader,
         renderSeriesHeader,
@@ -122,30 +128,28 @@ export function MatrixAlgorithmSeriesView(props: MatrixAlgorithmSeriesViewProps)
         const s = col.meta!.series;
         if (renderSeriesHeader) return renderSeriesHeader(s, j);
 
-        const args = formatArgs(s.args as any);
+        const args = formatArgsMultiline(s.args as any);
         return (
             <div
-                className="flex flex-col items-center justify-end gap-1 px-1 py-1"
+                className="flex min-h-[180px] w-full flex-col items-start justify-end gap-1 px-1 py-1 text-left"
                 title={`${s.name}\n prec = ${s.precision}\n args: ${args}`}
             >
                 <span
-                    className="text-[9px] leading-tight text-center whitespace-nowrap"
-                    style={{
-                        writingMode: "vertical-rl",
-                        textOrientation: "mixed",
-                        transform: "rotate(180deg)",
-                    }}
+                    className="w-full text-[10px] font-semibold leading-tight whitespace-normal break-all"
+
                 >
                     {s.name}
                 </span>
 
-                <span className="text-[8px] leading-tight text-textDim/60 whitespace-nowrap">
+                <span className="w-full text-[8px] leading-tight text-textDim/60 whitespace-normal break-all">
                     {s.precision}
                 </span>
 
-                <span className="text-[8px] leading-tight text-textDim/70 whitespace-nowrap">
-                    {args}
-                </span>
+                {args ? (
+                    <span className="w-full text-[8px] leading-tight text-textDim/70 whitespace-pre-line break-all">
+                        {args}
+                    </span>
+                ) : null}
             </div>
         );
     };

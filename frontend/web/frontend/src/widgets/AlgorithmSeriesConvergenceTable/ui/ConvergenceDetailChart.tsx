@@ -9,8 +9,21 @@ interface ConvergenceDetailChartProps {
     detail: SelectedDetail;
 }
 
+function formatComplexLimit(
+    value: { re: number | null; im: number | null } | null | undefined
+): string {
+    if (!value) return "∅";
+    const { re, im } = value;
+    if (re == null && im == null) return "∅";
+    if (im == null || im === 0) return String(re);
+    if (re == null || re === 0) return `${im}i`;
+    const sign = im >= 0 ? "+" : "-";
+    return `${re} ${sign} ${Math.abs(im)}i`;
+}
+
 export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ detail }) => {
     const { series, accel, analysis, limit, points } = detail;
+    const seriesLimit = limit ?? series?.limit ?? null;
 
     // Глобальный переключатель: использовать модуль или знак
     const [useAbs, setUseAbs] = useState<boolean>(true);
@@ -46,6 +59,7 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
                         Тип: {shortSide} | {shortMon}
                     </div>
                     <div>Сравнено шагов (пар): {analysis.stepsAnalyzed}</div>
+                    <div>Предел ряда: {formatComplexLimit(seriesLimit)}</div>
 
                     {/* Глобальный переключатель "модуль / со знаком" для всех трёх элементов */}
                     <div className="pt-1">
