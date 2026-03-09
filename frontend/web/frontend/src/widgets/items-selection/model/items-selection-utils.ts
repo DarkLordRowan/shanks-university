@@ -53,11 +53,25 @@ export function collectArgColumns(rows: Row[]): string[] {
     return [...s].sort((a, b) => a.localeCompare(b));
 }
 
+function getSortableValue(row: Row, key: SortKey): string | number | null {
+    switch (key) {
+        case "algo":
+            return row.algo;
+        case "m":
+            return row.m;
+        case "x":
+            return row.x;
+        case "seriesName":
+            return row.seriesName;
+    }
+}
+
 export function sortRows(rows: Row[], sort: SortState): Row[] {
     const r = [...rows];
     r.sort((a, b) => {
         for (const s of sort) {
-            const ka = (a as any)[s.key], kb = (b as any)[s.key];
+            const ka = getSortableValue(a, s.key);
+            const kb = getSortableValue(b, s.key);
             if (ka == null && kb == null) continue;
             if (ka == null) return 1;
             if (kb == null) return -1;

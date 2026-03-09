@@ -68,8 +68,7 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
             await new Promise<void>((r) => requestAnimationFrame(() => r()));
             await new Promise<void>((r) => requestAnimationFrame(() => r()));
 
-            const fontsAny = (document as any).fonts;
-            if (fontsAny?.ready) await fontsAny.ready;
+            if (document.fonts?.ready) await document.fonts.ready;
 
             document.body.classList.add(EXPORT_CLASS);
 
@@ -92,13 +91,13 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
             clone.style.boxSizing = "border-box";
             clone.style.paddingBottom = `${EXTRA_PX}px`;
             clone.style.transform = "none";
-            (clone.style as any).zoom = "1";
+            clone.style.setProperty("zoom", "1");
 
             const cloneTable = clone.querySelector("table") as HTMLTableElement | null;
             if (cloneTable) {
                 cloneTable.style.width = `${targetWidth}px`;
                 cloneTable.style.minWidth = `${targetWidth}px`;
-                (cloneTable.style as any).tableLayout = "fixed";
+                cloneTable.style.tableLayout = "fixed";
             }
 
             const stage = document.createElement("div");

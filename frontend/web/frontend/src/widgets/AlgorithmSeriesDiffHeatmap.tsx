@@ -99,7 +99,7 @@ function sideState(hasCell: boolean, hasErr: boolean, n: number | null): SideSta
 }
 
 /** Полная классификация по всем случаям. */
-export function classifyErrorChangeFull(
+function classifyErrorChangeFull(
     hasPrevCell: boolean,
     hasNextCell: boolean,
     hasPrevErr: boolean,
@@ -630,13 +630,13 @@ export function AlgorithmSeriesDiffHeatmap({
             rows={rowsAxis}
             cols={colsAxis}
             maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
-            resetKey={`${(experiment as any)?.id ?? "no-exp"}::${prevPrecision ?? "∅"}->${nextPrecision ?? "∅"}`}
+            resetKey={`${experiment?.id ?? "no-exp"}::${prevPrecision ?? "∅"}->${nextPrecision ?? "∅"}`}
             export={{
                 fileBaseName: `AlgorithmSeriesDiffHeatmap_${prevPrecision ?? "∅"}_to_${nextPrecision ?? "∅"}`,
                 enablePng: true,
                 enableXlsx: true,
                 buildWorkbook: ({ rows, cols }) => {
-                    const aoa: any[][] = [];
+                    const aoa: Array<Array<string | number | null>> = [];
 
                     // header
                     aoa.push([
@@ -650,7 +650,7 @@ export function AlgorithmSeriesDiffHeatmap({
                     // body
                     for (const r of rows) {
                         const algo = r.meta!;
-                        const rowArr: any[] = [];
+                        const rowArr: Array<string | number | null> = [];
 
                         rowArr.push(
                             `${algo.algorithmName}\n${algo.m != null ? `m=${algo.m}` : "m=∅"}${

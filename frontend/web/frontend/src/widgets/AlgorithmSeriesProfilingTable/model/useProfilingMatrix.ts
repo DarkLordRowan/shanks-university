@@ -6,6 +6,7 @@ import {
     type SeriesInfo,
     type AlgoInfo,
     type ProfilingMatrix,
+    type ProfilingAnalysis,
     type ProgressState,
 } from "./types";
 import { analyzeSeriesAccelProfiling, buildArgsSummary, parseX } from "./profilingUtils";
@@ -48,7 +49,7 @@ export function useProfilingMatrix(
         const total = seriesAccelList.length;
         setProgress({ running: true, current: 0, total });
 
-        const cells: Record<string, any> = {};
+        const cells: Record<string, ProfilingAnalysis> = {};
 
         function processChunk(startIndex: number) {
             if (cancelled) return;

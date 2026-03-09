@@ -89,11 +89,11 @@ export const ProfilingMatrixTable: React.FC<ProfilingMatrixTableProps> = ({
                     `Алгоритм: ${algo.algorithmName}` + (algo.m != null ? `, m=${algo.m}` : "")
                 );
                 titleLines.push("Аргументы алгоритма:");
-                const algoEntries = nonNullEntries((algo as any).algorithmArgs);
+                const algoEntries = nonNullEntries(algo.algorithmArgs);
                 for (const [k, v] of algoEntries.sort(([a], [b]) => a.localeCompare(b))) {
                     titleLines.push(`  ${k} = ${String(v)}`);
                 }
-                if ((algo as any).argsSummary) titleLines.push(`  (${String((algo as any).argsSummary)})`);
+                if (algo.argsSummary) titleLines.push(`  (${String(algo.argsSummary)})`);
                 titleLines.push("");
                 titleLines.push(`Trend(T): ${analysis.trendTotal}`);
                 titleLines.push(`Max(T): ${maxText}`);

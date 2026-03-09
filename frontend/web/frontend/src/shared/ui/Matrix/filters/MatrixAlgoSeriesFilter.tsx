@@ -14,7 +14,7 @@ function normalize(s: string): string {
     return (s ?? "").trim().toLowerCase();
 }
 
-function formatArgs(args: Record<string, any> | null | undefined): string {
+function formatArgs(args: Record<string, unknown> | null | undefined): string {
     if (!args) return "";
     const entries = Object.entries(args).filter(([, v]) => v !== null && v !== undefined);
     if (entries.length === 0) return "";
@@ -81,7 +81,7 @@ function accelSortKey(a: Accel, key: SortKey): string {
 
 function seriesSortKey(s: Series, key: SortKey): string {
     if (key === "id") return s.id;
-    if (key === "name_args") return `${s.name}::${s.precision ?? ""}::${formatArgs(s.args as any)}`;
+    if (key === "name_args") return `${s.name}::${s.precision ?? ""}::${formatArgs(s.args)}`;
     return s.name;
 }
 
@@ -123,7 +123,7 @@ function accelSearchText(a: Accel): string {
 
 function seriesSearchText(s: Series): string {
     return normalize(
-        [s.name, s.precision ?? "", formatArgs(s.args as any)].filter(Boolean).join(" ")
+        [s.name, s.precision ?? "", formatArgs(s.args)].filter(Boolean).join(" ")
     );
 }
 
@@ -180,7 +180,7 @@ function parseScalarQuery(
     return { kind: "str" };
 }
 
-function valueMatches(argVal: any, vqRaw: string): boolean {
+function valueMatches(argVal: unknown, vqRaw: string): boolean {
     const q = parseScalarQuery(vqRaw);
 
     if (q.kind === "num") {
@@ -202,7 +202,7 @@ function valueMatches(argVal: any, vqRaw: string): boolean {
     return normalize(String(argVal)).includes(normalize(vqRaw));
 }
 
-function clauseMatchesArgs(args: Record<string, any> | null, clause: ArgClause): boolean {
+function clauseMatchesArgs(args: Record<string, unknown> | null, clause: ArgClause): boolean {
     const kq = normalize(clause.key);
     const vq = normalize(clause.value);
 
@@ -228,7 +228,7 @@ function clauseMatchesArgs(args: Record<string, any> | null, clause: ArgClause):
         if (!vq) return true;
 
         for (const kk of matchedKeys) {
-            const v = (args as any)[kk];
+            const v = args[kk];
             if (v == null) continue;
             if (valueMatches(v, clause.value)) return true;
         }
@@ -238,7 +238,7 @@ function clauseMatchesArgs(args: Record<string, any> | null, clause: ArgClause):
     return true;
 }
 
-function applyArgsClauses<T extends { args: Record<string, any> | null }>(
+function applyArgsClauses<T extends { args: Record<string, unknown> | null }>(
     list: T[],
     op: ArgsOp,
     clauses: ArgClause[]
@@ -400,7 +400,6 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                 accel: { ...s.accel, selectedGroupKeys: new Set() },
             };
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [accelGroups.length]);
 
     useEffect(() => {
@@ -412,7 +411,6 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                 series: { ...s.series, selectedGroupKeys: new Set() },
             };
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [seriesGroups.length]);
 
     // precision default select-all (в whitelist)
@@ -423,7 +421,6 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
             if (precisionOptions.length === 0) return s;
             return { ...s, series: { ...s.series, selectedPrecisions: new Set() } };
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [precisionOptions.length]);
 
     const filteredAccels = useMemo(() => {
@@ -434,7 +431,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
             : (accelList ?? []);
 
         // args clauses
-        out = applyArgsClauses(out as any, state.accel.argsOp, state.accel.argClauses);
+        out = applyArgsClauses(out, state.accel.argsOp, state.accel.argClauses);
 
         // m
         const mMin = parseNullableNumber(state.accel.mMinText);
@@ -471,7 +468,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
         );
 
         // args clauses
-        out = applyArgsClauses(out as any, state.series.argsOp, state.series.argClauses);
+        out = applyArgsClauses(out, state.series.argsOp, state.series.argClauses);
 
         // groups
         const byGroup = applyGroupFilter(
@@ -503,7 +500,11 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                     onToggleGroup={(key) =>
                         setState((s) => {
                             const next = new Set(s.accel.selectedGroupKeys);
-                            next.has(key) ? next.delete(key) : next.add(key);
+                            if (next.has(key)) {
+                                next.delete(key);
+                            } else {
+                                next.add(key);
+                            }
                             return { ...s, accel: { ...s.accel, selectedGroupKeys: next } };
                         })
                     }
@@ -590,7 +591,11 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                     onToggleGroup={(key) =>
                         setState((s) => {
                             const next = new Set(s.series.selectedGroupKeys);
-                            next.has(key) ? next.delete(key) : next.add(key);
+                            if (next.has(key)) {
+                                next.delete(key);
+                            } else {
+                                next.add(key);
+                            }
                             return { ...s, series: { ...s.series, selectedGroupKeys: next } };
                         })
                     }
@@ -618,7 +623,11 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                     onTogglePrecision={(p) =>
                         setState((s) => {
                             const next = new Set(s.series.selectedPrecisions);
-                            next.has(p) ? next.delete(p) : next.add(p);
+                            if (next.has(p)) {
+                                next.delete(p);
+                            } else {
+                                next.add(p);
+                            }
                             return { ...s, series: { ...s.series, selectedPrecisions: next } };
                         })
                     }

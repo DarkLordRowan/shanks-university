@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Experiment, Series } from "@/entities/experiment/model/experiment";
-import type { MonotonicityType, SideType } from "../model/types";
+import type { MonotonicityType, SeriesComputedConvergenceAnalysis, SideType } from "../model/types";
 import { useSeriesComputedConvergence } from "../model/useSeriesComputedConvergence";
 import {
     applyMonotonicityThreshold,
@@ -132,7 +132,7 @@ function computeDevStats(series: Series): DevStats {
     const vals: number[] = [];
     let sum = 0;
 
-    for (const p of computed as any[]) {
+    for (const p of computed) {
         const d = absDiff(p?.value, limit);
         if (d == null || !Number.isFinite(d)) continue;
         vals.push(d);
@@ -217,7 +217,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
     const rows = useMemo(() => {
         return seriesList
             .map((s: Series) => {
-                const a: any = (analysisBySeriesId as any)[s.id];
+                const a = analysisBySeriesId[s.id];
                 if (!a) return null;
 
                 const side = applySideThreshold(
@@ -235,7 +235,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
 
                 const sideShort = formatSideShort(side);
                 const monShort = formatMonotonicityShort(mon);
-                const argsSummary = buildArgsSummary((s.args ?? null) as any);
+                const argsSummary = buildArgsSummary(s.args ?? null);
 
                 const dev = computeDevStats(s);
 
@@ -253,7 +253,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
             })
             .filter(Boolean) as Array<{
             series: Series;
-            analysis: any;
+            analysis: SeriesComputedConvergenceAnalysis;
             side: SideType;
             mon: MonotonicityType;
             sideShort: string;
@@ -329,7 +329,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
         if (!experiment || !selectedSeriesId) return null;
 
         const series = (experiment.seriesList ?? []).find((s) => s.id === selectedSeriesId) ?? null;
-        const analysis: any = (analysisBySeriesId as any)[selectedSeriesId] ?? null;
+        const analysis = analysisBySeriesId[selectedSeriesId] ?? null;
 
         if (!series || !analysis) return null;
 
@@ -352,7 +352,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
             side,
             monotonicity,
             points: buildDetailPoints(series),
-            argsSummary: buildArgsSummary((series.args ?? null) as any),
+            argsSummary: buildArgsSummary(series.args ?? null),
             dev: computeDevStats(series),
         };
     }, [
@@ -601,7 +601,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                             titleLines.push(`prec: ${s.precision}`);
                             titleLines.push(`args: ${r.argsSummary || "—"}`);
                             titleLines.push(
-                                `limit: ${s.limit ? `(${(s as any).limit.re ?? (s as any).limit.real}, ${(s as any).limit.im ?? (s as any).limit.imag ?? 0})` : "∅"}`
+                                `limit: ${s.limit ? `(${s.limit.re ?? 0}, ${s.limit.im ?? 0})` : "∅"}`
                             );
                             titleLines.push(`dev count: ${r.dev.count}`);
                             titleLines.push(`min ||S_n−S||: ${fmtDev(r.dev.min)}`);

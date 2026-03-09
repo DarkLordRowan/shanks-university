@@ -4,13 +4,9 @@ import React, { useMemo } from "react";
 import type { Accel, Experiment, Series } from "@/entities/experiment/model/experiment.ts";
 import type { MatrixAxisItem } from "@/shared/ui/Matrix/Matrix.tsx";
 import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries.tsx";
+import { getAlgorithmSeriesCellDomId } from "../model/getAlgorithmSeriesCellDomId";
 
 export type SelectedCell = { accelId: string; seriesId: string };
-
-/** Единый способ построить id для DOM-элемента ячейки. */
-export function getAlgorithmSeriesCellDomId(accelId: string, seriesId: string): string {
-    return `algo-series-cell-${accelId}::${seriesId}`;
-}
 
 interface AlgorithmSeriesMatrixTableProps {
     experiment: Experiment | null;

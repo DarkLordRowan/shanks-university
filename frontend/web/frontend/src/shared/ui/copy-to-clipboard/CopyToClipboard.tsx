@@ -25,6 +25,7 @@ export const CopyToClipboard: React.FC<Props> = (
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
         } catch {
+            setCopied(false);
         }
     };
 

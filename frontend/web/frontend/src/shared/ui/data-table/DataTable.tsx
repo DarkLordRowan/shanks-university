@@ -80,7 +80,9 @@ export const DataTable: React.FC<{
           setFilters(parsed.filters);
         }
       }
-    } catch {}
+    } catch {
+      return;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
 
@@ -89,7 +91,9 @@ export const DataTable: React.FC<{
     const state = JSON.stringify({ q, page, pageSize, sortIndex, sortDir, filters });
     try {
       localStorage.setItem(storageKey, state);
-    } catch {}
+    } catch {
+      return;
+    }
   }, [q, page, pageSize, sortIndex, sortDir, filters, storageKey]);
 
   // Reset to first page when data or filters change

@@ -1,6 +1,6 @@
 // widgets/ErrorMatrixTable.tsx
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx-js-style";
 import type { Experiment } from "@/entities/experiment/model/experiment";
 import { buildErrorMatrixFromExperiment } from "@/shared/lib/error-matrix/buildErrorMatrix";
@@ -127,7 +127,7 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                     algorithmName: a.algorithmName,
                     m: a.m,
                     argsSummary: a.argsSummary,
-                    algorithmArgs: (a.algorithmArgs ?? null) as any,
+                    algorithmArgs: (a.algorithmArgs ?? null) as Record<string, unknown> | null,
                 },
             })),
         [sortedAlgoList]
@@ -274,8 +274,7 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
         );
     };
 
-    const buildWorkbook = useCallback(
-        ({
+    const buildWorkbook = ({
             rows,
             cols,
         }: {
@@ -321,9 +320,7 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
             const ws = XLSX.utils.aoa_to_sheet(data);
             XLSX.utils.book_append_sheet(wb, ws, "error_matrix");
             return wb;
-        },
-        [algoStats, cellMap]
-    );
+        };
 
     const totalAlgos = sortedAlgoList.length;
     const totalSteps = nList.length;

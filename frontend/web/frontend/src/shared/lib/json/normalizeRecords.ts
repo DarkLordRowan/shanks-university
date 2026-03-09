@@ -40,7 +40,7 @@ function toItemComputed(raw: {
 function toItemError(raw: ResponseRecord["error"]): ResponseError | null {
     if (!raw) return null;
 
-    const nRaw = (raw.data as any)?.n as NumLike;
+    const nRaw = (raw.data?.["n"] ?? null) as NumLike;
     const nNum = toNumber(nRaw);
     const n =
         nRaw === null || nRaw === undefined || Number.isNaN(nNum)
@@ -99,7 +99,7 @@ function normalizeName(raw: string): string {
 
 export function normalizeRecord(rec: ResponseRecord, idx: number): Item {
     // x может быть number|string|null
-    const xRaw = (rec.series.arguments as any)?.x as NumLike;
+    const xRaw = (rec.series.arguments as { x?: NumLike })?.x;
     const xNum = toNumber(xRaw);
     const x = Number.isNaN(xNum) ? 0 : xNum;
 

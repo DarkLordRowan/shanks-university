@@ -9,10 +9,10 @@ import type {
 } from "@/entities/experiment/model/experiment.ts";
 import {
     AlgorithmSeriesMatrixTable,
-    getAlgorithmSeriesCellDomId,
     type SelectedCell,
 } from "./AlgorithmSeriesMatrixTable";
 import { AlgorithmSeriesDetailChart } from "./AlgorithmSeriesDetailChart";
+import { getAlgorithmSeriesCellDomId } from "../model/getAlgorithmSeriesCellDomId";
 
 export interface AlgorithmSeriesViewProps {
     experiment: Experiment | null;

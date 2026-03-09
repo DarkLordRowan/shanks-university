@@ -16,14 +16,14 @@ export type PagerInfo = {
     totalCols: number;
 };
 
-function formatArgs(args: Record<string, any> | null | undefined): string {
+function formatArgs(args: Record<string, unknown> | null | undefined): string {
     if (!args) return "";
     const entries = Object.entries(args).filter(([, v]) => v !== null && v !== undefined);
     if (entries.length === 0) return "";
     return entries.map(([k, v]) => `${k}=${typeof v === "string" ? v : String(v)}`).join(", ");
 }
 
-function formatArgsMultiline(args: Record<string, any> | null | undefined): string {
+function formatArgsMultiline(args: Record<string, unknown> | null | undefined): string {
     const inline = formatArgs(args);
     if (!inline) return "";
     return inline.replace(/,\s*/g, ",\n");
@@ -128,7 +128,7 @@ export function MatrixAlgorithmSeriesView(props: MatrixAlgorithmSeriesViewProps)
         const s = col.meta!.series;
         if (renderSeriesHeader) return renderSeriesHeader(s, j);
 
-        const args = formatArgsMultiline(s.args as any);
+        const args = formatArgsMultiline(s.args);
         return (
             <div
                 className="flex min-h-[180px] w-full flex-col items-start justify-end gap-1 px-1 py-1 text-left"

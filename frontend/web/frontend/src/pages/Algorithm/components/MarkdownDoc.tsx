@@ -54,7 +54,10 @@ export const MarkdownDoc: React.FC<{ id: string }> = ({ id }) => {
     // скрываем мета-заголовки и параграфы с такой же меткой
     const renderHeading =
         (Tag: "h1" | "h2" | "h3", cls: string) =>
-            ({ children, ...props }: any) => {
+            ({
+                children,
+                ...props
+            }: React.HTMLAttributes<HTMLHeadingElement> & { children?: React.ReactNode }) => {
                 const text = String(children).trim();
                 if (isMetaHeading(text)) return null;
                 return (
@@ -64,7 +67,10 @@ export const MarkdownDoc: React.FC<{ id: string }> = ({ id }) => {
                 );
             };
 
-    const renderParagraph = ({ children, ...props }: any) => {
+    const renderParagraph = ({
+        children,
+        ...props
+    }: React.HTMLAttributes<HTMLParagraphElement> & { children?: React.ReactNode }) => {
         const text = String(children).trim();
         if (isMetaHeading(text)) return null;
         return <p {...props}>{children}</p>;
@@ -88,7 +94,7 @@ export const MarkdownDoc: React.FC<{ id: string }> = ({ id }) => {
                 <div className="md:grid md:grid-cols-4 md:gap-6">
                     {/* Markdown */}
                     <article
-                        ref={articleRef as any}
+                        ref={articleRef}
                         className="prose prose-invert max-w-none prose-pre:bg-surface/40 prose-code:text-white prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-hr:border-border/60 md:col-span-3"
                     >
                         <ReactMarkdown

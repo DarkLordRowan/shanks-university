@@ -469,7 +469,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                             line.push(s.precisionLabel);
                             break;
                         case "m":
-                            line.push(s.m != null ? Number(s.m as any) || String(s.m) : null);
+                            line.push(s.m != null ? Number(s.m) || String(s.m) : null);
                             break;
                         case "argsSummary":
                             line.push(s.argsSummary || null);

@@ -17,7 +17,7 @@ type SeriesAccel = Experiment["seriesAccelList"][number];
 
 function parsePartitions(path: string): Record<string, string> {
     const res: Record<string, string> = {};
-    const parts = path.split(/[\\\/]/);
+    const parts = path.split(/[\\/]/);
 
     for (const seg of parts) {
         const idx = seg.indexOf("=");
@@ -75,17 +75,6 @@ const SERIES_COLUMNS = [
 ] as const;
 
 // Для accelerations НЕ используем проекцию по умолчанию: nested (computed/errors/events/filtered) может «обнуляться».
-const ACCEL_COLUMNS = [
-    "series_id",
-    "accel_name",
-    "m_value",
-    "additional_args",
-    "computed",
-    "errors",
-    "events",
-    "noise_str",
-    "filtered",
-] as const;
 
 export function useLoadParquetExperiment() {
     const [state, setState] = useState<LoadParquetState>({ status: "idle" });
@@ -166,11 +155,12 @@ export function useLoadParquetExperiment() {
                             (r as unknown as { series_id?: unknown }).series_id
                         );
 
+                        const source = r as Partial<Pick<ParquetSeriesRow, "series_id" | "precision" | "series_name">>;
                         const patched: ParquetSeriesRow = {
                             ...r,
-                            series_id: (sid ?? -1) as any,
-                            precision: (r as any).precision ?? precisionFromPath ?? "",
-                            series_name: (r as any).series_name ?? seriesNameFromPath ?? "",
+                            series_id: sid ?? -1,
+                            precision: source.precision ?? precisionFromPath ?? "",
+                            series_name: source.series_name ?? seriesNameFromPath ?? "",
                         };
 
                         const series = buildSeriesEntityFromParquetRow(patched);
@@ -201,7 +191,7 @@ export function useLoadParquetExperiment() {
                     const seriesIdFromPath = toNumberOrNull(parts["series_id"]);
 
                     // БАЗОВО: читаем без columns, чтобы не потерять nested.
-                    let rows = await readParquetFile<ParquetAccelRow>(f);
+                    const rows = await readParquetFile<ParquetAccelRow>(f);
 
                     // Опционально можно попытаться ускорить: сначала с columns, затем fallback.
                     // Оставлено выключенным, чтобы не ловить «пропавшие computed/filtered».
@@ -225,7 +215,7 @@ export function useLoadParquetExperiment() {
 
                         const patched: ParquetAccelRow = {
                             ...r,
-                            series_id: sid as any,
+                            series_id: sid,
                         };
 
                         const { accelId, accel, seriesAccel } =

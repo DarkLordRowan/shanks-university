@@ -43,7 +43,7 @@ export const ItemsSelectionMatrix: React.FC<{
                     <td className="px-2 py-1 tabular-nums">{r.x}</td>
                     <td className="px-2 py-1">{r.seriesName}</td>
                     {argCols.map(k => (
-                        <td key={k} className="px-2 py-1">{formatArg((r as any).args?.[k])}</td>
+                        <td key={k} className="px-2 py-1">{formatArg(r.args?.[k])}</td>
                     ))}
                 </tr>
             ))}

@@ -12,6 +12,8 @@ import type { MatrixAxisItem } from "@/shared/ui/Matrix/Matrix";
 import { computeErrorStats, type ErrorStats } from "./model/errorStats";
 import { ErrorStatsCell, type HeatClass } from "./ui/ErrorStatsCell";
 import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries";
+import { buildMatrixCellDomId } from "@/shared/lib/dom/buildMatrixCellDomId";
+import { buildMatrixArgsSummary } from "@/shared/lib/matrixArgs";
 
 interface AlgorithmSeriesErrorStatsTableProps {
     experiment: Experiment | null;
@@ -51,12 +53,7 @@ function getGlobalMax(statsIndex: StatsIndex): number {
     return g;
 }
 
-function formatArgs(args: Record<string, any> | null | undefined): string {
-    if (!args) return "";
-    const entries = Object.entries(args).filter(([, v]) => v !== null && v !== undefined);
-    if (entries.length === 0) return "";
-    return entries.map(([k, v]) => `${k}=${typeof v === "string" ? v : String(v)}`).join(", ");
-}
+const formatArgs = buildMatrixArgsSummary;
 
 function classifyByMax(st: ErrorStats | null, globalMax: number): HeatClass {
     if (!st || !Number.isFinite(st.max) || st.count <= 0) return "neutral";
@@ -79,8 +76,8 @@ function fmtExp(x: number | null | undefined, digits = 2): string {
     return x.toExponential(digits);
 }
 
-export function getErrorStatsCellDomId(accelId: string, seriesId: string): string {
-    return `errstats-cell-${accelId}::${seriesId}`;
+function getErrorStatsCellDomId(accelId: string, seriesId: string): string {
+    return buildMatrixCellDomId("errstats-cell", accelId, seriesId);
 }
 
 export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsTableProps> = ({
@@ -183,16 +180,16 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
             aoa.push([
                 "Алгоритм \\ Ряд",
                 ...cols.map((c) => {
-                    const s = c.meta as any;
+                    const s = c.meta;
                     const name = c.meta?.name ?? c.id;
-                    const x = s?.xLabel ?? s?.x ?? "∅";
+                    const x = s?.args?.x ?? "∅";
                     const prec = s?.precision ?? "∅";
                     return `${name} (x=${String(x)}, prec=${String(prec)})`;
                 }),
             ]);
 
             for (const r of rows) {
-                const a = r.meta as any;
+                const a = r.meta;
                 const algoName = r.meta?.name ?? r.id;
                 const m = a?.m != null ? `\nm=${String(a.m)}` : "";
 

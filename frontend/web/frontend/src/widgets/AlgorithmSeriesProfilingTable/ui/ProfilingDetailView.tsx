@@ -33,16 +33,6 @@ const toChartData = (points: ProfilingPoint[], kinds: string[]): Array<Record<st
     });
 };
 
-const toDiffChartData = (points: ProfilingPoint[], kinds: string[]): Array<Record<string, number | null>> => {
-    return points.map((p) => {
-        const row: Record<string, number | null> = {
-            n: p.n,
-            diffTotalOps: isNum(p.diffTotalOps) ? p.diffTotalOps : null,
-        };
-        for (const k of kinds) row[`d:${k}`] = isNum(p.diffByKind?.[k]) ? (p.diffByKind[k] as number) : null;
-        return row;
-    });
-};
 
 /* ======================= tooltip ======================= */
 
@@ -67,7 +57,7 @@ const TooltipBox: React.FC<{ label: string; items: Array<{ name: string; value: 
     );
 };
 
-const TotalOpsTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload, label }) => {
+const TotalOpsTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload }) => {
     if (!active || !payload || payload.length === 0) return null;
     const row = (payload[0]?.payload ?? {}) as AnyRow;
 
@@ -77,7 +67,7 @@ const TotalOpsTooltip: React.FC<TooltipProps<number, string>> = ({ active, paylo
     return <TooltipBox label={`n = ${String(n)}`} items={[{ name: "total", value: total }]} />;
 };
 
-const BreakdownTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload, label }) => {
+const BreakdownTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload }) => {
     if (!active || !payload || payload.length === 0) return null;
 
     const row = (payload[0]?.payload ?? {}) as AnyRow;

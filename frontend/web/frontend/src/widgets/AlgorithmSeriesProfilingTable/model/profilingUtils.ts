@@ -6,44 +6,29 @@ import {
     type SeriesArgs,
     type AccelArgs,
 } from "./types";
-
-type Scalar = number | string | boolean | null;
+import { buildMatrixCellDomId } from "@/shared/lib/dom/buildMatrixCellDomId";
+import {
+    buildMatrixArgsSummary,
+    nonNullEntries,
+    parseSeriesXArg,
+} from "@/shared/lib/matrixArgs";
 
 export function hasFiniteNumber(v: number | null | undefined): v is number {
     return v != null && Number.isFinite(v);
 }
-
-export function nonNullEntries<T extends Record<string, unknown>>(obj: T | null | undefined) {
-    if (!obj) return [] as [string, unknown][];
-    return Object.entries(obj).filter(([, v]) => v !== null && v !== undefined);
-}
-
-function toSortableNumber(v: Scalar): number | null {
-    if (typeof v === "number") return Number.isFinite(v) ? v : null;
-    if (typeof v === "string") {
-        const n = Number(v);
-        return Number.isFinite(n) ? n : null;
-    }
-    return null;
-}
+export { nonNullEntries };
 
 export function parseX(args: SeriesArgs | null): { xLabel: string; xSort: number | null } {
-    const raw = (args?.x as Scalar | undefined) ?? null;
-    if (raw == null) return { xLabel: "∅", xSort: null };
-    return { xLabel: String(raw), xSort: toSortableNumber(raw) };
+    return parseSeriesXArg(args);
 }
 
 export function buildArgsSummary(args: AccelArgs | null): string {
-    const entries = nonNullEntries(args);
-    if (entries.length === 0) return "";
-    entries.sort(([a], [b]) => a.localeCompare(b));
-    return entries.map(([k, v]) => `${k}=${v}`).join(", ");
+    return buildMatrixArgsSummary(args);
 }
 
 export function getProfilingCellDomId(accelId: string, seriesId: string): string {
-    return `profiling-cell-${accelId}::${seriesId}`;
+    return buildMatrixCellDomId("profiling-cell", accelId, seriesId);
 }
-
 export function formatOps(v: number | null): string {
     if (!hasFiniteNumber(v)) return "∅";
     const a = Math.abs(v);

@@ -20,8 +20,7 @@ import type {
     ParquetAccelRow,
     ParquetComplex,
     ParquetErrorRow,
-    ParquetEventRow,
-    ParquetScalar,
+    ParquetEventRow,
     ParquetSeriesRow,
 } from "./types";
 
@@ -176,7 +175,7 @@ function mapAccelComputed(raw: unknown): SeriesAccelComputedPoint[] {
             n,
             value: toComplex(c.value),
             deviation: toNumberOrNull(c.deviation),
-            profiling: toProfiling((c as any).profiling),
+            profiling: toProfiling(c.profiling),
         };
     });
 }
@@ -295,14 +294,14 @@ function buildAccelId(row: ParquetAccelRow): string {
 
     for (const k of ORDERED_ACCEL_ARG_KEYS) {
         if (!present.has(k)) continue;
-        const v = (args as any)[k];
+        const v = args[k];
         if (v == null) continue;
         parts.push(`${k}=${String(v)}`);
     }
 
     for (const k of presentKeys.sort()) {
         if ((ORDERED_ACCEL_ARG_KEYS as readonly string[]).includes(k)) continue;
-        const v = (args as any)[k];
+        const v = args[k];
         if (v == null) continue;
         parts.push(`${k}=${String(v)}`);
     }
@@ -322,8 +321,8 @@ function buildSeriesList(seriesRows: ParquetSeriesRow[]): Series[] {
             name: r.series_name,
             precision: r.precision,
             args: normalizeSeriesArgs(r.arguments),
-            limit: toComplex((r as any).series_limit),
-            computed: mapSeriesComputed((r as any).computed),
+            limit: toComplex(r.series_limit),
+            computed: mapSeriesComputed(r.computed),
         };
 
         map.set(sid, series);
@@ -382,7 +381,7 @@ export async function buildExperimentFromParquet(
         const events = mapEvents(row.events);
 
         const noise = typeof row.noise_str === "string" ? row.noise_str : null;
-        const filtered = mapFiltered((row as any).filtered);
+        const filtered = mapFiltered(row.filtered);
 
         seriesAccelList.push({
             series_id: series.id,
@@ -418,8 +417,8 @@ export function buildSeriesEntityFromParquetRow(row: ParquetSeriesRow): Series |
         name: row.series_name,
         precision: row.precision,
         args: normalizeSeriesArgs(row.arguments),
-        limit: toComplex((row as any).series_limit),
-        computed: mapSeriesComputed((row as any).computed),
+        limit: toComplex(row.series_limit),
+        computed: mapSeriesComputed(row.computed),
     };
 }
 
@@ -445,7 +444,7 @@ export function buildAccelAndSeriesAccelEntitiesFromParquetRow(params: {
         errors: mapErrors(row.errors),
         events: mapEvents(row.events),
         noise: typeof row.noise_str === "string" ? row.noise_str : null,
-        filtered: mapFiltered((row as any).filtered),
+        filtered: mapFiltered(row.filtered),
     };
 
     return { accelId, accel, seriesAccel };

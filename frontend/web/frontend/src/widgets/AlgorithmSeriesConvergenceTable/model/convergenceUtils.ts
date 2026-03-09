@@ -9,6 +9,12 @@ import {
     type AccelArgs,
     type SeriesArgs,
 } from "./types";
+import { buildMatrixCellDomId } from "@/shared/lib/dom/buildMatrixCellDomId";
+import {
+    buildMatrixArgsSummary,
+    nonNullEntries,
+    parseSeriesXArg,
+} from "@/shared/lib/matrixArgs";
 
 const EPS = 1e-15;
 
@@ -300,41 +306,15 @@ export function formatMonotonicityDescription(mon: MonotonicityType): string {
 }
 
 export function getConvergenceCellDomId(accelId: string, seriesId: string): string {
-    return `conv-cell-${accelId}::${seriesId}`;
+    return buildMatrixCellDomId("conv-cell", accelId, seriesId);
 }
-
-function toSortableNumber(v: Scalar): number | null {
-    if (typeof v === "number") {
-        return Number.isFinite(v) ? v : null;
-    }
-    if (typeof v === "string") {
-        const n = Number(v);
-        return Number.isFinite(n) ? n : null;
-    }
-    return null;
-}
-
-type Scalar = number | string | boolean | null;
 
 export function parseX(args: SeriesArgs | null): { xLabel: string; xSort: number | null } {
-    const raw = args?.x as Scalar | undefined;
-    if (raw == null) {
-        return { xLabel: "∅", xSort: null };
-    }
-    return {
-        xLabel: String(raw),
-        xSort: toSortableNumber(raw),
-    };
+    return parseSeriesXArg(args);
 }
 
-export function nonNullEntries<T extends Record<string, unknown>>(obj: T | null | undefined) {
-    if (!obj) return [] as [string, unknown][];
-    return Object.entries(obj).filter(([, v]) => v !== null && v !== undefined);
-}
+export { nonNullEntries };
 
 export function buildArgsSummary(args: AccelArgs | null): string {
-    const entries = nonNullEntries(args);
-    if (entries.length === 0) return "";
-    entries.sort(([a], [b]) => a.localeCompare(b));
-    return entries.map(([k, v]) => `${k}=${v}`).join(", ");
+    return buildMatrixArgsSummary(args);
 }

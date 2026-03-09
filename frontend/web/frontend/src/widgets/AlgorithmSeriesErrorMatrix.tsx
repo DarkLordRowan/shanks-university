@@ -537,13 +537,13 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
             rows={rowsAxis}
             cols={colsAxis}
             maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
-            resetKey={`${(experiment as any)?.id ?? "no-exp"}::${precisionFilter ?? "all"}`}
+            resetKey={`${experiment?.id ?? "no-exp"}::${precisionFilter ?? "all"}`}
             export={{
                 fileBaseName: `AlgorithmSeriesErrorMatrix${precisionFilter ? `_${precisionFilter}` : ""}`,
                 enablePng: true,
                 enableXlsx: true,
                 buildWorkbook: ({ rows, cols }) => {
-                    const aoa: any[][] = [];
+                    const aoa: Array<Array<string | number | null>> = [];
 
                     // header row
                     aoa.push([
@@ -557,7 +557,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                     // data rows
                     for (const r of rows) {
                         const algo = r.meta!;
-                        const rowArr: any[] = [];
+                        const rowArr: Array<string | number | null> = [];
                         rowArr.push(
                             `${algo.algorithmName}\n${algo.m != null ? `m=${String(algo.m)}` : "m=∅"}${
                                 algo.argsSummary ? `\n${algo.argsSummary}` : ""
@@ -623,8 +623,10 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                             const cell = ws[addr];
                             if (!cell) continue;
 
-                            const algo = rows[R - 1]?.meta!;
-                            const s = cols[C - 1]?.meta!;
+                            const algo = rows[R - 1]?.meta;
+                            const s = cols[C - 1]?.meta;
+                            if (!algo || !s) continue;
+
                             const cellKey = `${algo.key}||${s.key}`;
                             const sa = cellMap.get(cellKey);
 

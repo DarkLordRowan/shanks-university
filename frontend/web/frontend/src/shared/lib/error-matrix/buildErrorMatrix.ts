@@ -126,7 +126,7 @@ export function buildErrorMatrixFromExperiment(
             const n = e?.n;
             if (!Number.isFinite(n)) continue;
 
-            const rawMsg = (e as any).message;
+            const rawMsg = e.message;
             const msg = typeof rawMsg === "string" ? rawMsg.trim() : String(rawMsg ?? "").trim();
 
             let info = errorInfoByN.get(n);

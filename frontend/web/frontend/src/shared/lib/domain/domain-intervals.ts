@@ -32,7 +32,6 @@ export function latexToNumber(s: string): number {
     expr = expr.replace(/(Math\.PI|Math\.E)\s*(\d|\()/g, "$1*$2");
 
     if (!/^[0-9+\-*/().\sMathPIE]*$/.test(expr)) throw new Error("Unsupported token in LaTeX bound");
-    // eslint-disable-next-line no-new-func
     const f = new Function(`return (${expr});`);
     const val = Number(f());
     if (!Number.isFinite(val)) throw new Error("Non-finite");
