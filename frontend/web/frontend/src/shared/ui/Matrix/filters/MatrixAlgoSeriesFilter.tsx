@@ -152,9 +152,17 @@ function applySeriesPrecisionFilter(
     selectedPrecisions: Set<string>,
     mode: FilterMode
 ): Series[] {
-    if (selectedPrecisions.size === 0) return [];
+    if (selectedPrecisions.size === 0) return mode === "blacklist" ? list : [];
     if (mode === "whitelist") return list.filter((s) => selectedPrecisions.has(s.precision ?? ""));
     return list.filter((s) => !selectedPrecisions.has(s.precision ?? ""));
+}
+
+function areSetsEqual<T>(a: Set<T>, b: Set<T>): boolean {
+    if (a.size !== b.size) return false;
+    for (const v of a) {
+        if (!b.has(v)) return false;
+    }
+    return true;
 }
 
 function parseScalarQuery(
@@ -206,11 +214,11 @@ function clauseMatchesArgs(args: Record<string, unknown> | null, clause: ArgClau
     const kq = normalize(clause.key);
     const vq = normalize(clause.value);
 
-    if (!kq && !vq) return true; // пустое правило ничего не ограничивает
+    if (!kq && !vq) return true; // empty rule does not restrict
 
     if (!args) return false;
 
-    // value-only: любое значение содержит vq
+    // value-only: any argument value contains vq
     if (!kq && vq) {
         for (const [, v] of Object.entries(args)) {
             if (v == null) continue;
@@ -219,7 +227,7 @@ function clauseMatchesArgs(args: Record<string, unknown> | null, clause: ArgClau
         return false;
     }
 
-    // key задан (substring match по ключу)
+    // key is set (substring match by key)
     if (kq) {
         const keys = Object.keys(args);
         const matchedKeys = keys.filter((kk) => normalize(kk).includes(kq));
@@ -390,38 +398,118 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
             .sort((a, b) => a.localeCompare(b));
     }, [seriesList]);
 
+    const accelGroupKeys = useMemo(() => accelGroups.map((g) => g.key), [accelGroups]);
+    const seriesGroupKeys = useMemo(() => seriesGroups.map((g) => g.key), [seriesGroups]);
+    const precisionOptionSet = useMemo(() => new Set(precisionOptions), [precisionOptions]);
+
     // groups default select-all
     useEffect(() => {
         setState((s) => {
             if (s.accel.groupMode !== "whitelist") return s;
-            if (s.accel.selectedGroupKeys.size > 0) return s;
-            return {
-                ...s,
-                accel: { ...s.accel, selectedGroupKeys: new Set() },
-            };
+
+            const available = new Set(accelGroupKeys);
+            const next = new Set(
+                Array.from(s.accel.selectedGroupKeys).filter((key) => available.has(key))
+            );
+
+            if (next.size === 0 && available.size > 0) {
+                return {
+                    ...s,
+                    accel: { ...s.accel, selectedGroupKeys: available },
+                };
+            }
+
+            if (!areSetsEqual(next, s.accel.selectedGroupKeys)) {
+                return {
+                    ...s,
+                    accel: { ...s.accel, selectedGroupKeys: next },
+                };
+            }
+
+            return s;
         });
-    }, [accelGroups.length]);
+    }, [accelGroupKeys, resetKey]);
 
     useEffect(() => {
         setState((s) => {
             if (s.series.groupMode !== "whitelist") return s;
-            if (s.series.selectedGroupKeys.size > 0) return s;
-            return {
-                ...s,
-                series: { ...s.series, selectedGroupKeys: new Set() },
-            };
+
+            const available = new Set(seriesGroupKeys);
+            const next = new Set(
+                Array.from(s.series.selectedGroupKeys).filter((key) => available.has(key))
+            );
+
+            if (next.size === 0 && available.size > 0) {
+                return {
+                    ...s,
+                    series: { ...s.series, selectedGroupKeys: available },
+                };
+            }
+
+            if (!areSetsEqual(next, s.series.selectedGroupKeys)) {
+                return {
+                    ...s,
+                    series: { ...s.series, selectedGroupKeys: next },
+                };
+            }
+
+            return s;
         });
-    }, [seriesGroups.length]);
+    }, [seriesGroupKeys, resetKey]);
 
     // precision default select-all (в whitelist)
     useEffect(() => {
         setState((s) => {
             if (s.series.precisionMode !== "whitelist") return s;
-            if (s.series.selectedPrecisions.size > 0) return s;
-            if (precisionOptions.length === 0) return s;
-            return { ...s, series: { ...s.series, selectedPrecisions: new Set() } };
+
+            const next = new Set(
+                Array.from(s.series.selectedPrecisions).filter((p) => precisionOptionSet.has(p))
+            );
+
+            if (next.size === 0 && precisionOptionSet.size > 0) {
+                return {
+                    ...s,
+                    series: {
+                        ...s.series,
+                        selectedPrecisions: new Set(precisionOptionSet),
+                    },
+                };
+            }
+
+            if (!areSetsEqual(next, s.series.selectedPrecisions)) {
+                return {
+                    ...s,
+                    series: { ...s.series, selectedPrecisions: next },
+                };
+            }
+
+            return s;
         });
-    }, [precisionOptions.length]);
+    }, [precisionOptionSet, resetKey]);
+
+    const visibleAccelGroups = useMemo(() => {
+        const q = normalize(state.accel.query);
+        if (!q) return accelGroups;
+
+        return accelGroups
+            .map((g) => ({
+                ...g,
+                items: g.items.filter((a) => accelSearchText(a).includes(q)),
+            }))
+            .filter((g) => g.items.length > 0);
+    }, [accelGroups, state.accel.query]);
+
+    const visibleSeriesGroups = useMemo(() => {
+        const q = normalize(state.series.query);
+        if (!q) return seriesGroups;
+
+        return seriesGroups
+            .map((g) => ({
+                ...g,
+                items: g.items.filter((s) => seriesSearchText(s).includes(q)),
+            }))
+            .filter((g) => g.items.length > 0);
+    }, [seriesGroups, state.series.query]);
 
     const filteredAccels = useMemo(() => {
         const q = normalize(state.accel.query);
@@ -447,7 +535,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
         const byGroupIds = new Set(byGroup.map((a) => a.id));
         out = out.filter((a) => byGroupIds.has(a.id));
 
-        // ids (если где-то используется)
+        // ids (if used elsewhere)
         out = applyIdFilter(out, state.accel.selectedIds, state.accel.idMode);
 
         return sortAccels(out, "name_args");
@@ -491,7 +579,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                 <MatrixAccelsFilter
                     query={state.accel.query}
                     onQuery={(v) => setState((s) => ({ ...s, accel: { ...s.accel, query: v } }))}
-                    groups={accelGroups}
+                    groups={visibleAccelGroups}
                     groupMode={state.accel.groupMode}
                     onGroupMode={(m) =>
                         setState((s) => ({ ...s, accel: { ...s.accel, groupMode: m } }))
@@ -513,7 +601,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                             ...s,
                             accel: {
                                 ...s.accel,
-                                selectedGroupKeys: new Set(accelGroups.map((g) => g.key)),
+                                selectedGroupKeys: new Set(visibleAccelGroups.map((g) => g.key)),
                             },
                         }))
                     }
@@ -582,7 +670,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                 <MatrixSeriesFilter
                     query={state.series.query}
                     onQuery={(v) => setState((s) => ({ ...s, series: { ...s.series, query: v } }))}
-                    groups={seriesGroups}
+                    groups={visibleSeriesGroups}
                     groupMode={state.series.groupMode}
                     onGroupMode={(m) =>
                         setState((s) => ({ ...s, series: { ...s.series, groupMode: m } }))
@@ -604,7 +692,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                             ...s,
                             series: {
                                 ...s.series,
-                                selectedGroupKeys: new Set(seriesGroups.map((g) => g.key)),
+                                selectedGroupKeys: new Set(visibleSeriesGroups.map((g) => g.key)),
                             },
                         }))
                     }
