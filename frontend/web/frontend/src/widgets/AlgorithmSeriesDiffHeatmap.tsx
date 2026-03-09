@@ -10,6 +10,7 @@ import type {
     SeriesArgs,
 } from "@/entities/experiment/model/experiment";
 import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
+import { ExperimentMatrixFilterScope } from "@/shared/ui/Matrix/filters/ExperimentMatrixFilterScope";
 import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
 import * as XLSX from "xlsx-js-style";
 
@@ -320,12 +321,14 @@ function styleFromColorSpec(spec: ColorSpec): XLSX.CellStyle {
 
 /* ------------ component ------------ */
 
-export function AlgorithmSeriesDiffHeatmap({
+function AlgorithmSeriesDiffHeatmapView({
     experiment,
     maxSeries,
+    externalResetKey,
 }: {
     experiment: Experiment | null;
     maxSeries?: number;
+    externalResetKey?: string;
 }) {
     const { seriesRaw, accelRaw, seriesAccelRaw, precisionsOrder } = useMemo(() => {
         if (!experiment) {
@@ -630,7 +633,7 @@ export function AlgorithmSeriesDiffHeatmap({
             rows={rowsAxis}
             cols={colsAxis}
             maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
-            resetKey={`${experiment?.id ?? "no-exp"}::${prevPrecision ?? "∅"}->${nextPrecision ?? "∅"}`}
+            resetKey={`${experiment?.id ?? "no-exp"}::${prevPrecision ?? "∅"}->${nextPrecision ?? "∅"}::${externalResetKey ?? ""}`}
             export={{
                 fileBaseName: `AlgorithmSeriesDiffHeatmap_${prevPrecision ?? "∅"}_to_${nextPrecision ?? "∅"}`,
                 enablePng: true,
@@ -833,3 +836,24 @@ export function AlgorithmSeriesDiffHeatmap({
         />
     );
 }
+
+export function AlgorithmSeriesDiffHeatmap({
+    experiment,
+    maxSeries,
+}: {
+    experiment: Experiment | null;
+    maxSeries?: number;
+}) {
+    return (
+        <ExperimentMatrixFilterScope experiment={experiment} resetKey={experiment?.id ?? "no-exp"}>
+            {({ experimentFiltered, filterStateKey }) => (
+                <AlgorithmSeriesDiffHeatmapView
+                    experiment={experimentFiltered}
+                    maxSeries={maxSeries}
+                    externalResetKey={filterStateKey}
+                />
+            )}
+        </ExperimentMatrixFilterScope>
+    );
+}
+

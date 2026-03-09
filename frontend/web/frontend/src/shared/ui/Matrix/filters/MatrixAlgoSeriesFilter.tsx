@@ -1,4 +1,4 @@
-// src/shared/ui/Matrix/filters/MatrixAlgoSeriesFilter.tsx
+﻿// src/shared/ui/Matrix/filters/MatrixAlgoSeriesFilter.tsx
 
 import React, { useEffect, useMemo, useState } from "react";
 import type { Accel, Series } from "@/entities/experiment/model/experiment.ts";
@@ -402,22 +402,14 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
     const seriesGroupKeys = useMemo(() => seriesGroups.map((g) => g.key), [seriesGroups]);
     const precisionOptionSet = useMemo(() => new Set(precisionOptions), [precisionOptions]);
 
-    // groups default select-all
+    // keep only group keys that still exist after data changes
     useEffect(() => {
         setState((s) => {
-            if (s.accel.groupMode !== "whitelist") return s;
 
             const available = new Set(accelGroupKeys);
             const next = new Set(
                 Array.from(s.accel.selectedGroupKeys).filter((key) => available.has(key))
             );
-
-            if (next.size === 0 && available.size > 0) {
-                return {
-                    ...s,
-                    accel: { ...s.accel, selectedGroupKeys: available },
-                };
-            }
 
             if (!areSetsEqual(next, s.accel.selectedGroupKeys)) {
                 return {
@@ -432,19 +424,11 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
 
     useEffect(() => {
         setState((s) => {
-            if (s.series.groupMode !== "whitelist") return s;
 
             const available = new Set(seriesGroupKeys);
             const next = new Set(
                 Array.from(s.series.selectedGroupKeys).filter((key) => available.has(key))
             );
-
-            if (next.size === 0 && available.size > 0) {
-                return {
-                    ...s,
-                    series: { ...s.series, selectedGroupKeys: available },
-                };
-            }
 
             if (!areSetsEqual(next, s.series.selectedGroupKeys)) {
                 return {
@@ -457,24 +441,13 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
         });
     }, [seriesGroupKeys, resetKey]);
 
-    // precision default select-all (в whitelist)
+    // keep only precision values that still exist after data changes
     useEffect(() => {
         setState((s) => {
-            if (s.series.precisionMode !== "whitelist") return s;
 
             const next = new Set(
                 Array.from(s.series.selectedPrecisions).filter((p) => precisionOptionSet.has(p))
             );
-
-            if (next.size === 0 && precisionOptionSet.size > 0) {
-                return {
-                    ...s,
-                    series: {
-                        ...s.series,
-                        selectedPrecisions: new Set(precisionOptionSet),
-                    },
-                };
-            }
 
             if (!areSetsEqual(next, s.series.selectedPrecisions)) {
                 return {
@@ -783,3 +756,5 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
         </div>
     );
 }
+
+

@@ -11,6 +11,7 @@ import type {
     SeriesArgs,
 } from "@/entities/experiment/model/experiment";
 import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
+import { ExperimentMatrixFilterScope } from "@/shared/ui/Matrix/filters/ExperimentMatrixFilterScope";
 import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
 import * as XLSX from "xlsx-js-style";
 
@@ -246,9 +247,10 @@ function rowHeaderStyle(): XLSX.CellStyle {
 
 /* ---------------- component ---------------- */
 
-export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProps> = ({
+const AlgorithmSeriesErrorMatrixView: React.FC<AlgorithmSeriesErrorMatrixProps & { externalResetKey?: string }> = ({
     experiment,
     maxSeries,
+    externalResetKey,
 }) => {
     /** null = все precision, конкретная строка = фильтр по precision */
     const [precisionFilter, setPrecisionFilter] = useState<string | null>(null);
@@ -537,7 +539,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
             rows={rowsAxis}
             cols={colsAxis}
             maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
-            resetKey={`${experiment?.id ?? "no-exp"}::${precisionFilter ?? "all"}`}
+            resetKey={`${experiment?.id ?? "no-exp"}::${precisionFilter ?? "all"}::${externalResetKey ?? ""}`}
             export={{
                 fileBaseName: `AlgorithmSeriesErrorMatrix${precisionFilter ? `_${precisionFilter}` : ""}`,
                 enablePng: true,
@@ -700,5 +702,22 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                 </div>
             }
         />
+    );
+};
+
+export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProps> = ({
+    experiment,
+    maxSeries,
+}) => {
+    return (
+        <ExperimentMatrixFilterScope experiment={experiment} resetKey={experiment?.id ?? "no-exp"}>
+            {({ experimentFiltered, filterStateKey }) => (
+                <AlgorithmSeriesErrorMatrixView
+                    experiment={experimentFiltered}
+                    maxSeries={maxSeries}
+                    externalResetKey={filterStateKey}
+                />
+            )}
+        </ExperimentMatrixFilterScope>
     );
 };

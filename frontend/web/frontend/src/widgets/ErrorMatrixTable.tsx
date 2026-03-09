@@ -6,6 +6,7 @@ import type { Experiment } from "@/entities/experiment/model/experiment";
 import { buildErrorMatrixFromExperiment } from "@/shared/lib/error-matrix/buildErrorMatrix";
 import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
 import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
+import { ExperimentMatrixFilterScope } from "@/shared/ui/Matrix/filters/ExperimentMatrixFilterScope";
 
 /** Оформление ячейки по количеству ошибок */
 function getCellClasses(count: number): string {
@@ -42,10 +43,11 @@ type ColMeta = {
     n: number;
 };
 
-export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
+const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?: string }> = ({
     experiment,
     maxSteps,
     className,
+    externalResetKey,
 }) => {
     // варианты точности из series.precision
     const precisionOptions = useMemo(() => {
@@ -328,7 +330,7 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
     return (
         <MatrixPaged<RowMeta, ColMeta>
             className={className}
-            resetKey={`${experiment.id}::${precision ?? "ALL"}::${sort.key}:${sort.dir}`}
+            resetKey={`${experiment.id}::${precision ?? "ALL"}::${sort.key}:${sort.dir}::${externalResetKey ?? ""}`}
             rows={rowsAxis}
             cols={colsAxis}
             maxColsPerPage={maxSteps && maxSteps > 0 ? maxSteps : 0}
@@ -395,5 +397,24 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                 </div>
             }
         />
+    );
+};
+
+export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
+    experiment,
+    maxSteps,
+    className,
+}) => {
+    return (
+        <ExperimentMatrixFilterScope experiment={experiment} resetKey={experiment?.id ?? "no-exp"}>
+            {({ experimentFiltered, filterStateKey }) => (
+                <ErrorMatrixTableView
+                    experiment={experimentFiltered}
+                    maxSteps={maxSteps}
+                    className={className}
+                    externalResetKey={filterStateKey}
+                />
+            )}
+        </ExperimentMatrixFilterScope>
     );
 };

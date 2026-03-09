@@ -16,6 +16,7 @@ import {
     getSeriesRowDomId,
 } from "../model/seriesComputedConvergenceUtils";
 import { SeriesComputedDetailChart } from "./SeriesComputedDetailChart";
+import { ExperimentMatrixFilterScope } from "@/shared/ui/Matrix/filters/ExperimentMatrixFilterScope";
 
 export interface SeriesComputedConvergenceTableProps {
     experiment: Experiment | null;
@@ -165,9 +166,10 @@ function cmpNumNullable(a: number | null, b: number | null): number {
     return a - b;
 }
 
-export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceTableProps> = ({
+const SeriesComputedConvergenceTableView: React.FC<SeriesComputedConvergenceTableProps & { totalRowsBeforeFilter?: number }> = ({
     experiment,
     className,
+    totalRowsBeforeFilter,
 }) => {
     const { seriesList, analysisBySeriesId, progress } = useSeriesComputedConvergence(experiment);
 
@@ -263,7 +265,6 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
             dev: DevStats;
         }>;
     }, [seriesList, analysisBySeriesId, maxSignChangesForOneSided, maxViolationsForMonotone]);
-
     const sortedRows = useMemo(() => {
         if (!sort) return rows;
 
@@ -324,6 +325,12 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
 
         return arr;
     }, [rows, sort]);
+
+    useEffect(() => {
+        if (!selectedSeriesId) return;
+        if (sortedRows.some((r) => r.series.id === selectedSeriesId)) return;
+        setSelectedSeriesId(null);
+    }, [selectedSeriesId, sortedRows]);
 
     const selected = useMemo(() => {
         if (!experiment || !selectedSeriesId) return null;
@@ -397,7 +404,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
         );
     }
 
-    if (seriesList.length === 0) {
+    if (rows.length === 0) {
         return (
             <div className={className}>
                 <div className="text-textDim text-sm">
@@ -457,6 +464,9 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                 <div className="mt-2 text-[10px] text-textDim/70">
                     Клик по строке открывает детальный график и таблицы. Клик по заголовку
                     сортирует.
+                </div>
+                <div className="mt-1 text-[10px] text-textDim/70">
+                    rows: {sortedRows.length} / {totalRowsBeforeFilter ?? rows.length}
                 </div>
             </div>
 
@@ -713,3 +723,26 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
         </div>
     );
 };
+
+export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceTableProps> = ({
+    experiment,
+    className,
+}) => {
+    const totalRowsBeforeFilter = useMemo(
+        () => (experiment?.seriesList ?? []).filter((s) => (s.computed ?? []).length > 0).length,
+        [experiment]
+    );
+
+    return (
+        <ExperimentMatrixFilterScope experiment={experiment} resetKey={experiment?.id ?? "no-exp"}>
+            {({ experimentFiltered }) => (
+                <SeriesComputedConvergenceTableView
+                    experiment={experimentFiltered}
+                    className={className}
+                    totalRowsBeforeFilter={totalRowsBeforeFilter}
+                />
+            )}
+        </ExperimentMatrixFilterScope>
+    );
+};
+
