@@ -1,21 +1,23 @@
+import { buildGithubFileLinks } from "@/shared/lib/github/links";
+
 export const GH = {
     owner: "DarkLordRowan",
     repo: "shanks-university",
     branch: "VecImpl",
-    srcFolder: "shanks_transformation/methods/algorithm", // файлы .hpp
-    docsFolder: "theory/algorithm", // файлы .tex
+    srcFolder: "shanks_transformation/methods/algorithm",
+    docsFolder: "theory/algorithm",
+} as const;
+
+const repoConfig = {
+    owner: GH.owner,
+    repo: GH.repo,
+    branch: GH.branch,
 };
 
 export function buildSrcLinks(algId: string) {
-    const path = `${GH.srcFolder}/${algId}.hpp`;
-    const raw = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}`;
-    const web = `https://github.com/${GH.owner}/${GH.repo}/blob/${GH.branch}/${path}`;
-    return { raw, web, path };
+    return buildGithubFileLinks(repoConfig, GH.srcFolder, `${algId}.hpp`);
 }
 
 export function buildDocLinks(algId: string) {
-    const path = `${GH.docsFolder}/${algId}.tex`;
-    const raw = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}`;
-    const web = `https://github.com/${GH.owner}/${GH.repo}/blob/${GH.branch}/${path}`;
-    return { raw, web, path };
+    return buildGithubFileLinks(repoConfig, GH.docsFolder, `${algId}.tex`);
 }

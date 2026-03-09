@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { getAllowedMValues, toggleMValue } from "@/features/select-parameters/model/mValues";
 
 type Props = {
     value: number[] ;                    // выбранные m
@@ -6,19 +7,15 @@ type Props = {
     disabled?: boolean;
 };
 
-function isValidM(n: number) { return Number.isInteger(n) && n >= 2 && n <= 100 && n % 2 === 0; }
-
 export function SelectMs({ value, onChange, disabled }: Props) {
     const [collapsed, setCollapsed] = useState<boolean>(value.length > 0);
 
-    const all = useMemo(() => Array.from({length: 51}, (_, k) => 2*k), []);
+    const all = useMemo(() => getAllowedMValues(), []);
     const set = useMemo(() => new Set(value), [value]);
 
     const toggle = useCallback((m: number) => {
-        if (!isValidM(m)) return;
-        if (set.has(m)) onChange(value.filter(v => v !== m));
-        else onChange([...value, m].sort((a,b) => a-b));
-    }, [onChange, set, value]);
+        onChange(toggleMValue(value, m));
+    }, [onChange, value]);
 
     const selectAll = useCallback(() => onChange(all), [all, onChange]);
     const clearAll  = useCallback(() => onChange([]), [onChange]);

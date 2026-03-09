@@ -14,13 +14,13 @@ export function ResponseRecordsFileInput({ onLoaded }: Props) {
             const file = event.target.files?.[0];
             if (!file) return;
 
-            await loadFromFile(file);
+            const result = await loadFromFile(file);
 
-            if (onLoaded && state.status === "success") {
-                onLoaded(state.data.length);
+            if (onLoaded && result.ok) {
+                onLoaded(result.data.length);
             }
         },
-        [loadFromFile, onLoaded, state.status, state],
+        [loadFromFile, onLoaded],
     );
 
     return (

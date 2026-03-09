@@ -19,9 +19,11 @@ export function useLoadResponseRecordsFromFile() {
 
         if (result.ok) {
             setState({ status: "success", data: result.data });
-        } else {
-            setState({ status: "error", issues: result.issues });
+            return { ok: true as const, data: result.data };
         }
+
+        setState({ status: "error", issues: result.issues });
+        return { ok: false as const, issues: result.issues };
     }, []);
 
     const reset = useCallback(() => {

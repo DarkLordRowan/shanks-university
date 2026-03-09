@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { getAllowedMValues, isValidMValue } from "@/features/select-parameters/model/mValues";
 
 type Props = {
     value: number | null;
@@ -6,9 +7,6 @@ type Props = {
     disabled?: boolean;
 };
 
-function isValidM(n: number): boolean {
-    return Number.isInteger(n) && n >= 0 && n <= 100 && n % 2 === 0;
-}
 function clamp01(x: number) { return Math.min(1, Math.max(0, x)); }
 
 export function SelectM({ value, onChange, disabled }: Props) {
@@ -22,11 +20,7 @@ export function SelectM({ value, onChange, disabled }: Props) {
     const [draft, setDraft] = useState<string>(value == null ? "" : String(value));
 
     // множество допустимых значений
-    const options = useMemo(() => {
-        const arr: number[] = [];
-        for (let k = 0; k <= 50; k++) arr.push(2 * k);
-        return arr;
-    }, []);
+    const options = useMemo(() => getAllowedMValues(), []);
 
     // валидность
     const validity: "in" | "out" | "empty" = useMemo(() => {
@@ -34,7 +28,7 @@ export function SelectM({ value, onChange, disabled }: Props) {
         if (s === "") return "empty";
         const n = Number(s);
         if (!Number.isFinite(n)) return "out";
-        return isValidM(n) ? "in" : "out";
+        return isValidMValue(n) ? "in" : "out";
     }, [draft]);
 
     // быстрый выбор

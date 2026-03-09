@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useStreamLoadRecords } from "../model/useStreamLoadRecords";
 import type { Item } from "@/entities/item/model/item";
-import { normalizeRecords } from "@/utils/normalizeRecords.ts";
+import { normalizeRecords } from "@/shared/lib/json/normalizeRecords";
 
 interface StreamFileInputProps {
     onItemsChange?: (items: Item[]) => void;
@@ -15,7 +15,7 @@ export function StreamFileInput({ onItemsChange }: StreamFileInputProps) {
             const items = normalizeRecords(recordsRef.current);
             onItemsChange(items);
         }
-    }, [state.status]);
+    }, [state.status, onItemsChange, recordsRef]);
 
     return (
         <div className="space-y-2 text-sm">

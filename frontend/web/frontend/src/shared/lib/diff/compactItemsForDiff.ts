@@ -1,5 +1,5 @@
-import type { Item } from "../entities/item/model/item";
-import type { DiffItem } from "../entities/diff/model/diffItem";
+﻿import type { Item } from "@/entities/item/model/item";
+import type { DiffItem } from "@/entities/diff/model/diffItem";
 import { computeItemScore } from "./computeItemScore";
 
 function buildSeriesKey(seriesName: string, x: number): string {

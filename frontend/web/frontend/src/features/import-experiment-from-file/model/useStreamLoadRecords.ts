@@ -29,14 +29,10 @@ export function useStreamLoadRecords() {
                 recordsRef.current.push(record);
 
                 count += 1;
-                if (count <= 3) {
-                    console.log("parsed record", count, record);
-                }
                 setState({ status: "loading", count });
             },
             (issues) => {
                 hadError = true;
-                console.error("validation issues", issues);
                 setState({ status: "error", issues });
             },
         );
