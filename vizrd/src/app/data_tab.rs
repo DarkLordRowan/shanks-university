@@ -443,6 +443,26 @@ fn show_sequence(ui: &mut egui::Ui, seq: &SequenceDisplay, id_source: &str) {
                 });
         });
 
+    if seq.events.is_empty() {
+        ui.label("No events recorded.");
+    } else {
+        egui::CollapsingHeader::new("Events")
+            .id_salt(format!("{}_events_collapsible", id_source))
+            .default_open(false)
+            .show(ui, |ui| {
+                let mut evs: Vec<_> = seq
+                    .events
+                    .iter()
+                    .flat_map(|(n, list)| list.iter().map(move |desc| (*n, desc)))
+                    .collect();
+                evs.sort_by_key(|(n, _)| *n);
+
+                for (n, desc) in evs {
+                    ui.label(format!("n={}: {}", n, desc));
+                }
+            });
+    }
+
     ui.separator();
 
     egui::CollapsingHeader::new("Detailed Table")

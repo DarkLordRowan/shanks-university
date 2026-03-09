@@ -383,7 +383,6 @@ where
                 });
             }
             lazy_series = Some(ptr);
-            let _ = sdata; // assigned but never used
         }
 
         let mut lazy_accels: BTreeMap<
