@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Experiment, Series } from "@/entities/experiment/model/experiment";
 import type { ProgressState, SeriesComputedConvergenceAnalysis } from "./types";
 import { analyzeSeriesComputedConvergence } from "./seriesComputedConvergenceUtils";
+import { runChunkedWithProgress } from "@/shared/lib/chunkProgress";
 
 const DEFAULT_CHUNK = 24;
 
@@ -42,32 +43,23 @@ export function useSeriesComputedConvergence(
         const total = list.length;
         const acc: Record<string, SeriesComputedConvergenceAnalysis> = {};
 
-        function runChunk(start: number) {
-            if (cancelled) return;
-
-            const end = Math.min(start + chunkSize, total);
-
-            for (let i = start; i < end; i++) {
-                const s = list[i];
-                acc[s.id] = analyzeSeriesComputedConvergence(s);
-            }
-
-            const current = end;
-            const running = end < total;
-
-            setProgress({ running, current, total });
-
-            if (running) {
-                setTimeout(() => runChunk(end), 0);
-                return;
-            }
-
-            if (!cancelled) {
-                setAnalysisBySeriesId({ ...acc });
-            }
-        }
-
-        runChunk(0);
+        runChunkedWithProgress({
+            total,
+            chunkSize,
+            isCancelled: () => cancelled,
+            onRange: (start, end) => {
+                for (let i = start; i < end; i++) {
+                    const s = list[i];
+                    acc[s.id] = analyzeSeriesComputedConvergence(s);
+                }
+            },
+            onProgress: setProgress,
+            onDone: () => {
+                if (!cancelled) {
+                    setAnalysisBySeriesId({ ...acc });
+                }
+            },
+        });
 
         return () => {
             cancelled = true;

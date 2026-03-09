@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useMemo } from "react";
 import type { Experiment, ProfilingMatrix, SelectedCell, OpsTrendType } from "../model/types";
 import {
     formatOps,
     formatTrendShort,
     getProfilingCellDomId,
-    nonNullEntries,
 } from "../model/profilingUtils";
 import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries.tsx";
+import { appendAlgorithmArgsTooltipLines } from "@/shared/lib/matrixTooltip";
+import { buildSeriesAccelPairKey } from "@/shared/lib/experimentIndex";
 
 interface ProfilingMatrixTableProps {
     experiment: Experiment;
@@ -37,6 +38,9 @@ export const ProfilingMatrixTable: React.FC<ProfilingMatrixTableProps> = ({
                                                                               selectedCell,
                                                                               onCellSelect,
                                                                           }) => {
+    const algoByKey = useMemo(() => new Map(matrix.algoList.map((a) => [a.key, a])), [matrix.algoList]);
+    const seriesByKey = useMemo(() => new Map(matrix.seriesList.map((s) => [s.key, s])), [matrix.seriesList]);
+
     return (
         <MatrixAlgorithmSeries
             accelList={experiment?.accelList ?? []}
@@ -58,11 +62,11 @@ export const ProfilingMatrixTable: React.FC<ProfilingMatrixTableProps> = ({
                 </>
             )}
             renderCell={(row, col) => {
-                const algo = matrix.algoList.find((a) => a.key === row.id);
-                const s = matrix.seriesList.find((x) => x.key === col.id);
+                const algo = algoByKey.get(row.id);
+                const s = seriesByKey.get(col.id);
                 if (!algo || !s) return null;
 
-                const key = `${algo.key}::${s.key}`;
+                const key = buildSeriesAccelPairKey(algo.key, s.key);
                 const analysis = matrix.cells[key];
 
                 if (!analysis) {
@@ -89,11 +93,7 @@ export const ProfilingMatrixTable: React.FC<ProfilingMatrixTableProps> = ({
                     `Алгоритм: ${algo.algorithmName}` + (algo.m != null ? `, m=${algo.m}` : "")
                 );
                 titleLines.push("Аргументы алгоритма:");
-                const algoEntries = nonNullEntries(algo.algorithmArgs);
-                for (const [k, v] of algoEntries.sort(([a], [b]) => a.localeCompare(b))) {
-                    titleLines.push(`  ${k} = ${String(v)}`);
-                }
-                if (algo.argsSummary) titleLines.push(`  (${String(algo.argsSummary)})`);
+                appendAlgorithmArgsTooltipLines(titleLines, algo.algorithmArgs, algo.argsSummary);
                 titleLines.push("");
                 titleLines.push(`Trend(T): ${analysis.trendTotal}`);
                 titleLines.push(`Max(T): ${maxText}`);

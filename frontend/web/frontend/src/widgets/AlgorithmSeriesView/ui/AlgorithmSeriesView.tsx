@@ -13,6 +13,7 @@ import {
 } from "./AlgorithmSeriesMatrixTable";
 import { AlgorithmSeriesDetailChart } from "./AlgorithmSeriesDetailChart";
 import { getAlgorithmSeriesCellDomId } from "../model/getAlgorithmSeriesCellDomId";
+import { buildExperimentIndex } from "@/shared/lib/experimentIndex";
 
 export interface AlgorithmSeriesViewProps {
     experiment: Experiment | null;
@@ -33,6 +34,7 @@ export const AlgorithmSeriesView: React.FC<AlgorithmSeriesViewProps> = ({
 }) => {
     const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
     const detailRef = useRef<HTMLDivElement | null>(null);
+    const experimentIndex = useMemo(() => buildExperimentIndex(experiment), [experiment]);
 
     useEffect(() => {
         setSelectedCell(null);
@@ -52,20 +54,17 @@ export const AlgorithmSeriesView: React.FC<AlgorithmSeriesViewProps> = ({
     }, [selectedCell]);
 
     const selectedDetail: SelectedDetail | null = useMemo(() => {
-        if (!experiment || !selectedCell) return null;
+        if (!selectedCell) return null;
 
         const { accelId, seriesId } = selectedCell;
 
-        const accel = (experiment.accelList ?? []).find((a) => a.id === accelId) ?? null;
-        const series = (experiment.seriesList ?? []).find((s) => s.id === seriesId) ?? null;
+        const accel = experimentIndex.accelById.get(accelId) ?? null;
+        const series = experimentIndex.seriesById.get(seriesId) ?? null;
 
-        const seriesAccel =
-            (experiment.seriesAccelList ?? []).find(
-                (x) => x.accel_id === accelId && x.series_id === seriesId
-            ) ?? null;
+        const seriesAccel = experimentIndex.getSeriesAccel(seriesId, accelId);
 
         return { accel, series, seriesAccel };
-    }, [experiment, selectedCell]);
+    }, [experimentIndex, selectedCell]);
 
     if (!experiment) {
         return (

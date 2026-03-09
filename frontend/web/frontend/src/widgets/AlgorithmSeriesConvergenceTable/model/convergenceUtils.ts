@@ -83,8 +83,8 @@ export function getPointsSortedByN(
 }
 
 export function analyzeSeriesAccelConvergence(
-    series: Series,
-    _accel: Accel,
+    series: Series | null | undefined,
+    _accel: Accel | null | undefined,
     sa: SeriesAccel,
     maxSignChangesForOneSided: number = 0,
     maxViolationsForMonotone: number = 0

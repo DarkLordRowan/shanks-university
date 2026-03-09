@@ -9,6 +9,7 @@ import {
 } from "../model/convergenceUtils";
 import { ConvergenceDetailChart } from "./ConvergenceDetailChart";
 import { ConvergenceMatrixTable } from "./ConvergenceMatrixTable";
+import { buildExperimentIndex, buildSeriesAccelPairKey } from "@/shared/lib/experimentIndex";
 
 export interface AlgorithmSeriesConvergenceTableProps {
     experiment: import("../model/types").Experiment | null;
@@ -24,6 +25,7 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
     const { matrix, progress } = useConvergenceMatrix(experiment);
     const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
     const chartRef = useRef<HTMLDivElement | null>(null);
+    const experimentIndex = useMemo(() => buildExperimentIndex(experiment), [experiment]);
 
     // при смене эксперимента сбрасываем выбор
     useEffect(() => {
@@ -48,21 +50,15 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
     }, [selectedCell]);
 
     const selectedDetail: SelectedDetail | null = useMemo(() => {
-        if (!selectedCell || !experiment || !matrix) return null;
+        if (!selectedCell || !matrix) return null;
 
         const { seriesId, accelId } = selectedCell;
 
-        const series = (experiment.seriesList ?? []).find((s) => s.id === seriesId) ?? null;
-        const accel = (experiment.accelList ?? []).find((a) => a.id === accelId) ?? null;
-        const sa =
-            (experiment.seriesAccelList ?? []).find(
-                (x) => x.series_id === seriesId && x.accel_id === accelId
-            ) ?? null;
+        const series = experimentIndex.seriesById.get(seriesId) ?? null;
+        const accel = experimentIndex.accelById.get(accelId) ?? null;
+        const sa = experimentIndex.getSeriesAccel(seriesId, accelId);
 
-        const seriesInfo = matrix.seriesList.find((s) => s.key === seriesId) ?? null;
-        const algoInfo = matrix.algoList.find((a) => a.key === accelId) ?? null;
-
-        const analysis = matrix.cells[`${accelId}::${seriesId}`] ?? null;
+        const analysis = matrix.cells[buildSeriesAccelPairKey(accelId, seriesId)] ?? null;
         const limit = series?.limit ?? null;
 
         let prevVal: { re: number | null; im: number | null } | null = null;
@@ -118,15 +114,13 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
             : [];
 
         return {
-            seriesInfo,
-            algoInfo,
             series,
             accel,
             analysis,
             limit,
             points,
         };
-    }, [selectedCell, experiment, matrix]);
+    }, [selectedCell, experimentIndex, matrix]);
 
     if (!experiment) {
         return (

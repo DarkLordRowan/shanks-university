@@ -5,6 +5,7 @@ import type { SeriesAccelComputedPoint, Profiling } from "@/entities/experiment/
 import { getProfilingCellDomId } from "../model/profilingUtils";
 import { ProfilingMatrixTable } from "./ProfilingMatrixTable";
 import { ProfilingDetailView } from "./ProfilingDetailView";
+import { buildExperimentIndex, buildSeriesAccelPairKey } from "@/shared/lib/experimentIndex";
 
 export interface AlgorithmSeriesProfilingTableProps {
     experiment: import("../model/types").Experiment | null;
@@ -51,6 +52,15 @@ export const AlgorithmSeriesProfilingTable: React.FC<AlgorithmSeriesProfilingTab
     const { matrix, progress } = useProfilingMatrix(experiment);
     const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
     const chartRef = useRef<HTMLDivElement | null>(null);
+    const experimentIndex = useMemo(() => buildExperimentIndex(experiment), [experiment]);
+    const matrixSeriesById = useMemo(
+        () => new Map((matrix?.seriesList ?? []).map((s) => [s.key, s])),
+        [matrix?.seriesList]
+    );
+    const matrixAlgoById = useMemo(
+        () => new Map((matrix?.algoList ?? []).map((a) => [a.key, a])),
+        [matrix?.algoList]
+    );
 
     useEffect(() => {
         setSelectedCell(null);
@@ -69,22 +79,19 @@ export const AlgorithmSeriesProfilingTable: React.FC<AlgorithmSeriesProfilingTab
     }, [selectedCell]);
 
     const selectedDetail: SelectedDetail | null = useMemo(() => {
-        if (!selectedCell || !experiment || !matrix) return null;
+        if (!selectedCell || !matrix) return null;
 
         const { seriesId, accelId } = selectedCell;
 
-        const series = (experiment.seriesList ?? []).find((s) => s.id === seriesId) ?? null;
-        const accel = (experiment.accelList ?? []).find((a) => a.id === accelId) ?? null;
+        const series = experimentIndex.seriesById.get(seriesId) ?? null;
+        const accel = experimentIndex.accelById.get(accelId) ?? null;
 
-        const sa =
-            (experiment.seriesAccelList ?? []).find(
-                (x) => x.series_id === seriesId && x.accel_id === accelId
-            ) ?? null;
+        const sa = experimentIndex.getSeriesAccel(seriesId, accelId);
 
-        const seriesInfo = matrix.seriesList.find((s) => s.key === seriesId) ?? null;
-        const algoInfo = matrix.algoList.find((a) => a.key === accelId) ?? null;
+        const seriesInfo = matrixSeriesById.get(seriesId) ?? null;
+        const algoInfo = matrixAlgoById.get(accelId) ?? null;
 
-        const analysis = matrix.cells[`${accelId}::${seriesId}`] ?? null;
+        const analysis = matrix.cells[buildSeriesAccelPairKey(accelId, seriesId)] ?? null;
 
         const points: ProfilingPoint[] = sa
             ? (() => {
@@ -132,7 +139,7 @@ export const AlgorithmSeriesProfilingTable: React.FC<AlgorithmSeriesProfilingTab
             analysis,
             points,
         };
-    }, [selectedCell, experiment, matrix]);
+    }, [selectedCell, experimentIndex, matrix, matrixSeriesById, matrixAlgoById]);
 
     if (!experiment) {
         return (
