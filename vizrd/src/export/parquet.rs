@@ -433,7 +433,7 @@ impl ParquetExporter {
 
                         m_entry_sb.append(true);
                     } else {
-                        m_entry_sb.append(false);
+                        append_null_method_entry(m_entry_sb);
                     }
                 }
                 methods_sb.append(true);
@@ -444,7 +444,7 @@ impl ParquetExporter {
                 filtered_builder.field_builder::<Int64Builder>(1).unwrap().append_null();
                 let methods_sb = filtered_builder.field_builder::<StructBuilder>(2).unwrap();
                 for i in 0..method_keys.len() {
-                    methods_sb.field_builder::<StructBuilder>(i).unwrap().append(false);
+                    append_null_method_entry(methods_sb.field_builder::<StructBuilder>(i).unwrap());
                 }
                 methods_sb.append(false);
                 filtered_builder.append(false);
@@ -530,6 +530,20 @@ fn append_null_profiling(sb: &mut StructBuilder) {
     sb.field_builder::<Int64Builder>(1).unwrap().append_null();
     sb.field_builder::<Int64Builder>(2).unwrap().append_null();
     sb.field_builder::<Int64Builder>(3).unwrap().append_null();
+    sb.append(false);
+}
+
+/// Append all-null real/imag struct entry.
+fn append_null_real_imag(sb: &mut StructBuilder) {
+    sb.field_builder::<StringBuilder>(0).unwrap().append_null();
+    sb.field_builder::<StringBuilder>(1).unwrap().append_null();
+    sb.append(false);
+}
+
+/// Append all-null method entry struct entry.
+fn append_null_method_entry(sb: &mut StructBuilder) {
+    sb.field_builder::<ListBuilder<StructBuilder>>(0).unwrap().append_null();
+    append_null_real_imag(sb.field_builder::<StructBuilder>(1).unwrap());
     sb.append(false);
 }
 
