@@ -14,6 +14,7 @@ namespace shanks::ffi::bridge {
 struct RawArr;
 struct RawValue;
 struct ErrorEvent;
+struct Filtered;
 
 /**
  * @brief Opaque handle for a series implementation.
@@ -34,7 +35,7 @@ public:
 
     virtual std::unique_ptr<CSeries> apply_noise(rust::Str name, rust::Str params_json, uint64_t start_n) const = 0;
     virtual std::unique_ptr<CSeries> run_algo(rust::Str name, rust::Str params_json, size_t m, size_t n) const = 0;
-    virtual RawArr filter(rust::Str name, rust::Str params_json, uint64_t start_n) const = 0;
+    virtual Filtered filter(rust::Str name, rust::Str params_json, uint64_t start_n) const = 0;
 
     /// Returns errors occurred during the last run_algo() call.
     virtual rust::Vec<ErrorEvent> get_errors() const = 0;
@@ -58,7 +59,7 @@ RawArr get_an(const CSeries& series);
 RawArr get_deviation(const CSeries& series);
 RawValue get_limit(const CSeries& series);
 
-RawArr filter(const CSeries& series, rust::Str name, rust::Str params_json, uint64_t start_n);
+Filtered filter(const CSeries& series, rust::Str name, rust::Str params_json, uint64_t start_n);
 
 rust::Vec<ErrorEvent> get_errors(const CSeries& series);
 }

@@ -580,7 +580,7 @@ where
             for f_inst in filters {
                 debug!("Filtering with {}", f_inst.filter_type);
                 let fargs = sorted_args_json(&f_inst.args)?;
-                let farr = match bridge::filter(
+                let filt = match bridge::filter(
                     &**a_ptr,
                     &f_inst.filter_type,
                     &fargs,
@@ -621,9 +621,9 @@ where
                 let adata = AccelData {
                     start_offset: stop_n.unwrap_or(0),
                     result: ResultData {
-                        sn: arr_from_raw(farr),
+                        sn: arr_from_raw(filt.sn),
                         an: Arr::Real(Vec::new()),
-                        deviations: Arr::Real(Vec::new()),
+                        deviations: arr_from_raw(filt.deviation),
                     },
                     events: vec![], // events already emitted with unfiltered or not applicable
                 };

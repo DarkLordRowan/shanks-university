@@ -85,6 +85,12 @@ pub mod ffi {
         message: String,
     }
 
+    #[derive(Clone, Debug)]
+    struct Filtered {
+        sn: RawArr,
+        deviation: RawArr,
+    }
+
     unsafe extern "C++" {
         include!("vizrd/ffi/include/bridge.hpp");
 
@@ -117,7 +123,12 @@ pub mod ffi {
         fn get_deviation(series: &CSeries) -> RawArr;
         fn get_limit(series: &CSeries) -> RawValue;
 
-        fn filter(series: &CSeries, name: &str, params_json: &str, start_n: u64) -> Result<RawArr>;
+        fn filter(
+            series: &CSeries,
+            name: &str,
+            params_json: &str,
+            start_n: u64,
+        ) -> Result<Filtered>;
 
         /// Returns errors occurred during the last `run_algo` call on this series.
         fn get_errors(series: &CSeries) -> Vec<ErrorEvent>;

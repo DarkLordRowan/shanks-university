@@ -251,12 +251,17 @@ public:
         return result_obj;
     }
 
-    RawArr filter(rust::Str name, rust::Str params_json, uint64_t start_n) const override {
+    Filtered filter(rust::Str name, rust::Str params_json, uint64_t start_n) const override {
         std::string s_name(name);
         std::string s_params(params_json);
         try {
             auto filtered = ::shanks::filters::apply_filter<T>(result.Sn, s_name, s_params, start_n);
-            return convert_vec(filtered);
+            std::vector<T> dev;
+            dev.reserve(filtered.size());
+            for (const auto& sn : filtered) {
+                dev.push_back(sn - limit);
+            }
+            return Filtered{std::move(convert_vec(filtered)), std::move(convert_vec(dev))};
         } catch (const std::exception& ex) {
             throw std::runtime_error(
                 "Filter '" + s_name + "' failed with params " + s_params + ": " + ex.what()
