@@ -41,7 +41,7 @@ RawArr get_an(const CSeries& series) { return series.get_an(); }
 RawArr get_deviation(const CSeries& series) { return series.get_deviation(); }
 RawValue get_limit(const CSeries& series) { return series.get_limit(); }
 RawArr filter(const CSeries& series, rust::Str name, rust::Str params_json, uint64_t start_n) { return series.filter(name, params_json, start_n); }
-rust::Vec<rust::String> get_events(const CSeries& series) { return series.get_events(); }
+rust::Vec<ErrorEvent> get_errors(const CSeries& series) { return series.get_errors(); }
 
 
 rust::Vec<rust::String> list_series() {

@@ -20,6 +20,8 @@ use rusqlite::params;
 use std::path::Path;
 use tokio_rusqlite::Connection;
 
+use crate::compute::{SeriesEvent, SeriesEventKind};
+
 // ---------------------------------------------------------------------------
 // Plain data types (no FFI, no UniquePtr)
 // ---------------------------------------------------------------------------
@@ -58,14 +60,6 @@ pub struct CachedSeriesData {
 pub struct CachedAccelData {
     pub start_offset: u64,
     pub result: CachedResultData,
-}
-
-/// One event row.
-#[derive(Debug, Clone)]
-pub struct CachedEvent {
-    pub n: u64,
-    pub name: String,
-    pub description: String,
 }
 
 // ---------------------------------------------------------------------------
@@ -134,10 +128,11 @@ impl Cache {
                     accel_name       TEXT    NOT NULL,
                     m_value          INTEGER NOT NULL DEFAULT -1,
                     args_json        TEXT    NOT NULL DEFAULT '{}',
+                    events_json      TEXT    NOT NULL DEFAULT '{}',
                     filter_type      TEXT    NOT NULL DEFAULT '',
                     filter_args_json TEXT    NOT NULL DEFAULT '',
                     n_points         INTEGER NOT NULL DEFAULT 0,
-                    UNIQUE(series_id, accel_name, m_value, args_json, filter_type, filter_args_json)
+                    UNIQUE(series_id, accel_name, m_value, args_json, events_json, filter_type, filter_args_json)
                 );
 
                 -- Accel numerical data (val=accelerated sn, an, dev)
@@ -387,6 +382,7 @@ impl Cache {
         accel_name: String,
         m_value: Option<i64>,
         args_json: String,
+        events_json: String,
         filter_type: Option<String>,
         filter_args_json: Option<String>,
     ) -> Result<Option<(i64, u64)>> {
@@ -397,14 +393,15 @@ impl Cache {
             let res = c.query_row(
                 "SELECT id, n_points FROM accelerations \
                  WHERE series_id=?1 AND accel_name=?2 \
-                   AND m_value=?3 AND args_json=?4 \
-                   AND filter_type=?5 \
-                   AND filter_args_json=?6",
+                   AND m_value=?3 AND args_json=?4 AND events_json=?5 \
+                   AND filter_type=?6 \
+                   AND filter_args_json=?7",
                 params![
                     series_id,
                     accel_name,
                     m_value.unwrap_or(-1),
                     args_json,
+                    events_json,
                     filter_type.unwrap_or_default(),
                     filter_args_json.unwrap_or_default()
                 ],
@@ -427,6 +424,7 @@ impl Cache {
         accel_name: String,
         m_value: Option<i64>,
         args_json: String,
+        events_json: String,
         filter_type: Option<String>,
         filter_args_json: Option<String>,
         n_points: u64,
@@ -438,15 +436,16 @@ impl Cache {
             let tx = c.transaction()?;
             tx.execute(
                 "INSERT INTO accelerations
-                 (series_id,accel_name,m_value,args_json,filter_type,filter_args_json,n_points)
-                 VALUES (?1,?2,?3,?4,?5,?6,?7)
-                 ON CONFLICT(series_id,accel_name,m_value,args_json,filter_type,filter_args_json)
+                 (series_id,accel_name,m_value,args_json,events_json,filter_type,filter_args_json,n_points)
+                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8)
+                 ON CONFLICT(series_id,accel_name,m_value,args_json,events_json,filter_type,filter_args_json)
                  DO UPDATE SET n_points = MAX(excluded.n_points, accelerations.n_points)",
                 params![
                     series_id,
                     accel_name,
                     m_value.unwrap_or(-1),
                     args_json,
+                    events_json.clone(),
                     filter_type.clone().unwrap_or_default(),
                     filter_args_json.clone().unwrap_or_default(),
                     n_points
@@ -455,14 +454,15 @@ impl Cache {
             let id: i64 = tx.query_row(
                 "SELECT id FROM accelerations \
                  WHERE series_id=?1 AND accel_name=?2 \
-                   AND m_value=?3 AND args_json=?4 \
-                   AND filter_type=?5 \
-                   AND filter_args_json=?6",
+                   AND m_value=?3 AND args_json=?4 AND events_json=?5 \
+                   AND filter_type=?6 \
+                   AND filter_args_json=?7",
                 params![
                     series_id,
                     accel_name,
                     m_value.unwrap_or(-1),
                     args_json,
+                    events_json,
                     filter_type.unwrap_or_default(),
                     filter_args_json.unwrap_or_default()
                 ],
@@ -569,7 +569,7 @@ impl Cache {
     // -----------------------------------------------------------------------
 
     /// Insert events for an accel row (replaces all existing events for that accel).
-    pub async fn insert_events(&self, accel_id: i64, events: Vec<CachedEvent>) -> Result<()> {
+    pub async fn insert_events(&self, accel_id: i64, events: Vec<SeriesEvent>) -> Result<()> {
         let Some(conn) = &self.conn else {
             return Ok(());
         };
@@ -578,8 +578,8 @@ impl Cache {
             tx.execute("DELETE FROM events WHERE accel_id=?1", params![accel_id])?;
             for ev in &events {
                 tx.execute(
-                    "INSERT INTO events (accel_id,n,name,description) VALUES (?1,?2,?3,?4)",
-                    params![accel_id, ev.n as i64, ev.name, ev.description],
+                    "INSERT INTO events (accel_id,n,kind,description) VALUES (?1,?2,?3,?4,?5)",
+                    params![accel_id, ev.n as i64, ev.kind.to_string(), ev.description],
                 )?;
             }
             tx.commit()?;
@@ -590,18 +590,20 @@ impl Cache {
     }
 
     /// Load events for an accel row.
-    pub async fn get_events(&self, accel_id: i64) -> Result<Vec<CachedEvent>> {
+    pub async fn get_events(&self, accel_id: i64) -> Result<Vec<SeriesEvent>> {
         let Some(conn) = &self.conn else {
             return Ok(Vec::new());
         };
         conn.call(move |c| {
-            let mut stmt =
-                c.prepare("SELECT n, name, description FROM events WHERE accel_id=?1 ORDER BY n")?;
+            let mut stmt = c.prepare(
+                "SELECT n, kind, name, description FROM events WHERE accel_id=?1 ORDER BY n",
+            )?;
             let rows = stmt.query_map(params![accel_id], |r| {
-                Ok(CachedEvent {
+                Ok(SeriesEvent {
                     n: r.get::<_, i64>(0)? as u64,
-                    name: r.get(1)?,
-                    description: r.get::<_, Option<String>>(2)?.unwrap_or_default(),
+                    kind: serde_json::from_str(&r.get::<_, String>(1)?)
+                        .unwrap_or(SeriesEventKind::Error),
+                    description: r.get::<_, Option<String>>(3)?.unwrap_or_default(),
                 })
             })?;
             rows.collect::<rusqlite::Result<Vec<_>>>()

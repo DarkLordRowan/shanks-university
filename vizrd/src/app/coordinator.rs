@@ -1,8 +1,8 @@
 use crate::app::{AppSelection, Config, PlotCache, ResultKey};
 use crate::cache::Cache;
-use crate::compute::{self, AccelData, Cancellable, ComputeEvent, SeriesData};
+use crate::compute::{self, AccelData, Cancellable, ComputeEvent, SeriesData, SeriesEventKind};
 use arc_swap::ArcSwap;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::watch;
@@ -12,6 +12,7 @@ pub struct Coordinator {
     series_results: HashMap<compute::SeriesDesc, Option<Arc<SeriesData>>>,
     accel_results: HashMap<ResultKey, Option<Arc<AccelData>>>,
     active_tasks: HashMap<compute::SeriesDesc, Cancellable>,
+    events: BTreeMap<SeriesEventKind, crate::experiment::EventConfig>,
     n_points_cached: u64,
 
     // State
@@ -35,7 +36,7 @@ pub struct Coordinator {
 
 impl Coordinator {
     pub fn spawn(
-        _cfg: Option<crate::experiment::ExperimentConfig>,
+        cfg: Option<crate::experiment::ExperimentConfig>,
         cache: Cache,
         plot_cache: Arc<ArcSwap<PlotCache>>,
         data_cache: Arc<ArcSwap<crate::app::data_tab::DataCache>>,
@@ -44,6 +45,7 @@ impl Coordinator {
         config_rx: watch::Receiver<Config>,
         combos_rx: watch::Receiver<AppSelection>,
     ) {
+        let events = cfg.map(|c| c.events).unwrap_or_default();
         let (event_tx, event_rx) = tokio::sync::mpsc::channel(100);
 
         let initial_config = config_rx.borrow().clone();
@@ -65,6 +67,7 @@ impl Coordinator {
             last_err_tx,
             config_rx,
             combos_rx,
+            events,
             event_tx,
             event_rx,
         };
@@ -175,6 +178,7 @@ impl Coordinator {
                             let a_desc = compute::AccelDesc {
                                 accel: accel.clone(),
                                 filter: Some(filter.clone()),
+                                events: self.events.clone(),
                             };
                             let rk = ResultKey {
                                 series: s_desc.clone(),
@@ -187,6 +191,7 @@ impl Coordinator {
                         let a_desc = compute::AccelDesc {
                             accel: accel.clone(),
                             filter: None,
+                            events: self.events.clone(),
                         };
                         let rk = ResultKey {
                             series: s_desc.clone(),
@@ -248,6 +253,7 @@ impl Coordinator {
                 id: s_desc.clone(),
                 series: s_desc.clone(),
                 n_points: self.n_points_cached,
+                events: self.events.clone(),
                 algorithms: algos.into_iter().collect(),
                 filters: filters.into_iter().collect(),
             };

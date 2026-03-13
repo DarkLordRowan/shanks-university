@@ -3,13 +3,13 @@
 pub mod coordinator;
 pub mod data_tab;
 mod selection;
-mod ui;
 
 use crate::cache::Cache;
-use crate::compute::{self, AccelData, IsCancelled, SeriesData};
+use crate::compute::{self, AccelData, IsCancelled, SeriesData, SeriesEventKind};
 use crate::experiment::ExperimentConfig;
 use crate::ffi::{Arr, ArrF64, ArrLine, ComplexOf, IntervalOf, Value};
 use arc_swap::ArcSwap;
+use egui::Id;
 use egui_plot::{Line, LineStyle, PlotPoint, PlotPoints};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
@@ -81,8 +81,8 @@ enum LineKind {
 
 #[derive(Clone)]
 struct BakedEventGroup {
-    name: String,
-    description: String,
+    kind: SeriesEventKind,
+    text: String,
     points: Vec<PlotPoint>,
     shape: egui_plot::MarkerShape,
     color: egui::Color32,
@@ -542,8 +542,10 @@ impl ShanksApp {
 
             let mut baked_events: Vec<BakedEventGroup> = Vec::new();
             if !events.is_empty() {
-                let mut grouped_events: BTreeMap<(String, String), Vec<PlotPoint>> =
-                    BTreeMap::new();
+                let mut grouped_events: BTreeMap<
+                    (compute::SeriesEventKind, String),
+                    Vec<PlotPoint>,
+                > = BTreeMap::new();
                 for ev in &events {
                     let pts = if let Some(idx) = (ev.n as usize).checked_sub(1) {
                         let extract_pts =
@@ -577,27 +579,43 @@ impl ShanksApp {
 
                     if !pts.is_empty() {
                         grouped_events
-                            .entry((ev.name.clone(), ev.description.clone()))
+                            .entry((ev.kind, ev.description.clone()))
                             .or_default()
                             .extend(pts);
                     } else {
                         grouped_events
-                            .entry((ev.name.clone(), ev.description.clone()))
+                            .entry((ev.kind, ev.description.clone()))
                             .or_default()
                             .push(PlotPoint::new(ev.n as f64, 0.0));
                     }
                 }
 
-                for ((name, desc), pts) in grouped_events {
+                for ((kind, desc), pts) in grouped_events {
                     use egui_plot::MarkerShape;
-                    let (shape, color) = match name.as_str() {
-                        "stop" => (MarkerShape::Square, egui::Color32::RED),
-                        "error" => (MarkerShape::Cross, egui::Color32::from_rgb(255, 140, 0)), // Orange
-                        _ => (MarkerShape::Circle, egui::Color32::YELLOW),
+                    let (shape, color) = match kind {
+                        compute::SeriesEventKind::SlowAccel => {
+                            (MarkerShape::Circle, egui::Color32::YELLOW)
+                        }
+                        compute::SeriesEventKind::Monotone => {
+                            (MarkerShape::Square, egui::Color32::from_rgb(100, 149, 237))
+                        } // CornflowerBlue
+                        compute::SeriesEventKind::DivergentAccel => {
+                            (MarkerShape::Up, egui::Color32::from_rgb(255, 69, 0))
+                        } // OrangeRed
+                        compute::SeriesEventKind::SignChanged => {
+                            (MarkerShape::Diamond, egui::Color32::from_rgb(147, 112, 219))
+                        } // MediumPurple
+                        compute::SeriesEventKind::SecondDiff => {
+                            (MarkerShape::Down, egui::Color32::from_rgb(218, 112, 214))
+                        } // Orchid
+                        compute::SeriesEventKind::Trigger => {
+                            (MarkerShape::Plus, egui::Color32::from_rgb(255, 215, 0))
+                        } // Gold
+                        compute::SeriesEventKind::Error => (MarkerShape::Cross, egui::Color32::RED),
                     };
                     baked_events.push(BakedEventGroup {
-                        name,
-                        description: desc,
+                        text: format!("{}{}: {}", kind.symbol(), kind, desc),
+                        kind,
                         points: pts,
                         shape,
                         color,
@@ -910,7 +928,7 @@ impl ShanksApp {
 impl eframe::App for ShanksApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            egui::menu::bar(ui, |ui| {
+            egui::MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Clear Cache").clicked() {
                         let cache = self.cache.clone();
@@ -1055,7 +1073,11 @@ impl eframe::App for ShanksApp {
             let mut plot =
                 egui_plot::Plot::new("main_plot").data_aspect(current_tab_state.aspect_ratio);
             if self.show_legend {
-                plot = plot.legend(egui_plot::Legend::default());
+                plot = plot.legend(
+                    egui_plot::Legend::default()
+                        .follow_insertion_order(true)
+                        .grouping(egui_plot::LegendGrouping::ById),
+                );
             }
 
             if current_tab_state.symlog {
@@ -1107,13 +1129,28 @@ impl eframe::App for ShanksApp {
                         _ => {}
                     }
 
+                    if self.show_events {
+                        for ev_group in &baked.events {
+                            let points = egui_plot::Points::new(
+                                &ev_group.text,
+                                PlotPoints::Borrowed(&ev_group.points),
+                            )
+                            .shape(ev_group.shape)
+                            .color(ev_group.color)
+                            .radius(5.0)
+                            .id(Id::new(ev_group.kind));
+
+                            plot_ui.points(points);
+                        }
+                    }
+
                     if self.show_interval_shading {
                         for poly_pts in &baked.shading_polygons {
                             plot_ui.polygon(
-                                egui_plot::Polygon::new(PlotPoints::Borrowed(limit_pts_slice(
-                                    poly_pts,
-                                    self.n_points,
-                                )))
+                                egui_plot::Polygon::new(
+                                    "",
+                                    PlotPoints::Borrowed(limit_pts_slice(poly_pts, self.n_points)),
+                                )
                                 .fill_color(baked.color.gamma_multiply(0.2))
                                 .stroke(egui::Stroke::NONE),
                             );
@@ -1123,30 +1160,30 @@ impl eframe::App for ShanksApp {
                     match &baked.data {
                         ArrLine::Real((name, v)) => {
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(v, self.n_points)))
-                                    .name(name)
-                                    .color(baked.color)
-                                    .width(baked.width)
-                                    .style(baked.style),
+                                Line::new(
+                                    name,
+                                    PlotPoints::Borrowed(limit_pts_slice(v, self.n_points)),
+                                )
+                                .color(baked.color)
+                                .width(baked.width)
+                                .style(baked.style),
                             );
                         }
                         ArrLine::Complex(c) => {
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
-                                    &c.real.1,
-                                    self.n_points,
-                                )))
-                                .name(&c.real.0)
+                                Line::new(
+                                    &c.real.0,
+                                    PlotPoints::Borrowed(limit_pts_slice(&c.real.1, self.n_points)),
+                                )
                                 .color(baked.color)
                                 .width(baked.width)
                                 .style(baked.style),
                             );
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
-                                    &c.imag.1,
-                                    self.n_points,
-                                )))
-                                .name(&c.imag.0)
+                                Line::new(
+                                    &c.imag.0,
+                                    PlotPoints::Borrowed(limit_pts_slice(&c.imag.1, self.n_points)),
+                                )
                                 .color(baked.color)
                                 .width(baked.width)
                                 .style(baked.style),
@@ -1154,21 +1191,19 @@ impl eframe::App for ShanksApp {
                         }
                         ArrLine::Interval(iv) => {
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
-                                    &iv.inf.1,
-                                    self.n_points,
-                                )))
-                                .name(&iv.inf.0)
+                                Line::new(
+                                    &iv.inf.0,
+                                    PlotPoints::Borrowed(limit_pts_slice(&iv.inf.1, self.n_points)),
+                                )
                                 .color(baked.color)
                                 .width(baked.width)
                                 .style(baked.style),
                             );
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
-                                    &iv.sup.1,
-                                    self.n_points,
-                                )))
-                                .name(&iv.sup.0)
+                                Line::new(
+                                    &iv.sup.0,
+                                    PlotPoints::Borrowed(limit_pts_slice(&iv.sup.1, self.n_points)),
+                                )
                                 .color(baked.color)
                                 .width(baked.width)
                                 .style(baked.style),
@@ -1176,58 +1211,53 @@ impl eframe::App for ShanksApp {
                         }
                         ArrLine::CInterval(ci) => {
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
-                                    &ci.real.inf.1,
-                                    self.n_points,
-                                )))
-                                .name(&ci.real.inf.0)
+                                Line::new(
+                                    &ci.real.inf.0,
+                                    PlotPoints::Borrowed(limit_pts_slice(
+                                        &ci.real.inf.1,
+                                        self.n_points,
+                                    )),
+                                )
                                 .color(baked.color)
                                 .width(baked.width)
                                 .style(baked.style),
                             );
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
-                                    &ci.real.sup.1,
-                                    self.n_points,
-                                )))
-                                .name(&ci.real.sup.0)
+                                Line::new(
+                                    &ci.real.sup.0,
+                                    PlotPoints::Borrowed(limit_pts_slice(
+                                        &ci.real.sup.1,
+                                        self.n_points,
+                                    )),
+                                )
                                 .color(baked.color)
                                 .width(baked.width)
                                 .style(baked.style),
                             );
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
-                                    &ci.imag.inf.1,
-                                    self.n_points,
-                                )))
-                                .name(&ci.imag.inf.0)
+                                Line::new(
+                                    &ci.imag.inf.0,
+                                    PlotPoints::Borrowed(limit_pts_slice(
+                                        &ci.imag.inf.1,
+                                        self.n_points,
+                                    )),
+                                )
                                 .color(baked.color)
                                 .width(baked.width)
                                 .style(baked.style),
                             );
                             plot_ui.line(
-                                Line::new(PlotPoints::Borrowed(limit_pts_slice(
-                                    &ci.imag.sup.1,
-                                    self.n_points,
-                                )))
-                                .name(&ci.imag.sup.0)
+                                Line::new(
+                                    &ci.imag.sup.0,
+                                    PlotPoints::Borrowed(limit_pts_slice(
+                                        &ci.imag.sup.1,
+                                        self.n_points,
+                                    )),
+                                )
                                 .color(baked.color)
                                 .width(baked.width)
                                 .style(baked.style),
                             );
-                        }
-                    }
-
-                    if self.show_events {
-                        for ev_group in &baked.events {
-                            let points =
-                                egui_plot::Points::new(PlotPoints::Borrowed(&ev_group.points))
-                                    .name(format!("{}: {}", ev_group.name, ev_group.description))
-                                    .shape(ev_group.shape)
-                                    .color(ev_group.color)
-                                    .radius(5.0);
-
-                            plot_ui.points(points);
                         }
                     }
                 }

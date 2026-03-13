@@ -104,10 +104,8 @@ template <typename T, PrecisionType P>
 class CSeriesImpl : public CSeries {
     ::series_result<T> result;
     T limit;
-    // Events emitted during the last run_algo() call.
-    // Mutable so that run_algo (logically const, returns new obj) can store events.
-    // Actually stored on the *returned* object, so no mutation needed here.
-    mutable std::vector<std::tuple<uint64_t, std::string, std::string>> events_;
+    // Errors occurred during the last run_algo() call.
+    mutable std::vector<std::pair<uint64_t, std::string>> errors_;
 
     RawArr convert_vec(const std::vector<T>& vec) const {
         RawArr res;
@@ -189,11 +187,10 @@ public:
         return convert_val(limit);
     }
 
-    rust::Vec<rust::String> get_events() const override {
-        rust::Vec<rust::String> out;
-        for (const auto& [n, name, desc] : events_) {
-            std::string encoded = std::to_string(n) + "\t" + name + "\t" + desc;
-            out.push_back(rust::String(encoded));
+    rust::Vec<ErrorEvent> get_errors() const override {
+        rust::Vec<ErrorEvent> out;
+        for (const auto& [n, msg] : errors_) {
+            out.push_back(ErrorEvent{n, rust::String(msg)});
         }
         return out;
     }
@@ -223,7 +220,7 @@ public:
         acc_res.Sn.reserve(n);
         acc_res.an.reserve(n);
 
-        std::vector<std::tuple<uint64_t, std::string, std::string>> new_events;
+        std::vector<std::pair<uint64_t, std::string>> new_errors;
 
         T prev_accel = T(0);
         for (size_t i = 1; i <= n; ++i) {
@@ -231,16 +228,14 @@ public:
             try {
                 accelerated = (*algo)(i, m, result);
             } catch (const std::exception& ex) {
-                new_events.emplace_back(
+                new_errors.emplace_back(
                     static_cast<uint64_t>(i),
-                    "error",
                     std::string(ex.what())
                 );
                 accelerated = prev_accel;
             } catch (...) {
-                new_events.emplace_back(
+                new_errors.emplace_back(
                     static_cast<uint64_t>(i),
-                    "error",
                     "Unknown exception in acceleration algorithm"
                 );
                 accelerated = prev_accel;
@@ -250,9 +245,9 @@ public:
             prev_accel = accelerated;
         }
 
-        // Build the result object and store events on it
+        // Build the result object and store errors on it
         auto result_obj = std::make_unique<CSeriesImpl<T, P>>(std::move(acc_res), limit);
-        result_obj->events_ = std::move(new_events);
+        result_obj->errors_ = std::move(new_errors);
         return result_obj;
     }
 

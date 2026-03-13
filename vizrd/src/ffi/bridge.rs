@@ -79,6 +79,12 @@ pub mod ffi {
         r4: Vec<RealValue>,
     }
 
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct ErrorEvent {
+        n: u64,
+        message: String,
+    }
+
     unsafe extern "C++" {
         include!("vizrd/ffi/include/bridge.hpp");
 
@@ -113,9 +119,8 @@ pub mod ffi {
 
         fn filter(series: &CSeries, name: &str, params_json: &str, start_n: u64) -> Result<RawArr>;
 
-        /// Returns events from the last `run_algo` call on this series.
-        /// Each entry is tab-separated: "n\tname\tdescription".
-        fn get_events(series: &CSeries) -> Vec<String>;
+        /// Returns errors occurred during the last `run_algo` call on this series.
+        fn get_errors(series: &CSeries) -> Vec<ErrorEvent>;
 
         fn list_series() -> Vec<String>;
 

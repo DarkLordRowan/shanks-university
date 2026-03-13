@@ -14,6 +14,8 @@ use std::{
     ops::{Add, Mul},
     path::Path,
 };
+
+use crate::compute::SeriesEventKind;
 // TODO: Convert String to Arc<str>, and Vec<Event...> to Arc<[...]>.
 
 // Range
@@ -203,6 +205,10 @@ pub struct ExperimentConfig {
     #[serde(default)]
     pub precisions: Option<Vec<String>>,
 
+    /// Event configurations (stop limits)
+    #[serde(default)]
+    pub events: BTreeMap<SeriesEventKind, EventConfig>,
+
     /// Number of terms for computation (high-level parameter)
     pub n_points: Option<u64>,
 }
@@ -299,7 +305,6 @@ impl FilterDef {
     }
 }
 
-/// Accel definition with parameter expansion.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Accel<I, F> {
     /// Accel name from registry
@@ -311,10 +316,6 @@ pub struct Accel<I, F> {
     /// Additional arguments with expansion
     #[serde(default)]
     pub args: BTreeMap<String, F>,
-
-    /// Event configurations
-    #[serde(default)]
-    pub events: Vec<EventDef>,
 }
 
 impl AccelDef {
@@ -327,22 +328,14 @@ impl AccelDef {
                 name: self.name.clone(),
                 m,
                 args,
-                events: self.events.clone(),
             })
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct EventDef {
-    /// Event type: "slow_accel", "monotone", "divergent", "sign_changed", "second_diff"
-    #[serde(rename = "type")]
-    pub event_type: String,
-
-    /// Maximum number of events to log (None = unlimited)
-    pub log_action_capacity: Option<i64>,
-
-    /// Number of events before stopping (None = never stop)
-    pub stop_action_limit: Option<i64>,
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct EventConfig {
+    /// Number of events before filtering (None = never filter)
+    pub filter_after: Option<i64>,
 }
 
 // #[cfg(test)]

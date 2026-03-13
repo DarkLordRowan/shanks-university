@@ -116,10 +116,12 @@ fn create_sequence_display(
 ) -> SequenceDisplay {
     let mut ev_map: HashMap<usize, Vec<String>> = HashMap::new();
     for ev in events {
-        ev_map
-            .entry(ev.n as usize)
-            .or_default()
-            .push(format!("{}: {}", ev.name, ev.description));
+        ev_map.entry(ev.n as usize).or_default().push(format!(
+            "{}{}: {}",
+            ev.kind.symbol(),
+            ev.kind,
+            ev.description
+        ));
     }
 
     let len = match sn {
