@@ -38,7 +38,10 @@ fn main() {
         .flag_if_supported("-DSHANKS_ENABLE_PROFILING");
 
     if !is_debug {
-        build.flag_if_supported("-O3");
+        build
+            .flag_if_supported("-O3")
+            .flag_if_supported("-march=x86-64-v3")
+            .flag_if_supported("-DNDEBUG");
     }
 
     build.compile("shanks_ffi");
