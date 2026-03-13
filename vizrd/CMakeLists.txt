@@ -4,9 +4,6 @@ project(vizrd_ffi CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Enable Link Time Optimization for maximum performance
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-
 # Find dependencies
 find_package(Eigen3 REQUIRED)
 find_library(GMP_LIBRARY gmp REQUIRED)

@@ -66,7 +66,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3 -march=x86-64-v3 -DNDEBUG" -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=TRUE ..
+          cmake -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O3 -march=x86-64-v3 -DNDEBUG" ..
           cmake --build .
 
       - name: Build Rust Frontend (vizrd.exe)
