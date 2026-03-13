@@ -240,14 +240,16 @@ impl SeriesDef {
         // Collect all argument combinations
         let arg_combinations = Arg::expand(&self.args);
 
-        arg_combinations
-            .into_iter()
-            .zip(self.x.iter())
-            .map(|(args, x)| SeriesInstance {
-                name: self.name.clone(),
+        self.x.iter().flat_map(move |x| {
+            let arg_combinations = arg_combinations.clone();
+            let x = x.clone();
+            let name = self.name.clone();
+            arg_combinations.into_iter().map(move |args| SeriesInstance {
+                name: name.clone(),
                 args,
-                x,
+                x: x.clone(),
             })
+        })
     }
 }
 
@@ -269,16 +271,28 @@ pub struct Noise<S, F, I> {
 impl NoiseDef {
     /// Expand this definition into concrete instances.
     pub fn expand(&self) -> impl Iterator<Item = NoiseInstance> {
-        self.method
-            .iter()
-            .zip(Arg::expand(&self.args))
-            .zip(self.seed.as_ref().unwrap_or(&ArgI::Single(0)).iter())
-            .map(|((method, args), seed)| NoiseInstance {
-                noise_type: self.noise_type.clone(),
-                method: method.to_string(),
-                args,
-                seed,
-            })
+        let arg_combinations = Arg::expand(&self.args);
+
+        self.method.iter().flat_map(move |method| {
+            let arg_combinations = arg_combinations.clone();
+            let method = method.to_string();
+            let noise_type = self.noise_type.clone();
+            self.seed
+                .as_ref()
+                .unwrap_or(&ArgI::Single(0))
+                .iter()
+                .flat_map(move |seed| {
+                    let arg_combinations = arg_combinations.clone();
+                    let method = method.clone();
+                    let noise_type = noise_type.clone();
+                    arg_combinations.into_iter().map(move |args| NoiseInstance {
+                        noise_type: noise_type.clone(),
+                        method: method.clone(),
+                        args,
+                        seed,
+                    })
+                })
+        })
     }
 }
 
@@ -321,14 +335,17 @@ pub struct Accel<I, F> {
 impl AccelDef {
     /// Expand this definition into concrete instances.
     pub fn expand(&self) -> impl Iterator<Item = AccelInstance> {
-        self.m
-            .iter()
-            .zip(Arg::expand(&self.args))
-            .map(|(m, args)| AccelInstance {
-                name: self.name.clone(),
+        let arg_combinations = Arg::expand(&self.args);
+
+        self.m.iter().flat_map(move |m| {
+            let arg_combinations = arg_combinations.clone();
+            let name = self.name.clone();
+            arg_combinations.into_iter().map(move |args| AccelInstance {
+                name: name.clone(),
                 m,
                 args,
             })
+        })
     }
 }
 
