@@ -7,7 +7,7 @@ use crate::experiment::{
 };
 use crate::export::parquet::{AccelExportRow, AccelFilteredData, ExportData, ParquetExporter, SeriesExportRow};
 use anyhow::Result;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeSet};
 use std::path::PathBuf;
 use tokio::sync::mpsc;
 
@@ -38,7 +38,7 @@ pub struct RunSummary {
     pub successful: usize,
     pub failed: usize,
     pub total_time_secs: f64,
-    pub errors: Vec<String>,
+    pub errors: BTreeSet<String>,
 }
 
 /// Headless batch runner.
@@ -268,9 +268,8 @@ impl HeadlessRunner {
                     summary.successful += 1;
                 }
                 ComputeEvent::Error { error, .. } => {
-                    finished_tasks += 1;
                     summary.failed += 1;
-                    summary.errors.push(error);
+                    summary.errors.insert(error);
                 }
             }
         }
