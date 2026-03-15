@@ -58,7 +58,7 @@ public:
         if (n == 0)
             state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
-            state *= this->x * this->x / utils::cast<T, size_t>()(n * (size_t{4} * n - size_t{2}));
+            state = state / utils::cast<T, size_t>()(n * (size_t{4} * n - size_t{2})) * this->x * this->x;
         return state;
     }
 };
