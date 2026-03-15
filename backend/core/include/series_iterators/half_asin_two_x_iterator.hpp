@@ -40,7 +40,7 @@ public:
      * @return T The value of 0.5 * asin(2x).
      */
     T get_sum() const override {
-        return utils::cast<T, int>()(0.5) * utils::math<T>::asin(utils::cast<T, int>()(2) * this->x);
+        return utils::cast<T, double>()(0.5) * utils::math<T>::asin(utils::cast<T, int>()(2) * this->x);
     }
 
     /**
@@ -66,14 +66,10 @@ public:
         else
             state *=
                 this->x * this->x *
-                utils::cast<T, size_t>()(2 * n *
-                                         utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
-                                                                  static_cast<size_t>(1)) *
-                                         utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                utils::cast<T, size_t>()(2 * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
                                                                   static_cast<size_t>(1))) /
                 utils::cast<T, size_t>()(
-                    n * n *
-                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)));
+                    n * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)));
         return state;
     }
 };
