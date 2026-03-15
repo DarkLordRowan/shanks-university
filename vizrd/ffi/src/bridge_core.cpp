@@ -1,6 +1,14 @@
 #include "bridge_internal.hpp"
+#include <gsl/gsl_errno.h>
 
 namespace shanks::ffi::bridge {
+
+// Turn off GSL's default error handler (which calls abort()) globally
+struct GslErrorHandlerOff {
+    GslErrorHandlerOff() {
+        gsl_set_error_handler_off();
+    }
+} gsl_error_handler_off_instance;
 
 void shanks_force_link_gslcblas() {
     // dummy call to ensure linkage
