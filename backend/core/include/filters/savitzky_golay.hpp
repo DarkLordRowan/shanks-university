@@ -36,10 +36,9 @@ std::vector<Scalar> savitzky_golay_filter(const std::vector<Scalar>& data, size_
     for (size_t i = 0; i < window_length; ++i) {
         v[i] = -N_val + utils::cast<Scalar, int>()(static_cast<int>(i), precision);
     }
-    
+
     Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> x =
         Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>::Ones(window_length, polyorder + 1);
-
 
     // Constructing the Vandermonde matrix
     for (size_t i{1}; i <= polyorder; ++i) {

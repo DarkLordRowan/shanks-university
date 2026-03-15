@@ -62,13 +62,12 @@ public:
      */
     T next(K n, T& state) const override {
         // Formula for the n-th term based on partial fraction decomposition components
-        state =
-            utils::math<T>::pow(this->x, utils::cast<T, K>()(n)) * utils::cast<T, double>()(0.2) *
-            (utils::math<T>::template minus_one_raised_to_power_n<K>(n) *
-                 utils::cast<T, size_t>()(
-                     utils::math<size_t>::pow(static_cast<size_t>(2), static_cast<size_t>(n) + 1)) +
-             utils::cast<T, size_t>()(utils::math<size_t>::pow(static_cast<size_t>(3), static_cast<size_t>(n) + 1))) /
-            utils::cast<T, size_t>()(utils::math<size_t>::pow(static_cast<size_t>(6), static_cast<size_t>(n) + 1));
+        const std::size_t precision = utils::helpers<T>::get_precision(state);
+        state = utils::math<T>::pow(this->x, utils::cast<T, K>()(n)) * utils::cast<T, double>()(0.2, precision) *
+                (utils::math<T>::template minus_one_raised_to_power_n<K>(n) *
+                     utils::math<T>::pow(utils::cast<T, int>()(1, precision) / utils::cast<T, int>()(3, precision),
+                                         utils::cast<T, K>()(n + 1)) +
+                 utils::math<T>::pow(utils::cast<T, double>()(0.5, precision), utils::cast<T, K>()(n + 1)));
 
         return state;
     }

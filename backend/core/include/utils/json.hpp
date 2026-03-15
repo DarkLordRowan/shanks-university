@@ -1,8 +1,8 @@
 #ifndef SHANKS_UTILS_JSON_HPP
 #define SHANKS_UTILS_JSON_HPP
 
-#include <string>
 #include <cctype>
+#include <string>
 
 namespace shanks::utils_json {
 
@@ -15,14 +15,14 @@ inline std::string get_json_val(const std::string& json, const std::string& key)
     pos = json.find(":", pos);
     if (pos == std::string::npos) return "";
     pos++;
-    
+
     // Skip spaces, tabs, and potential opening quote
     while (pos < json.size() && (std::isspace(json[pos]) || json[pos] == '\"')) pos++;
-    
+
     auto end = pos;
     // Values end at comma, closing brace, or closing quote
     while (end < json.size() && json[end] != ',' && json[end] != '}' && json[end] != '\"') end++;
-    
+
     return json.substr(pos, end - pos);
 }
 
@@ -41,6 +41,6 @@ inline bool parse_bool(const std::string& json, const std::string& key) {
     throw std::runtime_error("Invalid boolean value for " + key + ": " + val);
 }
 
-} // namespace shanks::utils_json
+}  // namespace shanks::utils_json
 
-#endif // SHANKS_UTILS_JSON_HPP
+#endif  // SHANKS_UTILS_JSON_HPP

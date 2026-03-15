@@ -36,6 +36,8 @@ def test_plot(suf : str, ser : str, x : str, n : int):
     ax1.legend()
     
     ax2.plot(range(n), [abs(float(x.__repr__())) for x in an], label = "an")
+    for x in an:
+        print(x)
     ax2.set_yscale("log")
     ax2.legend()
     

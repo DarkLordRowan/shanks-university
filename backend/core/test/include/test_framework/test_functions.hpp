@@ -149,11 +149,16 @@ inline series_result<T> apply_noise_interactive(series_result<T>& source, const 
     // Applying noise
     switch (noise_type) {
         case shanks::uniform:
-            return shanks::apply_uniform_noise(source, shanks::NoiseMethod::jitter, seed, utils::cast<double,ParamType>()(param1), utils::cast<double,ParamType>()(param2));
+            return shanks::apply_uniform_noise(source, shanks::NoiseMethod::jitter, seed,
+                                               utils::cast<double, ParamType>()(param1),
+                                               utils::cast<double, ParamType>()(param2));
         case shanks::normal:
-            return shanks::apply_normal_noise(source, shanks::NoiseMethod::jitter, seed,  utils::cast<double,ParamType>()(param1), utils::cast<double,ParamType>()(param2));
+            return shanks::apply_normal_noise(source, shanks::NoiseMethod::jitter, seed,
+                                              utils::cast<double, ParamType>()(param1),
+                                              utils::cast<double, ParamType>()(param2));
         case shanks::poisson:
-            return shanks::apply_poisson_noise(source, shanks::NoiseMethod::jitter, seed, utils::cast<double,ParamType>()(param1));
+            return shanks::apply_poisson_noise(source, shanks::NoiseMethod::jitter, seed,
+                                               utils::cast<double, ParamType>()(param1));
         default:
             throw std::invalid_argument("Invalid noise type");
     }

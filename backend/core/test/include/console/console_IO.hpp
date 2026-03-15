@@ -133,7 +133,8 @@ InputType inline console_IO<InputType>::input(const std::string& var_name) {
                         throw std::out_of_range("Series with this id is not implemented");
 
                 } else if constexpr (std::is_same<InputType, shanks::NoiseType>::value) {
-                    if (x >= shanks::NoiseType::noise_count) throw std::out_of_range("Series with this id is not implemented");
+                    if (x >= shanks::NoiseType::noise_count)
+                        throw std::out_of_range("Series with this id is not implemented");
                 }
             }
 

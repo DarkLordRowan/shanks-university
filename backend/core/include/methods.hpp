@@ -90,7 +90,8 @@ public:
     static const std::vector<entry>& get_entries() {
         static const std::vector<entry> entries = {
 #define TRANSFORMATION_ENTRY(id, name, camel, cls, binding, ...) \
-    {transformation_id_t::id, name, []([[maybe_unused]] const std::string& params_json)->std::unique_ptr<series_acceleration<T, K>> __VA_ARGS__},
+    {transformation_id_t::id, name,                              \
+     []([[maybe_unused]] const std::string& params_json)->std::unique_ptr<series_acceleration<T, K>> __VA_ARGS__},
 #include "transformation_registry.def"
 #undef TRANSFORMATION_ENTRY
         };
