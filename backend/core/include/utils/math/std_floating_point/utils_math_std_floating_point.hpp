@@ -106,6 +106,7 @@ T utils::math<T>::zeta(const T& x) {
 }
 #ifdef __GSL_SF_EXPINT_H__
 #include <gsl/gsl_errno.h>
+
 #include <stdexcept>
 #include <string>
 

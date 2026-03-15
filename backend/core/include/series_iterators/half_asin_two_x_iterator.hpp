@@ -66,10 +66,11 @@ public:
         else
             state *=
                 this->x * this->x *
-                utils::cast<T, size_t>()(2 * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
-                                                                  static_cast<size_t>(1))) /
-                utils::cast<T, size_t>()(
-                    n * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)));
+                utils::cast<T, size_t>()(2 * utils::math<size_t>::fma(static_cast<size_t>(2),
+                                                                      static_cast<size_t>(n - 1),
+                                                                      static_cast<size_t>(1))) /
+                utils::cast<T, size_t>()(n * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                      static_cast<size_t>(1)));
         return state;
     }
 };

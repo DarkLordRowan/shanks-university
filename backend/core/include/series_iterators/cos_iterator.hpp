@@ -58,7 +58,8 @@ public:
         if (n == 0)
             state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
-            state =  state / utils::cast<T, K>()(n * (static_cast<K>(4) * n - static_cast<K>(2))) * utils::cast<T, int>()(-1) * this->x * this->x;
+            state = state / utils::cast<T, K>()(n * (static_cast<K>(4) * n - static_cast<K>(2))) *
+                    utils::cast<T, int>()(-1) * this->x * this->x;
         return state;
     }
 };
