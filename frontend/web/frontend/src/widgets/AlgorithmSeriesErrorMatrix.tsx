@@ -544,20 +544,20 @@ const AlgorithmSeriesErrorMatrixView: React.FC<AlgorithmSeriesErrorMatrixProps &
                 fileBaseName: `AlgorithmSeriesErrorMatrix${precisionFilter ? `_${precisionFilter}` : ""}`,
                 enablePng: true,
                 enableXlsx: true,
-                buildWorkbook: ({ rows, cols }) => {
+                buildWorkbook: ({ rows: _rows, cols: _cols }) => {
                     const aoa: Array<Array<string | number | null>> = [];
 
                     // header row
                     aoa.push([
                         "Алгоритм \\ Ряд",
-                        ...cols.map((c) => {
+                        ...colsAxis.map((c) => {
                             const s = c.meta!;
                             return `${s.seriesName}\n x=${s.xLabel}\n precision=${s.precision}\n lim=${formatComplex(s.limit)}`;
                         }),
                     ]);
 
                     // data rows
-                    for (const r of rows) {
+                    for (const r of rowsAxis) {
                         const algo = r.meta!;
                         const rowArr: Array<string | number | null> = [];
                         rowArr.push(
@@ -566,7 +566,7 @@ const AlgorithmSeriesErrorMatrixView: React.FC<AlgorithmSeriesErrorMatrixProps &
                             }`
                         );
 
-                        for (const c of cols) {
+                        for (const c of colsAxis) {
                             const s = c.meta!;
                             const cellKey = `${algo.key}||${s.key}`;
                             const sa = cellMap.get(cellKey);
@@ -596,10 +596,10 @@ const AlgorithmSeriesErrorMatrixView: React.FC<AlgorithmSeriesErrorMatrixProps &
                     const ws = XLSX.utils.aoa_to_sheet(aoa);
 
                     // column widths
-                    ws["!cols"] = [{ wch: 40 }, ...cols.map(() => ({ wch: 18 }))];
+                    ws["!cols"] = [{ wch: 40 }, ...colsAxis.map(() => ({ wch: 18 }))];
 
                     // row heights (под повёрнутые заголовки в UI это не 1:1, но читаемо)
-                    ws["!rows"] = [{ hpt: 48 }, ...rows.map(() => ({ hpt: 36 }))];
+                    ws["!rows"] = [{ hpt: 48 }, ...rowsAxis.map(() => ({ hpt: 36 }))];
 
                     // styles
                     const range = XLSX.utils.decode_range(ws["!ref"] || "A1:A1");
@@ -625,8 +625,8 @@ const AlgorithmSeriesErrorMatrixView: React.FC<AlgorithmSeriesErrorMatrixProps &
                             const cell = ws[addr];
                             if (!cell) continue;
 
-                            const algo = rows[R - 1]?.meta;
-                            const s = cols[C - 1]?.meta;
+                            const algo = rowsAxis[R - 1]?.meta;
+                            const s = colsAxis[C - 1]?.meta;
                             if (!algo || !s) continue;
 
                             const cellKey = `${algo.key}||${s.key}`;

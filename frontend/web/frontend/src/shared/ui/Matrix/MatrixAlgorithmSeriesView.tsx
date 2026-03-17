@@ -170,13 +170,15 @@ export function MatrixAlgorithmSeriesView(props: MatrixAlgorithmSeriesViewProps)
                     ? {
                           fileBaseName: exportCfg.fileBaseName,
                           enablePng: exportCfg.enablePng,
-                          enableXlsx: exportCfg.enableXlsx,
-                          buildWorkbook: ({ pager }) =>
-                              exportCfg.buildWorkbook({
-                                  accelList,
-                                  seriesList,
-                                  pager: pager as PagerInfo,
-                              }),
+                          enableXlsx: Boolean(exportCfg.enableXlsx && exportCfg.buildWorkbook),
+                          buildWorkbook: exportCfg.buildWorkbook
+                              ? ({ pager }) =>
+                                    exportCfg.buildWorkbook({
+                                        accelList,
+                                        seriesList,
+                                        pager: pager as PagerInfo,
+                                    })
+                              : undefined,
                       }
                     : undefined
             }

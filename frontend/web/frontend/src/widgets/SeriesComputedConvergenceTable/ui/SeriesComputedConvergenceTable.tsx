@@ -24,6 +24,12 @@ import {
 import { SeriesComputedDetailChart } from "./SeriesComputedDetailChart";
 import { ExperimentMatrixFilterScope } from "@/shared/ui/Matrix/filters/ExperimentMatrixFilterScope";
 import { MatrixExportWrapper } from "@/shared/ui/Matrix/MatrixExportWrapper";
+import {
+    appendSheet,
+    buildKeyValueSheet,
+    buildSheetFromAoa,
+    createWorkbook,
+} from "@/shared/lib/xlsxExport";
 
 export interface SeriesComputedConvergenceTableProps {
     experiment: Experiment | null;
@@ -147,29 +153,36 @@ function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
         ]);
     });
 
-    const sheet = XLSX.utils.aoa_to_sheet(aoa);
-    sheet["!cols"] = [
-        { wch: 6 },
-        { wch: 24 },
-        { wch: 12 },
-        { wch: 28 },
-        { wch: 26 },
-        { wch: 14 },
-        { wch: 24 },
-        { wch: 10 },
-        { wch: 14 },
-        { wch: 12 },
-        { wch: 16 },
-        { wch: 10 },
-        { wch: 16 },
-        { wch: 16 },
-        { wch: 16 },
-        { wch: 16 },
-        { wch: 10 },
-        { wch: 14 },
-        { wch: 12 },
-    ];
-    return sheet;
+    return buildSheetFromAoa(aoa, {
+        cols: [
+            { wch: 6 },
+            { wch: 24 },
+            { wch: 12 },
+            { wch: 28 },
+            { wch: 26 },
+            { wch: 14 },
+            { wch: 24 },
+            { wch: 10 },
+            { wch: 14 },
+            { wch: 12 },
+            { wch: 16 },
+            { wch: 10 },
+            { wch: 16 },
+            { wch: 16 },
+            { wch: 16 },
+            { wch: 16 },
+            { wch: 10 },
+            { wch: 14 },
+            { wch: 12 },
+        ],
+        headerRows: 1,
+        rowHeaderCols: 2,
+        decorateCell: ({ rowIndex, colIndex, cell }) => {
+            if (rowIndex === 0) return;
+            if ([10, 12, 13, 14, 15, 17, 18].includes(colIndex)) cell.z = "0.000E+00";
+            if ([0, 7, 8, 9, 11, 16].includes(colIndex)) cell.z = "0";
+        },
+    });
 }
 
 function buildSelectedMetaSheet(selected: {
@@ -202,9 +215,11 @@ function buildSelectedMetaSheet(selected: {
         ["amp powers", selected.dev.amplitudeOrders],
     ];
 
-    const sheet = XLSX.utils.aoa_to_sheet(aoa);
-    sheet["!cols"] = [{ wch: 20 }, { wch: 28 }];
-    return sheet;
+    return buildSheetFromAoa(aoa, {
+        cols: [{ wch: 20 }, { wch: 28 }],
+        headerRows: 1,
+        rowHeaderCols: 1,
+    });
 }
 
 function buildPointsSheet(points: ReturnType<typeof buildDetailPoints>): XLSX.WorkSheet {
@@ -223,16 +238,22 @@ function buildPointsSheet(points: ReturnType<typeof buildDetailPoints>): XLSX.Wo
         ]);
     }
 
-    const sheet = XLSX.utils.aoa_to_sheet(aoa);
-    sheet["!cols"] = [
-        { wch: 10 },
-        { wch: 18 },
-        { wch: 18 },
-        { wch: 16 },
-        { wch: 16 },
-        { wch: 14 },
-    ];
-    return sheet;
+    return buildSheetFromAoa(aoa, {
+        cols: [
+            { wch: 10 },
+            { wch: 18 },
+            { wch: 18 },
+            { wch: 16 },
+            { wch: 16 },
+            { wch: 14 },
+        ],
+        headerRows: 1,
+        decorateCell: ({ rowIndex, colIndex, cell }) => {
+            if (rowIndex === 0) return;
+            if ([0, 5].includes(colIndex)) cell.z = "0";
+            if ([1, 2, 3, 4].includes(colIndex)) cell.z = "0.000E+00";
+        },
+    });
 }
 
 function buildDiffsSheet(points: ReturnType<typeof buildDetailPoints>): XLSX.WorkSheet {
@@ -254,15 +275,21 @@ function buildDiffsSheet(points: ReturnType<typeof buildDetailPoints>): XLSX.Wor
         aoa.push([point.n, point.diffRe, point.diffIm, point.diffNorm, signedDiff]);
     }
 
-    const sheet = XLSX.utils.aoa_to_sheet(aoa);
-    sheet["!cols"] = [
-        { wch: 10 },
-        { wch: 18 },
-        { wch: 18 },
-        { wch: 18 },
-        { wch: 18 },
-    ];
-    return sheet;
+    return buildSheetFromAoa(aoa, {
+        cols: [
+            { wch: 10 },
+            { wch: 18 },
+            { wch: 18 },
+            { wch: 18 },
+            { wch: 18 },
+        ],
+        headerRows: 1,
+        decorateCell: ({ rowIndex, colIndex, cell }) => {
+            if (rowIndex === 0) return;
+            if (colIndex === 0) cell.z = "0";
+            if ([1, 2, 3, 4].includes(colIndex)) cell.z = "0.000E+00";
+        },
+    });
 }
 
 const SeriesComputedConvergenceTableView: React.FC<
@@ -464,18 +491,41 @@ const SeriesComputedConvergenceTableView: React.FC<
     ]);
 
     const buildWorkbook = useCallback((): XLSX.WorkBook => {
-        const workbook = XLSX.utils.book_new();
+        const workbook = createWorkbook(
+            "Series computed convergence",
+            "Series computed convergence export"
+        );
 
-        XLSX.utils.book_append_sheet(workbook, buildSummarySheet(sortedRows), "summary");
+        appendSheet(
+            workbook,
+            buildKeyValueSheet([
+                { key: "rows", value: sortedRows.length },
+                { key: "total rows before filter", value: totalRowsBeforeFilter ?? sortedRows.length },
+                { key: "max sign changes", value: maxSignChangesForOneSided },
+                { key: "max violations", value: maxViolationsForMonotone },
+                { key: "sort", value: sort ? `${sort.key} (${sort.dir})` : "default" },
+                { key: "selected series", value: selected?.series.name ?? "none" },
+            ]),
+            "overview"
+        );
+
+        appendSheet(workbook, buildSummarySheet(sortedRows), "summary");
 
         if (selected) {
-            XLSX.utils.book_append_sheet(workbook, buildSelectedMetaSheet(selected), "selected_meta");
-            XLSX.utils.book_append_sheet(workbook, buildPointsSheet(selected.points), "selected_points");
-            XLSX.utils.book_append_sheet(workbook, buildDiffsSheet(selected.points), "selected_diffs");
+            appendSheet(workbook, buildSelectedMetaSheet(selected), "selected_meta");
+            appendSheet(workbook, buildPointsSheet(selected.points), "selected_points");
+            appendSheet(workbook, buildDiffsSheet(selected.points), "selected_diffs");
         }
 
         return workbook;
-    }, [sortedRows, selected]);
+    }, [
+        maxSignChangesForOneSided,
+        maxViolationsForMonotone,
+        selected,
+        sort,
+        sortedRows,
+        totalRowsBeforeFilter,
+    ]);
 
     if (!experiment) {
         return (

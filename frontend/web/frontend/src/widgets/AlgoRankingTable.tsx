@@ -13,6 +13,12 @@ import {
     type AlgoRankingSortKey as SortKey,
     type AlgoStats,
 } from "./AlgoRankingTable.model";
+import {
+    appendSheet,
+    buildKeyValueSheet,
+    buildSheetFromAoa,
+    createWorkbook,
+} from "@/shared/lib/xlsxExport";
 
 type SortDir = "asc" | "desc";
 
@@ -45,76 +51,165 @@ type ColId =
     | "rankStability"
     | "totalRankScore";
 
-type ColMeta = { id: ColId; title: string; sortKey: SortKey; defaultDir: SortDir };
+type ColMeta = {
+    id: ColId;
+    title: string;
+    description: string;
+    sortKey: SortKey;
+    defaultDir: SortDir;
+};
+
+function buildArgDescription(slot: number): string {
+    return `${slot}-й слот args после сортировки параметров по имени: key=value. В таблице показываются только первые 3 непустых args.`;
+}
 
 const ARG_COLUMNS: ColMeta[] = [
-    { id: "arg1", title: "arg 1", sortKey: "arg1", defaultDir: "asc" },
-    { id: "arg2", title: "arg 2", sortKey: "arg2", defaultDir: "asc" },
-    { id: "arg3", title: "arg 3", sortKey: "arg3", defaultDir: "asc" },
+    {
+        id: "arg1",
+        title: "arg 1",
+        description: buildArgDescription(1),
+        sortKey: "arg1",
+        defaultDir: "asc",
+    },
+    {
+        id: "arg2",
+        title: "arg 2",
+        description: buildArgDescription(2),
+        sortKey: "arg2",
+        defaultDir: "asc",
+    },
+    {
+        id: "arg3",
+        title: "arg 3",
+        description: buildArgDescription(3),
+        sortKey: "arg3",
+        defaultDir: "asc",
+    },
 ];
 
 const BASE_COLUMNS: ColMeta[] = [
-    { id: "precision", title: "precision", sortKey: "precision", defaultDir: "asc" },
-    { id: "m", title: "m", sortKey: "m", defaultDir: "asc" },
-    { id: "seriesCount", title: "series", sortKey: "seriesCount", defaultDir: "desc" },
+    {
+        id: "precision",
+        title: "precision",
+        description:
+            "Precision рядов, по которым считалась строка алгоритма. Если в строку попали разные precision без фильтра, может быть '-'.",
+        sortKey: "precision",
+        defaultDir: "asc",
+    },
+    {
+        id: "m",
+        title: "m",
+        description: "Параметр m алгоритма.",
+        sortKey: "m",
+        defaultDir: "asc",
+    },
+    {
+        id: "seriesCount",
+        title: "series",
+        description: "Число уникальных рядов, по которым этот алгоритм удалось сравнить.",
+        sortKey: "seriesCount",
+        defaultDir: "desc",
+    },
     {
         id: "avgBestDeviation",
         title: "avg min |dev|",
+        description: "Среднее по рядам от min |A_n - lim| для алгоритма. Меньше лучше.",
         sortKey: "avgBestDeviation",
         defaultDir: "asc",
     },
     {
         id: "avgRelativeError",
         title: "avg rel error",
+        description:
+            "Среднее отношение min |A_n - lim| алгоритма к min |S_n - lim| ряда. 1 = на уровне ряда, <1 = лучше ряда, >1 = хуже. Для 0/0 берется 1.",
         sortKey: "avgRelativeError",
         defaultDir: "asc",
     },
     {
         id: "avgMinDeviationN",
         title: "avg min dev n",
+        description: "Среднее n, на котором алгоритм достигает своего min |A_n - lim|. Меньше лучше.",
         sortKey: "avgMinDeviationN",
         defaultDir: "asc",
     },
     {
         id: "avgStepsToTol",
         title: "avg steps to eps",
+        description:
+            "Средний первый n, на котором |A_n - lim| <= epsilon. Если epsilon не достигнут, такой ряд в среднее не входит.",
         sortKey: "avgStepsToTol",
         defaultDir: "asc",
     },
     {
         id: "fracReachedTol",
         title: "reached eps, %",
+        description: "Доля рядов, на которых алгоритм вообще достиг |A_n - lim| <= epsilon. Больше лучше.",
         sortKey: "fracReachedTol",
         defaultDir: "desc",
     },
     {
         id: "bestMinShare",
         title: "best min div, %",
+        description:
+            "Доля сравнимых рядов, где min |A_n - lim| у этого алгоритма был лучшим среди всех алгоритмов. Больше лучше.",
         sortKey: "bestMinShare",
         defaultDir: "desc",
     },
     {
         id: "worstMinShare",
         title: "worst min div, %",
+        description:
+            "Доля сравнимых рядов, где min |A_n - lim| у этого алгоритма был худшим среди всех алгоритмов. Меньше лучше.",
         sortKey: "worstMinShare",
         defaultDir: "asc",
     },
     {
         id: "bestLastShare",
         title: "best last div, %",
+        description:
+            "Доля сравнимых рядов, где на последнем n ошибка алгоритма была лучшей среди всех алгоритмов. Больше лучше.",
         sortKey: "bestLastShare",
         defaultDir: "desc",
     },
     {
         id: "worstLastShare",
         title: "worst last div, %",
+        description:
+            "Доля сравнимых рядов, где на последнем n ошибка алгоритма была худшей среди всех алгоритмов. Меньше лучше.",
         sortKey: "worstLastShare",
         defaultDir: "asc",
     },
-    { id: "rankPrecision", title: "rank precision", sortKey: "rankPrecision", defaultDir: "asc" },
-    { id: "rankSpeed", title: "rank speed", sortKey: "rankSpeed", defaultDir: "asc" },
-    { id: "rankStability", title: "rank stability", sortKey: "rankStability", defaultDir: "asc" },
-    { id: "totalRankScore", title: "total rank", sortKey: "totalRankScore", defaultDir: "asc" },
+    {
+        id: "rankPrecision",
+        title: "rank precision",
+        description:
+            "Итоговый rank по точности: avg min |dev| + avg rel error + best min div + worst min div. Меньше лучше.",
+        sortKey: "rankPrecision",
+        defaultDir: "asc",
+    },
+    {
+        id: "rankSpeed",
+        title: "rank speed",
+        description: "Итоговый rank по скорости: avg min dev n + avg steps to eps. Меньше лучше.",
+        sortKey: "rankSpeed",
+        defaultDir: "asc",
+    },
+    {
+        id: "rankStability",
+        title: "rank stability",
+        description:
+            "Итоговый rank по устойчивости: reached eps + best last div + worst last div. Меньше лучше.",
+        sortKey: "rankStability",
+        defaultDir: "asc",
+    },
+    {
+        id: "totalRankScore",
+        title: "total rank",
+        description:
+            "Сумма rank precision + rank speed + rank stability. Это общий ранг алгоритма, меньше лучше.",
+        sortKey: "totalRankScore",
+        defaultDir: "asc",
+    },
 ];
 
 function buildColumns(argColumnCount: number): ColMeta[] {
@@ -142,6 +237,23 @@ function formatSteps(n: number): string {
 function formatPercent(value: number): string {
     if (!Number.isFinite(value)) return "-";
     return `${(value * 100).toFixed(1)}%`;
+}
+
+function formatSortDir(dir: SortDir): string {
+    return dir === "asc" ? "возрастанию" : "убыванию";
+}
+
+function buildColumnTooltip(meta: ColMeta, active: boolean, sortDir: SortDir): string {
+    const nextDir = active ? (sortDir === "asc" ? "desc" : "asc") : meta.defaultDir;
+
+    return [
+        `${meta.title}: ${meta.description}`,
+        "",
+        active
+            ? `Сейчас сортировка по этой колонке идет по ${formatSortDir(sortDir)}.`
+            : "Сейчас сортировка идет по другой колонке.",
+        `Клик: сортировать по ${formatSortDir(nextDir)}.`,
+    ].join("\n");
 }
 
 function compareValues(aVal: unknown, bVal: unknown, dir: SortDir): number {
@@ -265,6 +377,60 @@ function getExportValue(row: RowMeta, colId: ColId): string | number | null {
     }
 }
 
+function getExportColumnWidth(colId: ColId): number {
+    switch (colId) {
+        case "precision":
+            return 14;
+        case "m":
+            return 10;
+        case "arg1":
+        case "arg2":
+        case "arg3":
+            return 18;
+        case "seriesCount":
+            return 10;
+        case "avgBestDeviation":
+        case "avgRelativeError":
+        case "avgMinDeviationN":
+        case "avgStepsToTol":
+        case "fracReachedTol":
+        case "bestMinShare":
+        case "worstMinShare":
+        case "bestLastShare":
+        case "worstLastShare":
+            return 16;
+        case "rankPrecision":
+        case "rankSpeed":
+        case "rankStability":
+        case "totalRankScore":
+            return 14;
+    }
+}
+
+function getExportColumnFormat(colId: ColId): string | null {
+    switch (colId) {
+        case "fracReachedTol":
+        case "bestMinShare":
+        case "worstMinShare":
+        case "bestLastShare":
+        case "worstLastShare":
+            return "0.0%";
+        case "avgBestDeviation":
+        case "avgRelativeError":
+            return "0.000E+00";
+        case "avgMinDeviationN":
+        case "avgStepsToTol":
+        case "seriesCount":
+        case "rankPrecision":
+        case "rankSpeed":
+        case "rankStability":
+        case "totalRankScore":
+            return "0";
+        default:
+            return null;
+    }
+}
+
 export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, className }) => {
     const [epsilonExp, setEpsilonExp] = useState(-6);
     const epsilon = useMemo(() => Math.pow(10, epsilonExp), [epsilonExp]);
@@ -316,7 +482,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                 type="button"
                 className="w-full px-1 py-1 text-[10px] text-left select-none"
                 onClick={() => handleSort(meta.sortKey, meta.defaultDir)}
-                title={`sort: ${meta.sortKey}`}
+                title={buildColumnTooltip(meta, active, sortDir)}
             >
                 <span className="truncate">{meta.title}</span>
                 {icon ? <span className="ml-1 text-[9px] text-textDim/70">{icon}</span> : null}
@@ -369,12 +535,26 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
             cols: MatrixAxisItem<ColMeta>[];
             pager: { startIndex: number; endIndex: number };
         }): XLSX.WorkBook => {
-            const workbook = XLSX.utils.book_new();
+            const workbook = createWorkbook("Algorithm ranking", "Algorithm ranking export");
 
-            const header: (string | number)[] = ["place", "algorithm"];
-            for (const col of cols) header.push(col.meta?.id ?? col.id);
+            appendSheet(
+                workbook,
+                buildKeyValueSheet([
+                    { key: "epsilon", value: epsilon },
+                    { key: "epsilon exponent", value: epsilonExp },
+                    { key: "precision filter", value: precisionFilter ?? "all" },
+                    { key: "sort key", value: sortKey },
+                    { key: "sort dir", value: sortDir },
+                    { key: "rows", value: rows.length },
+                    { key: "columns", value: cols.length + 2 },
+                ]),
+                "overview"
+            );
 
-            const data: (string | number | null)[][] = [header];
+            const header: (string | number | boolean | null)[] = ["place", "algorithm"];
+            for (const col of cols) header.push(col.meta?.title ?? String(col.id));
+
+            const data: (string | number | boolean | null)[][] = [header];
 
             for (const row of rows) {
                 const stats = row.meta!;
@@ -387,11 +567,33 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                 data.push(line);
             }
 
-            const worksheet = XLSX.utils.aoa_to_sheet(data);
-            XLSX.utils.book_append_sheet(workbook, worksheet, "algo_ranking");
+            const worksheet = buildSheetFromAoa(data, {
+                cols: [
+                    { wch: 8 },
+                    { wch: 28 },
+                    ...cols.map((col) => ({ wch: getExportColumnWidth(col.meta!.id) })),
+                ],
+                headerRows: 1,
+                rowHeaderCols: 2,
+                decorateCell: ({ rowIndex, colIndex, cell }) => {
+                    if (rowIndex === 0) return;
+                    if (colIndex === 0) {
+                        cell.z = "0";
+                        return;
+                    }
+                    if (colIndex === 1) return;
+
+                    const meta = cols[colIndex - 2]?.meta;
+                    if (!meta) return;
+                    const format = getExportColumnFormat(meta.id);
+                    if (format) cell.z = format;
+                },
+            });
+
+            appendSheet(workbook, worksheet, "algo_ranking");
             return workbook;
         },
-        []
+        [epsilon, epsilonExp, precisionFilter, sortDir, sortKey]
     );
 
     if (!experiment || !experiment.seriesAccelList || experiment.seriesAccelList.length === 0) {

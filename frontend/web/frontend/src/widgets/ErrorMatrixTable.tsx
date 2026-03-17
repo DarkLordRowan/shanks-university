@@ -7,6 +7,12 @@ import { buildErrorMatrixFromExperiment } from "@/shared/lib/error-matrix/buildE
 import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
 import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
 import { ExperimentMatrixFilterScope } from "@/shared/ui/Matrix/filters/ExperimentMatrixFilterScope";
+import {
+    appendSheet,
+    buildKeyValueSheet,
+    buildSheetFromAoa,
+    createWorkbook,
+} from "@/shared/lib/xlsxExport";
 
 /** Оформление ячейки по количеству ошибок */
 function getCellClasses(count: number): string {
@@ -277,21 +283,41 @@ const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?
     };
 
     const buildWorkbook = ({
-            rows,
-            cols,
-        }: {
-            rows: MatrixAxisItem<RowMeta>[];
-            cols: MatrixAxisItem<ColMeta>[];
-            pager: { startIndex: number; endIndex: number };
-        }): XLSX.WorkBook => {
-            const wb = XLSX.utils.book_new();
+        rows: _rows,
+        cols: _cols,
+    }: {
+        rows: MatrixAxisItem<RowMeta>[];
+        cols: MatrixAxisItem<ColMeta>[];
+        pager: { startIndex: number; endIndex: number };
+    }): XLSX.WorkBook => {
+            const workbook = createWorkbook("Error matrix by steps", "Error matrix export");
 
-            const header: (string | number)[] = ["Алгоритм", "Всего", "OK", "Err", "%OK", "%Err"];
-            for (const c of cols) header.push(`n=${c.meta?.n}`);
+            appendSheet(
+                workbook,
+                buildKeyValueSheet([
+                    { key: "precision filter", value: precision ?? "all" },
+                    { key: "algorithms", value: rowsAxis.length },
+                    { key: "steps", value: colsAxis.length },
+                    { key: "error items", value: totalErrorItems },
+                    { key: "total elements", value: totalElements },
+                    { key: "sort", value: `${sort.key} (${sort.dir})` },
+                ]),
+                "overview"
+            );
 
-            const data: (string | number | null)[][] = [header];
+            const header: (string | number | boolean | null)[] = [
+                "algorithm",
+                "total",
+                "ok",
+                "err",
+                "%ok",
+                "%err",
+            ];
+            for (const c of colsAxis) header.push(`n=${c.meta?.n}`);
 
-            for (const r of rows) {
+            const data: (string | number | boolean | null)[][] = [header];
+
+            for (const r of rowsAxis) {
                 const algo = r.meta!;
                 const st = algoStats[algo.key] ?? { total: 0, success: 0, error: 0 };
                 const total = st.total;
@@ -309,7 +335,7 @@ const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?
                     errPct != null ? Number(errPct.toFixed(1)) : null,
                 ];
 
-                for (const c of cols) {
+                for (const c of colsAxis) {
                     const n = c.meta!.n;
                     const cellKey = `${algo.key}||${n}`;
                     const count = cellMap.get(cellKey) ?? 0;
@@ -319,9 +345,30 @@ const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?
                 data.push(line);
             }
 
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            XLSX.utils.book_append_sheet(wb, ws, "error_matrix");
-            return wb;
+            appendSheet(
+                workbook,
+                buildSheetFromAoa(data, {
+                    cols: [
+                        { wch: 28 },
+                        { wch: 10 },
+                        { wch: 10 },
+                        { wch: 10 },
+                        { wch: 10 },
+                        { wch: 10 },
+                        ...colsAxis.map(() => ({ wch: 8 })),
+                    ],
+                    headerRows: 1,
+                    rowHeaderCols: 1,
+                    decorateCell: ({ rowIndex, colIndex, cell }) => {
+                        if (rowIndex === 0) return;
+                        if ([1, 2, 3].includes(colIndex)) cell.z = "0";
+                        if ([4, 5].includes(colIndex)) cell.z = "0.0";
+                        if (colIndex >= 6) cell.z = "0";
+                    },
+                }),
+                "error_matrix"
+            );
+            return workbook;
         };
 
     const totalAlgos = sortedAlgoList.length;

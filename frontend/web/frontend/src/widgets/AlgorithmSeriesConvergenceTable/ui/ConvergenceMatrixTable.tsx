@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import * as XLSX from "xlsx-js-style";
 import {
     type ConvergenceMatrix,
     type Experiment,
@@ -11,6 +12,7 @@ import {
 } from "../model/convergenceUtils";
 import {
     buildConvergenceClassLegendTitle,
+    buildConvergenceDetailPoints,
     computeConvergenceDevStatsFromSeriesAccel,
     formatAmplitudeOrders,
     formatComplexValue,
@@ -21,6 +23,12 @@ import {
 import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries.tsx";
 import { appendAlgorithmArgsTooltipLines } from "@/shared/lib/matrixTooltip";
 import { buildSeriesAccelPairKey } from "@/shared/lib/experimentIndex";
+import {
+    appendSheet,
+    buildKeyValueSheet,
+    buildSheetFromAoa,
+    createWorkbook,
+} from "@/shared/lib/xlsxExport";
 
 interface ConvergenceMatrixTableProps {
     experiment: Experiment;
@@ -119,6 +127,298 @@ function getCellColorClass(classInfo: ConvergenceClassInfo, selected: boolean): 
     }
 }
 
+function getClassFillColor(colorToken: ConvergenceClassInfo["colorToken"]): string {
+    switch (colorToken) {
+        case "violet":
+            return "6D28D9";
+        case "green":
+            return "047857";
+        case "greenDark":
+            return "065F46";
+        case "yellow":
+            return "A16207";
+        case "yellowDark":
+            return "854D0E";
+        case "orange":
+            return "C2410C";
+        case "orangeDark":
+            return "9A3412";
+        case "red":
+            return "B91C1C";
+        case "redDark":
+            return "7F1D1D";
+        case "neutral":
+        default:
+            return "1F2937";
+    }
+}
+
+function formatSignedError(point: { err: number | null; sign: -1 | 0 | 1 | null }): number | null {
+    if (point.err == null || !Number.isFinite(point.err)) return null;
+    if (point.sign == null || point.sign === 0) return point.err;
+    return point.err * point.sign;
+}
+
+interface ExportRow {
+    algorithmKey: string;
+    algorithmName: string;
+    m: number | null;
+    argsSummary: string;
+    seriesKey: string;
+    seriesName: string;
+    xLabel: string;
+    precision: string;
+    limitText: string;
+    classInfo: ConvergenceClassInfo;
+    steps: number;
+    signChanges: number;
+    violations: number;
+    min: number | null;
+    minN: number | null;
+    lastMinusMin: number | null;
+    amplitudeOrders: number | null;
+}
+
+function buildOverviewSheet(args: {
+    algoCount: number;
+    seriesCount: number;
+    pairCount: number;
+    maxSignChangesForOneSided: number;
+    maxViolationsForMonotone: number;
+    selectedCell: SelectedCell | null;
+}): XLSX.WorkSheet {
+    return buildKeyValueSheet([
+        { key: "algorithms", value: args.algoCount },
+        { key: "series", value: args.seriesCount },
+        { key: "pairs", value: args.pairCount },
+        { key: "max sign changes", value: args.maxSignChangesForOneSided },
+        { key: "max violations", value: args.maxViolationsForMonotone },
+        {
+            key: "selected cell",
+            value: args.selectedCell
+                ? `${args.selectedCell.accelId} × ${args.selectedCell.seriesId}`
+                : "none",
+        },
+    ]);
+}
+
+function buildSummarySheet(rows: ExportRow[]): XLSX.WorkSheet {
+    const aoa: Array<Array<string | number | boolean | null>> = [
+        [
+            "algorithm",
+            "m",
+            "args",
+            "series",
+            "x",
+            "precision",
+            "limit",
+            "class",
+            "class title",
+            "steps",
+            "sign changes",
+            "violations",
+            "min |A_n-lim|",
+            "min n",
+            "last - min",
+            "amp powers",
+        ],
+        ...rows.map((row) => [
+            row.algorithmName,
+            row.m,
+            row.argsSummary || null,
+            row.seriesName,
+            row.xLabel,
+            row.precision,
+            row.limitText,
+            row.classInfo.label,
+            row.classInfo.title,
+            row.steps,
+            row.signChanges,
+            row.violations,
+            row.min,
+            row.minN,
+            row.lastMinusMin,
+            row.amplitudeOrders,
+        ]),
+    ];
+
+    return buildSheetFromAoa(aoa, {
+        cols: [
+            { wch: 24 },
+            { wch: 8 },
+            { wch: 28 },
+            { wch: 24 },
+            { wch: 10 },
+            { wch: 12 },
+            { wch: 20 },
+            { wch: 12 },
+            { wch: 18 },
+            { wch: 10 },
+            { wch: 14 },
+            { wch: 12 },
+            { wch: 16 },
+            { wch: 10 },
+            { wch: 16 },
+            { wch: 12 },
+        ],
+        headerRows: 1,
+        rowHeaderCols: 1,
+        decorateCell: ({ rowIndex, colIndex, cell }) => {
+            if (rowIndex === 0) return;
+            if ([1, 9, 10, 11, 13].includes(colIndex)) cell.z = "0";
+            if ([12, 14, 15].includes(colIndex)) cell.z = "0.000E+00";
+        },
+    });
+}
+
+function buildMatrixSheet(args: {
+    algoList: Array<{ key: string; algorithmName: string; m: number | null; argsSummary: string }>;
+    seriesList: Array<{ key: string; seriesName: string; xLabel: string; precision: string }>;
+    cellSummaryByKey: Map<string, CellSummary>;
+}): XLSX.WorkSheet {
+    const aoa: Array<Array<string | number | boolean | null>> = [
+        [
+            "algorithm \\ series",
+            ...args.seriesList.map(
+                (series) => `${series.seriesName}\nx=${series.xLabel}\nprec=${series.precision}`
+            ),
+        ],
+    ];
+
+    for (const algo of args.algoList) {
+        aoa.push([
+            `${algo.algorithmName}${algo.m != null ? `\nm=${algo.m}` : ""}${
+                algo.argsSummary ? `\n${algo.argsSummary}` : ""
+            }`,
+            ...args.seriesList.map((series) => {
+                const summary = args.cellSummaryByKey.get(buildSeriesAccelPairKey(algo.key, series.key));
+                if (!summary) return "—";
+                return `${summary.classInfo.label}\nmin@${summary.minN ?? "—"}`;
+            }),
+        ]);
+    }
+
+    return buildSheetFromAoa(aoa, {
+        cols: [{ wch: 34 }, ...args.seriesList.map(() => ({ wch: 18 }))],
+        rows: [{ hpt: 42 }, ...args.algoList.map(() => ({ hpt: 34 }))],
+        headerRows: 1,
+        rowHeaderCols: 1,
+        decorateCell: ({ rowIndex, colIndex, cell }) => {
+            if (rowIndex === 0 || colIndex === 0) return;
+            const algo = args.algoList[rowIndex - 1];
+            const series = args.seriesList[colIndex - 1];
+            if (!algo || !series) return;
+
+            const summary = args.cellSummaryByKey.get(buildSeriesAccelPairKey(algo.key, series.key));
+            if (!summary) return;
+
+            cell.s = {
+                fill: { patternType: "solid", fgColor: { rgb: getClassFillColor(summary.classInfo.colorToken) } },
+                font: { color: { rgb: "F9FAFB" }, bold: true },
+                alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                border: {
+                    top: { style: "thin", color: { rgb: "374151" } },
+                    bottom: { style: "thin", color: { rgb: "374151" } },
+                    left: { style: "thin", color: { rgb: "374151" } },
+                    right: { style: "thin", color: { rgb: "374151" } },
+                },
+            };
+        },
+    });
+}
+
+function buildSelectedMetaSheet(args: {
+    algorithmName: string;
+    m: number | null;
+    argsSummary: string;
+    seriesName: string;
+    xLabel: string;
+    precision: string;
+    limitText: string;
+    classInfo: ConvergenceClassInfo;
+    steps: number;
+    signChanges: number;
+    violations: number;
+    min: number | null;
+    minN: number | null;
+    lastMinusMin: number | null;
+    amplitudeOrders: number | null;
+}): XLSX.WorkSheet {
+    return buildKeyValueSheet([
+        { key: "algorithm", value: args.algorithmName },
+        { key: "m", value: args.m },
+        { key: "args", value: args.argsSummary || null },
+        { key: "series", value: args.seriesName },
+        { key: "x", value: args.xLabel },
+        { key: "precision", value: args.precision },
+        { key: "limit", value: args.limitText },
+        { key: "class", value: args.classInfo.label },
+        { key: "class title", value: args.classInfo.title },
+        { key: "class description", value: args.classInfo.description },
+        { key: "steps", value: args.steps },
+        { key: "sign changes", value: args.signChanges },
+        { key: "violations", value: args.violations },
+        { key: "min |A_n-lim|", value: args.min },
+        { key: "min n", value: args.minN },
+        { key: "last - min", value: args.lastMinusMin },
+        { key: "amp powers", value: args.amplitudeOrders },
+    ]);
+}
+
+function buildPointsSheet(
+    points: ReturnType<typeof buildConvergenceDetailPoints>
+): XLSX.WorkSheet {
+    const aoa: Array<Array<string | number | boolean | null>> = [
+        ["n", "Re(A_n)", "Im(A_n)", "|A_n-lim|", "sgn*|A_n-lim|", "sgn(Re(A_n-lim))"],
+        ...points.map((point) => [
+            point.n,
+            point.valueRe,
+            point.valueIm,
+            point.err,
+            formatSignedError(point),
+            point.sign,
+        ]),
+    ];
+
+    return buildSheetFromAoa(aoa, {
+        cols: [
+            { wch: 10 },
+            { wch: 18 },
+            { wch: 18 },
+            { wch: 16 },
+            { wch: 16 },
+            { wch: 16 },
+        ],
+        headerRows: 1,
+        decorateCell: ({ rowIndex, colIndex, cell }) => {
+            if (rowIndex === 0) return;
+            if ([0, 5].includes(colIndex)) cell.z = "0";
+            if ([1, 2, 3, 4].includes(colIndex)) cell.z = "0.000E+00";
+        },
+    });
+}
+
+function buildDiffsSheet(
+    points: ReturnType<typeof buildConvergenceDetailPoints>
+): XLSX.WorkSheet {
+    const aoa: Array<Array<string | number | boolean | null>> = [
+        ["n", "Re(A_n-A_{n-1})", "Im(A_n-A_{n-1})", "|A_n-A_{n-1}|"],
+        ...points
+            .filter((point) => point.diffNorm != null)
+            .map((point) => [point.n, point.diffRe, point.diffIm, point.diffNorm]),
+    ];
+
+    return buildSheetFromAoa(aoa, {
+        cols: [{ wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 18 }],
+        headerRows: 1,
+        decorateCell: ({ rowIndex, colIndex, cell }) => {
+            if (rowIndex === 0) return;
+            if (colIndex === 0) cell.z = "0";
+            if ([1, 2, 3].includes(colIndex)) cell.z = "0.000E+00";
+        },
+    });
+}
+
 export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     experiment,
     matrix,
@@ -176,6 +476,173 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
         maxViolationsForMonotone
     );
 
+    const exportRows = useMemo<ExportRow[]>(() => {
+        const rows: ExportRow[] = [];
+
+        for (const seriesAccel of experiment?.seriesAccelList ?? []) {
+            const algo = algoByKey.get(seriesAccel.accel_id);
+            const series = seriesByKey.get(seriesAccel.series_id);
+            const analysis = matrix.cells[buildSeriesAccelPairKey(seriesAccel.accel_id, seriesAccel.series_id)];
+            const summary = cellSummaryByKey.get(
+                buildSeriesAccelPairKey(seriesAccel.accel_id, seriesAccel.series_id)
+            );
+
+            if (!algo || !series || !analysis || !summary) continue;
+
+            rows.push({
+                algorithmKey: algo.key,
+                algorithmName: algo.algorithmName,
+                m: algo.m,
+                argsSummary: algo.argsSummary,
+                seriesKey: series.key,
+                seriesName: series.seriesName,
+                xLabel: series.xLabel,
+                precision: series.precision,
+                limitText: formatComplexValue(seriesLimitByKey.get(series.key) ?? null),
+                classInfo: summary.classInfo,
+                steps: analysis.stepsAnalyzed,
+                signChanges: analysis.signChangesCount,
+                violations: analysis.violationsCount,
+                min: summary.min,
+                minN: summary.minN,
+                lastMinusMin: summary.lastMinusMin,
+                amplitudeOrders: summary.amplitudeOrders,
+            });
+        }
+
+        rows.sort((left, right) => {
+            const byAlgo = left.algorithmName.localeCompare(right.algorithmName);
+            if (byAlgo !== 0) return byAlgo;
+            const byM = (left.m ?? 0) - (right.m ?? 0);
+            if (byM !== 0) return byM;
+            const bySeries = left.seriesName.localeCompare(right.seriesName);
+            if (bySeries !== 0) return bySeries;
+            return left.xLabel.localeCompare(right.xLabel);
+        });
+
+        return rows;
+    }, [algoByKey, cellSummaryByKey, experiment, matrix.cells, seriesByKey, seriesLimitByKey]);
+
+    const buildWorkbook = useMemo(
+        () =>
+            ({
+                accelList,
+                seriesList,
+            }: {
+                accelList: import("@/entities/experiment/model/experiment").Accel[];
+                seriesList: import("@/entities/experiment/model/experiment").Series[];
+                pager: { startIndex: number; endIndex: number; totalCols: number };
+            }): XLSX.WorkBook => {
+                const accelIds = new Set(accelList.map((item) => item.id));
+                const seriesIds = new Set(seriesList.map((item) => item.id));
+                const filteredAlgoList = matrix.algoList.filter((item) => accelIds.has(item.key));
+                const filteredSeriesList = matrix.seriesList.filter((item) => seriesIds.has(item.key));
+                const filteredExportRows = exportRows.filter(
+                    (row) => accelIds.has(row.algorithmKey) && seriesIds.has(row.seriesKey)
+                );
+
+                const workbook = createWorkbook(
+                    "Algorithm × series convergence",
+                    "Algorithm × series convergence export"
+                );
+
+                appendSheet(
+                    workbook,
+                    buildOverviewSheet({
+                        algoCount: accelList.length,
+                        seriesCount: seriesList.length,
+                        pairCount: filteredExportRows.length,
+                        maxSignChangesForOneSided,
+                        maxViolationsForMonotone,
+                        selectedCell,
+                    }),
+                    "overview"
+                );
+                appendSheet(workbook, buildSummarySheet(filteredExportRows), "summary");
+                appendSheet(
+                    workbook,
+                    buildMatrixSheet({
+                        algoList: filteredAlgoList,
+                        seriesList: filteredSeriesList,
+                        cellSummaryByKey,
+                    }),
+                    "matrix"
+                );
+
+                if (selectedCell) {
+                    const selectedAlgo = algoByKey.get(selectedCell.accelId);
+                    const selectedSeries = seriesByKey.get(selectedCell.seriesId);
+                    const selectedAnalysis = matrix.cells[
+                        buildSeriesAccelPairKey(selectedCell.accelId, selectedCell.seriesId)
+                    ];
+                    const selectedSummary = cellSummaryByKey.get(
+                        buildSeriesAccelPairKey(selectedCell.accelId, selectedCell.seriesId)
+                    );
+                    const selectedSeriesAccel =
+                        experiment.seriesAccelList.find(
+                            (item) =>
+                                item.accel_id === selectedCell.accelId &&
+                                item.series_id === selectedCell.seriesId
+                        ) ?? null;
+
+                    if (
+                        selectedAlgo &&
+                        selectedSeries &&
+                        selectedAnalysis &&
+                        selectedSummary &&
+                        selectedSeriesAccel
+                    ) {
+                        const points = buildConvergenceDetailPoints(
+                            selectedSeriesAccel,
+                            seriesLimitByKey.get(selectedSeries.key) ?? null
+                        );
+
+                        appendSheet(
+                            workbook,
+                            buildSelectedMetaSheet({
+                                algorithmName: selectedAlgo.algorithmName,
+                                m: selectedAlgo.m,
+                                argsSummary: selectedAlgo.argsSummary,
+                                seriesName: selectedSeries.seriesName,
+                                xLabel: selectedSeries.xLabel,
+                                precision: selectedSeries.precision,
+                                limitText: formatComplexValue(
+                                    seriesLimitByKey.get(selectedSeries.key) ?? null
+                                ),
+                                classInfo: selectedSummary.classInfo,
+                                steps: selectedAnalysis.stepsAnalyzed,
+                                signChanges: selectedAnalysis.signChangesCount,
+                                violations: selectedAnalysis.violationsCount,
+                                min: selectedSummary.min,
+                                minN: selectedSummary.minN,
+                                lastMinusMin: selectedSummary.lastMinusMin,
+                                amplitudeOrders: selectedSummary.amplitudeOrders,
+                            }),
+                            "selected_meta"
+                        );
+                        appendSheet(workbook, buildPointsSheet(points), "selected_points");
+                        appendSheet(workbook, buildDiffsSheet(points), "selected_diffs");
+                    }
+                }
+
+                return workbook;
+            },
+        [
+            algoByKey,
+            cellSummaryByKey,
+            experiment.seriesAccelList,
+            exportRows,
+            matrix.algoList,
+            matrix.cells,
+            matrix.seriesList,
+            maxSignChangesForOneSided,
+            maxViolationsForMonotone,
+            selectedCell,
+            seriesByKey,
+            seriesLimitByKey,
+        ]
+    );
+
     return (
         <MatrixAlgorithmSeries
             accelList={experiment?.accelList ?? []}
@@ -188,7 +655,8 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             export={{
                 fileBaseName: "convergence-matrix",
                 enablePng: true,
-                enableXlsx: false,
+                enableXlsx: true,
+                buildWorkbook,
             }}
             renderTitle={() => "Монотонность и направление: алгоритмы × ряды"}
             renderSubtitle={() => (

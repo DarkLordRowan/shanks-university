@@ -638,20 +638,20 @@ function AlgorithmSeriesDiffHeatmapView({
                 fileBaseName: `AlgorithmSeriesDiffHeatmap_${prevPrecision ?? "∅"}_to_${nextPrecision ?? "∅"}`,
                 enablePng: true,
                 enableXlsx: true,
-                buildWorkbook: ({ rows, cols }) => {
+                buildWorkbook: ({ rows: _rows, cols: _cols }) => {
                     const aoa: Array<Array<string | number | null>> = [];
 
                     // header
                     aoa.push([
                         "Алгоритм \\ Ряд",
-                        ...cols.map((c) => {
+                        ...colsAxis.map((c) => {
                             const s = c.meta!;
                             return `${s.seriesName}\n x=${s.xLabel}`;
                         }),
                     ]);
 
                     // body
-                    for (const r of rows) {
+                    for (const r of rowsAxis) {
                         const algo = r.meta!;
                         const rowArr: Array<string | number | null> = [];
 
@@ -661,7 +661,7 @@ function AlgorithmSeriesDiffHeatmapView({
                             }`
                         );
 
-                        for (const c of cols) {
+                        for (const c of colsAxis) {
                             const s = c.meta!;
                             const key = `${algo.key}||${s.key}`;
                             const rec = diffMap.get(key);
@@ -701,8 +701,8 @@ function AlgorithmSeriesDiffHeatmapView({
                     const ws = XLSX.utils.aoa_to_sheet(aoa);
 
                     // размеры
-                    ws["!cols"] = [{ wch: 40 }, ...cols.map(() => ({ wch: 22 }))];
-                    ws["!rows"] = [{ hpt: 40 }, ...rows.map(() => ({ hpt: 36 }))];
+                    ws["!cols"] = [{ wch: 40 }, ...colsAxis.map(() => ({ wch: 22 }))];
+                    ws["!rows"] = [{ hpt: 40 }, ...rowsAxis.map(() => ({ hpt: 36 }))];
 
                     // стили
                     const ref = ws["!ref"] || "A1:A1";
@@ -727,8 +727,8 @@ function AlgorithmSeriesDiffHeatmapView({
                             const cell = ws[addr];
                             if (!cell) continue;
 
-                            const algo = rows[R - 1]!.meta!;
-                            const s = cols[C - 1]!.meta!;
+                            const algo = rowsAxis[R - 1]!.meta!;
+                            const s = colsAxis[C - 1]!.meta!;
                             const key = `${algo.key}||${s.key}`;
                             const rec = diffMap.get(key);
 
@@ -856,4 +856,3 @@ export function AlgorithmSeriesDiffHeatmap({
         </ExperimentMatrixFilterScope>
     );
 }
-
