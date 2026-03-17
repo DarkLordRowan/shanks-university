@@ -8,9 +8,9 @@ license = "MIT"
 
 [dependencies]
 # GUI
-egui = "0.31"
-eframe = { version = "0.31", features = ["persistence"] }
-egui_plot = "0.31"
+egui = "0.33"
+eframe = { version = "0.33", features = ["persistence"] }
+egui_plot = "0.34"
 
 # FFI
 libloading = "0.8"
@@ -54,7 +54,7 @@ rayon = "1.10"
 # Export
 arrow = "54"
 parquet = "54"
-egui_extras = "0.31"
+egui_extras = "0.33"
 arc-swap = "1.8.2"
 
 [build-dependencies]
@@ -73,6 +73,7 @@ opt-level = 3
 lto = true
 codegen-units = 1
 strip = true
+panic = "abort"
 
 [profile.dev]
 opt-level = 0

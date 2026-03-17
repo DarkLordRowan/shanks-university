@@ -326,27 +326,37 @@ void test_series() {
             std::string value;
             try {
                 value = utils::helpers<T>::to_string(x()->operator()(i, order, result));
-                fout << ",\"" << value 
-                     << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[i] - series->get_sum())) 
-                     << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(x()->operator()(i, order, result) - series->get_sum()))
-                     << "\",\"" << (utils::math<T>::abs(result.Sn[i] - series->get_sum()) > utils::math<T>::abs(utils::math<T>::abs(x()->operator()(i, order, result) - series->get_sum())))<< "\"";
+                fout << ",\"" << value << "\",\""
+                     << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[i] - series->get_sum())) << "\",\""
+                     << utils::helpers<T>::to_string(
+                            utils::math<T>::abs(x()->operator()(i, order, result) - series->get_sum()))
+                     << "\",\""
+                     << (utils::math<T>::abs(result.Sn[i] - series->get_sum()) >
+                         utils::math<T>::abs(
+                             utils::math<T>::abs(x()->operator()(i, order, result) - series->get_sum())))
+                     << "\"";
             } catch (const std::exception& e) {
                 std::string s = std::string(e.what());
                 std::replace(std::begin(s), std::end(s), ' ', '_');
                 value = s;
                 fout << ",\"" << value << "\",\"" << value << "\",\"" << value << "\",\"" << value << "\"";
             }
-            
         }
         for (const auto& beta : betas) {
             for (const auto& x : methods_with_one_param) {
                 std::string value;
                 try {
                     value = utils::helpers<T>::to_string(x(beta)->operator()(i, order, result));
-                    fout << ",\"" << value 
-                     << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[i] - series->get_sum())) 
-                     << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(x(beta)->operator()(i, order, result) - series->get_sum()))
-                     << "\",\"" << (utils::math<T>::abs(result.Sn[i] - series->get_sum()) > utils::math<T>::abs(utils::math<T>::abs(x(beta)->operator()(i, order, result) - series->get_sum())))<< "\"";
+                    fout << ",\"" << value << "\",\""
+                         << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[i] - series->get_sum()))
+                         << "\",\""
+                         << utils::helpers<T>::to_string(
+                                utils::math<T>::abs(x(beta)->operator()(i, order, result) - series->get_sum()))
+                         << "\",\""
+                         << (utils::math<T>::abs(result.Sn[i] - series->get_sum()) >
+                             utils::math<T>::abs(
+                                 utils::math<T>::abs(x(beta)->operator()(i, order, result) - series->get_sum())))
+                         << "\"";
                 } catch (const std::exception& e) {
                     std::string s = std::string(e.what());
                     std::replace(std::begin(s), std::end(s), ' ', '_');
@@ -360,10 +370,16 @@ void test_series() {
                 std::string value;
                 try {
                     value = utils::helpers<T>::to_string(x(a, b)->operator()(i, order, result));
-                    fout << ",\"" << value 
-                     << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[i] - series->get_sum())) 
-                     << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum()))
-                     << "\",\"" << (utils::math<T>::abs(result.Sn[i] - series->get_sum()) > utils::math<T>::abs(utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum())))<< "\"";
+                    fout << ",\"" << value << "\",\""
+                         << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[i] - series->get_sum()))
+                         << "\",\""
+                         << utils::helpers<T>::to_string(
+                                utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum()))
+                         << "\",\""
+                         << (utils::math<T>::abs(result.Sn[i] - series->get_sum()) >
+                             utils::math<T>::abs(
+                                 utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum())))
+                         << "\"";
                 } catch (const std::exception& e) {
                     std::string s = std::string(e.what());
                     std::replace(std::begin(s), std::end(s), ' ', '_');
@@ -378,10 +394,16 @@ void test_series() {
                     std::string value;
                     try {
                         value = utils::helpers<T>::to_string(x(a, b)->operator()(i, order, result));
-                        fout << ",\"" << value 
-                             << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[i] - series->get_sum())) 
-                             << "\",\"" << utils::helpers<T>::to_string(utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum()))
-                             << "\",\"" << (utils::math<T>::abs(result.Sn[i] - series->get_sum()) > utils::math<T>::abs(utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum()))) << "\"";
+                        fout << ",\"" << value << "\",\""
+                             << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[i] - series->get_sum()))
+                             << "\",\""
+                             << utils::helpers<T>::to_string(
+                                    utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum()))
+                             << "\",\""
+                             << (utils::math<T>::abs(result.Sn[i] - series->get_sum()) >
+                                 utils::math<T>::abs(
+                                     utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum())))
+                             << "\"";
                     } catch (const std::exception& e) {
                         std::string s = std::string(e.what());
                         std::replace(std::begin(s), std::end(s), ' ', '_');

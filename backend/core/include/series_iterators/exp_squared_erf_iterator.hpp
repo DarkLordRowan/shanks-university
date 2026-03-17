@@ -67,9 +67,10 @@ public:
             state =
                 utils::cast<T, int>()(2) * this->x / utils::math<T>::sqrt(utils::cast<T, double>()(std::numbers::pi));
         else
-            state *= utils::cast<T, int>()(2) * this->x * this->x /
-                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                                       static_cast<size_t>(1)));
+            state = state /
+                    utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                      static_cast<size_t>(1))) *
+                    utils::cast<T, int>()(2) * this->x * this->x;
         return state;
     }
 };

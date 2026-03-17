@@ -21,25 +21,23 @@ void bind_series(pybind11::module_& m, const char* suffix) {
         .def_readwrite("Sn", &series_result<T>::Sn)
         .def_readwrite("an", &series_result<T>::an);
 
-#define BIND_SERIES_IMPL(snake, camel, tName, kName)                                                                \
-    m.def(                                                                                                          \
-        create_name(camel, suffix).c_str(),                                                                         \
-        [](K n, T x, T t, K k) {                                                                                    \
-            using S = shanks::series::snake##_iterator<T, K>;                                                       \
-            std::unique_ptr<S> it;                                                                                  \
-            if constexpr (std::is_constructible_v<S, T, T, K>)                                                      \
-                it = std::make_unique<S>(x, t, k);                                                                  \
-            else if constexpr (std::is_constructible_v<S, T, T>)                                                    \
-                it = std::make_unique<S>(x, t);                                                                     \
-            else if constexpr (std::is_constructible_v<S, T, K>)                                                    \
-                it = std::make_unique<S>(x, k);                                                                     \
-            else                                                                                                    \
-                it = std::make_unique<S>(x);                                                                        \
-            return std::make_pair(                                                                                  \
-                it->generate(n),                                                                                    \
-                it->get_sum());                                                                                     \
-        },                                                                                                          \
-        py::arg("n"), py::arg("x") = T(0), py::arg(tName ? tName : "tParam") = T(1),                                \
+#define BIND_SERIES_IMPL(snake, camel, tName, kName)                                 \
+    m.def(                                                                           \
+        create_name(camel, suffix).c_str(),                                          \
+        [](K n, T x, T t, K k) {                                                     \
+            using S = shanks::series::snake##_iterator<T, K>;                        \
+            std::unique_ptr<S> it;                                                   \
+            if constexpr (std::is_constructible_v<S, T, T, K>)                       \
+                it = std::make_unique<S>(x, t, k);                                   \
+            else if constexpr (std::is_constructible_v<S, T, T>)                     \
+                it = std::make_unique<S>(x, t);                                      \
+            else if constexpr (std::is_constructible_v<S, T, K>)                     \
+                it = std::make_unique<S>(x, k);                                      \
+            else                                                                     \
+                it = std::make_unique<S>(x);                                         \
+            return std::make_pair(it->generate(n), it->get_sum());                   \
+        },                                                                           \
+        py::arg("n"), py::arg("x") = T(0), py::arg(tName ? tName : "tParam") = T(1), \
         py::arg(kName ? kName : "kParam") = K(1));
 
 #define SERIES_ENTRY(snake, camel) BIND_SERIES_IMPL(snake, camel, nullptr, nullptr)
@@ -144,16 +142,22 @@ template <AcceptedLike T>
 void bind_noise(pybind11::module_& m, const char* suffix) {
     m.def(
         create_name("applyNoise", suffix).c_str(),
-        [](const series_result<T>& result, shanks::NoiseMethod method, shanks::NoiseType type, unsigned long long int seed,
-           const typename GetUnderlyingType<T>::value& p1, const GetUnderlyingType<T>::value& p2) {
+        [](const series_result<T>& result, shanks::NoiseMethod method, shanks::NoiseType type,
+           unsigned long long int seed, const typename GetUnderlyingType<T>::value& p1,
+           const GetUnderlyingType<T>::value& p2) {
             unsigned long long int actual_seed = (seed == 0) ? pseudo_random_seed : seed;
             switch (type) {
                 case shanks::uniform:
-                    return shanks::apply_uniform_noise(result, method, seed, utils::cast<double,typename GetUnderlyingType<T>::value>()(p1), utils::cast<double,typename GetUnderlyingType<T>::value>()(p2));
+                    return shanks::apply_uniform_noise(result, method, seed,
+                                                       utils::cast<double, typename GetUnderlyingType<T>::value>()(p1),
+                                                       utils::cast<double, typename GetUnderlyingType<T>::value>()(p2));
                 case shanks::normal:
-                    return shanks::apply_normal_noise(result, method, seed,  utils::cast<double,typename GetUnderlyingType<T>::value>()(p1), utils::cast<double,typename GetUnderlyingType<T>::value>()(p2));
+                    return shanks::apply_normal_noise(result, method, seed,
+                                                      utils::cast<double, typename GetUnderlyingType<T>::value>()(p1),
+                                                      utils::cast<double, typename GetUnderlyingType<T>::value>()(p2));
                 case shanks::poisson:
-                    return shanks::apply_poisson_noise(result, method, seed, utils::cast<double,typename GetUnderlyingType<T>::value>()(p1));
+                    return shanks::apply_poisson_noise(result, method, seed,
+                                                       utils::cast<double, typename GetUnderlyingType<T>::value>()(p1));
                 default:
                     throw std::invalid_argument("Invalid noise type");
             }

@@ -20,7 +20,7 @@ import type {
     ParquetAccelRow,
     ParquetComplex,
     ParquetErrorRow,
-    ParquetEventRow,
+    ParquetEventRow,
     ParquetSeriesRow,
 } from "./types";
 

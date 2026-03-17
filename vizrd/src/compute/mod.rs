@@ -13,17 +13,20 @@
 
 use anyhow::Result;
 use log::debug;
+use serde::{Deserialize, Serialize};
 use std::{
+    cmp,
     collections::BTreeMap,
+    fmt::Display,
     sync::{
         Arc,
-        atomic::{Atomic, Ordering},
+        atomic::{self, Atomic},
     },
 };
 use tokio::{sync::mpsc, task::JoinHandle};
 
 use crate::{
-    cache::{Cache, CachedAccelData, CachedEvent, CachedResultData, CachedSeriesData, RawArrBlobs},
+    cache::{Cache, CachedAccelData, CachedResultData, CachedSeriesData, RawArrBlobs},
     experiment::{AccelInstance, FilterInstance, NoiseInstance, SeriesInstance},
     ffi::{
         Arr, ComplexOf, IntervalOf, Value,
@@ -49,13 +52,13 @@ impl Cancellable {
     }
     pub fn cancel(&self) {
         self.handle.abort();
-        self.cancelled.store(true, Ordering::Relaxed);
+        self.cancelled.store(true, atomic::Ordering::Relaxed);
     }
 }
 
 impl IsCancelled {
     pub fn cancelled(&self) -> bool {
-        self.0.load(Ordering::Relaxed)
+        self.0.load(atomic::Ordering::Relaxed)
     }
 }
 
@@ -69,6 +72,8 @@ pub struct ComputeTask<T> {
     pub algorithms: Vec<AccelInstance>,
     /// Filters applied independently to every accel that triggers a stop event.
     pub filters: Vec<FilterInstance>,
+    /// Global event configuration (stop limits).
+    pub events: BTreeMap<SeriesEventKind, crate::experiment::EventConfig>,
 }
 
 /// Identifies a computed series (what was computed).
@@ -99,13 +104,55 @@ pub struct AccelDesc {
     pub accel: AccelInstance,
     /// `None` = no filter was applied (no stop event, or no filters requested).
     pub filter: Option<FilterInstance>,
+    /// The event configuration used for this computation.
+    pub events: BTreeMap<SeriesEventKind, crate::experiment::EventConfig>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum SeriesEventKind {
+    SlowAccel,
+    Monotone,
+    DivergentAccel,
+    SignChanged,
+    SecondDiff,
+    Trigger,
+    Error,
+}
+
+impl Display for SeriesEventKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SeriesEventKind::SlowAccel => write!(f, "slow_accel"),
+            SeriesEventKind::Monotone => write!(f, "monotone"),
+            SeriesEventKind::DivergentAccel => write!(f, "divergent_accel"),
+            SeriesEventKind::SignChanged => write!(f, "sign_changed"),
+            SeriesEventKind::SecondDiff => write!(f, "second_diff"),
+            SeriesEventKind::Trigger => write!(f, "trigger"),
+            SeriesEventKind::Error => write!(f, "error"),
+        }
+    }
+}
+
+impl SeriesEventKind {
+    pub fn symbol(&self) -> &'static str {
+        match self {
+            Self::SlowAccel => "🐌",
+            Self::Monotone => "⏸",
+            Self::DivergentAccel => "⏫",
+            Self::SignChanged => "±",
+            Self::SecondDiff => "Δ²",
+            Self::Trigger => "🎯",
+            Self::Error => "❌",
+        }
+    }
 }
 
 /// An event triggered during accel computation.
 #[derive(Debug, Clone)]
 pub struct SeriesEvent {
     pub n: u64,
-    pub name: String,
+    pub kind: SeriesEventKind,
     pub description: String,
 }
 
@@ -207,6 +254,7 @@ where
         None => (None, None, None),
     };
 
+    let mut sdata_opt: Option<Arc<SeriesData>> = None;
     if let Some(sid) = cached_id {
         if let Ok(Some(sd)) = cache.get_series_data(sid).await {
             let mut sdata = series_data_from_cache(&sd);
@@ -215,12 +263,14 @@ where
                     sdata.sum = Some(val);
                 }
             }
+            let s_done = sdata.clone();
             let _ = tx
                 .send(ComputeEvent::SeriesDone {
                     id: id.clone(),
-                    data: sdata.clone(),
+                    data: s_done,
                 })
                 .await;
+            sdata_opt = Some(Arc::new(sdata));
         }
     }
 
@@ -237,6 +287,7 @@ where
                     accel.name.clone(),
                     Some(accel.m),
                     aargs.clone(),
+                    serde_json::to_string(&task.events).unwrap_or_default(),
                     None,
                     None,
                 )
@@ -252,13 +303,28 @@ where
         if let Some((aid, _)) = cached_accel {
             if let Ok(Some(ad)) = cache.get_accel_data(aid).await {
                 let events = cache.get_events(aid).await.unwrap_or_default();
-                let adata = accel_data_from_cache(&ad, events);
+                let mut adata = accel_data_from_cache(&ad, events);
+
+                // Derived events for cache results
+                if let Some(ref sdata) = sdata_opt {
+                    let (volatile, _trigger_n) = process_events(
+                        &adata.result.sn,
+                        &adata.result.an,
+                        &adata.result.deviations,
+                        &sdata.result.deviations,
+                        &task.events,
+                    );
+                    adata.events.extend(volatile);
+                    adata.events.sort_by_key(|e| e.n);
+                }
+
                 let _ = tx
                     .send(ComputeEvent::AccelDone {
                         id: id.clone(),
                         desc: AccelDesc {
                             accel: accel.clone(),
                             filter: None,
+                            events: task.events.clone(),
                         },
                         data: adata,
                     })
@@ -276,6 +342,7 @@ where
                         accel.name.clone(),
                         Some(accel.m),
                         aargs.clone(),
+                        serde_json::to_string(&task.events).unwrap_or_default(),
                         Some(filter.filter_type.clone()),
                         Some(fargs),
                     )
@@ -291,13 +358,28 @@ where
                 // Emit cached filtered if available
                 if let Ok(Some(ad)) = cache.get_accel_data(aid).await {
                     let events = cache.get_events(aid).await.unwrap_or_default();
-                    let adata = accel_data_from_cache(&ad, events);
+                    let mut adata = accel_data_from_cache(&ad, events);
+
+                    // Derived events for cache filtered results
+                    if let Some(ref sdata) = sdata_opt {
+                        let (volatile, _trigger_n) = process_events(
+                            &adata.result.sn,
+                            &adata.result.an,
+                            &adata.result.deviations,
+                            &sdata.result.deviations,
+                            &task.events,
+                        );
+                        adata.events.extend(volatile);
+                        adata.events.sort_by_key(|e| e.n);
+                    }
+
                     let _ = tx
                         .send(ComputeEvent::AccelDone {
                             id: id.clone(),
                             desc: AccelDesc {
                                 accel: accel.clone(),
                                 filter: Some(filter.clone()),
+                                events: task.events.clone(),
                             },
                             data: adata,
                         })
@@ -431,7 +513,7 @@ where
                             },
                             events: vec![SeriesEvent {
                                 n: 0,
-                                name: "error".to_string(),
+                                kind: SeriesEventKind::Error,
                                 description: format!("run_algo failed: {}", e),
                             }],
                         };
@@ -440,6 +522,7 @@ where
                             desc: AccelDesc {
                                 accel: a_inst.clone(),
                                 filter: None,
+                                events: task.events.clone(),
                             },
                             data: adata,
                         });
@@ -450,36 +533,30 @@ where
                         continue;
                     }
                 };
-                // Collect events emitted by the C++ algorithm (per-step errors)
-                let cpp_events: Vec<SeriesEvent> = bridge::get_events(&*ptr)
-                    .iter()
-                    .filter_map(|s| {
-                        let mut parts = s.splitn(3, '\t');
-                        let n: u64 = parts.next()?.parse().ok()?;
-                        let name = parts.next()?.to_string();
-                        let description = parts.next().unwrap_or("").to_string();
-                        Some(SeriesEvent {
-                            n,
-                            name,
-                            description,
-                        })
-                    })
-                    .collect();
-                let dev = bridge::get_deviation(&*ptr);
-                let stop_n = detect_divergence(&dev.r1);
-                lazy_accels.insert(a_idx, (ptr, stop_n, cpp_events));
-            }
-            let (ref a_ptr, stop_n, ref cpp_events) = lazy_accels[&a_idx];
+                let sn = arr_from_raw(bridge::get_sn(&*ptr));
+                let an = arr_from_raw(bridge::get_an(&*ptr));
+                let dev = arr_from_raw(bridge::get_deviation(&*ptr));
+                let s_dev = arr_from_raw(bridge::get_deviation(&**s_ptr));
 
-            if need_unfiltered {
-                let mut events: Vec<SeriesEvent> = cpp_events.clone();
-                if let Some(n) = stop_n {
-                    events.push(SeriesEvent {
-                        n,
-                        name: "stop".to_string(),
-                        description: "Divergence detected; stop_action_limit reached.".to_string(),
+                let (mut processed_events, stop_n) =
+                    process_events(&sn, &an, &dev, &s_dev, &task.events);
+
+                // Pull C++ errors
+                let cpp_errors = bridge::get_errors(&*ptr);
+                for err in cpp_errors {
+                    processed_events.push(SeriesEvent {
+                        n: err.n,
+                        kind: SeriesEventKind::Error,
+                        description: err.message,
                     });
                 }
+                processed_events.sort_by_key(|e| e.n);
+
+                lazy_accels.insert(a_idx, (ptr, stop_n, processed_events));
+            }
+            let (ref a_ptr, stop_n, ref events) = lazy_accels[&a_idx];
+
+            if need_unfiltered {
                 let adata = AccelData {
                     start_offset: 0,
                     result: ResultData {
@@ -487,13 +564,14 @@ where
                         an: arr_from_raw(bridge::get_an(&**a_ptr)),
                         deviations: arr_from_raw(bridge::get_deviation(&**a_ptr)),
                     },
-                    events,
+                    events: events.clone(),
                 };
                 let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
                     id: s_id.clone(),
                     desc: AccelDesc {
                         accel: a_inst.clone(),
                         filter: None,
+                        events: task.events.clone(),
                     },
                     data: adata,
                 });
@@ -502,7 +580,7 @@ where
             for f_inst in filters {
                 debug!("Filtering with {}", f_inst.filter_type);
                 let fargs = sorted_args_json(&f_inst.args)?;
-                let farr = match bridge::filter(
+                let filt = match bridge::filter(
                     &**a_ptr,
                     &f_inst.filter_type,
                     &fargs,
@@ -519,7 +597,7 @@ where
                             },
                             events: vec![SeriesEvent {
                                 n: 0,
-                                name: "error".to_string(),
+                                kind: SeriesEventKind::Error,
                                 description: format!("filter failed: {}", e),
                             }],
                         };
@@ -528,6 +606,7 @@ where
                             desc: AccelDesc {
                                 accel: a_inst.clone(),
                                 filter: Some(f_inst.clone()),
+                                events: task.events.clone(),
                             },
                             data: adata,
                         });
@@ -539,25 +618,21 @@ where
                     }
                 };
 
-                let stop_event = stop_n.map(|n| SeriesEvent {
-                    n,
-                    name: "stop".to_string(),
-                    description: "Divergence detected; stop_action_limit reached.".to_string(),
-                });
                 let adata = AccelData {
                     start_offset: stop_n.unwrap_or(0),
                     result: ResultData {
-                        sn: arr_from_raw(farr),
+                        sn: arr_from_raw(filt.sn),
                         an: Arr::Real(Vec::new()),
-                        deviations: Arr::Real(Vec::new()),
+                        deviations: arr_from_raw(filt.deviation),
                     },
-                    events: stop_event.into_iter().collect(),
+                    events: vec![], // events already emitted with unfiltered or not applicable
                 };
                 let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
                     id: s_id.clone(),
                     desc: AccelDesc {
                         accel: a_inst.clone(),
                         filter: Some(f_inst.clone()),
+                        events: task.events.clone(),
                     },
                     data: adata,
                 });
@@ -624,24 +699,24 @@ where
                             deviations: arr_to_blobs(&data.result.deviations),
                         },
                     };
-                    let evs: Vec<CachedEvent> = data
-                        .events
-                        .iter()
-                        .map(|e| CachedEvent {
-                            n: e.n,
-                            name: e.name.clone(),
-                            description: e.description.clone(),
-                        })
-                        .collect();
                     tokio::spawn(async move {
                         let aid = c
-                            .upsert_accel(sid, aname, Some(m), aargs, ftype, fargs, npts)
+                            .upsert_accel(
+                                sid,
+                                aname,
+                                Some(m),
+                                aargs,
+                                serde_json::to_string(&desc.events).unwrap_or_default(),
+                                ftype,
+                                fargs,
+                                npts,
+                            )
                             .await
                             .unwrap_or(-1);
                         if aid != -1 {
                             let _ = c.insert_accel_data(aid, ablobs).await;
-                            if !evs.is_empty() {
-                                let _ = c.insert_events(aid, evs).await;
+                            if !data.events.is_empty() {
+                                let _ = c.insert_events(aid, data.events).await;
                             }
                         }
                     });
@@ -802,7 +877,7 @@ fn series_data_from_cache(sd: &CachedSeriesData) -> SeriesData {
     }
 }
 
-fn accel_data_from_cache(ad: &CachedAccelData, events: Vec<CachedEvent>) -> AccelData {
+fn accel_data_from_cache(ad: &CachedAccelData, events: Vec<SeriesEvent>) -> AccelData {
     AccelData {
         start_offset: ad.start_offset,
         result: ResultData {
@@ -810,14 +885,7 @@ fn accel_data_from_cache(ad: &CachedAccelData, events: Vec<CachedEvent>) -> Acce
             an: arr_from_blobs(&ad.result.an),
             deviations: arr_from_blobs(&ad.result.deviations),
         },
-        events: events
-            .into_iter()
-            .map(|e| SeriesEvent {
-                n: e.n,
-                name: e.name,
-                description: e.description,
-            })
-            .collect(),
+        events: events,
     }
 }
 
@@ -825,24 +893,148 @@ fn accel_data_from_cache(ad: &CachedAccelData, events: Vec<CachedEvent>) -> Acce
 // Misc helpers
 // ---------------------------------------------------------------------------
 
-fn sorted_args_json(params: &BTreeMap<String, serde_json::Value>) -> Result<String> {
-    Ok(serde_json::to_string(params)?)
+fn rv_abs_cmp(a: &bridge::RealValue, b: &bridge::RealValue) -> std::cmp::Ordering {
+    if let Some(d) = a.exponent.partial_cmp(&b.exponent)
+        && d != cmp::Ordering::Equal
+    {
+        d
+    } else {
+        a.mantissa
+            .abs()
+            .partial_cmp(&b.mantissa.abs())
+            .unwrap_or(std::cmp::Ordering::Equal)
+    }
 }
 
-/// Detect the first index where there are 3+ consecutive rising deviations.
-/// Returns the start of the rising run (already adjusted by -3).
-fn detect_divergence(devs: &[RealValue]) -> Option<u64> {
-    let mut run = 0usize;
-    for i in 1..devs.len() {
-        if devs[i].mantissa > devs[i - 1].mantissa {
-            run += 1;
-            if run >= 3 {
-                let start = i.saturating_sub(3);
-                return Some(start as u64);
+fn rv_to_f64(rv: &bridge::RealValue) -> f64 {
+    rv.mantissa * 2.0f64.powi(rv.exponent as i32)
+}
+
+fn process_events(
+    sn: &Arr,
+    _an: &Arr,
+    dev: &Arr,
+    s_dev: &Arr,
+    config: &BTreeMap<SeriesEventKind, crate::experiment::EventConfig>,
+) -> (Vec<SeriesEvent>, Option<u64>) {
+    let mut events = Vec::new();
+    let mut stop_n: Option<u64> = None;
+
+    let dev_r = match dev {
+        Arr::Real(v) => v,
+        _ => return (events, None),
+    };
+    let s_dev_r = match s_dev {
+        Arr::Real(v) => v,
+        _ => return (events, None),
+    };
+    let sn_r = match sn {
+        Arr::Real(v) => v,
+        _ => return (events, None),
+    };
+
+    let mut counters: BTreeMap<SeriesEventKind, i64> = BTreeMap::new();
+    let n_total = dev_r.len();
+
+    for k in 0..n_total {
+        let mut triggered = Vec::new();
+
+        // 1. Slow Accel
+        if k < s_dev_r.len() && rv_abs_cmp(&dev_r[k], &s_dev_r[k]) == std::cmp::Ordering::Greater {
+            triggered.push((
+                SeriesEventKind::SlowAccel,
+                format!(
+                    "Deviation {} > series baseline {}",
+                    rv_to_f64(&dev_r[k]),
+                    rv_to_f64(&s_dev_r[k])
+                ),
+            ));
+        }
+
+        // 2. Monotone/Divergent
+        if k > 0 {
+            match rv_abs_cmp(&dev_r[k], &dev_r[k - 1]) {
+                std::cmp::Ordering::Greater => {
+                    triggered.push((
+                        SeriesEventKind::DivergentAccel,
+                        format!(
+                            "Deviation increased from {} to {}",
+                            rv_to_f64(&dev_r[k - 1]),
+                            rv_to_f64(&dev_r[k])
+                        ),
+                    ));
+                }
+                std::cmp::Ordering::Equal => {
+                    triggered.push((
+                        SeriesEventKind::Monotone,
+                        format!("Deviation stuck at {}", rv_to_f64(&dev_r[k])),
+                    ));
+                }
+                _ => {}
             }
-        } else {
-            run = 0;
+        }
+
+        // 3. Sign Changed
+        if k > 0 {
+            let s_k = rv_to_f64(&dev_r[k]);
+            let s_k1 = rv_to_f64(&dev_r[k - 1]);
+            // If they have opposite signs, product is negative (or one is zero and other is not)
+            // But usually we care about crosses: sign flips.
+            if (s_k > 0.0 && s_k1 < 0.0) || (s_k < 0.0 && s_k1 > 0.0) {
+                triggered.push((
+                    SeriesEventKind::SignChanged,
+                    format!("Error sign flipped from {} to {}", s_k1, s_k),
+                ));
+            }
+        }
+
+        // 4. Second Diff
+        if k >= 2 {
+            let v_k = rv_to_f64(&sn_r[k]);
+            let v_k1 = rv_to_f64(&sn_r[k - 1]);
+            let v_k2 = rv_to_f64(&sn_r[k - 2]);
+            let diff1 = (v_k - v_k1).abs();
+            let diff2 = (v_k1 - v_k2).abs();
+            if diff1 >= diff2 {
+                triggered.push((
+                    SeriesEventKind::SecondDiff,
+                    format!("Second diff growth: |{:.2e}| >= |{:.2e}|", diff1, diff2),
+                ));
+            }
+        }
+
+        // Process triggered events
+        for (kind, desc) in triggered {
+            let count = counters.entry(kind).or_insert(0);
+            *count += 1;
+
+            events.push(SeriesEvent {
+                n: k as u64,
+                kind,
+                description: desc,
+            });
+
+            if let Some(cfg) = config.get(&kind) {
+                if let Some(limit) = cfg.filter_after {
+                    if *count >= limit && stop_n.is_none() {
+                        stop_n = Some(k as u64);
+                        events.push(SeriesEvent {
+                            n: k as u64,
+                            kind: SeriesEventKind::Trigger,
+                            description: format!(
+                                "Filters triggered due to {} limit ({})",
+                                kind.to_string(),
+                                limit
+                            ),
+                        });
+                    }
+                }
+            }
         }
     }
-    None
+
+    (events, stop_n)
+}
+fn sorted_args_json(params: &BTreeMap<String, serde_json::Value>) -> Result<String> {
+    Ok(serde_json::to_string(params)?)
 }

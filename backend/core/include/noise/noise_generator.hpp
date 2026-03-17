@@ -2,7 +2,6 @@
 #define SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
 #pragma once
 #include <chrono>
-
 #include <cstdlib>
 #include <random>
 #include <stdexcept>
@@ -170,7 +169,6 @@ series_result<T> apply_normal_noise(const series_result<T>& result, const NoiseM
     return apply_noise_impl<NoiseMethod::scaling, NoiseType::normal, T>(result, rng, mean, stddev);
 }
 
-
 /**
  * @brief Applies Poisson noise to a series result.
  */
@@ -187,8 +185,8 @@ series_result<T> apply_poisson_noise(const series_result<T>& result, const Noise
  * @brief High-level entry point for applying noise using string-based type/method and JSON parameters.
  */
 template <AcceptedLike T>
-series_result<T> apply_noise(const series_result<T>& result, const std::string& name,
-                             const std::string& params_json, uint64_t start_n) {
+series_result<T> apply_noise(const series_result<T>& result, const std::string& name, const std::string& params_json,
+                             uint64_t start_n) {
     // 1. Handle tail slicing
     series_result<T> tail_res = result;
     if (start_n > 0 && start_n < result.Sn.size()) {
@@ -200,14 +198,19 @@ series_result<T> apply_noise(const series_result<T>& result, const std::string& 
 
     // 2. Parse Method and Type
     NoiseType nt = NoiseType::uniform;
-    if (name == "uniform") nt = NoiseType::uniform;
-    else if (name == "normal" || name == "gaussian") nt = NoiseType::normal;
-    else if (name == "poisson") nt = NoiseType::poisson;
+    if (name == "uniform")
+        nt = NoiseType::uniform;
+    else if (name == "normal" || name == "gaussian")
+        nt = NoiseType::normal;
+    else if (name == "poisson")
+        nt = NoiseType::poisson;
 
     NoiseMethod nm = NoiseMethod::jitter;
     auto method_str = ::shanks::utils_json::get_json_val_required(params_json, "method");
-    if (method_str == "scaling") nm = NoiseMethod::scaling;
-    else if (method_str != "jitter") throw std::runtime_error("Invalid noise method: " + method_str);
+    if (method_str == "scaling")
+        nm = NoiseMethod::scaling;
+    else if (method_str != "jitter")
+        throw std::runtime_error("Invalid noise method: " + method_str);
 
     // 3. Parse Seed
     unsigned long long seed = 0;
@@ -222,30 +225,33 @@ series_result<T> apply_noise(const series_result<T>& result, const std::string& 
     if (nt == NoiseType::uniform) {
         double min = std::stod(::shanks::utils_json::get_json_val_required(params_json, "min"));
         double max = std::stod(::shanks::utils_json::get_json_val_required(params_json, "max"));
-        
+
         if (min >= max) {
-            throw std::invalid_argument("uniform noise: min must be less than max (min=" + std::to_string(min) + ", max=" + std::to_string(max) + ")");
+            throw std::invalid_argument("uniform noise: min must be less than max (min=" + std::to_string(min) +
+                                        ", max=" + std::to_string(max) + ")");
         }
         return apply_uniform_noise<T>(tail_res, nm, seed, min, max);
     } else if (nt == NoiseType::normal) {
         double mean = std::stod(::shanks::utils_json::get_json_val_required(params_json, "mean"));
         double stddev = std::stod(::shanks::utils_json::get_json_val_required(params_json, "stddev"));
-        
+
         if (stddev <= 0) {
-            throw std::invalid_argument("normal noise: stddev must be positive (stddev=" + std::to_string(stddev) + ")");
+            throw std::invalid_argument("normal noise: stddev must be positive (stddev=" + std::to_string(stddev) +
+                                        ")");
         }
         return apply_normal_noise<T>(tail_res, nm, seed, mean, stddev);
     } else if (nt == NoiseType::poisson) {
         double lambda = std::stod(::shanks::utils_json::get_json_val_required(params_json, "lambda"));
-        
+
         if (lambda <= 0) {
-            throw std::invalid_argument("poisson noise: lambda must be positive (lambda=" + std::to_string(lambda) + ")");
+            throw std::invalid_argument("poisson noise: lambda must be positive (lambda=" + std::to_string(lambda) +
+                                        ")");
         }
         return apply_poisson_noise<T>(tail_res, nm, seed, lambda);
     }
     return tail_res;
 }
 
-} // namespace shanks
+}  // namespace shanks
 
 #endif  // SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP

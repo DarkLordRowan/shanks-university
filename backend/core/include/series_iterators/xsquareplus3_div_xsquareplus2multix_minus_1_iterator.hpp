@@ -64,9 +64,10 @@ public:
     T next(K n, T& state) const override {
         // Specific term formula for the expansion of the rational function around x=1
         state = utils::cast<T, double>()(0.5) * utils::math<T>::template minus_one_raised_to_power_n<K>(n) *
-                utils::cast<T, size_t>()(utils::math<size_t>::pow(size_t{3}, static_cast<size_t>(n + 2)) - 7) *
-                utils::math<T>::pow(this->x - utils::cast<T, int>()(1), utils::cast<T, K>()(n)) /
-                utils::cast<T, size_t>()(utils::math<size_t>::pow(size_t{3}, static_cast<size_t>(n + 1)));
+                (utils::cast<T, size_t>()(3) -
+                 utils::cast<T, size_t>()(7) /
+                     utils::math<T>::pow(utils::cast<T, size_t>()(3), utils::cast<T, K>()(n + 1))) *
+                utils::math<T>::pow(this->x - utils::cast<T, int>()(1), utils::cast<T, K>()(n));
         return state;
     }
 };

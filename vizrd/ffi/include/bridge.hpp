@@ -13,6 +13,8 @@ namespace shanks::ffi::bridge {
 // Forward declarations of cxx-generated structs
 struct RawArr;
 struct RawValue;
+struct ErrorEvent;
+struct Filtered;
 
 /**
  * @brief Opaque handle for a series implementation.
@@ -33,11 +35,10 @@ public:
 
     virtual std::unique_ptr<CSeries> apply_noise(rust::Str name, rust::Str params_json, uint64_t start_n) const = 0;
     virtual std::unique_ptr<CSeries> run_algo(rust::Str name, rust::Str params_json, size_t m, size_t n) const = 0;
-    virtual RawArr filter(rust::Str name, rust::Str params_json, uint64_t start_n) const = 0;
+    virtual Filtered filter(rust::Str name, rust::Str params_json, uint64_t start_n) const = 0;
 
-    /// Returns events emitted during the last run_algo() call.
-    /// Each entry is a tab-separated string: "n\tname\tdescription".
-    virtual rust::Vec<rust::String> get_events() const = 0;
+    /// Returns errors occurred during the last run_algo() call.
+    virtual rust::Vec<ErrorEvent> get_errors() const = 0;
 };
 
 // Meta info
@@ -58,7 +59,7 @@ RawArr get_an(const CSeries& series);
 RawArr get_deviation(const CSeries& series);
 RawValue get_limit(const CSeries& series);
 
-RawArr filter(const CSeries& series, rust::Str name, rust::Str params_json, uint64_t start_n);
+Filtered filter(const CSeries& series, rust::Str name, rust::Str params_json, uint64_t start_n);
 
-rust::Vec<rust::String> get_events(const CSeries& series);
+rust::Vec<ErrorEvent> get_errors(const CSeries& series);
 }

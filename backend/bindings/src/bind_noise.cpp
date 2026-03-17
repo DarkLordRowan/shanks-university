@@ -3,12 +3,12 @@
 void bind_noise_all(py::module_& m) {
     py::enum_<shanks::NoiseType>(m, "NoiseType")
         .value("Uniform", shanks::NoiseType::uniform)
-        .value("Normal",  shanks::NoiseType::normal)
+        .value("Normal", shanks::NoiseType::normal)
         .value("Poisson", shanks::NoiseType::poisson)
         .export_values();
 
     py::enum_<shanks::NoiseMethod>(m, "NoiseMethod")
-        .value("Jitter",  shanks::NoiseMethod::jitter)
+        .value("Jitter", shanks::NoiseMethod::jitter)
         .value("Scaling", shanks::NoiseMethod::scaling)
         .export_values();
 

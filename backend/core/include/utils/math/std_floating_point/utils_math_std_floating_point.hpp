@@ -105,21 +105,46 @@ T utils::math<T>::zeta(const T& x) {
     return std::riemann_zeta(x);
 }
 #ifdef __GSL_SF_EXPINT_H__
+#include <gsl/gsl_errno.h>
+
+#include <stdexcept>
+#include <string>
+
 template <std::floating_point T>
 T utils::math<T>::ci_x(const T& x) {
-    return static_cast<T>(gsl_sf_Ci(static_cast<double>(x)));
+    gsl_sf_result res;
+    int status = gsl_sf_Ci_e(static_cast<double>(x), &res);
+    if (status != GSL_SUCCESS) {
+        throw std::runtime_error("GSL Error (Ci): " + std::string(gsl_strerror(status)));
+    }
+    return static_cast<T>(res.val);
 }
 template <std::floating_point T>
 T utils::math<T>::si_x(const T& x) {
-    return static_cast<T>(gsl_sf_Si(static_cast<double>(x)));
+    gsl_sf_result res;
+    int status = gsl_sf_Si_e(static_cast<double>(x), &res);
+    if (status != GSL_SUCCESS) {
+        throw std::runtime_error("GSL Error (Si): " + std::string(gsl_strerror(status)));
+    }
+    return static_cast<T>(res.val);
 }
 template <std::floating_point T>
 T utils::math<T>::inc_gamma(const T& x, const T& alpha) {
-    return std::tgamma(alpha) - static_cast<T>(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(x)));
+    gsl_sf_result res;
+    int status = gsl_sf_gamma_inc_e(static_cast<double>(alpha), static_cast<double>(x), &res);
+    if (status != GSL_SUCCESS) {
+        throw std::runtime_error("GSL Error (gamma_inc): " + std::string(gsl_strerror(status)));
+    }
+    return std::tgamma(alpha) - static_cast<T>(res.val);
 }
 template <std::floating_point T>
 T utils::math<T>::lambertW0(const T& x) {
-    return static_cast<T>(gsl_sf_lambert_W0(static_cast<double>(x)));
+    gsl_sf_result res;
+    int status = gsl_sf_lambert_W0_e(static_cast<double>(x), &res);
+    if (status != GSL_SUCCESS) {
+        throw std::runtime_error("GSL Error (lambert_W0): " + std::string(gsl_strerror(status)));
+    }
+    return static_cast<T>(res.val);
 }
 #endif
 

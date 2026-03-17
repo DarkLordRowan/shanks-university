@@ -521,7 +521,6 @@ impl Block<AccelSelect> {
                     name: a.name.clone(),
                     m: *m,
                     args,
-                    events: a.events.clone(),
                 });
             }
         }
@@ -553,7 +552,6 @@ fn accel_def_to_select(def: &AccelDef) -> AccelSelect {
         name: def.name.clone(),
         m,
         args,
-        events: def.events.clone(),
     }
 }
 
