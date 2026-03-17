@@ -1,12 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useConvergenceMatrix } from "../model/useConvergenceMatrix";
-import { type SelectedCell, type SelectedDetail, type DetailPoint } from "../model/types";
+import { type SelectedCell, type SelectedDetail } from "../model/types";
 import {
-    errorNorm,
-    realDiffSign,
-    getPointsSortedByN,
     getConvergenceCellDomId,
+    formatMonotonicityWithMax,
+    formatSideWithMax,
 } from "../model/convergenceUtils";
+import {
+    buildConvergenceDetailPoints,
+    computeConvergenceDevStats,
+    getConvergenceClassInfo,
+} from "../model/convergenceSummary";
 import { ConvergenceDetailChart } from "./ConvergenceDetailChart";
 import { ConvergenceMatrixTable } from "./ConvergenceMatrixTable";
 import { buildExperimentIndex, buildSeriesAccelPairKey } from "@/shared/lib/experimentIndex";
@@ -24,12 +28,16 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
 }) => {
     const { matrix, progress } = useConvergenceMatrix(experiment);
     const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
+    const [maxSignChangesForOneSided, setMaxSignChangesForOneSided] = useState<number>(0);
+    const [maxViolationsForMonotone, setMaxViolationsForMonotone] = useState<number>(0);
     const chartRef = useRef<HTMLDivElement | null>(null);
     const experimentIndex = useMemo(() => buildExperimentIndex(experiment), [experiment]);
 
     // при смене эксперимента сбрасываем выбор
     useEffect(() => {
         setSelectedCell(null);
+        setMaxSignChangesForOneSided(0);
+        setMaxViolationsForMonotone(0);
     }, [experiment]);
 
     // при выборе ячейки скроллим к графикам
@@ -60,58 +68,15 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
 
         const analysis = matrix.cells[buildSeriesAccelPairKey(accelId, seriesId)] ?? null;
         const limit = series?.limit ?? null;
-
-        let prevVal: { re: number | null; im: number | null } | null = null;
-
-        const points: DetailPoint[] = sa
-            ? (() => {
-                  const sorted = getPointsSortedByN(sa);
-                  const pts: DetailPoint[] = [];
-
-                  for (const p of sorted) {
-                      const valueRe = p.value?.re ?? null;
-                      const valueImRaw = p.value?.im ?? null;
-                      const valueIm = valueImRaw ?? 0;
-                      const err = errorNorm(p.value, limit);
-                      const sign = realDiffSign(p.value, limit);
-
-                      let diffRe: number | null = null;
-                      let diffIm: number | null = null;
-                      let diffNorm: number | null = null;
-
-                      if (
-                          prevVal &&
-                          valueRe != null &&
-                          Number.isFinite(valueRe) &&
-                          prevVal.re != null &&
-                          Number.isFinite(prevVal.re)
-                      ) {
-                          const prevIm = prevVal.im ?? 0;
-                          const dRe = valueRe - prevVal.re;
-                          const dIm = valueIm - prevIm;
-                          const dn = Math.hypot(dRe, dIm);
-                          diffRe = dRe;
-                          diffIm = dIm;
-                          diffNorm = Number.isFinite(dn) ? dn : null;
-                      }
-
-                      prevVal = { re: valueRe, im: valueImRaw };
-
-                      pts.push({
-                          n: p.n,
-                          valueRe,
-                          valueIm: valueImRaw,
-                          err,
-                          sign,
-                          diffRe,
-                          diffIm,
-                          diffNorm,
-                      });
-                  }
-
-                  return pts;
-              })()
-            : [];
+        const points = buildConvergenceDetailPoints(sa, limit);
+        const dev = computeConvergenceDevStats(points);
+        const side = analysis
+            ? formatSideWithMax(analysis, maxSignChangesForOneSided)
+            : "unknown";
+        const monotonicity = analysis
+            ? formatMonotonicityWithMax(analysis, maxViolationsForMonotone)
+            : "unknown";
+        const classInfo = analysis ? getConvergenceClassInfo(side, monotonicity, dev) : null;
 
         return {
             series,
@@ -119,8 +84,16 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
             analysis,
             limit,
             points,
+            classInfo,
+            dev,
         };
-    }, [selectedCell, experimentIndex, matrix]);
+    }, [
+        selectedCell,
+        experimentIndex,
+        matrix,
+        maxSignChangesForOneSided,
+        maxViolationsForMonotone,
+    ]);
 
     if (!experiment) {
         return (
@@ -175,12 +148,16 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
                 experiment={experiment}
                 matrix={matrix}
                 maxSeries={maxSeries}
+                maxSignChangesForOneSided={maxSignChangesForOneSided}
+                maxViolationsForMonotone={maxViolationsForMonotone}
+                onMaxSignChangesForOneSidedChange={setMaxSignChangesForOneSided}
+                onMaxViolationsForMonotoneChange={setMaxViolationsForMonotone}
                 selectedCell={selectedCell}
                 onCellSelect={setSelectedCell}
             />
 
             <div ref={chartRef}>
-                {selectedDetail && selectedDetail.analysis && (
+                {selectedDetail && selectedDetail.analysis && selectedDetail.classInfo && (
                     <div className="mt-4">
                         <div className="mb-2 flex justify-end">
                             <button

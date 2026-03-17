@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { type SelectedDetail } from "../model/types";
-import { formatMonotonicityShort, formatSideShort } from "../model/convergenceUtils";
+import { buildArgsSummary } from "../model/convergenceUtils";
+import {
+    formatAmplitudeOrders,
+    formatComplexValue,
+    formatDeviationValue,
+} from "../model/convergenceSummary";
 import { ConvergenceErrorChart } from "./detail/ConvergenceErrorChart";
 import { ConvergenceAnTable } from "./detail/ConvergenceAnTable";
 import { ConvergenceDiffTable } from "./detail/ConvergenceDiffTable";
@@ -9,59 +14,46 @@ interface ConvergenceDetailChartProps {
     detail: SelectedDetail;
 }
 
-function formatComplexLimit(
-    value: { re: number | null; im: number | null } | null | undefined
-): string {
-    if (!value) return "∅";
-    const { re, im } = value;
-    if (re == null && im == null) return "∅";
-    if (im == null || im === 0) return String(re);
-    if (re == null || re === 0) return `${im}i`;
-    const sign = im >= 0 ? "+" : "-";
-    return `${re} ${sign} ${Math.abs(im)}i`;
-}
-
 export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ detail }) => {
-    const { series, accel, analysis, limit, points } = detail;
-    const seriesLimit = limit ?? series?.limit ?? null;
-
-    // Глобальный переключатель: использовать модуль или знак
+    const { series, accel, analysis, limit, points, classInfo, dev } = detail;
     const [useAbs, setUseAbs] = useState<boolean>(true);
 
-    if (!series || !accel || !analysis) {
+    if (!series || !accel || !analysis || !classInfo) {
         return null;
     }
 
-    const shortSide = formatSideShort(analysis.side);
-    const shortMon = formatMonotonicityShort(analysis.monotonicity);
+    const algoArgs = buildArgsSummary(accel.args ?? null);
 
     return (
         <div className="mt-4 rounded-xl border border-border bg-panel p-4 text-xs text-textDim shadow-panel">
             <div className="mb-3 flex flex-wrap justify-between gap-3">
                 <div>
-                    <div className="text-sm font-semibold text-textDim">
-                        Детальный график сходимости
+                    <div className="text-sm font-semibold text-textDim">Алгоритм × ряд</div>
+                    <div className="mt-1 space-y-0.5 text-[11px] text-textDim/80">
+                        <div>Ряд: {series.name}</div>
+                        <div>precision: {series.precision}</div>
+                        <div>limit: {formatComplexValue(limit ?? series.limit ?? null)}</div>
+                        <div>
+                            Алгоритм: {accel.name}
+                            {accel.m != null ? `, m=${accel.m}` : ""}
+                        </div>
+                        {algoArgs ? <div>args: {algoArgs}</div> : null}
                     </div>
-                    {/*<div className="mt-1 space-y-0.5 text-[11px] text-textDim/80">*/}
-                    {/*    <div>*/}
-                    {/*        Ряд: {seriesInfo.seriesName}, x={seriesInfo.xLabel}, prec=*/}
-                    {/*        {seriesInfo.precision}*/}
-                    {/*    </div>*/}
-                    {/*    <div>*/}
-                    {/*        Алгоритм: {algoInfo.algorithmName}*/}
-                    {/*        {algoInfo.m != null ? `, m=${algoInfo.m}` : ""}*/}
-                    {/*    </div>*/}
-                    {/*    {algoInfo.argsSummary && <div>Аргументы: {algoInfo.argsSummary}</div>}*/}
-                    {/*</div>*/}
                 </div>
+
                 <div className="space-y-1 text-right text-[11px] text-textDim/80">
                     <div>
-                        Тип: {shortSide} | {shortMon}
+                        Класс: {classInfo.label} ({classInfo.title})
                     </div>
-                    <div>Сравнено шагов (пар): {analysis.stepsAnalyzed}</div>
-                    <div>Предел ряда: {formatComplexLimit(seriesLimit)}</div>
+                    <div>Шагов в анализе: {analysis.stepsAnalyzed}</div>
+                    <div>
+                        min: {formatDeviationValue(dev.min)} @ n={dev.minN ?? "—"}
+                    </div>
+                    <div>
+                        last-min: {formatDeviationValue(dev.lastMinusMin)} | amp:{" "}
+                        {formatAmplitudeOrders(dev.amplitudeOrders)}
+                    </div>
 
-                    {/* Глобальный переключатель "модуль / со знаком" для всех трёх элементов */}
                     <div className="pt-1">
                         <span className="mr-1 text-[10px] text-textDim/70">Ошибка:</span>
                         <button
@@ -92,8 +84,11 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
                 </div>
             </div>
 
-            {/* useAbs уходит во все три компонента */}
-            <ConvergenceErrorChart points={points} limit={limit} useAbs={useAbs} />
+            <div className="mb-3 rounded border border-border/60 bg-surface/40 px-3 py-2 text-[11px] text-textDim/80">
+                {classInfo.description}
+            </div>
+
+            <ConvergenceErrorChart points={points} useAbs={useAbs} />
             <ConvergenceAnTable points={points} useAbs={useAbs} />
             <ConvergenceDiffTable points={points} useAbs={useAbs} />
         </div>

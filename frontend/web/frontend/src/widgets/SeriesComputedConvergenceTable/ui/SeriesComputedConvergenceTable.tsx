@@ -1,6 +1,5 @@
-// src/widgets/SeriesComputedConvergenceTable/ui/SeriesComputedConvergenceTable.tsx
-
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import * as XLSX from "xlsx-js-style";
 import type { Experiment, Series } from "@/entities/experiment/model/experiment";
 import type { MonotonicityType, SeriesComputedConvergenceAnalysis, SideType } from "../model/types";
 import { useSeriesComputedConvergence } from "../model/useSeriesComputedConvergence";
@@ -9,59 +8,26 @@ import {
     applySideThreshold,
     buildArgsSummary,
     buildDetailPoints,
-    describeClass,
     formatIntervals,
-    formatMonotonicityShort,
-    formatSideShort,
     getSeriesRowDomId,
 } from "../model/seriesComputedConvergenceUtils";
+import {
+    buildSeriesComputedClassLegendTitle,
+    computeSeriesComputedDevStats,
+    formatAmplitudeOrders,
+    formatComplexValue,
+    formatDeviationValue,
+    getSeriesComputedClassInfo,
+    type SeriesComputedClassInfo,
+    type SeriesComputedDevStats,
+} from "../model/seriesComputedSummary";
 import { SeriesComputedDetailChart } from "./SeriesComputedDetailChart";
 import { ExperimentMatrixFilterScope } from "@/shared/ui/Matrix/filters/ExperimentMatrixFilterScope";
+import { MatrixExportWrapper } from "@/shared/ui/Matrix/MatrixExportWrapper";
 
 export interface SeriesComputedConvergenceTableProps {
     experiment: Experiment | null;
     className?: string;
-}
-
-function isMonotone(mon: MonotonicityType): boolean {
-    return (
-        mon === "strict_decreasing_error" ||
-        mon === "non_increasing_error" ||
-        mon === "constant_error"
-    );
-}
-
-function getRowColorClass(side: SideType, mon: MonotonicityType, selected: boolean): string {
-    const sel = selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "";
-
-    if (side === "unknown" || mon === "unknown") {
-        return "border-border/60 text-textDim/70 bg-surface/30 hover:bg-surface/40" + sel;
-    }
-
-    const mono = isMonotone(mon);
-
-    if (side === "one_sided" && mono)
-        return "border-border text-textDim bg-emerald-500/25 hover:bg-emerald-500/35" + sel;
-    if (side === "one_sided" && !mono)
-        return "border-border text-textDim bg-sky-500/25 hover:bg-sky-500/35" + sel;
-
-    if (side === "two_sided" && mono)
-        return "border-border text-textDim bg-amber-300/35 hover:bg-amber-300/45" + sel;
-    if (side === "two_sided" && !mono)
-        return "border-border text-textDim bg-red-500/30 hover:bg-red-500/40" + sel;
-
-    return "border-border text-textDim bg-surface/40 hover:bg-surface/50" + sel;
-}
-
-/** 0 = лучше, больше = хуже/неопределённо */
-function classScore(side: SideType, mon: MonotonicityType): number {
-    if (side === "unknown" || mon === "unknown") return 4;
-    const mono = isMonotone(mon);
-    if (side === "one_sided" && mono) return 0;
-    if (side === "one_sided" && !mono) return 1;
-    if (side === "two_sided" && mono) return 2;
-    if (side === "two_sided" && !mono) return 3;
-    return 4;
 }
 
 type SortKey =
@@ -73,111 +39,240 @@ type SortKey =
     | "sign"
     | "viol"
     | "devMin"
+    | "minN"
     | "devMean"
     | "devMedian"
-    | "devMax";
+    | "devMax"
+    | "lastMinusMin"
+    | "ampOrders";
 type SortDir = "asc" | "desc";
 
-type ComplexAny = { re?: unknown; im?: unknown; real?: unknown; imag?: unknown };
+interface RowData {
+    series: Series;
+    analysis: SeriesComputedConvergenceAnalysis;
+    side: SideType;
+    monotonicity: MonotonicityType;
+    argsSummary: string;
+    classInfo: SeriesComputedClassInfo;
+    dev: SeriesComputedDevStats;
+}
 
-function toNum(v: unknown): number | null {
-    if (v == null) return null;
-    if (typeof v === "number") return Number.isFinite(v) ? v : null;
-    if (typeof v === "string") {
-        const n = Number(v);
-        return Number.isFinite(n) ? n : null;
+function getRowColorClass(classInfo: SeriesComputedClassInfo, selected: boolean): string {
+    const selectedClass = selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "";
+
+    switch (classInfo.colorToken) {
+        case "violet":
+            return "border-border text-textDim bg-violet-500/25 hover:bg-violet-500/35" + selectedClass;
+        case "green":
+            return "border-border text-textDim bg-emerald-400/25 hover:bg-emerald-400/35" + selectedClass;
+        case "greenDark":
+            return "border-border text-textDim bg-emerald-700/35 hover:bg-emerald-700/45" + selectedClass;
+        case "yellow":
+            return "border-border text-textDim bg-yellow-300/35 hover:bg-yellow-300/45" + selectedClass;
+        case "yellowDark":
+            return "border-border text-textDim bg-yellow-700/35 hover:bg-yellow-700/45" + selectedClass;
+        case "orange":
+            return "border-border text-textDim bg-orange-400/30 hover:bg-orange-400/40" + selectedClass;
+        case "orangeDark":
+            return "border-border text-textDim bg-orange-700/35 hover:bg-orange-700/45" + selectedClass;
+        case "red":
+            return "border-border text-textDim bg-red-400/30 hover:bg-red-400/40" + selectedClass;
+        case "redDark":
+            return "border-border text-textDim bg-red-800/35 hover:bg-red-800/45" + selectedClass;
+        case "neutral":
+        default:
+            return "border-border/60 text-textDim/70 bg-surface/30 hover:bg-surface/40" + selectedClass;
     }
-    return null;
-}
-
-function readComplex(z: unknown): { re: number | null; im: number | null } {
-    if (!z || typeof z !== "object") return { re: null, im: null };
-    const o = z as ComplexAny;
-    const re = toNum(o.re ?? o.real);
-    const im = toNum(o.im ?? o.imag);
-    return { re, im };
-}
-
-/** ||z - w||, im=null трактуем как 0; re обязателен */
-function absDiff(z: unknown, w: unknown): number | null {
-    const a = readComplex(z);
-    const b = readComplex(w);
-
-    if (a.re == null || b.re == null) return null;
-
-    const ai = a.im ?? 0;
-    const bi = b.im ?? 0;
-
-    return Math.hypot(a.re - b.re, ai - bi);
-}
-
-type DevStats = {
-    count: number;
-    min: number | null;
-    mean: number | null;
-    median: number | null;
-    max: number | null;
-};
-
-/**
- * Статистика по d_n = ||S_n - S||, где S = series.limit, S_n = series.computed[n].value.
- * Возвращает null-поля, если нет данных.
- */
-function computeDevStats(series: Series): DevStats {
-    const limit = series.limit;
-    const computed = series.computed ?? [];
-    if (!limit || computed.length === 0) {
-        return { count: 0, min: null, mean: null, median: null, max: null };
-    }
-
-    const vals: number[] = [];
-    let sum = 0;
-
-    for (const p of computed) {
-        const d = absDiff(p?.value, limit);
-        if (d == null || !Number.isFinite(d)) continue;
-        vals.push(d);
-        sum += d;
-    }
-
-    const n = vals.length;
-    if (n === 0) return { count: 0, min: null, mean: null, median: null, max: null };
-
-    vals.sort((a, b) => a - b);
-
-    const min = vals[0];
-    const max = vals[n - 1];
-    const mean = sum / n;
-
-    const mid = Math.floor(n / 2);
-    const median = n % 2 === 1 ? vals[mid] : 0.5 * (vals[mid - 1] + vals[mid]);
-
-    return { count: n, min, mean, median, max };
-}
-
-function fmtDev(x: number | null): string {
-    return x == null ? "—" : x.toExponential(3);
 }
 
 function cmpNumNullable(a: number | null, b: number | null): number {
     if (a == null && b == null) return 0;
-    if (a == null) return 1; // null вниз
+    if (a == null) return 1;
     if (b == null) return -1;
     return a - b;
 }
 
-const SeriesComputedConvergenceTableView: React.FC<SeriesComputedConvergenceTableProps & { totalRowsBeforeFilter?: number }> = ({
-    experiment,
-    className,
-    totalRowsBeforeFilter,
-}) => {
+function formatSignedError(point: { err: number | null; sign: -1 | 0 | 1 | null }): number | null {
+    if (point.err == null || !Number.isFinite(point.err)) return null;
+    if (point.sign == null || point.sign === 0) return point.err;
+    return point.err * point.sign;
+}
+
+function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
+    const header = [
+        "#",
+        "series",
+        "precision",
+        "args",
+        "limit",
+        "class",
+        "class title",
+        "steps",
+        "sign changes",
+        "violations",
+        "min |S_n-S|",
+        "min n",
+        "mean |S_n-S|",
+        "median |S_n-S|",
+        "max |S_n-S|",
+        "last |S_n-S|",
+        "last n",
+        "last - min",
+        "amp powers",
+    ];
+
+    const aoa: Array<Array<string | number | null>> = [header];
+
+    rows.forEach((row, index) => {
+        aoa.push([
+            index + 1,
+            row.series.name,
+            row.series.precision,
+            row.argsSummary || null,
+            formatComplexValue(row.series.limit ?? null),
+            row.classInfo.label,
+            row.classInfo.title,
+            row.analysis.stepsAnalyzed,
+            row.analysis.signChangesCount,
+            row.analysis.incCount,
+            row.dev.min,
+            row.dev.minN,
+            row.dev.mean,
+            row.dev.median,
+            row.dev.max,
+            row.dev.last,
+            row.dev.lastN,
+            row.dev.lastMinusMin,
+            row.dev.amplitudeOrders,
+        ]);
+    });
+
+    const sheet = XLSX.utils.aoa_to_sheet(aoa);
+    sheet["!cols"] = [
+        { wch: 6 },
+        { wch: 24 },
+        { wch: 12 },
+        { wch: 28 },
+        { wch: 26 },
+        { wch: 14 },
+        { wch: 24 },
+        { wch: 10 },
+        { wch: 14 },
+        { wch: 12 },
+        { wch: 16 },
+        { wch: 10 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 10 },
+        { wch: 14 },
+        { wch: 12 },
+    ];
+    return sheet;
+}
+
+function buildSelectedMetaSheet(selected: {
+    series: Series;
+    analysis: SeriesComputedConvergenceAnalysis;
+    argsSummary: string;
+    classInfo: SeriesComputedClassInfo;
+    dev: SeriesComputedDevStats;
+}): XLSX.WorkSheet {
+    const aoa: Array<Array<string | number | null>> = [
+        ["field", "value"],
+        ["series", selected.series.name],
+        ["precision", selected.series.precision],
+        ["args", selected.argsSummary || null],
+        ["limit", formatComplexValue(selected.series.limit ?? null)],
+        ["class", selected.classInfo.label],
+        ["class title", selected.classInfo.title],
+        ["class description", selected.classInfo.description],
+        ["steps", selected.analysis.stepsAnalyzed],
+        ["sign changes", selected.analysis.signChangesCount],
+        ["violations", selected.analysis.incCount],
+        ["min |S_n-S|", selected.dev.min],
+        ["min n", selected.dev.minN],
+        ["mean |S_n-S|", selected.dev.mean],
+        ["median |S_n-S|", selected.dev.median],
+        ["max |S_n-S|", selected.dev.max],
+        ["last |S_n-S|", selected.dev.last],
+        ["last n", selected.dev.lastN],
+        ["last - min", selected.dev.lastMinusMin],
+        ["amp powers", selected.dev.amplitudeOrders],
+    ];
+
+    const sheet = XLSX.utils.aoa_to_sheet(aoa);
+    sheet["!cols"] = [{ wch: 20 }, { wch: 28 }];
+    return sheet;
+}
+
+function buildPointsSheet(points: ReturnType<typeof buildDetailPoints>): XLSX.WorkSheet {
+    const aoa: Array<Array<string | number | null>> = [
+        ["n", "Re(S_n)", "Im(S_n)", "|S_n-S|", "sgn*|S_n-S|", "sgn(Re(S_n-S))"],
+    ];
+
+    for (const point of points) {
+        aoa.push([
+            point.n,
+            point.valueRe,
+            point.valueIm,
+            point.err,
+            formatSignedError(point),
+            point.sign,
+        ]);
+    }
+
+    const sheet = XLSX.utils.aoa_to_sheet(aoa);
+    sheet["!cols"] = [
+        { wch: 10 },
+        { wch: 18 },
+        { wch: 18 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 14 },
+    ];
+    return sheet;
+}
+
+function buildDiffsSheet(points: ReturnType<typeof buildDetailPoints>): XLSX.WorkSheet {
+    const aoa: Array<Array<string | number | null>> = [
+        ["n", "Re(S_n-S_{n-1})", "Im(S_n-S_{n-1})", "|S_n-S_{n-1}|", "sgn*|S_n-S_{n-1}|"],
+    ];
+
+    for (const point of points.filter((entry) => entry.diffNorm != null)) {
+        const signedDiff =
+            point.diffNorm != null &&
+            Number.isFinite(point.diffNorm) &&
+            point.diffRe != null &&
+            Number.isFinite(point.diffRe)
+                ? point.diffRe >= 0
+                    ? point.diffNorm
+                    : -point.diffNorm
+                : point.diffNorm;
+
+        aoa.push([point.n, point.diffRe, point.diffIm, point.diffNorm, signedDiff]);
+    }
+
+    const sheet = XLSX.utils.aoa_to_sheet(aoa);
+    sheet["!cols"] = [
+        { wch: 10 },
+        { wch: 18 },
+        { wch: 18 },
+        { wch: 18 },
+        { wch: 18 },
+    ];
+    return sheet;
+}
+
+const SeriesComputedConvergenceTableView: React.FC<
+    SeriesComputedConvergenceTableProps & { totalRowsBeforeFilter?: number }
+> = ({ experiment, className, totalRowsBeforeFilter }) => {
     const { seriesList, analysisBySeriesId, progress } = useSeriesComputedConvergence(experiment);
 
     const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
-
     const [maxSignChangesForOneSided, setMaxSignChangesForOneSided] = useState<number>(0);
     const [maxViolationsForMonotone, setMaxViolationsForMonotone] = useState<number>(0);
-
     const [sort, setSort] = useState<{ key: SortKey; dir: SortDir } | null>(null);
 
     const detailRef = useRef<HTMLDivElement | null>(null);
@@ -197,14 +292,14 @@ const SeriesComputedConvergenceTableView: React.FC<SeriesComputedConvergenceTabl
 
     const scrollBackToSelected = useCallback(() => {
         if (!selectedSeriesId) return;
-        const el = document.getElementById(getSeriesRowDomId(selectedSeriesId));
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        const element = document.getElementById(getSeriesRowDomId(selectedSeriesId));
+        if (element) element.scrollIntoView({ behavior: "smooth", block: "center" });
     }, [selectedSeriesId]);
 
     const toggleSort = useCallback((key: SortKey) => {
-        setSort((prev) => {
-            if (!prev || prev.key !== key) return { key, dir: "asc" };
-            return { key, dir: prev.dir === "asc" ? "desc" : "asc" };
+        setSort((previous) => {
+            if (!previous || previous.key !== key) return { key, dir: "asc" };
+            return { key, dir: previous.dir === "asc" ? "desc" : "asc" };
         });
     }, []);
 
@@ -216,128 +311,124 @@ const SeriesComputedConvergenceTableView: React.FC<SeriesComputedConvergenceTabl
         [sort]
     );
 
-    const rows = useMemo(() => {
+    const rows = useMemo<RowData[]>(() => {
         return seriesList
-            .map((s: Series) => {
-                const a = analysisBySeriesId[s.id];
-                if (!a) return null;
+            .map((series) => {
+                const analysis = analysisBySeriesId[series.id];
+                if (!analysis) return null;
 
                 const side = applySideThreshold(
-                    a.sideRaw,
-                    a.signChangesCount,
+                    analysis.sideRaw,
+                    analysis.signChangesCount,
                     maxSignChangesForOneSided
                 );
-                const mon = applyMonotonicityThreshold(
-                    a.monotonicityRaw,
-                    a.incCount,
-                    a.decCount,
-                    a.eqCount,
+                const monotonicity = applyMonotonicityThreshold(
+                    analysis.monotonicityRaw,
+                    analysis.incCount,
+                    analysis.decCount,
+                    analysis.eqCount,
                     maxViolationsForMonotone
                 );
 
-                const sideShort = formatSideShort(side);
-                const monShort = formatMonotonicityShort(mon);
-                const argsSummary = buildArgsSummary(s.args ?? null);
-
-                const dev = computeDevStats(s);
+                const dev = computeSeriesComputedDevStats(series);
+                const classInfo = getSeriesComputedClassInfo(side, monotonicity, dev);
 
                 return {
-                    series: s,
-                    analysis: a,
+                    series,
+                    analysis,
                     side,
-                    mon,
-                    sideShort,
-                    monShort,
-                    argsSummary,
-                    clsScore: classScore(side, mon),
+                    monotonicity,
+                    argsSummary: buildArgsSummary(series.args ?? null),
+                    classInfo,
                     dev,
                 };
             })
-            .filter(Boolean) as Array<{
-            series: Series;
-            analysis: SeriesComputedConvergenceAnalysis;
-            side: SideType;
-            mon: MonotonicityType;
-            sideShort: string;
-            monShort: string;
-            argsSummary: string;
-            clsScore: number;
-            dev: DevStats;
-        }>;
+            .filter((row): row is RowData => row != null);
     }, [seriesList, analysisBySeriesId, maxSignChangesForOneSided, maxViolationsForMonotone]);
+
     const sortedRows = useMemo(() => {
         if (!sort) return rows;
 
-        const mul = sort.dir === "asc" ? 1 : -1;
-        const cmpStr = (a: string, b: string) => a.localeCompare(b, "ru");
+        const direction = sort.dir === "asc" ? 1 : -1;
+        const compareText = (a: string, b: string) => a.localeCompare(b, "ru");
 
-        const get = (r: (typeof rows)[number]) => {
+        const getValue = (row: RowData) => {
             switch (sort.key) {
                 case "name":
-                    return r.series.name ?? "";
+                    return row.series.name ?? "";
                 case "precision":
-                    return r.series.precision ?? "";
+                    return row.series.precision ?? "";
                 case "args":
-                    return r.argsSummary ?? "";
+                    return row.argsSummary ?? "";
                 case "class":
-                    return r.clsScore;
+                    return row.classInfo.order;
                 case "k":
-                    return r.analysis.stepsAnalyzed ?? 0;
+                    return row.analysis.stepsAnalyzed;
                 case "sign":
-                    return r.analysis.signChangesCount ?? 0;
+                    return row.analysis.signChangesCount;
                 case "viol":
-                    return r.analysis.incCount ?? 0;
+                    return row.analysis.incCount;
                 case "devMin":
-                    return r.dev.min;
+                    return row.dev.min;
+                case "minN":
+                    return row.dev.minN;
                 case "devMean":
-                    return r.dev.mean;
+                    return row.dev.mean;
                 case "devMedian":
-                    return r.dev.median;
+                    return row.dev.median;
                 case "devMax":
-                    return r.dev.max;
+                    return row.dev.max;
+                case "lastMinusMin":
+                    return row.dev.lastMinusMin;
+                case "ampOrders":
+                    return row.dev.amplitudeOrders;
             }
         };
 
-        const isNumKey =
+        const numericKey =
             sort.key === "class" || sort.key === "k" || sort.key === "sign" || sort.key === "viol";
-
-        const isDevKey =
+        const nullableNumericKey =
             sort.key === "devMin" ||
+            sort.key === "minN" ||
             sort.key === "devMean" ||
             sort.key === "devMedian" ||
-            sort.key === "devMax";
+            sort.key === "devMax" ||
+            sort.key === "lastMinusMin" ||
+            sort.key === "ampOrders";
 
-        const arr = [...rows];
-        arr.sort((ra, rb) => {
-            if (isDevKey) {
-                const c0 = cmpNumNullable(get(ra) as number | null, get(rb) as number | null);
-                if (c0 !== 0) return mul * c0;
-            } else if (isNumKey) {
-                const c0 = Number(get(ra)) - Number(get(rb));
-                if (c0 !== 0) return mul * c0;
+        const result = [...rows];
+        result.sort((left, right) => {
+            if (nullableNumericKey) {
+                const base = cmpNumNullable(
+                    getValue(left) as number | null,
+                    getValue(right) as number | null
+                );
+                if (base !== 0) return direction * base;
+            } else if (numericKey) {
+                const base = Number(getValue(left)) - Number(getValue(right));
+                if (base !== 0) return direction * base;
             } else {
-                const c0 = cmpStr(String(get(ra)), String(get(rb)));
-                if (c0 !== 0) return mul * c0;
+                const base = compareText(String(getValue(left)), String(getValue(right)));
+                if (base !== 0) return direction * base;
             }
 
-            return cmpStr(ra.series.name ?? "", rb.series.name ?? "");
+            return compareText(left.series.name ?? "", right.series.name ?? "");
         });
 
-        return arr;
+        return result;
     }, [rows, sort]);
 
     useEffect(() => {
         if (!selectedSeriesId) return;
-        if (sortedRows.some((r) => r.series.id === selectedSeriesId)) return;
+        if (sortedRows.some((row) => row.series.id === selectedSeriesId)) return;
         setSelectedSeriesId(null);
     }, [selectedSeriesId, sortedRows]);
 
     const selected = useMemo(() => {
         if (!experiment || !selectedSeriesId) return null;
 
-        const series = (experiment.seriesList ?? []).find((s) => s.id === selectedSeriesId) ?? null;
+        const series = (experiment.seriesList ?? []).find((item) => item.id === selectedSeriesId) ?? null;
         const analysis = analysisBySeriesId[selectedSeriesId] ?? null;
-
         if (!series || !analysis) return null;
 
         const side = applySideThreshold(
@@ -352,15 +443,17 @@ const SeriesComputedConvergenceTableView: React.FC<SeriesComputedConvergenceTabl
             analysis.eqCount,
             maxViolationsForMonotone
         );
+        const dev = computeSeriesComputedDevStats(series);
 
         return {
             series,
             analysis,
             side,
             monotonicity,
+            classInfo: getSeriesComputedClassInfo(side, monotonicity, dev),
             points: buildDetailPoints(series),
             argsSummary: buildArgsSummary(series.args ?? null),
-            dev: computeDevStats(series),
+            dev,
         };
     }, [
         experiment,
@@ -370,12 +463,24 @@ const SeriesComputedConvergenceTableView: React.FC<SeriesComputedConvergenceTabl
         maxViolationsForMonotone,
     ]);
 
+    const buildWorkbook = useCallback((): XLSX.WorkBook => {
+        const workbook = XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(workbook, buildSummarySheet(sortedRows), "summary");
+
+        if (selected) {
+            XLSX.utils.book_append_sheet(workbook, buildSelectedMetaSheet(selected), "selected_meta");
+            XLSX.utils.book_append_sheet(workbook, buildPointsSheet(selected.points), "selected_points");
+            XLSX.utils.book_append_sheet(workbook, buildDiffsSheet(selected.points), "selected_diffs");
+        }
+
+        return workbook;
+    }, [sortedRows, selected]);
+
     if (!experiment) {
         return (
             <div className={className}>
-                <div className="text-textDim text-sm">
-                    Нет данных для анализа (experiment = null).
-                </div>
+                <div className="text-sm text-textDim">Нет данных для анализа (experiment = null).</div>
             </div>
         );
     }
@@ -407,319 +512,338 @@ const SeriesComputedConvergenceTableView: React.FC<SeriesComputedConvergenceTabl
     if (rows.length === 0) {
         return (
             <div className={className}>
-                <div className="text-textDim text-sm">
-                    Нет рядов с рассчитанными частичными суммами (series.computed пуст).
+                <div className="text-sm text-textDim">
+                    Нет рядов с рассчитанными частичными суммами (`series.computed` пуст).
                 </div>
             </div>
         );
     }
 
+    const classLegendTitle = buildSeriesComputedClassLegendTitle(
+        maxSignChangesForOneSided,
+        maxViolationsForMonotone
+    );
+
     return (
         <div className={className}>
-            <div className="mb-2 rounded-xl border border-border bg-panel p-3 text-[11px] text-textDim shadow-panel">
-                <div className="mb-2 text-sm font-semibold">Частичные суммы: анализ по рядам</div>
-
-                <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                        <span
-                            className="whitespace-nowrap"
-                            title="Максимальное число смен знака Re(Sₙ − S), при котором ряд считается односторонним."
-                        >
-                            max sign changes:
-                        </span>
-                        <input
-                            type="range"
-                            min={0}
-                            max={50}
-                            value={maxSignChangesForOneSided}
-                            onChange={(e) => setMaxSignChangesForOneSided(Number(e.target.value))}
-                            className="h-[4px] w-40 cursor-pointer"
-                        />
-                        <span className="w-8 text-right tabular-nums">
-                            {maxSignChangesForOneSided}
-                        </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <span
-                            className="whitespace-nowrap"
-                            title="Максимальное число увеличений ||Sₙ − S||, при котором ряд классифицируется как (почти) монотонный по ошибке."
-                        >
-                            max violations:
-                        </span>
-                        <input
-                            type="range"
-                            min={0}
-                            max={50}
-                            value={maxViolationsForMonotone}
-                            onChange={(e) => setMaxViolationsForMonotone(Number(e.target.value))}
-                            className="h-[4px] w-40 cursor-pointer"
-                        />
-                        <span className="w-8 text-right tabular-nums">
-                            {maxViolationsForMonotone}
-                        </span>
-                    </div>
-                </div>
-
-                <div className="mt-2 text-[10px] text-textDim/70">
-                    Клик по строке открывает детальный график и таблицы. Клик по заголовку
-                    сортирует.
-                </div>
-                <div className="mt-1 text-[10px] text-textDim/70">
-                    rows: {sortedRows.length} / {totalRowsBeforeFilter ?? rows.length}
-                </div>
-            </div>
-
-            <div
-                className="rounded-xl border border-border bg-surface/40 overflow-auto"
-                style={{ maxHeight: "55vh" }}
+            <MatrixExportWrapper
+                fileBaseName="series-computed-convergence"
+                enableXlsx
+                buildWorkbook={buildWorkbook}
             >
-                <table className="min-w-full border-collapse text-[10px]">
-                    <thead className="bg-surface/80 sticky top-0 z-10">
-                        <tr>
-                            <th
-                                className="border-b border-border px-2 py-2 text-left cursor-pointer select-none"
-                                onClick={() => toggleSort("name")}
-                                title="Сортировать по имени ряда"
-                            >
-                                Ряд{" "}
-                                <span className="ml-1 text-[9px] text-textDim/70">
-                                    {sortMark("name")}
-                                </span>
-                            </th>
-                            <th
-                                className="border-b border-border px-2 py-2 text-left cursor-pointer select-none"
-                                onClick={() => toggleSort("precision")}
-                                title="Сортировать по precision"
-                            >
-                                prec{" "}
-                                <span className="ml-1 text-[9px] text-textDim/70">
-                                    {sortMark("precision")}
-                                </span>
-                            </th>
-                            <th
-                                className="border-b border-border px-2 py-2 text-left cursor-pointer select-none"
-                                onClick={() => toggleSort("args")}
-                                title="Сортировать по аргументам ряда (строка)"
-                            >
-                                args{" "}
-                                <span className="ml-1 text-[9px] text-textDim/70">
-                                    {sortMark("args")}
-                                </span>
-                            </th>
-                            <th
-                                className="border-b border-border px-2 py-2 text-left cursor-pointer select-none"
-                                onClick={() => toggleSort("class")}
-                                title="Сортировать по классу (лучше → хуже)"
-                            >
-                                класс{" "}
-                                <span className="ml-1 text-[9px] text-textDim/70">
-                                    {sortMark("class")}
-                                </span>
-                            </th>
-                            <th
-                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
-                                onClick={() => toggleSort("k")}
-                                title="Сортировать по числу пар (n−1,n) в анализе"
-                            >
-                                k{" "}
-                                <span className="ml-1 text-[9px] text-textDim/70">
-                                    {sortMark("k")}
-                                </span>
-                            </th>
-                            <th
-                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
-                                onClick={() => toggleSort("sign")}
-                                title="Сортировать по числу смен знака"
-                            >
-                                sign{" "}
-                                <span className="ml-1 text-[9px] text-textDim/70">
-                                    {sortMark("sign")}
-                                </span>
-                            </th>
-                            <th
-                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
-                                onClick={() => toggleSort("viol")}
-                                title="Сортировать по числу нарушений монотонности ||Sₙ−S||"
-                            >
-                                viol{" "}
-                                <span className="ml-1 text-[9px] text-textDim/70">
-                                    {sortMark("viol")}
-                                </span>
-                            </th>
+                {({ captureRef }) => (
+                    <div ref={captureRef}>
+                        <div className="mb-2 rounded-xl border border-border bg-panel p-3 text-[11px] text-textDim shadow-panel">
+                            <div className="mb-2 text-sm font-semibold">Частичные суммы: анализ по рядам</div>
 
-                            <th
-                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
-                                onClick={() => toggleSort("devMin")}
-                                title="min_n ||S_n - S||"
-                            >
-                                min |Sₙ−S|{" "}
-                                <span className="ml-1 text-[9px] text-textDim/70">
-                                    {sortMark("devMin")}
-                                </span>
-                            </th>
-                            <th
-                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
-                                onClick={() => toggleSort("devMean")}
-                                title="mean_n ||S_n - S||"
-                            >
-                                mean{" "}
-                                <span className="ml-1 text-[9px] text-textDim/70">
-                                    {sortMark("devMean")}
-                                </span>
-                            </th>
-                            <th
-                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
-                                onClick={() => toggleSort("devMedian")}
-                                title="median_n ||S_n - S||"
-                            >
-                                med{" "}
-                                <span className="ml-1 text-[9px] text-textDim/70">
-                                    {sortMark("devMedian")}
-                                </span>
-                            </th>
-                            <th
-                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
-                                onClick={() => toggleSort("devMax")}
-                                title="max_n ||S_n - S||"
-                            >
-                                max{" "}
-                                <span className="ml-1 text-[9px] text-textDim/70">
-                                    {sortMark("devMax")}
-                                </span>
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {sortedRows.map((r) => {
-                            const s = r.series;
-                            const a = r.analysis;
-
-                            const isSelected = selectedSeriesId === s.id;
-                            const rowCls = getRowColorClass(r.side, r.mon, isSelected);
-
-                            const signNsText = a.signChangeNs?.length
-                                ? formatIntervals(a.signChangeNs)
-                                : "—";
-                            const violNsText = a.violationsNs?.length
-                                ? formatIntervals(a.violationsNs)
-                                : "—";
-
-                            const titleLines: string[] = [];
-                            titleLines.push(`Ряд: ${s.name}`);
-                            titleLines.push(`prec: ${s.precision}`);
-                            titleLines.push(`args: ${r.argsSummary || "—"}`);
-                            titleLines.push(
-                                `limit: ${s.limit ? `(${s.limit.re ?? 0}, ${s.limit.im ?? 0})` : "∅"}`
-                            );
-                            titleLines.push(`dev count: ${r.dev.count}`);
-                            titleLines.push(`min ||S_n−S||: ${fmtDev(r.dev.min)}`);
-                            titleLines.push(`mean ||S_n−S||: ${fmtDev(r.dev.mean)}`);
-                            titleLines.push(`med ||S_n−S||: ${fmtDev(r.dev.median)}`);
-                            titleLines.push(`max ||S_n−S||: ${fmtDev(r.dev.max)}`);
-                            titleLines.push("");
-                            titleLines.push(
-                                `Класс: ${describeClass(r.side, r.mon)} (${r.sideShort} | ${r.monShort})`
-                            );
-                            titleLines.push(`Пар (n−1,n) в анализе: ${a.stepsAnalyzed}`);
-                            titleLines.push(`Смен знака: ${a.signChangesCount}, ns: ${signNsText}`);
-                            titleLines.push(`Нарушений ||Sₙ−S||: ${a.incCount}, ns: ${violNsText}`);
-
-                            return (
-                                <tr
-                                    key={s.id}
-                                    id={getSeriesRowDomId(s.id)}
-                                    title={titleLines.join("\n")}
-                                    className={"cursor-pointer " + rowCls}
-                                    onClick={() => setSelectedSeriesId(s.id)}
-                                >
-                                    <td className="border-t border-border px-2 py-2 font-medium">
-                                        {s.name}
-                                    </td>
-                                    <td className="border-t border-border px-2 py-2 font-mono">
-                                        {s.precision}
-                                    </td>
-                                    <td
-                                        className="border-t border-border px-2 py-2 font-mono max-w-[240px] truncate"
-                                        title={r.argsSummary || "—"}
+                            <div className="flex flex-col gap-2">
+                                <div className="flex items-center gap-2">
+                                    <span
+                                        className="whitespace-nowrap"
+                                        title="Максимальное число смен знака Re(S_n - S), при котором ряд считается односторонним."
                                     >
-                                        {r.argsSummary || "—"}
-                                    </td>
-                                    <td className="border-t border-border px-2 py-2 font-mono">
-                                        {r.sideShort} | {r.monShort}
-                                    </td>
-                                    <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
-                                        {a.stepsAnalyzed}
-                                    </td>
-                                    <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
-                                        {a.signChangesCount}
-                                    </td>
-                                    <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
-                                        {a.incCount}
-                                    </td>
-
-                                    <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
-                                        {fmtDev(r.dev.min)}
-                                    </td>
-                                    <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
-                                        {fmtDev(r.dev.mean)}
-                                    </td>
-                                    <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
-                                        {fmtDev(r.dev.median)}
-                                    </td>
-                                    <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
-                                        {fmtDev(r.dev.max)}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
-
-            <div ref={detailRef}>
-                {selected && (
-                    <div className="mt-4">
-                        <div className="mb-2 flex items-start justify-between gap-2">
-                            <div className="text-[10px] text-textDim">
-                                <div className="font-semibold text-textDim/90">
-                                    {selected.series.name}
+                                        max sign changes:
+                                    </span>
+                                    <input
+                                        type="range"
+                                        min={0}
+                                        max={50}
+                                        value={maxSignChangesForOneSided}
+                                        onChange={(event) =>
+                                            setMaxSignChangesForOneSided(Number(event.target.value))
+                                        }
+                                        className="h-[4px] w-40 cursor-pointer"
+                                    />
+                                    <span className="w-8 text-right tabular-nums">
+                                        {maxSignChangesForOneSided}
+                                    </span>
                                 </div>
-                                <div className="font-mono">
-                                    prec: {selected.series.precision}{" "}
-                                    <span className="text-textDim/70">|</span> args:{" "}
-                                    {selected.argsSummary || "—"}{" "}
-                                    <span className="text-textDim/70">|</span> min:{" "}
-                                    {fmtDev(selected.dev.min)}{" "}
-                                    <span className="text-textDim/70">|</span> mean:{" "}
-                                    {fmtDev(selected.dev.mean)}{" "}
-                                    <span className="text-textDim/70">|</span> med:{" "}
-                                    {fmtDev(selected.dev.median)}{" "}
-                                    <span className="text-textDim/70">|</span> max:{" "}
-                                    {fmtDev(selected.dev.max)}
+
+                                <div className="flex items-center gap-2">
+                                    <span
+                                        className="whitespace-nowrap"
+                                        title="Максимальное число ростов |S_n - S|, при котором ряд всё ещё считается почти монотонным."
+                                    >
+                                        max violations:
+                                    </span>
+                                    <input
+                                        type="range"
+                                        min={0}
+                                        max={50}
+                                        value={maxViolationsForMonotone}
+                                        onChange={(event) =>
+                                            setMaxViolationsForMonotone(Number(event.target.value))
+                                        }
+                                        className="h-[4px] w-40 cursor-pointer"
+                                    />
+                                    <span className="w-8 text-right tabular-nums">
+                                        {maxViolationsForMonotone}
+                                    </span>
                                 </div>
                             </div>
 
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-2 py-[2px] text-[10px] text-textDim hover:bg-panel"
-                                onClick={scrollBackToSelected}
-                            >
-                                Вернуться к выбранному ряду
-                            </button>
+                            <div className="mt-2 text-[10px] text-textDim/70">
+                                Клик по строке открывает детальный график и таблицы. Наведи на заголовок
+                                <span className="font-semibold"> класс</span>, чтобы увидеть легенду символов.
+                            </div>
+                            <div className="mt-1 text-[10px] text-textDim/70">
+                                rows: {sortedRows.length} / {totalRowsBeforeFilter ?? rows.length}
+                            </div>
                         </div>
 
-                        <SeriesComputedDetailChart
-                            series={selected.series}
-                            side={selected.side}
-                            monotonicity={selected.monotonicity}
-                            stepsAnalyzed={selected.analysis.stepsAnalyzed}
-                            points={selected.points}
-                        />
+                        <div
+                            className="overflow-auto rounded-xl border border-border bg-surface/40"
+                            style={{ maxHeight: "55vh" }}
+                        >
+                            <table className="min-w-full border-collapse text-[10px]">
+                                <thead className="sticky top-0 z-10 bg-surface/80">
+                                    <tr>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-left"
+                                            onClick={() => toggleSort("name")}
+                                            title="Сортировать по имени ряда"
+                                        >
+                                            Ряд <span className="ml-1 text-[9px] text-textDim/70">{sortMark("name")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-left"
+                                            onClick={() => toggleSort("precision")}
+                                            title="Сортировать по precision"
+                                        >
+                                            prec <span className="ml-1 text-[9px] text-textDim/70">{sortMark("precision")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-left"
+                                            onClick={() => toggleSort("args")}
+                                            title="Сортировать по аргументам ряда"
+                                        >
+                                            args <span className="ml-1 text-[9px] text-textDim/70">{sortMark("args")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-left"
+                                            onClick={() => toggleSort("class")}
+                                            title={classLegendTitle}
+                                        >
+                                            класс <span className="ml-1 text-[9px] text-textDim/70">{sortMark("class")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("k")}
+                                            title="Сортировать по числу пар (n-1, n) в анализе"
+                                        >
+                                            k <span className="ml-1 text-[9px] text-textDim/70">{sortMark("k")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("sign")}
+                                            title="Сортировать по числу смен знака"
+                                        >
+                                            sign <span className="ml-1 text-[9px] text-textDim/70">{sortMark("sign")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("viol")}
+                                            title="Сортировать по числу ростов |S_n-S|"
+                                        >
+                                            viol <span className="ml-1 text-[9px] text-textDim/70">{sortMark("viol")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("devMin")}
+                                            title="min_n |S_n-S|"
+                                        >
+                                            min <span className="ml-1 text-[9px] text-textDim/70">{sortMark("devMin")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("minN")}
+                                            title="n, на котором достигается минимум |S_n-S|"
+                                        >
+                                            n min <span className="ml-1 text-[9px] text-textDim/70">{sortMark("minN")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("devMean")}
+                                            title="mean_n |S_n-S|"
+                                        >
+                                            mean <span className="ml-1 text-[9px] text-textDim/70">{sortMark("devMean")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("devMedian")}
+                                            title="median_n |S_n-S|"
+                                        >
+                                            med <span className="ml-1 text-[9px] text-textDim/70">{sortMark("devMedian")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("devMax")}
+                                            title="max_n |S_n-S|"
+                                        >
+                                            max <span className="ml-1 text-[9px] text-textDim/70">{sortMark("devMax")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("lastMinusMin")}
+                                            title="Разность между |S_last-S| и min_n |S_n-S|"
+                                        >
+                                            last-min <span className="ml-1 text-[9px] text-textDim/70">{sortMark("lastMinusMin")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("ampOrders")}
+                                            title="Амплитуда степеней: log10(max) - log10(min)"
+                                        >
+                                            amp pow <span className="ml-1 text-[9px] text-textDim/70">{sortMark("ampOrders")}</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {sortedRows.map((row) => {
+                                        const isSelected = selectedSeriesId === row.series.id;
+                                        const rowClassName = getRowColorClass(row.classInfo, isSelected);
+                                        const signNsText = row.analysis.signChangeNs.length
+                                            ? formatIntervals(row.analysis.signChangeNs)
+                                            : "—";
+                                        const violNsText = row.analysis.violationsNs.length
+                                            ? formatIntervals(row.analysis.violationsNs)
+                                            : "—";
+
+                                        const titleLines = [
+                                            `Ряд: ${row.series.name}`,
+                                            `prec: ${row.series.precision}`,
+                                            `args: ${row.argsSummary || "—"}`,
+                                            `limit: ${formatComplexValue(row.series.limit ?? null)}`,
+                                            `class: ${row.classInfo.label} — ${row.classInfo.title}`,
+                                            row.classInfo.description,
+                                            "",
+                                            `dev count: ${row.dev.count}`,
+                                            `min |S_n-S|: ${formatDeviationValue(row.dev.min)} at n=${row.dev.minN ?? "—"}`,
+                                            `mean |S_n-S|: ${formatDeviationValue(row.dev.mean)}`,
+                                            `med |S_n-S|: ${formatDeviationValue(row.dev.median)}`,
+                                            `max |S_n-S|: ${formatDeviationValue(row.dev.max)}`,
+                                            `last |S_n-S|: ${formatDeviationValue(row.dev.last)} at n=${row.dev.lastN ?? "—"}`,
+                                            `last - min: ${formatDeviationValue(row.dev.lastMinusMin)}`,
+                                            `amp powers: ${formatAmplitudeOrders(row.dev.amplitudeOrders)}`,
+                                            "",
+                                            `pairs analyzed: ${row.analysis.stepsAnalyzed}`,
+                                            `sign changes: ${row.analysis.signChangesCount}, ns: ${signNsText}`,
+                                            `violations: ${row.analysis.incCount}, ns: ${violNsText}`,
+                                        ];
+
+                                        return (
+                                            <tr
+                                                key={row.series.id}
+                                                id={getSeriesRowDomId(row.series.id)}
+                                                className={"cursor-pointer " + rowClassName}
+                                                title={titleLines.join("\n")}
+                                                onClick={() => setSelectedSeriesId(row.series.id)}
+                                            >
+                                                <td className="border-t border-border px-2 py-2 font-medium">
+                                                    {row.series.name}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 font-mono">
+                                                    {row.series.precision}
+                                                </td>
+                                                <td
+                                                    className="max-w-[240px] truncate border-t border-border px-2 py-2 font-mono"
+                                                    title={row.argsSummary || "—"}
+                                                >
+                                                    {row.argsSummary || "—"}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 font-mono">
+                                                    {row.classInfo.label}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {row.analysis.stepsAnalyzed}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {row.analysis.signChangesCount}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {row.analysis.incCount}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {formatDeviationValue(row.dev.min)}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {row.dev.minN ?? "—"}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {formatDeviationValue(row.dev.mean)}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {formatDeviationValue(row.dev.median)}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {formatDeviationValue(row.dev.max)}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {formatDeviationValue(row.dev.lastMinusMin)}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {formatAmplitudeOrders(row.dev.amplitudeOrders)}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div ref={detailRef}>
+                            {selected ? (
+                                <div className="mt-4">
+                                    <div className="mb-2 flex items-start justify-between gap-2">
+                                        <div className="text-[10px] text-textDim">
+                                            <div className="font-semibold text-textDim/90">
+                                                {selected.series.name}
+                                            </div>
+                                            <div className="font-mono">
+                                                prec: {selected.series.precision}
+                                                <span className="text-textDim/70"> | </span>
+                                                args: {selected.argsSummary || "—"}
+                                            </div>
+                                            <div className="font-mono">
+                                                limit: {formatComplexValue(selected.series.limit ?? null)}
+                                                <span className="text-textDim/70"> | </span>
+                                                class: {selected.classInfo.label} ({selected.classInfo.title})
+                                            </div>
+                                            <div className="font-mono">
+                                                min: {formatDeviationValue(selected.dev.min)} @ n=
+                                                {selected.dev.minN ?? "—"}
+                                                <span className="text-textDim/70"> | </span>
+                                                last: {formatDeviationValue(selected.dev.last)} @ n=
+                                                {selected.dev.lastN ?? "—"}
+                                                <span className="text-textDim/70"> | </span>
+                                                last-min: {formatDeviationValue(selected.dev.lastMinusMin)}
+                                                <span className="text-textDim/70"> | </span>
+                                                amp pow: {formatAmplitudeOrders(selected.dev.amplitudeOrders)}
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            className="rounded border border-border bg-surface px-2 py-[2px] text-[10px] text-textDim hover:bg-panel"
+                                            onClick={scrollBackToSelected}
+                                        >
+                                            Вернуться к выбранному ряду
+                                        </button>
+                                    </div>
+
+                                    <SeriesComputedDetailChart
+                                        series={selected.series}
+                                        classInfo={selected.classInfo}
+                                        stepsAnalyzed={selected.analysis.stepsAnalyzed}
+                                        points={selected.points}
+                                        dev={selected.dev}
+                                    />
+                                </div>
+                            ) : null}
+                        </div>
                     </div>
                 )}
-            </div>
+            </MatrixExportWrapper>
         </div>
     );
 };
@@ -729,7 +853,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
     className,
 }) => {
     const totalRowsBeforeFilter = useMemo(
-        () => (experiment?.seriesList ?? []).filter((s) => (s.computed ?? []).length > 0).length,
+        () => (experiment?.seriesList ?? []).filter((series) => (series.computed ?? []).length > 0).length,
         [experiment]
     );
 
@@ -745,4 +869,3 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
         </ExperimentMatrixFilterScope>
     );
 };
-

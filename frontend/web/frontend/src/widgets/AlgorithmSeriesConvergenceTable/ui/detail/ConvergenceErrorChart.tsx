@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { type Complex, type DetailPoint } from "../../model/types";
+import { type DetailPoint } from "../../model/types";
 import {
     CartesianGrid,
     Line,
@@ -12,8 +12,6 @@ import {
 } from "recharts";
 import type { TooltipProps } from "recharts/types/component/Tooltip";
 
-/* ======================= types ======================= */
-
 type AnyNum = number | null | undefined;
 
 interface ErrorChartPoint {
@@ -23,64 +21,52 @@ interface ErrorChartPoint {
 
 interface ConvergenceErrorChartProps {
     points: DetailPoint[];
-    limit: Complex | null;
     useAbs: boolean;
 }
 
-/* ======================= utils ======================= */
-
-const isFiniteNumber = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
+const isFiniteNumber = (value: unknown): value is number =>
+    typeof value === "number" && Number.isFinite(value);
 
 const formatValue = (value: AnyNum): string => {
     if (!isFiniteNumber(value)) return "—";
-    const v = value as number;
-    if (Math.abs(v) >= 1e5 || Math.abs(v) < 1e-4) return v.toExponential(6);
-    return v.toFixed(12).replace(/0+$/g, "").replace(/\.$/, "");
+    if (Math.abs(value) >= 1e5 || Math.abs(value) < 1e-4) return value.toExponential(6);
+    return value.toFixed(12).replace(/0+$/g, "").replace(/\.$/, "");
 };
-
-/* ======================= Tooltip ======================= */
 
 interface ErrorTooltipProps extends TooltipProps<number, string> {
     labelText: string;
 }
 
-const ErrorTooltip: React.FC<ErrorTooltipProps> = (props) => {
-    const { active, label, payload, labelText } = props;
+const ErrorTooltip: React.FC<ErrorTooltipProps> = ({ active, label, payload, labelText }) => {
     if (!active || !payload || payload.length === 0) return null;
 
-    const first = payload[0];
-    const raw = first?.value;
-    const val = isFiniteNumber(raw) ? (raw as number) : null;
+    const raw = payload[0]?.value;
+    const value = isFiniteNumber(raw) ? raw : null;
 
     return (
         <div className="rounded-xl border border-border bg-panel/95 p-3 text-xs shadow-lg backdrop-blur">
             <div className="mb-2 font-semibold">n = {label}</div>
             <div className="flex items-center gap-2">
                 <span className="text-[11px] text-textDim/80">{labelText} ≈</span>
-                <span className="font-mono text-[11px] tabular-nums">{formatValue(val)}</span>
+                <span className="font-mono text-[11px] tabular-nums">{formatValue(value)}</span>
             </div>
         </div>
     );
 };
 
-/* ======================= Chart ======================= */
-
 export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({
     points,
-    limit,
     useAbs,
 }) => {
     const data: ErrorChartPoint[] = useMemo(
         () =>
             points
-                .filter((p) => isFiniteNumber(p.err) && (p.err as number) >= 0)
-                .map((p) => {
-                    const base = p.err as number;
-                    const signed = !useAbs && p.sign != null && p.sign !== 0 ? base * p.sign : base;
-                    return {
-                        n: p.n,
-                        value: signed,
-                    };
+                .filter((point) => isFiniteNumber(point.err) && point.err >= 0)
+                .map((point) => {
+                    const base = point.err as number;
+                    const signed =
+                        !useAbs && point.sign != null && point.sign !== 0 ? base * point.sign : base;
+                    return { n: point.n, value: signed };
                 }),
         [points, useAbs]
     );
@@ -91,64 +77,91 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({
         let min = data[0].value;
         let max = data[0].value;
 
-        for (const d of data) {
-            if (d.value < min) min = d.value;
-            if (d.value > max) max = d.value;
+        for (const point of data) {
+            if (point.value < min) min = point.value;
+            if (point.value > max) max = point.value;
         }
 
         if (min === max) {
-            const base = Math.abs(min) || 1;
-            const pad = base * 0.1;
+            const pad = (Math.abs(min) || 1) * 0.1;
             return { yMin: min - pad, yMax: min + pad };
         }
 
-        const span = max - min;
-        const pad = span * 0.1;
+        const pad = (max - min) * 0.1;
         return { yMin: min - pad, yMax: max + pad };
     }, [data]);
 
     const [lineMode, setLineMode] = useState<"smooth" | "sharp">("smooth");
+    const [scaleMode, setScaleMode] = useState<"linear" | "symlog">("linear");
 
-    if (!limit || data.length === 0) {
+    if (data.length === 0) {
         return (
             <div className="mb-3 text-[11px] text-amber-300/80">
-                Невозможно построить график ошибки: нет предела или нет корректных значений Aₙ −
-                lim.
+                Невозможно построить график ошибки: нет корректных значений |A_n - lim|.
             </div>
         );
     }
 
-    const labelY = useAbs ? "|Aₙ − lim|" : "sgn·|Aₙ − lim|";
-    const tooltipLabel = labelY;
+    const labelY = useAbs ? "|A_n - lim|" : "sgn·|A_n - lim|";
 
     return (
         <div className="mb-3">
-            <div className="mb-1 flex justify-end gap-1 text-[10px] text-textDim/80">
-                <span className="mr-1">Соединение:</span>
-                <button
-                    type="button"
-                    className={
-                        "rounded border px-2 py-[1px]" +
-                        (lineMode === "smooth"
-                            ? " border-primary bg-primary/20"
-                            : " border-border bg-surface")
-                    }
-                    onClick={() => setLineMode("smooth")}
-                >
-                    плавное
-                </button>
-                <button
-                    type="button"
-                    className={
-                        "rounded border px-2 py-[1px]" +
-                        (lineMode === "sharp"
-                            ? " border-primary bg-primary/20"
-                            : " border-border bg-surface")
-                    }
-                    onClick={() => setLineMode("sharp")}
-                >
-                    резкое
-                </button>
+            <div className="mb-1 flex flex-wrap justify-end gap-2 text-[10px] text-textDim/80">
+                <div className="flex items-center gap-1">
+                    <span className="mr-1">Соединение:</span>
+                    <button
+                        type="button"
+                        className={
+                            "rounded border px-2 py-[1px]" +
+                            (lineMode === "smooth"
+                                ? " border-primary bg-primary/20"
+                                : " border-border bg-surface")
+                        }
+                        onClick={() => setLineMode("smooth")}
+                    >
+                        плавное
+                    </button>
+                    <button
+                        type="button"
+                        className={
+                            "rounded border px-2 py-[1px]" +
+                            (lineMode === "sharp"
+                                ? " border-primary bg-primary/20"
+                                : " border-border bg-surface")
+                        }
+                        onClick={() => setLineMode("sharp")}
+                    >
+                        резкое
+                    </button>
+                </div>
+
+                <div className="flex items-center gap-1">
+                    <span className="mr-1">Y:</span>
+                    <button
+                        type="button"
+                        className={
+                            "rounded border px-2 py-[1px]" +
+                            (scaleMode === "linear"
+                                ? " border-primary bg-primary/20"
+                                : " border-border bg-surface")
+                        }
+                        onClick={() => setScaleMode("linear")}
+                    >
+                        linear
+                    </button>
+                    <button
+                        type="button"
+                        className={
+                            "rounded border px-2 py-[1px]" +
+                            (scaleMode === "symlog"
+                                ? " border-primary bg-primary/20"
+                                : " border-border bg-surface")
+                        }
+                        onClick={() => setScaleMode("symlog")}
+                    >
+                        symlog
+                    </button>
+                </div>
             </div>
 
             <div className="relative w-full" style={{ height: 220 }}>
@@ -166,9 +179,10 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({
                             }}
                         />
                         <YAxis
+                            scale={scaleMode}
                             domain={[yMin, yMax]}
                             tick={{ fontSize: 10 }}
-                            tickFormatter={(v: number) => formatValue(v)}
+                            tickFormatter={(value: number) => formatValue(value)}
                             label={{
                                 value: labelY,
                                 angle: -90,
@@ -177,17 +191,17 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({
                             }}
                         />
                         <RechartsTooltip
-                            content={<ErrorTooltip labelText={tooltipLabel} />}
+                            content={<ErrorTooltip labelText={labelY} />}
                             wrapperStyle={{ zIndex: 50 }}
                         />
-                        {!useAbs && (
+                        {!useAbs ? (
                             <ReferenceLine
                                 y={0}
                                 stroke="red"
                                 strokeWidth={1.5}
                                 strokeDasharray="8 8"
                             />
-                        )}
+                        ) : null}
                         <Line
                             type={lineMode === "smooth" ? "monotone" : "linear"}
                             dataKey="value"
@@ -200,8 +214,10 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({
                     </LineChart>
                 </ResponsiveContainer>
             </div>
+
             <div className="mt-1 text-[10px] text-textDim/70">
-                График {labelY} по n. При наведении видно номер шага и значение ошибки.
+                График {labelY} по n. Режим `symlog` удобен, когда в одном ряду смешаны очень
+                маленькие и очень большие порядки.
             </div>
         </div>
     );

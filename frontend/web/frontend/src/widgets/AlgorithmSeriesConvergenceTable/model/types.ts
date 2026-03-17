@@ -7,6 +7,10 @@ import type {
     SeriesArgs,
     AccelArgs,
 } from "@/entities/experiment/model/experiment";
+import type {
+    ConvergenceClassInfo,
+    ConvergenceDevStats,
+} from "./convergenceSummary";
 
 export type SideType = "one_sided" | "two_sided" | "unknown";
 
@@ -85,6 +89,8 @@ export interface SelectedDetail {
     analysis: ConvergenceAnalysis | null;
     limit: Complex | null;
     points: DetailPoint[];
+    classInfo: ConvergenceClassInfo | null;
+    dev: ConvergenceDevStats;
 }
 
 export interface SelectedCell {

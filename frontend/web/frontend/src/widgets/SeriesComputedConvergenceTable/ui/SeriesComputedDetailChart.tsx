@@ -1,30 +1,35 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import type { Series } from "@/entities/experiment/model/experiment";
-import type { DetailPoint, MonotonicityType, SideType } from "../model/types";
-import { formatMonotonicityShort, formatSideShort } from "../model/seriesComputedConvergenceUtils";
+import type { DetailPoint } from "../model/types";
+import type {
+    SeriesComputedClassInfo,
+    SeriesComputedDevStats,
+} from "../model/seriesComputedSummary";
+import {
+    formatAmplitudeOrders,
+    formatComplexValue,
+    formatDeviationValue,
+} from "../model/seriesComputedSummary";
 import { SeriesComputedErrorChart } from "./detail/SeriesComputedErrorChart";
 import { SeriesComputedAnTable } from "./detail/SeriesComputedAnTable";
 import { SeriesComputedDiffTable } from "./detail/SeriesComputedDiffTable";
 
 interface SeriesComputedDetailChartProps {
     series: Series;
-    side: SideType;
-    monotonicity: MonotonicityType;
+    classInfo: SeriesComputedClassInfo;
     stepsAnalyzed: number;
     points: DetailPoint[];
+    dev: SeriesComputedDevStats;
 }
 
 export const SeriesComputedDetailChart: React.FC<SeriesComputedDetailChartProps> = ({
     series,
-    side,
-    monotonicity,
+    classInfo,
     stepsAnalyzed,
     points,
+    dev,
 }) => {
     const [useAbs, setUseAbs] = useState<boolean>(true);
-
-    const sideShort = useMemo(() => formatSideShort(side), [side]);
-    const monShort = useMemo(() => formatMonotonicityShort(monotonicity), [monotonicity]);
 
     return (
         <div className="mt-4 rounded-xl border border-border bg-panel p-4 text-xs text-textDim shadow-panel">
@@ -34,14 +39,22 @@ export const SeriesComputedDetailChart: React.FC<SeriesComputedDetailChartProps>
                     <div className="mt-1 space-y-0.5 text-[11px] text-textDim/80">
                         <div>Ряд: {series.name}</div>
                         <div>precision: {series.precision}</div>
+                        <div>limit: {formatComplexValue(series.limit ?? null)}</div>
                     </div>
                 </div>
 
                 <div className="space-y-1 text-right text-[11px] text-textDim/80">
                     <div>
-                        Тип: {sideShort} | {monShort}
+                        Класс: {classInfo.label} ({classInfo.title})
                     </div>
-                    <div>Сравнено шагов (пар): {stepsAnalyzed}</div>
+                    <div>Шагов в анализе: {stepsAnalyzed}</div>
+                    <div>
+                        min: {formatDeviationValue(dev.min)} @ n={dev.minN ?? "—"}
+                    </div>
+                    <div>
+                        last-min: {formatDeviationValue(dev.lastMinusMin)} | amp:{" "}
+                        {formatAmplitudeOrders(dev.amplitudeOrders)}
+                    </div>
 
                     <div className="pt-1">
                         <span className="mr-1 text-[10px] text-textDim/70">Ошибка:</span>

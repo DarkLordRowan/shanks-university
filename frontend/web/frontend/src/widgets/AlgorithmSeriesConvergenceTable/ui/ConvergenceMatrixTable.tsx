@@ -1,18 +1,23 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
     type ConvergenceMatrix,
     type Experiment,
-    type MonotonicityType,
     type SelectedCell,
-    type SideType,
 } from "../model/types";
 import {
-    formatMonotonicityShort,
     formatMonotonicityWithMax,
-    formatSideShort,
     formatSideWithMax,
     getConvergenceCellDomId,
 } from "../model/convergenceUtils";
+import {
+    buildConvergenceClassLegendTitle,
+    computeConvergenceDevStatsFromSeriesAccel,
+    formatAmplitudeOrders,
+    formatComplexValue,
+    formatDeviationValue,
+    getConvergenceClassInfo,
+    type ConvergenceClassInfo,
+} from "../model/convergenceSummary";
 import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries.tsx";
 import { appendAlgorithmArgsTooltipLines } from "@/shared/lib/matrixTooltip";
 import { buildSeriesAccelPairKey } from "@/shared/lib/experimentIndex";
@@ -21,56 +26,63 @@ interface ConvergenceMatrixTableProps {
     experiment: Experiment;
     matrix: ConvergenceMatrix;
     maxSeries?: number;
+    maxSignChangesForOneSided: number;
+    maxViolationsForMonotone: number;
+    onMaxSignChangesForOneSidedChange: (value: number) => void;
+    onMaxViolationsForMonotoneChange: (value: number) => void;
     selectedCell: SelectedCell | null;
     onCellSelect: (cell: SelectedCell) => void;
 }
 
-function isMonotone(mon: MonotonicityType): boolean {
-    return (
-        mon === "strict_decreasing_error" ||
-        mon === "non_increasing_error" ||
-        mon === "constant_error"
-    );
+interface CellSummary {
+    classInfo: ConvergenceClassInfo;
+    minN: number | null;
+    min: number | null;
+    lastMinusMin: number | null;
+    amplitudeOrders: number | null;
 }
 
-function describeClass(side: SideType, mon: MonotonicityType): string {
-    const mono = isMonotone(mon);
-
-    if (side === "one_sided" && mono) return "односторонний и монотонный";
-    if (side === "one_sided" && !mono) return "односторонний и немонотонный";
-    if (side === "two_sided" && mono) return "двусторонний и монотонный";
-    if (side === "two_sided" && !mono) return "двусторонний и немонотонный";
-
-    if (side === "unknown") return "недостаточно данных";
-    if (mon === "unknown") return "недостаточно данных";
-
-    return "недостаточно данных";
-}
+const EMPTY_CLASS_INFO = getConvergenceClassInfo("unknown", "unknown", {
+    count: 0,
+    first: null,
+    firstN: null,
+    min: null,
+    minN: null,
+    mean: null,
+    median: null,
+    max: null,
+    last: null,
+    lastN: null,
+    lastMinusMin: null,
+    amplitudeOrders: null,
+    plateauStartN: null,
+});
 
 function formatIntervals(ns: number[], maxRanges = 5): string {
     if (!ns.length) return "—";
 
     const sorted = Array.from(new Set(ns)).sort((a, b) => a - b);
-
     const ranges: Array<{ start: number; end: number }> = [];
     let start = sorted[0];
     let prev = sorted[0];
 
     for (let i = 1; i < sorted.length; i++) {
-        const x = sorted[i];
-        if (x === prev + 1) {
-            prev = x;
+        const value = sorted[i];
+        if (value === prev + 1) {
+            prev = value;
             continue;
         }
         ranges.push({ start, end: prev });
-        start = x;
-        prev = x;
+        start = value;
+        prev = value;
     }
     ranges.push({ start, end: prev });
 
     const parts = ranges
         .slice(0, maxRanges)
-        .map((r) => (r.start === r.end ? `${r.start}` : `${r.start}–${r.end}`));
+        .map((range) =>
+            range.start === range.end ? `${range.start}` : `${range.start}–${range.end}`
+        );
 
     if (ranges.length > maxRanges) {
         parts.push("…");
@@ -79,49 +91,90 @@ function formatIntervals(ns: number[], maxRanges = 5): string {
     return parts.join(", ");
 }
 
-function getCellColorClass(side: SideType, mon: MonotonicityType, selected: boolean): string {
-    const sel = selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "";
+function getCellColorClass(classInfo: ConvergenceClassInfo, selected: boolean): string {
+    const selectedClass = selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "";
 
-    if (side === "unknown" || mon === "unknown") {
-        return "border-border/60 text-textDim/70 bg-surface/30 hover:bg-surface/40" + sel;
+    switch (classInfo.colorToken) {
+        case "violet":
+            return "border-border text-textDim bg-violet-500/25 hover:bg-violet-500/35" + selectedClass;
+        case "green":
+            return "border-border text-textDim bg-emerald-400/25 hover:bg-emerald-400/35" + selectedClass;
+        case "greenDark":
+            return "border-border text-textDim bg-emerald-700/35 hover:bg-emerald-700/45" + selectedClass;
+        case "yellow":
+            return "border-border text-textDim bg-yellow-300/35 hover:bg-yellow-300/45" + selectedClass;
+        case "yellowDark":
+            return "border-border text-textDim bg-yellow-700/35 hover:bg-yellow-700/45" + selectedClass;
+        case "orange":
+            return "border-border text-textDim bg-orange-400/30 hover:bg-orange-400/40" + selectedClass;
+        case "orangeDark":
+            return "border-border text-textDim bg-orange-700/35 hover:bg-orange-700/45" + selectedClass;
+        case "red":
+            return "border-border text-textDim bg-red-400/30 hover:bg-red-400/40" + selectedClass;
+        case "redDark":
+            return "border-border text-textDim bg-red-800/35 hover:bg-red-800/45" + selectedClass;
+        case "neutral":
+        default:
+            return "border-border/60 text-textDim/70 bg-surface/30 hover:bg-surface/40" + selectedClass;
     }
-
-    const mono = isMonotone(mon);
-
-    if (side === "one_sided" && mono) {
-        return "border-border text-textDim bg-emerald-500/25 hover:bg-emerald-500/35" + sel;
-    }
-    if (side === "one_sided" && !mono) {
-        return "border-border text-textDim bg-sky-500/25 hover:bg-sky-500/35" + sel;
-    }
-
-    if (side === "two_sided" && mono) {
-        return "border-border text-textDim bg-amber-300/35 hover:bg-amber-300/45" + sel;
-    }
-    if (side === "two_sided" && !mono) {
-        return "border-border text-textDim bg-red-500/30 hover:bg-red-500/40" + sel;
-    }
-
-    return "border-border text-textDim bg-surface/40 hover:bg-surface/50" + sel;
 }
 
 export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     experiment,
     matrix,
     maxSeries,
+    maxSignChangesForOneSided,
+    maxViolationsForMonotone,
+    onMaxSignChangesForOneSidedChange,
+    onMaxViolationsForMonotoneChange,
     selectedCell,
     onCellSelect,
 }) => {
-    const [maxSignChangesForOneSided, setMaxSignChangesForOneSided] = useState<number>(0);
-    const [maxViolationsForMonotone, setMaxViolationsForMonotone] = useState<number>(0);
+    const algoByKey = useMemo(() => new Map(matrix.algoList.map((algo) => [algo.key, algo])), [matrix.algoList]);
+    const seriesByKey = useMemo(() => new Map(matrix.seriesList.map((series) => [series.key, series])), [matrix.seriesList]);
+    const seriesLimitByKey = useMemo(
+        () => new Map((experiment?.seriesList ?? []).map((series) => [series.id, series.limit ?? null])),
+        [experiment]
+    );
 
-    useEffect(() => {
-        setMaxSignChangesForOneSided(0);
-        setMaxViolationsForMonotone(0);
-    }, [experiment]);
+    const cellSummaryByKey = useMemo(() => {
+        const summary = new Map<string, CellSummary>();
 
-    const algoByKey = useMemo(() => new Map(matrix.algoList.map((a) => [a.key, a])), [matrix.algoList]);
-    const seriesByKey = useMemo(() => new Map(matrix.seriesList.map((s) => [s.key, s])), [matrix.seriesList]);
+        for (const seriesAccel of experiment?.seriesAccelList ?? []) {
+            const key = buildSeriesAccelPairKey(seriesAccel.accel_id, seriesAccel.series_id);
+            const analysis = matrix.cells[key];
+            if (!analysis) continue;
+
+            const side = formatSideWithMax(analysis, maxSignChangesForOneSided);
+            const monotonicity = formatMonotonicityWithMax(analysis, maxViolationsForMonotone);
+            const dev = computeConvergenceDevStatsFromSeriesAccel(
+                seriesAccel,
+                seriesLimitByKey.get(seriesAccel.series_id) ?? null
+            );
+            const classInfo = getConvergenceClassInfo(side, monotonicity, dev);
+
+            summary.set(key, {
+                classInfo,
+                minN: dev.minN,
+                min: dev.min,
+                lastMinusMin: dev.lastMinusMin,
+                amplitudeOrders: dev.amplitudeOrders,
+            });
+        }
+
+        return summary;
+    }, [
+        experiment,
+        matrix.cells,
+        maxSignChangesForOneSided,
+        maxViolationsForMonotone,
+        seriesLimitByKey,
+    ]);
+
+    const classLegendTitle = buildConvergenceClassLegendTitle(
+        maxSignChangesForOneSided,
+        maxViolationsForMonotone
+    );
 
     return (
         <MatrixAlgorithmSeries
@@ -149,7 +202,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                         <div className="flex items-center gap-1">
                             <span
                                 className="whitespace-nowrap"
-                                title="Максимальное количество смен знака разности Aₖ - lim, при котором приближение считается односторонним. Если смен знака больше этого значения, то считается двухсторонним."
+                                title="Максимальное число смен знака A_n - lim, при котором траектория все еще считается односторонней."
                             >
                                 max sign changes:
                             </span>
@@ -158,8 +211,8 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                 min={0}
                                 max={50}
                                 value={maxSignChangesForOneSided}
-                                onChange={(e) =>
-                                    setMaxSignChangesForOneSided(Number(e.target.value))
+                                onChange={(event) =>
+                                    onMaxSignChangesForOneSidedChange(Number(event.target.value))
                                 }
                                 className="h-[4px] w-28 cursor-pointer"
                             />
@@ -171,7 +224,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                         <div className="flex items-center gap-1">
                             <span
                                 className="whitespace-nowrap"
-                                title="Максимальное количество увеличений ошибки |Aₖ - lim|, при котором приближение всё ещё считается монотонным (неубывающим или невозрастающим). Если увеличений больше, то ошибка считается случайной (random)."
+                                title="Максимальное число ростов |A_n - lim|, при котором траектория все еще считается почти монотонной."
                             >
                                 max violations:
                             </span>
@@ -180,8 +233,8 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                 min={0}
                                 max={50}
                                 value={maxViolationsForMonotone}
-                                onChange={(e) =>
-                                    setMaxViolationsForMonotone(Number(e.target.value))
+                                onChange={(event) =>
+                                    onMaxViolationsForMonotoneChange(Number(event.target.value))
                                 }
                                 className="h-[4px] w-28 cursor-pointer"
                             />
@@ -190,39 +243,46 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                             </span>
                         </div>
                     </div>
+
+                    <span
+                        className="cursor-help rounded border border-border bg-surface px-2 py-[3px] text-[10px] text-textDim hover:bg-panel"
+                        title={classLegendTitle}
+                    >
+                        класс
+                    </span>
                 </div>
             )}
             renderCell={(row, col) => {
                 const algo = algoByKey.get(row.id);
-                const s = seriesByKey.get(col.id);
-                if (!algo || !s) return null;
+                const series = seriesByKey.get(col.id);
+                if (!algo || !series) return null;
 
-                const key = buildSeriesAccelPairKey(algo.key, s.key);
+                const key = buildSeriesAccelPairKey(algo.key, series.key);
                 const analysis = matrix.cells[key];
 
                 if (!analysis) {
                     return (
-                        <div className="w-full h-full min-h-[32px] flex items-center justify-center text-[10px] text-textDim/50">
+                        <div className="flex h-full min-h-[32px] w-full items-center justify-center text-[10px] text-textDim/50">
                             —
                         </div>
                     );
                 }
 
-                const side = formatSideWithMax(analysis, maxSignChangesForOneSided);
-                const monotonicity = formatMonotonicityWithMax(analysis, maxViolationsForMonotone);
-
-                const sideShort = formatSideShort(side);
-
-                const monShort = formatMonotonicityShort(monotonicity);
-
+                const summary = cellSummaryByKey.get(key);
+                const classInfo = summary?.classInfo ?? EMPTY_CLASS_INFO;
                 const isSelected =
-                    selectedCell?.seriesId === s.key && selectedCell?.accelId === algo.key;
+                    selectedCell?.seriesId === series.key && selectedCell?.accelId === algo.key;
+                const colorClass = getCellColorClass(classInfo, isSelected);
+                const domId = getConvergenceCellDomId(algo.key, series.key);
 
-                const colorClass = getCellColorClass(side, monotonicity, isSelected);
-                const domId = getConvergenceCellDomId(algo.key, s.key);
+                const signNsText =
+                    analysis.signChangeNs.length > 0 ? formatIntervals(analysis.signChangeNs) : "—";
+                const growthNsText =
+                    analysis.violationsNs.length > 0 ? formatIntervals(analysis.violationsNs) : "—";
 
                 const titleLines: string[] = [];
-                titleLines.push(`Ряд: ${s.seriesName} (x=${s.xLabel}, prec=${s.precision})`);
+                titleLines.push(`Ряд: ${series.seriesName} (x=${series.xLabel}, prec=${series.precision})`);
+                titleLines.push(`Предел ряда: ${formatComplexValue(seriesLimitByKey.get(series.key) ?? null)}`);
                 titleLines.push(
                     `Алгоритм: ${algo.algorithmName}` + (algo.m != null ? `, m=${algo.m}` : "")
                 );
@@ -233,26 +293,21 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                     algo.argsSummary
                 );
                 if (hasAlgoArgs) titleLines.push("");
-
-                titleLines.push(`Класс: ${describeClass(side, monotonicity)}`);
-
-                const signNsText =
-                    analysis.signChangeNs && analysis.signChangeNs.length > 0
-                        ? formatIntervals(analysis.signChangeNs)
-                        : "—";
-
-                const growthNsText =
-                    analysis.violationsNs && analysis.violationsNs.length > 0
-                        ? formatIntervals(analysis.violationsNs)
-                        : "—";
-
+                titleLines.push(`Класс: ${classInfo.label} (${classInfo.title})`);
+                titleLines.push(classInfo.description);
+                titleLines.push(
+                    `min |A_n-lim|: ${formatDeviationValue(summary?.min ?? null)} at n=${summary?.minN ?? "—"}`
+                );
+                titleLines.push(
+                    `last-min: ${formatDeviationValue(summary?.lastMinusMin ?? null)} | amp: ${formatAmplitudeOrders(summary?.amplitudeOrders ?? null)}`
+                );
                 titleLines.push(
                     `Число смен знака: ${analysis.signChangesCount}, ns: ${signNsText}`
                 );
                 titleLines.push(
-                    `Число расхождений |Aₙ−lim|: ${analysis.violationsCount}, ns: ${growthNsText}`
+                    `Число ростов |A_n-lim|: ${analysis.violationsCount}, ns: ${growthNsText}`
                 );
-                titleLines.push(`Пар (n−1,n) в анализе: ${analysis.stepsAnalyzed}`);
+                titleLines.push(`Пар (n-1,n) в анализе: ${analysis.stepsAnalyzed}`);
                 titleLines.push("");
                 titleLines.push("Клик — детальный график.");
 
@@ -261,17 +316,17 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                         id={domId}
                         title={titleLines.join("\n")}
                         className={
-                            "w-full h-full min-h-[32px] cursor-pointer border border-transparent " +
+                            "h-full min-h-[32px] w-full cursor-pointer border border-transparent " +
                             colorClass
                         }
-                        onClick={() => onCellSelect({ seriesId: s.key, accelId: algo.key })}
+                        onClick={() =>
+                            onCellSelect({ seriesId: series.key, accelId: algo.key })
+                        }
                     >
-                        <div className="flex select-none flex-col items-center justify-center gap-[1px] leading-tight py-[2px]">
-                            <span className="font-mono text-[10px]">
-                                {sideShort} | {monShort}
-                            </span>
+                        <div className="flex select-none flex-col items-center justify-center gap-[1px] py-[2px] leading-tight">
+                            <span className="font-mono text-[10px]">{classInfo.label}</span>
                             <span className="text-[9px] text-textDim/80">
-                                k: {analysis.stepsAnalyzed}
+                                min@{summary?.minN ?? "—"}
                             </span>
                         </div>
                     </div>
