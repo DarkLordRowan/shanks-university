@@ -6,6 +6,7 @@ import type {
     SeriesAccelComputedPoint,
     SeriesComputedPoint,
 } from "@/entities/experiment/model/experiment";
+import { analyzeSeriesAccelConvergence } from "@/widgets/AlgorithmSeriesConvergenceTable/model/convergenceUtils";
 
 export type AlgoKey = string;
 
@@ -27,6 +28,9 @@ export interface AlgoStats {
     reachedTolCount: number;
     minDeviationNs: number[];
     relativeErrors: number[];
+    ordersGains: number[];
+    lastMinusMinGaps: number[];
+    oneSidedCount: number;
 
     bestMinCount: number;
     worstMinCount: number;
@@ -38,6 +42,9 @@ export interface AlgoStats {
     avgStepsToTol: number;
     avgMinDeviationN: number;
     avgRelativeError: number;
+    avgOrdersGain: number;
+    avgLastMinusMin: number;
+    oneSidedShare: number;
     bestMinShare: number;
     worstMinShare: number;
     bestLastShare: number;
@@ -59,8 +66,11 @@ export type AlgoRankingSortKey =
     | "seriesCount"
     | "avgBestDeviation"
     | "avgRelativeError"
+    | "avgOrdersGain"
     | "avgMinDeviationN"
+    | "avgLastMinusMin"
     | "fracReachedTol"
+    | "oneSidedShare"
     | "avgStepsToTol"
     | "bestMinShare"
     | "worstMinShare"
@@ -150,6 +160,22 @@ function meanOrInfinity(values: number[]): number {
     return sum / values.length;
 }
 
+function meanOrNegativeInfinity(values: number[]): number {
+    if (values.length === 0) return Number.NEGATIVE_INFINITY;
+
+    let sum = 0;
+    for (const value of values) sum += value;
+    return sum / values.length;
+}
+
+function meanOrValue(values: number[], fallback: number): number {
+    if (values.length === 0) return fallback;
+
+    let sum = 0;
+    for (const value of values) sum += value;
+    return sum / values.length;
+}
+
 function computeRelativeError(algoMinDeviation: number, seriesMinDeviation: number): number {
     if (!Number.isFinite(algoMinDeviation) || !Number.isFinite(seriesMinDeviation)) {
         return Number.POSITIVE_INFINITY;
@@ -160,6 +186,35 @@ function computeRelativeError(algoMinDeviation: number, seriesMinDeviation: numb
     }
 
     return algoMinDeviation / seriesMinDeviation;
+}
+
+function computeOrdersGain(algoMinDeviation: number, seriesMinDeviation: number): number {
+    if (!Number.isFinite(algoMinDeviation) || !Number.isFinite(seriesMinDeviation)) {
+        return Number.NEGATIVE_INFINITY;
+    }
+
+    if (seriesMinDeviation === 0) {
+        if (algoMinDeviation === 0) return 0;
+        return -Math.abs(Math.log10(algoMinDeviation));
+    }
+
+    if (algoMinDeviation === 0) {
+        return Math.abs(Math.log10(seriesMinDeviation));
+    }
+
+    return Math.log10(seriesMinDeviation) - Math.log10(algoMinDeviation);
+}
+
+function computeLastMinusMinGap(lastDeviation: number, minDeviation: number): number {
+    if (!Number.isFinite(lastDeviation) || !Number.isFinite(minDeviation)) {
+        return Number.POSITIVE_INFINITY;
+    }
+
+    if (almostEqual(lastDeviation, minDeviation)) {
+        return 0;
+    }
+
+    return lastDeviation - minDeviation;
 }
 
 function collectDeviationMetrics(
@@ -342,6 +397,9 @@ export function buildAlgoStatsFromExperiment(
                 reachedTolCount: 0,
                 minDeviationNs: [],
                 relativeErrors: [],
+                ordersGains: [],
+                lastMinusMinGaps: [],
+                oneSidedCount: 0,
 
                 bestMinCount: 0,
                 worstMinCount: 0,
@@ -353,6 +411,9 @@ export function buildAlgoStatsFromExperiment(
                 avgStepsToTol: Number.POSITIVE_INFINITY,
                 avgMinDeviationN: Number.POSITIVE_INFINITY,
                 avgRelativeError: Number.POSITIVE_INFINITY,
+                avgOrdersGain: Number.NEGATIVE_INFINITY,
+                avgLastMinusMin: Number.POSITIVE_INFINITY,
+                oneSidedShare: 0,
                 bestMinShare: 0,
                 worstMinShare: 0,
                 bestLastShare: 0,
@@ -370,10 +431,14 @@ export function buildAlgoStatsFromExperiment(
 
         const metrics = collectDeviationMetrics(seriesAccel.computed ?? [], epsilon);
         if (!Number.isFinite(metrics.minDeviation)) continue;
+        const convergenceAnalysis = analyzeSeriesAccelConvergence(series, accel ?? null, seriesAccel);
 
         stats.seriesCount += 1;
         stats.bestDeviations.push(metrics.minDeviation);
         stats.minDeviationNs.push(metrics.minDeviationN);
+        if (convergenceAnalysis.side === "one_sided") {
+            stats.oneSidedCount += 1;
+        }
 
         if (Number.isFinite(metrics.stepsToTol)) {
             stats.stepsToTol.push(metrics.stepsToTol);
@@ -384,8 +449,16 @@ export function buildAlgoStatsFromExperiment(
 
         const seriesMinDeviation = seriesMinDeviationById.get(series.id) ?? Number.POSITIVE_INFINITY;
         if (Number.isFinite(seriesMinDeviation)) {
-            stats.relativeErrors.push(computeRelativeError(metrics.minDeviation, seriesMinDeviation));
+            if (seriesMinDeviation > 0) {
+                stats.relativeErrors.push(
+                    computeRelativeError(metrics.minDeviation, seriesMinDeviation)
+                );
+            }
+            stats.ordersGains.push(computeOrdersGain(metrics.minDeviation, seriesMinDeviation));
         }
+        stats.lastMinusMinGaps.push(
+            computeLastMinusMinGap(metrics.lastDeviation, metrics.minDeviation)
+        );
 
         const items = seriesMetrics.get(series.id) ?? [];
         items.push({
@@ -407,7 +480,10 @@ export function buildAlgoStatsFromExperiment(
         stats.fracReachedTol =
             stats.seriesCount > 0 ? stats.reachedTolCount / stats.seriesCount : 0;
         stats.avgStepsToTol = meanOrInfinity(finiteSteps);
-        stats.avgRelativeError = meanOrInfinity(stats.relativeErrors);
+        stats.avgRelativeError = meanOrValue(stats.relativeErrors, 1);
+        stats.avgOrdersGain = meanOrNegativeInfinity(stats.ordersGains);
+        stats.avgLastMinusMin = meanOrInfinity(stats.lastMinusMinGaps);
+        stats.oneSidedShare = stats.seriesCount > 0 ? stats.oneSidedCount / stats.seriesCount : 0;
 
         statsList.push(stats);
     }
@@ -474,11 +550,14 @@ export function buildAlgoStatsFromExperiment(
 
     const avgBestDeviationRanks = buildRankMap(statsList, (stats) => stats.avgBestDeviation, "asc");
     const avgRelativeErrorRanks = buildRankMap(statsList, (stats) => stats.avgRelativeError, "asc");
+    const avgOrdersGainRanks = buildRankMap(statsList, (stats) => stats.avgOrdersGain, "desc");
     const bestMinShareRanks = buildRankMap(statsList, (stats) => stats.bestMinShare, "desc");
     const worstMinShareRanks = buildRankMap(statsList, (stats) => stats.worstMinShare, "asc");
     const avgStepsToTolRanks = buildRankMap(statsList, (stats) => stats.avgStepsToTol, "asc");
     const avgMinDeviationNRanks = buildRankMap(statsList, (stats) => stats.avgMinDeviationN, "asc");
+    const avgLastMinusMinRanks = buildRankMap(statsList, (stats) => stats.avgLastMinusMin, "asc");
     const reachedTolRanks = buildRankMap(statsList, (stats) => stats.fracReachedTol, "desc");
+    const oneSidedShareRanks = buildRankMap(statsList, (stats) => stats.oneSidedShare, "desc");
     const bestLastShareRanks = buildRankMap(statsList, (stats) => stats.bestLastShare, "desc");
     const worstLastShareRanks = buildRankMap(statsList, (stats) => stats.worstLastShare, "asc");
 
@@ -491,6 +570,7 @@ export function buildAlgoStatsFromExperiment(
             stats.algoKey,
             (avgBestDeviationRanks.get(stats.algoKey) ?? 0) +
                 (avgRelativeErrorRanks.get(stats.algoKey) ?? 0) +
+                (avgOrdersGainRanks.get(stats.algoKey) ?? 0) +
                 (bestMinShareRanks.get(stats.algoKey) ?? 0) +
                 (worstMinShareRanks.get(stats.algoKey) ?? 0)
         );
@@ -504,6 +584,8 @@ export function buildAlgoStatsFromExperiment(
         stabilityScores.set(
             stats.algoKey,
             (reachedTolRanks.get(stats.algoKey) ?? 0) +
+                (oneSidedShareRanks.get(stats.algoKey) ?? 0) +
+                (avgLastMinusMinRanks.get(stats.algoKey) ?? 0) +
                 (bestLastShareRanks.get(stats.algoKey) ?? 0) +
                 (worstLastShareRanks.get(stats.algoKey) ?? 0)
         );
@@ -546,6 +628,9 @@ export function buildAlgoStatsFromExperiment(
 
         const devDiff = compareNumbers(a.avgBestDeviation, b.avgBestDeviation, "asc");
         if (devDiff !== 0) return devDiff;
+
+        const gainDiff = compareNumbers(a.avgOrdersGain, b.avgOrdersGain, "desc");
+        if (gainDiff !== 0) return gainDiff;
 
         return compareNumbers(a.avgRelativeError, b.avgRelativeError, "asc");
     });

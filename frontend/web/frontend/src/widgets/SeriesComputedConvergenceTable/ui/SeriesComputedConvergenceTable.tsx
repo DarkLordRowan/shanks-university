@@ -46,6 +46,8 @@ type SortKey =
     | "viol"
     | "devMin"
     | "minN"
+    | "devLast"
+    | "lastN"
     | "devMean"
     | "devMedian"
     | "devMax"
@@ -104,6 +106,15 @@ function formatSignedError(point: { err: number | null; sign: -1 | 0 | 1 | null 
     return point.err * point.sign;
 }
 
+function getExportSideLabel(
+    side: SideType,
+    kind: SeriesComputedClassInfo["kind"]
+): string {
+    if (kind === "unknown" || side === "unknown") return "?";
+    if (kind === "static") return "1s";
+    return side === "two_sided" ? "2s" : "1s";
+}
+
 function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
     const header = [
         "#",
@@ -111,6 +122,7 @@ function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
         "precision",
         "args",
         "limit",
+        "side",
         "class",
         "class title",
         "steps",
@@ -118,13 +130,13 @@ function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
         "violations",
         "min |S_n-S|",
         "min n",
-        "mean |S_n-S|",
-        "median |S_n-S|",
-        "max |S_n-S|",
         "last |S_n-S|",
         "last n",
         "last - min",
         "amp powers",
+        "mean |S_n-S|",
+        "median |S_n-S|",
+        "max |S_n-S|",
     ];
 
     const aoa: Array<Array<string | number | null>> = [header];
@@ -136,20 +148,21 @@ function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
             row.series.precision,
             row.argsSummary || null,
             formatComplexValue(row.series.limit ?? null),
-            row.classInfo.label,
+            getExportSideLabel(row.side, row.classInfo.kind),
+            row.classInfo.symbol,
             row.classInfo.title,
             row.analysis.stepsAnalyzed,
             row.analysis.signChangesCount,
             row.analysis.incCount,
             row.dev.min,
             row.dev.minN,
-            row.dev.mean,
-            row.dev.median,
-            row.dev.max,
             row.dev.last,
             row.dev.lastN,
             row.dev.lastMinusMin,
             row.dev.amplitudeOrders,
+            row.dev.mean,
+            row.dev.median,
+            row.dev.max,
         ]);
     });
 
@@ -160,7 +173,8 @@ function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
             { wch: 12 },
             { wch: 28 },
             { wch: 26 },
-            { wch: 14 },
+            { wch: 8 },
+            { wch: 10 },
             { wch: 24 },
             { wch: 10 },
             { wch: 14 },
@@ -168,19 +182,20 @@ function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
             { wch: 16 },
             { wch: 10 },
             { wch: 16 },
-            { wch: 16 },
-            { wch: 16 },
-            { wch: 16 },
             { wch: 10 },
             { wch: 14 },
             { wch: 12 },
+            { wch: 16 },
+            { wch: 16 },
+            { wch: 16 },
         ],
         headerRows: 1,
         rowHeaderCols: 2,
         decorateCell: ({ rowIndex, colIndex, cell }) => {
             if (rowIndex === 0) return;
-            if ([10, 12, 13, 14, 15, 17, 18].includes(colIndex)) cell.z = "0.000E+00";
-            if ([0, 7, 8, 9, 11, 16].includes(colIndex)) cell.z = "0";
+            if ([0, 8, 9, 10, 12, 14].includes(colIndex)) cell.z = "0";
+            if ([11, 13, 15, 17, 18, 19].includes(colIndex)) cell.z = "0.000E+00";
+            if (colIndex === 16) cell.z = "0.00";
         },
     });
 }
@@ -188,6 +203,7 @@ function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
 function buildSelectedMetaSheet(selected: {
     series: Series;
     analysis: SeriesComputedConvergenceAnalysis;
+    side: SideType;
     argsSummary: string;
     classInfo: SeriesComputedClassInfo;
     dev: SeriesComputedDevStats;
@@ -198,7 +214,8 @@ function buildSelectedMetaSheet(selected: {
         ["precision", selected.series.precision],
         ["args", selected.argsSummary || null],
         ["limit", formatComplexValue(selected.series.limit ?? null)],
-        ["class", selected.classInfo.label],
+        ["side", getExportSideLabel(selected.side, selected.classInfo.kind)],
+        ["class", selected.classInfo.symbol],
         ["class title", selected.classInfo.title],
         ["class description", selected.classInfo.description],
         ["steps", selected.analysis.stepsAnalyzed],
@@ -206,13 +223,13 @@ function buildSelectedMetaSheet(selected: {
         ["violations", selected.analysis.incCount],
         ["min |S_n-S|", selected.dev.min],
         ["min n", selected.dev.minN],
-        ["mean |S_n-S|", selected.dev.mean],
-        ["median |S_n-S|", selected.dev.median],
-        ["max |S_n-S|", selected.dev.max],
         ["last |S_n-S|", selected.dev.last],
         ["last n", selected.dev.lastN],
         ["last - min", selected.dev.lastMinusMin],
         ["amp powers", selected.dev.amplitudeOrders],
+        ["mean |S_n-S|", selected.dev.mean],
+        ["median |S_n-S|", selected.dev.median],
+        ["max |S_n-S|", selected.dev.max],
     ];
 
     return buildSheetFromAoa(aoa, {
@@ -399,6 +416,10 @@ const SeriesComputedConvergenceTableView: React.FC<
                     return row.dev.min;
                 case "minN":
                     return row.dev.minN;
+                case "devLast":
+                    return row.dev.last;
+                case "lastN":
+                    return row.dev.lastN;
                 case "devMean":
                     return row.dev.mean;
                 case "devMedian":
@@ -417,6 +438,8 @@ const SeriesComputedConvergenceTableView: React.FC<
         const nullableNumericKey =
             sort.key === "devMin" ||
             sort.key === "minN" ||
+            sort.key === "devLast" ||
+            sort.key === "lastN" ||
             sort.key === "devMean" ||
             sort.key === "devMedian" ||
             sort.key === "devMax" ||
@@ -713,6 +736,34 @@ const SeriesComputedConvergenceTableView: React.FC<
                                         </th>
                                         <th
                                             className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("devLast")}
+                                            title="|S_last-S|"
+                                        >
+                                            last <span className="ml-1 text-[9px] text-textDim/70">{sortMark("devLast")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("lastN")}
+                                            title="Последний n с конечным |S_n-S|"
+                                        >
+                                            n last <span className="ml-1 text-[9px] text-textDim/70">{sortMark("lastN")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("lastMinusMin")}
+                                            title="Разность между |S_last-S| и min_n |S_n-S|"
+                                        >
+                                            last-min <span className="ml-1 text-[9px] text-textDim/70">{sortMark("lastMinusMin")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
+                                            onClick={() => toggleSort("ampOrders")}
+                                            title="Амплитуда степеней: log10(max) - log10(min)"
+                                        >
+                                            amp pow <span className="ml-1 text-[9px] text-textDim/70">{sortMark("ampOrders")}</span>
+                                        </th>
+                                        <th
+                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
                                             onClick={() => toggleSort("devMean")}
                                             title="mean_n |S_n-S|"
                                         >
@@ -732,20 +783,6 @@ const SeriesComputedConvergenceTableView: React.FC<
                                         >
                                             max <span className="ml-1 text-[9px] text-textDim/70">{sortMark("devMax")}</span>
                                         </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("lastMinusMin")}
-                                            title="Разность между |S_last-S| и min_n |S_n-S|"
-                                        >
-                                            last-min <span className="ml-1 text-[9px] text-textDim/70">{sortMark("lastMinusMin")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("ampOrders")}
-                                            title="Амплитуда степеней: log10(max) - log10(min)"
-                                        >
-                                            amp pow <span className="ml-1 text-[9px] text-textDim/70">{sortMark("ampOrders")}</span>
-                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -758,7 +795,6 @@ const SeriesComputedConvergenceTableView: React.FC<
                                         const violNsText = row.analysis.violationsNs.length
                                             ? formatIntervals(row.analysis.violationsNs)
                                             : "—";
-
                                         const titleLines = [
                                             `Ряд: ${row.series.name}`,
                                             `prec: ${row.series.precision}`,
@@ -769,12 +805,12 @@ const SeriesComputedConvergenceTableView: React.FC<
                                             "",
                                             `dev count: ${row.dev.count}`,
                                             `min |S_n-S|: ${formatDeviationValue(row.dev.min)} at n=${row.dev.minN ?? "—"}`,
-                                            `mean |S_n-S|: ${formatDeviationValue(row.dev.mean)}`,
-                                            `med |S_n-S|: ${formatDeviationValue(row.dev.median)}`,
-                                            `max |S_n-S|: ${formatDeviationValue(row.dev.max)}`,
                                             `last |S_n-S|: ${formatDeviationValue(row.dev.last)} at n=${row.dev.lastN ?? "—"}`,
                                             `last - min: ${formatDeviationValue(row.dev.lastMinusMin)}`,
                                             `amp powers: ${formatAmplitudeOrders(row.dev.amplitudeOrders)}`,
+                                            `mean |S_n-S|: ${formatDeviationValue(row.dev.mean)}`,
+                                            `med |S_n-S|: ${formatDeviationValue(row.dev.median)}`,
+                                            `max |S_n-S|: ${formatDeviationValue(row.dev.max)}`,
                                             "",
                                             `pairs analyzed: ${row.analysis.stepsAnalyzed}`,
                                             `sign changes: ${row.analysis.signChangesCount}, ns: ${signNsText}`,
@@ -820,6 +856,18 @@ const SeriesComputedConvergenceTableView: React.FC<
                                                     {row.dev.minN ?? "—"}
                                                 </td>
                                                 <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {formatDeviationValue(row.dev.last)}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {row.dev.lastN ?? "—"}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {formatDeviationValue(row.dev.lastMinusMin)}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {formatAmplitudeOrders(row.dev.amplitudeOrders)}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
                                                     {formatDeviationValue(row.dev.mean)}
                                                 </td>
                                                 <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
@@ -827,12 +875,6 @@ const SeriesComputedConvergenceTableView: React.FC<
                                                 </td>
                                                 <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
                                                     {formatDeviationValue(row.dev.max)}
-                                                </td>
-                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
-                                                    {formatDeviationValue(row.dev.lastMinusMin)}
-                                                </td>
-                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
-                                                    {formatAmplitudeOrders(row.dev.amplitudeOrders)}
                                                 </td>
                                             </tr>
                                         );

@@ -39,9 +39,12 @@ type ColId =
     | "seriesCount"
     | "avgBestDeviation"
     | "avgRelativeError"
+    | "avgOrdersGain"
     | "avgMinDeviationN"
+    | "avgLastMinusMin"
     | "avgStepsToTol"
     | "fracReachedTol"
+    | "oneSidedShare"
     | "bestMinShare"
     | "worstMinShare"
     | "bestLastShare"
@@ -121,15 +124,31 @@ const BASE_COLUMNS: ColMeta[] = [
         id: "avgRelativeError",
         title: "avg rel error",
         description:
-            "Среднее отношение min |A_n - lim| алгоритма к min |S_n - lim| ряда. 1 = на уровне ряда, <1 = лучше ряда, >1 = хуже. Для 0/0 берется 1.",
+            "Среднее отношение min |A_n - lim| алгоритма к min |S_n - lim| ряда. 1 = на уровне ряда, <1 = лучше ряда, >1 = хуже. В среднее входят только ряды с min |S_n - lim| > 0; случаи с нулевым минимумом ряда оцениваются через avg gain, ord.",
         sortKey: "avgRelativeError",
         defaultDir: "asc",
+    },
+    {
+        id: "avgOrdersGain",
+        title: "avg gain, ord",
+        description:
+            "Средний выигрыш по порядкам относительно частичных сумм: log10(min |S_n - lim|) - log10(min |A_n - lim|). Больше лучше.",
+        sortKey: "avgOrdersGain",
+        defaultDir: "desc",
     },
     {
         id: "avgMinDeviationN",
         title: "avg min dev n",
         description: "Среднее n, на котором алгоритм достигает своего min |A_n - lim|. Меньше лучше.",
         sortKey: "avgMinDeviationN",
+        defaultDir: "asc",
+    },
+    {
+        id: "avgLastMinusMin",
+        title: "avg last-min",
+        description:
+            "Средний уход от лучшей точки к последней: |A_last - lim| - min_n |A_n - lim|. Меньше лучше.",
+        sortKey: "avgLastMinusMin",
         defaultDir: "asc",
     },
     {
@@ -145,6 +164,14 @@ const BASE_COLUMNS: ColMeta[] = [
         title: "reached eps, %",
         description: "Доля рядов, на которых алгоритм вообще достиг |A_n - lim| <= epsilon. Больше лучше.",
         sortKey: "fracReachedTol",
+        defaultDir: "desc",
+    },
+    {
+        id: "oneSidedShare",
+        title: "1-sided, %",
+        description:
+            "Доля запусков, где алгоритм шел к пределу односторонне. Для класса → это тоже считается как 1-sided. Больше лучше.",
+        sortKey: "oneSidedShare",
         defaultDir: "desc",
     },
     {
@@ -183,7 +210,7 @@ const BASE_COLUMNS: ColMeta[] = [
         id: "rankPrecision",
         title: "rank precision",
         description:
-            "Итоговый rank по точности: avg min |dev| + avg rel error + best min div + worst min div. Меньше лучше.",
+            "Итоговый rank по точности: avg min |dev| + avg rel error + avg gain, ord + best min div + worst min div. Меньше лучше.",
         sortKey: "rankPrecision",
         defaultDir: "asc",
     },
@@ -198,7 +225,7 @@ const BASE_COLUMNS: ColMeta[] = [
         id: "rankStability",
         title: "rank stability",
         description:
-            "Итоговый rank по устойчивости: reached eps + best last div + worst last div. Меньше лучше.",
+            "Итоговый rank по устойчивости: reached eps + 1-sided share + avg last-min + best last div + worst last div. Меньше лучше.",
         sortKey: "rankStability",
         defaultDir: "asc",
     },
@@ -211,7 +238,6 @@ const BASE_COLUMNS: ColMeta[] = [
         defaultDir: "asc",
     },
 ];
-
 function buildColumns(argColumnCount: number): ColMeta[] {
     return [
         BASE_COLUMNS[0],
@@ -222,6 +248,8 @@ function buildColumns(argColumnCount: number): ColMeta[] {
 }
 
 function formatNumber(x: number): string {
+    if (x === Number.POSITIVE_INFINITY) return "∞";
+    if (x === Number.NEGATIVE_INFINITY) return "-∞";
     if (!Number.isFinite(x)) return "-";
     const absX = Math.abs(x);
     if (absX === 0) return "0";
@@ -255,7 +283,6 @@ function buildColumnTooltip(meta: ColMeta, active: boolean, sortDir: SortDir): s
         `Клик: сортировать по ${formatSortDir(nextDir)}.`,
     ].join("\n");
 }
-
 function compareValues(aVal: unknown, bVal: unknown, dir: SortDir): number {
     if (typeof aVal === "string" && typeof bVal === "string") {
         const cmp = aVal.localeCompare(bVal);
@@ -309,12 +336,18 @@ function getCellText(row: RowMeta, colId: ColId): string {
             return formatNumber(row.avgBestDeviation);
         case "avgRelativeError":
             return formatNumber(row.avgRelativeError);
+        case "avgOrdersGain":
+            return formatNumber(row.avgOrdersGain);
         case "avgMinDeviationN":
             return formatSteps(row.avgMinDeviationN);
+        case "avgLastMinusMin":
+            return formatNumber(row.avgLastMinusMin);
         case "avgStepsToTol":
             return formatSteps(row.avgStepsToTol);
         case "fracReachedTol":
             return row.seriesCount > 0 ? formatPercent(row.fracReachedTol) : "-";
+        case "oneSidedShare":
+            return row.seriesCount > 0 ? formatPercent(row.oneSidedShare) : "-";
         case "bestMinShare":
             return formatPercent(row.bestMinShare);
         case "worstMinShare":
@@ -351,13 +384,27 @@ function getExportValue(row: RowMeta, colId: ColId): string | number | null {
         case "avgBestDeviation":
             return Number.isFinite(row.avgBestDeviation) ? row.avgBestDeviation : null;
         case "avgRelativeError":
-            return Number.isFinite(row.avgRelativeError) ? row.avgRelativeError : null;
+            return Number.isFinite(row.avgRelativeError)
+                ? row.avgRelativeError
+                : row.avgRelativeError === Number.POSITIVE_INFINITY
+                  ? "∞"
+                  : null;
+        case "avgOrdersGain":
+            return Number.isFinite(row.avgOrdersGain)
+                ? row.avgOrdersGain
+                : row.avgOrdersGain === Number.NEGATIVE_INFINITY
+                  ? "-∞"
+                  : null;
         case "avgMinDeviationN":
             return Number.isFinite(row.avgMinDeviationN) ? row.avgMinDeviationN : null;
+        case "avgLastMinusMin":
+            return Number.isFinite(row.avgLastMinusMin) ? row.avgLastMinusMin : null;
         case "avgStepsToTol":
             return Number.isFinite(row.avgStepsToTol) ? row.avgStepsToTol : null;
         case "fracReachedTol":
             return Number.isFinite(row.fracReachedTol) ? row.fracReachedTol : null;
+        case "oneSidedShare":
+            return Number.isFinite(row.oneSidedShare) ? row.oneSidedShare : null;
         case "bestMinShare":
             return Number.isFinite(row.bestMinShare) ? row.bestMinShare : null;
         case "worstMinShare":
@@ -391,9 +438,12 @@ function getExportColumnWidth(colId: ColId): number {
             return 10;
         case "avgBestDeviation":
         case "avgRelativeError":
+        case "avgOrdersGain":
         case "avgMinDeviationN":
+        case "avgLastMinusMin":
         case "avgStepsToTol":
         case "fracReachedTol":
+        case "oneSidedShare":
         case "bestMinShare":
         case "worstMinShare":
         case "bestLastShare":
@@ -410,6 +460,7 @@ function getExportColumnWidth(colId: ColId): number {
 function getExportColumnFormat(colId: ColId): string | null {
     switch (colId) {
         case "fracReachedTol":
+        case "oneSidedShare":
         case "bestMinShare":
         case "worstMinShare":
         case "bestLastShare":
@@ -417,7 +468,10 @@ function getExportColumnFormat(colId: ColId): string | null {
             return "0.0%";
         case "avgBestDeviation":
         case "avgRelativeError":
+        case "avgLastMinusMin":
             return "0.000E+00";
+        case "avgOrdersGain":
+            return "0.00";
         case "avgMinDeviationN":
         case "avgStepsToTol":
         case "seriesCount":
@@ -586,7 +640,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                     const meta = cols[colIndex - 2]?.meta;
                     if (!meta) return;
                     const format = getExportColumnFormat(meta.id);
-                    if (format) cell.z = format;
+                    if (format && typeof cell.v === "number") cell.z = format;
                 },
             });
 

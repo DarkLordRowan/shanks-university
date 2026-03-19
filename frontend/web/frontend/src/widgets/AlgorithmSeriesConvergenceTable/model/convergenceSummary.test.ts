@@ -39,6 +39,18 @@ describe("convergenceSummary", () => {
         expect(stats.amplitudeOrders).toBeCloseTo(2);
     });
 
+    it("treats log10(0) as 0 when amplitude includes an exact hit", () => {
+        const accel = buildSeriesAccel([
+            { n: 1, value: { re: 1.1, im: 0 } },
+            { n: 2, value: { re: 1, im: 0 } },
+        ]);
+
+        const stats = computeConvergenceDevStatsFromSeriesAccel(accel, LIMIT);
+
+        expect(stats.min).toBe(0);
+        expect(stats.amplitudeOrders).toBeCloseTo(-1);
+    });
+
     it("matches stats built from detail points", () => {
         const accel = buildSeriesAccel([
             { n: 1, value: { re: 1.2, im: 0 } },

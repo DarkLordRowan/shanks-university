@@ -47,7 +47,10 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
                     </div>
                     <div>Шагов в анализе: {analysis.stepsAnalyzed}</div>
                     <div>
-                        min: {formatDeviationValue(dev.min)} @ n={dev.minN ?? "—"}
+                        min: {formatDeviationValue(dev.min)} @ n={dev.minN ?? "-"}
+                    </div>
+                    <div>
+                        last: {formatDeviationValue(dev.last)} @ n={dev.lastN ?? "-"}
                     </div>
                     <div>
                         last-min: {formatDeviationValue(dev.lastMinusMin)} | amp:{" "}

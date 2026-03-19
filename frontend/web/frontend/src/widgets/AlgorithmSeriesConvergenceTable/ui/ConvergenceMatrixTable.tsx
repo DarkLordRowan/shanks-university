@@ -46,6 +46,8 @@ interface CellSummary {
     classInfo: ConvergenceClassInfo;
     minN: number | null;
     min: number | null;
+    last: number | null;
+    lastN: number | null;
     lastMinusMin: number | null;
     amplitudeOrders: number | null;
 }
@@ -159,6 +161,12 @@ function formatSignedError(point: { err: number | null; sign: -1 | 0 | 1 | null 
     return point.err * point.sign;
 }
 
+function getExportSideLabel(classInfo: ConvergenceClassInfo): string {
+    if (classInfo.kind === "unknown") return "?";
+    if (classInfo.kind === "static") return "1s";
+    return classInfo.kind.endsWith("_two_sided") ? "2s" : "1s";
+}
+
 interface ExportRow {
     algorithmKey: string;
     algorithmName: string;
@@ -170,11 +178,14 @@ interface ExportRow {
     precision: string;
     limitText: string;
     classInfo: ConvergenceClassInfo;
+    sideLabel: string;
     steps: number;
     signChanges: number;
     violations: number;
     min: number | null;
     minN: number | null;
+    last: number | null;
+    lastN: number | null;
     lastMinusMin: number | null;
     amplitudeOrders: number | null;
 }
@@ -212,6 +223,7 @@ function buildSummarySheet(rows: ExportRow[]): XLSX.WorkSheet {
             "x",
             "precision",
             "limit",
+            "side",
             "class",
             "class title",
             "steps",
@@ -219,6 +231,8 @@ function buildSummarySheet(rows: ExportRow[]): XLSX.WorkSheet {
             "violations",
             "min |A_n-lim|",
             "min n",
+            "last |A_n-lim|",
+            "last n",
             "last - min",
             "amp powers",
         ],
@@ -230,13 +244,16 @@ function buildSummarySheet(rows: ExportRow[]): XLSX.WorkSheet {
             row.xLabel,
             row.precision,
             row.limitText,
-            row.classInfo.label,
+            row.sideLabel,
+            row.classInfo.symbol,
             row.classInfo.title,
             row.steps,
             row.signChanges,
             row.violations,
             row.min,
             row.minN,
+            row.last,
+            row.lastN,
             row.lastMinusMin,
             row.amplitudeOrders,
         ]),
@@ -251,11 +268,14 @@ function buildSummarySheet(rows: ExportRow[]): XLSX.WorkSheet {
             { wch: 10 },
             { wch: 12 },
             { wch: 20 },
+            { wch: 8 },
             { wch: 12 },
             { wch: 18 },
             { wch: 10 },
             { wch: 14 },
             { wch: 12 },
+            { wch: 16 },
+            { wch: 10 },
             { wch: 16 },
             { wch: 10 },
             { wch: 16 },
@@ -265,8 +285,8 @@ function buildSummarySheet(rows: ExportRow[]): XLSX.WorkSheet {
         rowHeaderCols: 1,
         decorateCell: ({ rowIndex, colIndex, cell }) => {
             if (rowIndex === 0) return;
-            if ([1, 9, 10, 11, 13].includes(colIndex)) cell.z = "0";
-            if ([12, 14, 15].includes(colIndex)) cell.z = "0.000E+00";
+            if ([1, 10, 11, 12, 14, 16].includes(colIndex)) cell.z = "0";
+            if ([13, 15, 17, 18].includes(colIndex)) cell.z = "0.000E+00";
         },
     });
 }
@@ -336,11 +356,14 @@ function buildSelectedMetaSheet(args: {
     precision: string;
     limitText: string;
     classInfo: ConvergenceClassInfo;
+    sideLabel: string;
     steps: number;
     signChanges: number;
     violations: number;
     min: number | null;
     minN: number | null;
+    last: number | null;
+    lastN: number | null;
     lastMinusMin: number | null;
     amplitudeOrders: number | null;
 }): XLSX.WorkSheet {
@@ -352,7 +375,8 @@ function buildSelectedMetaSheet(args: {
         { key: "x", value: args.xLabel },
         { key: "precision", value: args.precision },
         { key: "limit", value: args.limitText },
-        { key: "class", value: args.classInfo.label },
+        { key: "side", value: args.sideLabel },
+        { key: "class", value: args.classInfo.symbol },
         { key: "class title", value: args.classInfo.title },
         { key: "class description", value: args.classInfo.description },
         { key: "steps", value: args.steps },
@@ -360,6 +384,8 @@ function buildSelectedMetaSheet(args: {
         { key: "violations", value: args.violations },
         { key: "min |A_n-lim|", value: args.min },
         { key: "min n", value: args.minN },
+        { key: "last |A_n-lim|", value: args.last },
+        { key: "last n", value: args.lastN },
         { key: "last - min", value: args.lastMinusMin },
         { key: "amp powers", value: args.amplitudeOrders },
     ]);
@@ -457,6 +483,8 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 classInfo,
                 minN: dev.minN,
                 min: dev.min,
+                last: dev.last,
+                lastN: dev.lastN,
                 lastMinusMin: dev.lastMinusMin,
                 amplitudeOrders: dev.amplitudeOrders,
             });
@@ -500,11 +528,14 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 precision: series.precision,
                 limitText: formatComplexValue(seriesLimitByKey.get(series.key) ?? null),
                 classInfo: summary.classInfo,
+                sideLabel: getExportSideLabel(summary.classInfo),
                 steps: analysis.stepsAnalyzed,
                 signChanges: analysis.signChangesCount,
                 violations: analysis.violationsCount,
                 min: summary.min,
                 minN: summary.minN,
+                last: summary.last,
+                lastN: summary.lastN,
                 lastMinusMin: summary.lastMinusMin,
                 amplitudeOrders: summary.amplitudeOrders,
             });
@@ -610,11 +641,14 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                     seriesLimitByKey.get(selectedSeries.key) ?? null
                                 ),
                                 classInfo: selectedSummary.classInfo,
+                                sideLabel: getExportSideLabel(selectedSummary.classInfo),
                                 steps: selectedAnalysis.stepsAnalyzed,
                                 signChanges: selectedAnalysis.signChangesCount,
                                 violations: selectedAnalysis.violationsCount,
                                 min: selectedSummary.min,
                                 minN: selectedSummary.minN,
+                                last: selectedSummary.last,
+                                lastN: selectedSummary.lastN,
                                 lastMinusMin: selectedSummary.lastMinusMin,
                                 amplitudeOrders: selectedSummary.amplitudeOrders,
                             }),

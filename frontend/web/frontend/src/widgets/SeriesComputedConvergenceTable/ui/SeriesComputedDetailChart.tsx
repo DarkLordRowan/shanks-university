@@ -49,7 +49,10 @@ export const SeriesComputedDetailChart: React.FC<SeriesComputedDetailChartProps>
                     </div>
                     <div>Шагов в анализе: {stepsAnalyzed}</div>
                     <div>
-                        min: {formatDeviationValue(dev.min)} @ n={dev.minN ?? "—"}
+                        min: {formatDeviationValue(dev.min)} @ n={dev.minN ?? "-"}
+                    </div>
+                    <div>
+                        last: {formatDeviationValue(dev.last)} @ n={dev.lastN ?? "-"}
                     </div>
                     <div>
                         last-min: {formatDeviationValue(dev.lastMinusMin)} | amp:{" "}

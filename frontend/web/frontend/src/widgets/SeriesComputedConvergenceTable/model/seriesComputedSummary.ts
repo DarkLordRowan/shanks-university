@@ -69,6 +69,11 @@ function almostEqual(a: number, b: number): boolean {
     return Math.abs(a - b) <= EPS * scale;
 }
 
+function safeLog10(value: number): number {
+    if (value === 0) return 0;
+    return Math.log10(value);
+}
+
 function formatScalar(value: number | null | undefined): string {
     if (!isFiniteNumber(value)) return "—";
     const absValue = Math.abs(value);
@@ -302,14 +307,7 @@ export function computeSeriesComputedDevStats(series: Series): SeriesComputedDev
         }
     }
 
-    let amplitudeOrders: number | null = null;
-    if (max === 0) {
-        amplitudeOrders = 0;
-    } else if (min === 0) {
-        amplitudeOrders = Number.POSITIVE_INFINITY;
-    } else {
-        amplitudeOrders = Math.log10(max) - Math.log10(min);
-    }
+    const amplitudeOrders = safeLog10(max) - safeLog10(min);
 
     return {
         count: finiteErrors.length,
