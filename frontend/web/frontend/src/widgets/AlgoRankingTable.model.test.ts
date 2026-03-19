@@ -102,6 +102,7 @@ describe("AlgoRankingTable.model", () => {
         expect(fast?.avgBestDeviation).toBeCloseTo(5e-6);
         expect(fast?.avgRelativeError).toBeCloseTo(0.1);
         expect(fast?.avgOrdersGain).toBeCloseTo(0.5);
+        expect(fast?.avgAmpAtMinN).toBeCloseTo(0.5);
         expect(fast?.avgMinDeviationN).toBe(2);
         expect(fast?.avgLastMinusMin).toBe(0);
         expect(fast?.avgStepsToTol).toBe(2);
@@ -115,6 +116,7 @@ describe("AlgoRankingTable.model", () => {
 
         expect(slow?.avgBestDeviation).toBeCloseTo(5.5e-4);
         expect(slow?.avgOrdersGain).toBeCloseTo(-1.5);
+        expect(slow?.avgAmpAtMinN).toBeCloseTo(-1.5);
         expect(slow?.avgMinDeviationN).toBe(2);
         expect(slow?.avgLastMinusMin).toBeCloseTo(4.5e-4);
         expect(slow?.bestMinShare).toBe(0);
@@ -226,5 +228,46 @@ describe("AlgoRankingTable.model", () => {
 
         expect(stats.find((item) => item.algorithmName === "OneSided")?.oneSidedShare).toBe(1);
         expect(stats.find((item) => item.algorithmName === "TwoSided")?.oneSidedShare).toBe(0);
+    });
+
+    it("computes amp at the first n where the algorithm reaches its minimum", () => {
+        const experiment: Experiment = {
+            id: "exp-amp-at-min-n",
+            seriesList: [
+                {
+                    id: "s-1",
+                    name: "S1",
+                    precision: "double",
+                    args: { x: 1 },
+                    limit: { re: 1, im: 0 },
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-1 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-4 },
+                        { n: 3, value: { re: 0, im: 0 }, deviation: 1e-8 },
+                    ],
+                },
+            ],
+            accelList: [{ id: "a-1", name: "Amp", m: 2, args: { alpha: 1 } }],
+            seriesAccelList: [
+                {
+                    series_id: "s-1",
+                    accel_id: "a-1",
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                        { n: 3, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                    ],
+                    errors: [],
+                    events: [],
+                },
+            ],
+        };
+
+        const stats = buildAlgoStatsFromExperiment(experiment, 1e-4, null);
+        const amp = stats[0];
+
+        expect(amp?.avgOrdersGain).toBeCloseTo(-2);
+        expect(amp?.avgAmpAtMinN).toBeCloseTo(2);
+        expect(amp?.avgMinDeviationN).toBe(2);
     });
 });

@@ -29,6 +29,7 @@ export interface AlgoStats {
     minDeviationNs: number[];
     relativeErrors: number[];
     ordersGains: number[];
+    ampAtMinNGains: number[];
     lastMinusMinGaps: number[];
     oneSidedCount: number;
 
@@ -43,6 +44,7 @@ export interface AlgoStats {
     avgMinDeviationN: number;
     avgRelativeError: number;
     avgOrdersGain: number;
+    avgAmpAtMinN: number;
     avgLastMinusMin: number;
     oneSidedShare: number;
     bestMinShare: number;
@@ -67,6 +69,7 @@ export type AlgoRankingSortKey =
     | "avgBestDeviation"
     | "avgRelativeError"
     | "avgOrdersGain"
+    | "avgAmpAtMinN"
     | "avgMinDeviationN"
     | "avgLastMinusMin"
     | "fracReachedTol"
@@ -325,6 +328,36 @@ function getSeriesMinDeviationMap(
     return result;
 }
 
+function getSeriesDeviationByNMaps(
+    seriesList: Series[] | undefined,
+    precisionFilter: string | null,
+    allowedSeriesIds?: Set<string> | null
+): Map<string, Map<number, number>> {
+    const result = new Map<string, Map<number, number>>();
+
+    for (const series of seriesList ?? []) {
+        if (allowedSeriesIds && !allowedSeriesIds.has(series.id)) continue;
+        if (precisionFilter && series.precision !== precisionFilter) continue;
+
+        const byN = new Map<number, number>();
+
+        for (const point of series.computed ?? []) {
+            const deviation = point.deviation;
+            if (!isFiniteNumber(deviation)) continue;
+
+            const absDeviation = Math.abs(deviation);
+            const prev = byN.get(point.n);
+            if (prev == null || absDeviation < prev) {
+                byN.set(point.n, absDeviation);
+            }
+        }
+
+        result.set(series.id, byN);
+    }
+
+    return result;
+}
+
 export function getVisibleArgColumnCount(stats: AlgoStats[]): number {
     let count = 0;
 
@@ -351,6 +384,11 @@ export function buildAlgoStatsFromExperiment(
     const seriesById = new Map((experiment.seriesList ?? []).map((series) => [series.id, series]));
     const accelById = new Map((experiment.accelList ?? []).map((accel) => [accel.id, accel]));
     const seriesMinDeviationById = getSeriesMinDeviationMap(
+        experiment.seriesList,
+        precisionFilter,
+        allowedSeriesIds
+    );
+    const seriesDeviationByNById = getSeriesDeviationByNMaps(
         experiment.seriesList,
         precisionFilter,
         allowedSeriesIds
@@ -398,6 +436,7 @@ export function buildAlgoStatsFromExperiment(
                 minDeviationNs: [],
                 relativeErrors: [],
                 ordersGains: [],
+                ampAtMinNGains: [],
                 lastMinusMinGaps: [],
                 oneSidedCount: 0,
 
@@ -412,6 +451,7 @@ export function buildAlgoStatsFromExperiment(
                 avgMinDeviationN: Number.POSITIVE_INFINITY,
                 avgRelativeError: Number.POSITIVE_INFINITY,
                 avgOrdersGain: Number.NEGATIVE_INFINITY,
+                avgAmpAtMinN: Number.NEGATIVE_INFINITY,
                 avgLastMinusMin: Number.POSITIVE_INFINITY,
                 oneSidedShare: 0,
                 bestMinShare: 0,
@@ -456,6 +496,14 @@ export function buildAlgoStatsFromExperiment(
             }
             stats.ordersGains.push(computeOrdersGain(metrics.minDeviation, seriesMinDeviation));
         }
+        const seriesDeviationAtAlgoMinN =
+            seriesDeviationByNById.get(series.id)?.get(metrics.minDeviationN) ??
+            Number.POSITIVE_INFINITY;
+        if (Number.isFinite(seriesDeviationAtAlgoMinN)) {
+            stats.ampAtMinNGains.push(
+                computeOrdersGain(metrics.minDeviation, seriesDeviationAtAlgoMinN)
+            );
+        }
         stats.lastMinusMinGaps.push(
             computeLastMinusMinGap(metrics.lastDeviation, metrics.minDeviation)
         );
@@ -482,6 +530,7 @@ export function buildAlgoStatsFromExperiment(
         stats.avgStepsToTol = meanOrInfinity(finiteSteps);
         stats.avgRelativeError = meanOrValue(stats.relativeErrors, 1);
         stats.avgOrdersGain = meanOrNegativeInfinity(stats.ordersGains);
+        stats.avgAmpAtMinN = meanOrNegativeInfinity(stats.ampAtMinNGains);
         stats.avgLastMinusMin = meanOrInfinity(stats.lastMinusMinGaps);
         stats.oneSidedShare = stats.seriesCount > 0 ? stats.oneSidedCount / stats.seriesCount : 0;
 
@@ -631,6 +680,9 @@ export function buildAlgoStatsFromExperiment(
 
         const gainDiff = compareNumbers(a.avgOrdersGain, b.avgOrdersGain, "desc");
         if (gainDiff !== 0) return gainDiff;
+
+        const gainAtMinNDiff = compareNumbers(a.avgAmpAtMinN, b.avgAmpAtMinN, "desc");
+        if (gainAtMinNDiff !== 0) return gainAtMinNDiff;
 
         return compareNumbers(a.avgRelativeError, b.avgRelativeError, "asc");
     });

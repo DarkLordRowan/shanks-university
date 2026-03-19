@@ -40,6 +40,7 @@ type ColId =
     | "avgBestDeviation"
     | "avgRelativeError"
     | "avgOrdersGain"
+    | "avgAmpAtMinN"
     | "avgMinDeviationN"
     | "avgLastMinusMin"
     | "avgStepsToTol"
@@ -124,16 +125,24 @@ const BASE_COLUMNS: ColMeta[] = [
         id: "avgRelativeError",
         title: "avg rel error",
         description:
-            "Среднее отношение min |A_n - lim| алгоритма к min |S_n - lim| ряда. 1 = на уровне ряда, <1 = лучше ряда, >1 = хуже. В среднее входят только ряды с min |S_n - lim| > 0; случаи с нулевым минимумом ряда оцениваются через avg gain, ord.",
+            "Среднее отношение min |A_n - lim| алгоритма к min |S_n - lim| ряда. 1 = на уровне ряда, <1 = лучше ряда, >1 = хуже. В среднее входят только ряды с min |S_n - lim| > 0; случаи с нулевым минимумом ряда оцениваются через avg amp.",
         sortKey: "avgRelativeError",
         defaultDir: "asc",
     },
     {
         id: "avgOrdersGain",
-        title: "avg gain, ord",
+        title: "avg amp",
         description:
-            "Средний выигрыш по порядкам относительно частичных сумм: log10(min |S_n - lim|) - log10(min |A_n - lim|). Больше лучше.",
+            "Средний выигрыш по порядкам между минимумом ряда и минимумом алгоритма: log10(min |S_n - lim|) - log10(min |A_n - lim|). Больше лучше.",
         sortKey: "avgOrdersGain",
+        defaultDir: "desc",
+    },
+    {
+        id: "avgAmpAtMinN",
+        title: "avg amp @ min n",
+        description:
+            "Средний выигрыш по порядкам на первом n, где алгоритм достиг своего min |A_n - lim|: log10(|S_n - lim| на этом n) - log10(min |A_n - lim|). Больше лучше.",
+        sortKey: "avgAmpAtMinN",
         defaultDir: "desc",
     },
     {
@@ -210,7 +219,7 @@ const BASE_COLUMNS: ColMeta[] = [
         id: "rankPrecision",
         title: "rank precision",
         description:
-            "Итоговый rank по точности: avg min |dev| + avg rel error + avg gain, ord + best min div + worst min div. Меньше лучше.",
+            "Итоговый rank по точности: avg min |dev| + avg rel error + avg amp + best min div + worst min div. Меньше лучше.",
         sortKey: "rankPrecision",
         defaultDir: "asc",
     },
@@ -338,6 +347,8 @@ function getCellText(row: RowMeta, colId: ColId): string {
             return formatNumber(row.avgRelativeError);
         case "avgOrdersGain":
             return formatNumber(row.avgOrdersGain);
+        case "avgAmpAtMinN":
+            return formatNumber(row.avgAmpAtMinN);
         case "avgMinDeviationN":
             return formatSteps(row.avgMinDeviationN);
         case "avgLastMinusMin":
@@ -395,6 +406,12 @@ function getExportValue(row: RowMeta, colId: ColId): string | number | null {
                 : row.avgOrdersGain === Number.NEGATIVE_INFINITY
                   ? "-∞"
                   : null;
+        case "avgAmpAtMinN":
+            return Number.isFinite(row.avgAmpAtMinN)
+                ? row.avgAmpAtMinN
+                : row.avgAmpAtMinN === Number.NEGATIVE_INFINITY
+                  ? "-∞"
+                  : null;
         case "avgMinDeviationN":
             return Number.isFinite(row.avgMinDeviationN) ? row.avgMinDeviationN : null;
         case "avgLastMinusMin":
@@ -439,6 +456,7 @@ function getExportColumnWidth(colId: ColId): number {
         case "avgBestDeviation":
         case "avgRelativeError":
         case "avgOrdersGain":
+        case "avgAmpAtMinN":
         case "avgMinDeviationN":
         case "avgLastMinusMin":
         case "avgStepsToTol":
@@ -471,6 +489,7 @@ function getExportColumnFormat(colId: ColId): string | null {
         case "avgLastMinusMin":
             return "0.000E+00";
         case "avgOrdersGain":
+        case "avgAmpAtMinN":
             return "0.00";
         case "avgMinDeviationN":
         case "avgStepsToTol":
