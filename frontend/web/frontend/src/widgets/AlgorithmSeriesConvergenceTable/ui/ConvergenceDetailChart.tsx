@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { type SelectedDetail } from "../model/types";
 import { buildArgsSummary } from "../model/convergenceUtils";
+import { getAlgoSeriesConvergenceColumnAnchorId } from "@/shared/lib/docs/tableDocs";
+import { DocsAnchorButton } from "@/shared/ui/docs/DocsAnchorButton";
 import {
     computeSeriesAlgoAmplitudeOrders,
     formatAmplitudeOrders,
@@ -46,7 +48,13 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
         <div className="mt-4 rounded-xl border border-border bg-panel p-4 text-xs text-textDim shadow-panel">
             <div className="mb-3 flex flex-wrap justify-between gap-3">
                 <div>
-                    <div className="text-sm font-semibold text-textDim">Алгоритм × ряд</div>
+                    <div className="group inline-flex items-center gap-2 text-sm font-semibold text-textDim">
+                        <span>Алгоритм × ряд</span>
+                        <DocsAnchorButton
+                            anchorId={getAlgoSeriesConvergenceColumnAnchorId("selectedDetail")}
+                            label="Алгоритмы × ряды: детализация выбранной пары"
+                        />
+                    </div>
                     <div className="mt-1 space-y-0.5 text-[11px] text-textDim/80">
                         <div>Ряд: {series.name}</div>
                         <div>precision: {series.precision}</div>

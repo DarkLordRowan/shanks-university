@@ -25,6 +25,11 @@ import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries.
 import { appendAlgorithmArgsTooltipLines } from "@/shared/lib/matrixTooltip";
 import { buildSeriesAccelPairKey } from "@/shared/lib/experimentIndex";
 import {
+    ALGO_SERIES_CONVERGENCE_TABLE_DOCS,
+    getAlgoSeriesConvergenceColumnAnchorId,
+} from "@/shared/lib/docs/tableDocs";
+import { DocsAnchorButton } from "@/shared/ui/docs/DocsAnchorButton";
+import {
     appendSheet,
     buildKeyValueSheet,
     buildSheetFromAoa,
@@ -739,7 +744,15 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 enableXlsx: true,
                 buildWorkbook,
             }}
-            renderTitle={() => "Монотонность и направление: алгоритмы × ряды"}
+            renderTitle={() => (
+                <span className="group inline-flex items-center gap-2">
+                    <span>Монотонность и направление: алгоритмы × ряды</span>
+                    <DocsAnchorButton
+                        anchorId={ALGO_SERIES_CONVERGENCE_TABLE_DOCS.id}
+                        label={ALGO_SERIES_CONVERGENCE_TABLE_DOCS.title}
+                    />
+                </span>
+            )}
             renderSubtitle={() => (
                 <>
                     Алгоритмы: {matrix.algoList.length} · Ряды: {matrix.seriesList.length}
@@ -747,59 +760,90 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             )}
             renderHeaderRight={() => (
                 <div className="flex items-center gap-3">
-                    <div className="flex flex-col gap-[2px] text-[10px]">
-                        <div className="flex items-center gap-1">
-                            <span
-                                className="whitespace-nowrap"
-                                title="Максимальное число смен знака A_n - lim, при котором траектория все еще считается односторонней."
-                            >
-                                max sign changes:
-                            </span>
-                            <input
-                                type="range"
-                                min={0}
-                                max={50}
-                                value={maxSignChangesForOneSided}
-                                onChange={(event) =>
-                                    onMaxSignChangesForOneSidedChange(Number(event.target.value))
-                                }
-                                className="h-[4px] w-28 cursor-pointer"
-                            />
-                            <span className="w-6 text-right tabular-nums">
-                                {maxSignChangesForOneSided}
-                            </span>
+                    <div className="group relative rounded border border-border/70 bg-surface/50 px-2 py-1">
+                        <div className="flex flex-col gap-[2px] pr-6 text-[10px]">
+                            <div className="flex items-center gap-1">
+                                <span
+                                    className="whitespace-nowrap"
+                                    title="Максимальное число смен знака A_n - lim, при котором траектория все еще считается односторонней."
+                                >
+                                    max sign changes:
+                                </span>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={50}
+                                    value={maxSignChangesForOneSided}
+                                    onChange={(event) =>
+                                        onMaxSignChangesForOneSidedChange(Number(event.target.value))
+                                    }
+                                    className="h-[4px] w-28 cursor-pointer"
+                                />
+                                <span className="w-6 text-right tabular-nums">
+                                    {maxSignChangesForOneSided}
+                                </span>
+                            </div>
+
+                            <div className="flex items-center gap-1">
+                                <span
+                                    className="whitespace-nowrap"
+                                    title="Максимальное число ростов |A_n - lim|, при котором траектория все еще считается почти монотонной."
+                                >
+                                    max violations:
+                                </span>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={50}
+                                    value={maxViolationsForMonotone}
+                                    onChange={(event) =>
+                                        onMaxViolationsForMonotoneChange(Number(event.target.value))
+                                    }
+                                    className="h-[4px] w-28 cursor-pointer"
+                                />
+                                <span className="w-6 text-right tabular-nums">
+                                    {maxViolationsForMonotone}
+                                </span>
+                            </div>
                         </div>
 
-                        <div className="flex items-center gap-1">
-                            <span
-                                className="whitespace-nowrap"
-                                title="Максимальное число ростов |A_n - lim|, при котором траектория все еще считается почти монотонной."
-                            >
-                                max violations:
-                            </span>
-                            <input
-                                type="range"
-                                min={0}
-                                max={50}
-                                value={maxViolationsForMonotone}
-                                onChange={(event) =>
-                                    onMaxViolationsForMonotoneChange(Number(event.target.value))
-                                }
-                                className="h-[4px] w-28 cursor-pointer"
-                            />
-                            <span className="w-6 text-right tabular-nums">
-                                {maxViolationsForMonotone}
-                            </span>
-                        </div>
+                        <DocsAnchorButton
+                            anchorId={getAlgoSeriesConvergenceColumnAnchorId("thresholds")}
+                            label={`${ALGO_SERIES_CONVERGENCE_TABLE_DOCS.title}: пороги классификации`}
+                            className="absolute right-1 top-1"
+                        />
                     </div>
 
-                    <span
-                        className="cursor-help rounded border border-border bg-surface px-2 py-[3px] text-[10px] text-textDim hover:bg-panel"
-                        title={classLegendTitle}
-                    >
-                        класс
+                    <span className="group relative inline-flex items-center rounded border border-border bg-surface px-2 py-[3px] pr-7 text-[10px] text-textDim">
+                        ячейка
+                        <DocsAnchorButton
+                            anchorId={getAlgoSeriesConvergenceColumnAnchorId("cell")}
+                            label={`${ALGO_SERIES_CONVERGENCE_TABLE_DOCS.title}: ячейка матрицы`}
+                            className="absolute right-1 top-1"
+                        />
+                    </span>
+
+                    <span className="group relative inline-flex items-center rounded border border-border bg-surface px-2 py-[3px] pr-7 text-[10px] text-textDim hover:bg-panel">
+                        <span className="cursor-help" title={classLegendTitle}>
+                            класс
+                        </span>
+
+                        <DocsAnchorButton
+                            anchorId={getAlgoSeriesConvergenceColumnAnchorId("class")}
+                            label={`${ALGO_SERIES_CONVERGENCE_TABLE_DOCS.title}: класс`}
+                            className="absolute right-1 top-1"
+                        />
                     </span>
                 </div>
+            )}
+            renderCorner={() => (
+                <span className="group inline-flex items-center gap-2 text-left">
+                    <span>Алгоритм \ Ряд</span>
+                    <DocsAnchorButton
+                        anchorId={getAlgoSeriesConvergenceColumnAnchorId("axes")}
+                        label={`${ALGO_SERIES_CONVERGENCE_TABLE_DOCS.title}: оси матрицы`}
+                    />
+                </span>
             )}
             renderCell={(row, col) => {
                 const algo = algoByKey.get(row.id);

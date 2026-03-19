@@ -12,6 +12,8 @@ import {
     TABLE_DOCS,
     type DocsColumnSection,
     type DocsTableSection,
+    type DocsXlsxFieldInfo,
+    type DocsXlsxSheetInfo,
 } from "@/shared/lib/docs/tableDocs";
 
 function DocsMarkdown({ content }: { content: string }) {
@@ -29,12 +31,21 @@ function isTableActive(table: DocsTableSection, activeAnchorId: string): boolean
         activeAnchorId === table.id ||
         activeAnchorId === table.screenSectionId ||
         activeAnchorId === table.xlsxSectionId ||
-        activeAnchorId.startsWith(`${table.id}-col-`)
+        activeAnchorId.startsWith(`${table.id}-col-`) ||
+        activeAnchorId.startsWith(`${table.id}-sheet-`)
     );
 }
 
 function isScreenActive(table: DocsTableSection, activeAnchorId: string): boolean {
     return activeAnchorId === table.screenSectionId || activeAnchorId.startsWith(`${table.id}-col-`);
+}
+
+function isXlsxActive(table: DocsTableSection, activeAnchorId: string): boolean {
+    return activeAnchorId === table.xlsxSectionId || activeAnchorId.startsWith(`${table.id}-sheet-`);
+}
+
+function isXlsxSheetActive(sheet: DocsXlsxSheetInfo, activeAnchorId: string): boolean {
+    return activeAnchorId === sheet.id || activeAnchorId.startsWith(`${sheet.id}-field-`);
 }
 
 function getTargetClasses(active: boolean): string {
@@ -135,6 +146,46 @@ function ColumnCard({
     );
 }
 
+function XlsxFieldCard({
+    field,
+    active,
+}: {
+    field: DocsXlsxFieldInfo;
+    active: boolean;
+}) {
+    const preference = field.preference ? getDocsColumnPreferenceLabel(field.preference) : null;
+
+    return (
+        <article
+            id={field.id}
+            className={[
+                "scroll-mt-24 rounded-[1.25rem] border p-4 transition",
+                active
+                    ? "border-accent/70 bg-surface/90 ring-2 ring-accent/30"
+                    : "border-border/70 bg-surface/60 hover:border-border",
+            ].join(" ")}
+        >
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+                <h5 className="text-base font-semibold text-white">{field.name}</h5>
+                {preference ? (
+                    <span className="rounded-full border border-border/70 bg-panel px-2 py-0.5 text-[11px] text-textDim">
+                        {preference}
+                    </span>
+                ) : null}
+                {field.refAnchorId ? (
+                    <Link
+                        to={buildDocsHref(field.refAnchorId)}
+                        className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] text-primary transition hover:border-primary/50 hover:text-white"
+                    >
+                        Экранная метрика
+                    </Link>
+                ) : null}
+            </div>
+            <DocsMarkdown content={field.markdown} />
+        </article>
+    );
+}
+
 const DocsPage: React.FC = () => {
     const location = useLocation();
 
@@ -191,12 +242,12 @@ const DocsPage: React.FC = () => {
                     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
                         <div className="space-y-4">
                             <h1 className="max-w-4xl text-3xl font-semibold text-white md:text-4xl">
-                                Документация по таблицам «Ранги алгоритмов» и «Частичные суммы»
+                                Документация по таблицам анализа рядов и алгоритмов
                             </h1>
                             <p className="max-w-3xl text-sm leading-7 text-textDim md:text-base">
                                 Эта страница описывает, как читать экранные таблицы и их xlsx-экспорт.
                                 Кнопка <span className="font-semibold text-white">?</span> рядом с
-                                заголовком таблицы или колонки ведёт сразу к нужному разделу.
+                                заголовком таблицы, колонки или ключевого элемента ведёт сразу к нужному разделу.
                             </p>
                             <div className="grid gap-3 md:grid-cols-3">
                                 <div className="rounded-[1.25rem] border border-border/70 bg-surface/60 p-4">
@@ -204,7 +255,7 @@ const DocsPage: React.FC = () => {
                                         Что покрыто
                                     </div>
                                     <div className="mt-2 text-sm text-white">
-                                        2 таблицы, все видимые колонки, xlsx-листы и формулы.
+                                        3 таблицы, экранные элементы, xlsx-листы и формулы.
                                     </div>
                                 </div>
                                 <div className="rounded-[1.25rem] border border-border/70 bg-surface/60 p-4">
@@ -239,7 +290,7 @@ const DocsPage: React.FC = () => {
                             </div>
                             <ul className="space-y-2 text-sm text-textDim">
                                 <li>Сначала идут общая идея таблицы и правила чтения экранной версии.</li>
-                                <li>Дальше отдельными карточками разобраны все колонки.</li>
+                                <li>Дальше отдельными карточками разобраны все колонки и фиксированные элементы интерфейса.</li>
                                 <li>В конце каждой секции описан xlsx-экспорт и его листы.</li>
                             </ul>
                         </aside>
@@ -276,7 +327,7 @@ const DocsPage: React.FC = () => {
 
                                     <div>
                                         <div className="mb-3 text-xs uppercase tracking-[0.18em] text-textDim/80">
-                                            Быстрые ссылки по колонкам
+                                            Быстрые ссылки по колонкам и элементам
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             {table.columns.map((column) => (
@@ -312,7 +363,7 @@ const DocsPage: React.FC = () => {
                                 id={table.xlsxSectionId}
                                 title="XLSX-экспорт"
                                 eyebrow="XLSX"
-                                active={activeAnchorId === table.xlsxSectionId}
+                                active={isXlsxActive(table, activeAnchorId)}
                             >
                                 <div className="space-y-5">
                                     <DocsMarkdown content={table.xlsxMarkdown} />
@@ -321,7 +372,13 @@ const DocsPage: React.FC = () => {
                                         {table.xlsxSheets.map((sheet) => (
                                             <article
                                                 key={sheet.name}
-                                                className="rounded-[1.25rem] border border-border/70 bg-surface/60 p-4"
+                                                id={sheet.id}
+                                                className={[
+                                                    "scroll-mt-24 rounded-[1.25rem] border p-4 transition",
+                                                    isXlsxSheetActive(sheet, activeAnchorId)
+                                                        ? "border-accent/70 bg-surface/90 ring-2 ring-accent/30"
+                                                        : "border-border/70 bg-surface/60",
+                                                ].join(" ")}
                                             >
                                                 <div className="mb-2 flex items-center justify-between gap-3">
                                                     <h4 className="text-lg font-semibold text-white">
@@ -335,6 +392,23 @@ const DocsPage: React.FC = () => {
                                                     {sheet.description}
                                                 </p>
                                                 <DocsMarkdown content={sheet.markdown} />
+
+                                                {sheet.fields.length > 0 ? (
+                                                    <div className="mt-4 space-y-3">
+                                                        <div className="text-xs uppercase tracking-[0.18em] text-textDim/80">
+                                                            Поля листа
+                                                        </div>
+                                                        <div className="grid gap-3">
+                                                            {sheet.fields.map((field) => (
+                                                                <XlsxFieldCard
+                                                                    key={field.id}
+                                                                    field={field}
+                                                                    active={activeAnchorId === field.id}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ) : null}
                                             </article>
                                         ))}
                                     </div>
