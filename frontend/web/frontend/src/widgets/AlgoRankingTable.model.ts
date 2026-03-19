@@ -31,6 +31,8 @@ export interface AlgoStats {
     ordersGains: number[];
     ampAtMinNGains: number[];
     lastMinusMinGaps: number[];
+    comparableSeriesMinCount: number;
+    notBetterThanSeriesCount: number;
     oneSidedCount: number;
 
     bestMinCount: number;
@@ -46,6 +48,7 @@ export interface AlgoStats {
     avgOrdersGain: number;
     avgAmpAtMinN: number;
     avgLastMinusMin: number;
+    notBetterThanSeriesShare: number;
     oneSidedShare: number;
     bestMinShare: number;
     worstMinShare: number;
@@ -70,6 +73,7 @@ export type AlgoRankingSortKey =
     | "avgRelativeError"
     | "avgOrdersGain"
     | "avgAmpAtMinN"
+    | "notBetterThanSeriesShare"
     | "avgMinDeviationN"
     | "avgLastMinusMin"
     | "fracReachedTol"
@@ -438,6 +442,8 @@ export function buildAlgoStatsFromExperiment(
                 ordersGains: [],
                 ampAtMinNGains: [],
                 lastMinusMinGaps: [],
+                comparableSeriesMinCount: 0,
+                notBetterThanSeriesCount: 0,
                 oneSidedCount: 0,
 
                 bestMinCount: 0,
@@ -453,6 +459,7 @@ export function buildAlgoStatsFromExperiment(
                 avgOrdersGain: Number.NEGATIVE_INFINITY,
                 avgAmpAtMinN: Number.NEGATIVE_INFINITY,
                 avgLastMinusMin: Number.POSITIVE_INFINITY,
+                notBetterThanSeriesShare: 0,
                 oneSidedShare: 0,
                 bestMinShare: 0,
                 worstMinShare: 0,
@@ -489,6 +496,13 @@ export function buildAlgoStatsFromExperiment(
 
         const seriesMinDeviation = seriesMinDeviationById.get(series.id) ?? Number.POSITIVE_INFINITY;
         if (Number.isFinite(seriesMinDeviation)) {
+            stats.comparableSeriesMinCount += 1;
+            if (
+                metrics.minDeviation > seriesMinDeviation ||
+                almostEqual(metrics.minDeviation, seriesMinDeviation)
+            ) {
+                stats.notBetterThanSeriesCount += 1;
+            }
             if (seriesMinDeviation > 0) {
                 stats.relativeErrors.push(
                     computeRelativeError(metrics.minDeviation, seriesMinDeviation)
@@ -532,6 +546,10 @@ export function buildAlgoStatsFromExperiment(
         stats.avgOrdersGain = meanOrNegativeInfinity(stats.ordersGains);
         stats.avgAmpAtMinN = meanOrNegativeInfinity(stats.ampAtMinNGains);
         stats.avgLastMinusMin = meanOrInfinity(stats.lastMinusMinGaps);
+        stats.notBetterThanSeriesShare =
+            stats.comparableSeriesMinCount > 0
+                ? stats.notBetterThanSeriesCount / stats.comparableSeriesMinCount
+                : 0;
         stats.oneSidedShare = stats.seriesCount > 0 ? stats.oneSidedCount / stats.seriesCount : 0;
 
         statsList.push(stats);
@@ -600,6 +618,11 @@ export function buildAlgoStatsFromExperiment(
     const avgBestDeviationRanks = buildRankMap(statsList, (stats) => stats.avgBestDeviation, "asc");
     const avgRelativeErrorRanks = buildRankMap(statsList, (stats) => stats.avgRelativeError, "asc");
     const avgOrdersGainRanks = buildRankMap(statsList, (stats) => stats.avgOrdersGain, "desc");
+    const notBetterThanSeriesRanks = buildRankMap(
+        statsList,
+        (stats) => stats.notBetterThanSeriesShare,
+        "asc"
+    );
     const bestMinShareRanks = buildRankMap(statsList, (stats) => stats.bestMinShare, "desc");
     const worstMinShareRanks = buildRankMap(statsList, (stats) => stats.worstMinShare, "asc");
     const avgStepsToTolRanks = buildRankMap(statsList, (stats) => stats.avgStepsToTol, "asc");
@@ -620,6 +643,7 @@ export function buildAlgoStatsFromExperiment(
             (avgBestDeviationRanks.get(stats.algoKey) ?? 0) +
                 (avgRelativeErrorRanks.get(stats.algoKey) ?? 0) +
                 (avgOrdersGainRanks.get(stats.algoKey) ?? 0) +
+                (notBetterThanSeriesRanks.get(stats.algoKey) ?? 0) +
                 (bestMinShareRanks.get(stats.algoKey) ?? 0) +
                 (worstMinShareRanks.get(stats.algoKey) ?? 0)
         );

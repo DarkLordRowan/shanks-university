@@ -17,6 +17,7 @@ export interface ConvergenceDevStats {
     lastN: number | null;
     lastMinusMin: number | null;
     amplitudeOrders: number | null;
+    maxAmplitudeOrders: number | null;
     plateauStartN: number | null;
 }
 
@@ -72,6 +73,10 @@ function almostEqual(a: number, b: number): boolean {
 function safeLog10(value: number): number {
     if (value === 0) return 0;
     return Math.log10(value);
+}
+
+function computeAmplitudeOrders(left: number, right: number): number {
+    return safeLog10(left) - safeLog10(right);
 }
 
 function formatScalar(value: number | null | undefined): string {
@@ -243,6 +248,7 @@ function buildDevStats(finiteErrors: ErrorPoint[]): ConvergenceDevStats {
             lastN: null,
             lastMinusMin: null,
             amplitudeOrders: null,
+            maxAmplitudeOrders: null,
             plateauStartN: null,
         };
     }
@@ -289,7 +295,8 @@ function buildDevStats(finiteErrors: ErrorPoint[]): ConvergenceDevStats {
         }
     }
 
-    const amplitudeOrders = safeLog10(max) - safeLog10(min);
+    const amplitudeOrders = computeAmplitudeOrders(lastPoint.err, min);
+    const maxAmplitudeOrders = computeAmplitudeOrders(max, min);
 
     return {
         count: finiteErrors.length,
@@ -304,8 +311,27 @@ function buildDevStats(finiteErrors: ErrorPoint[]): ConvergenceDevStats {
         lastN: lastPoint.n,
         lastMinusMin: lastPoint.err - min,
         amplitudeOrders,
+        maxAmplitudeOrders,
         plateauStartN,
     };
+}
+
+export function computeSeriesAlgoAmplitudeOrders(
+    seriesMin: number | null,
+    algoMin: number | null
+): number | null {
+    if (!isFiniteNumber(seriesMin) || !isFiniteNumber(algoMin)) return null;
+
+    if (seriesMin === 0) {
+        if (algoMin === 0) return 0;
+        return -Math.abs(Math.log10(algoMin));
+    }
+
+    if (algoMin === 0) {
+        return Math.abs(Math.log10(seriesMin));
+    }
+
+    return Math.log10(seriesMin) - Math.log10(algoMin);
 }
 
 export function buildConvergenceDetailPoints(

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { type SelectedDetail } from "../model/types";
 import { buildArgsSummary } from "../model/convergenceUtils";
 import {
+    computeSeriesAlgoAmplitudeOrders,
     formatAmplitudeOrders,
     formatComplexValue,
     formatDeviationValue,
@@ -14,6 +15,22 @@ interface ConvergenceDetailChartProps {
     detail: SelectedDetail;
 }
 
+function getSeriesMinDeviation(series: SelectedDetail["series"]): number | null {
+    let min: number | null = null;
+
+    for (const point of series?.computed ?? []) {
+        const deviation = point.deviation;
+        if (deviation == null || !Number.isFinite(deviation)) continue;
+
+        const absDeviation = Math.abs(deviation);
+        if (min == null || absDeviation < min) {
+            min = absDeviation;
+        }
+    }
+
+    return min;
+}
+
 export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ detail }) => {
     const { series, accel, analysis, limit, points, classInfo, dev } = detail;
     const [useAbs, setUseAbs] = useState<boolean>(true);
@@ -23,6 +40,7 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
     }
 
     const algoArgs = buildArgsSummary(accel.args ?? null);
+    const seriesAlgoAmp = computeSeriesAlgoAmplitudeOrders(getSeriesMinDeviation(series), dev.min);
 
     return (
         <div className="mt-4 rounded-xl border border-border bg-panel p-4 text-xs text-textDim shadow-panel">
@@ -53,8 +71,10 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
                         last: {formatDeviationValue(dev.last)} @ n={dev.lastN ?? "-"}
                     </div>
                     <div>
-                        last-min: {formatDeviationValue(dev.lastMinusMin)} | amp:{" "}
-                        {formatAmplitudeOrders(dev.amplitudeOrders)}
+                        last-min: {formatDeviationValue(dev.lastMinusMin)} | last/min amp:{" "}
+                        {formatAmplitudeOrders(dev.amplitudeOrders)} | max/min amp:{" "}
+                        {formatAmplitudeOrders(dev.maxAmplitudeOrders)} | series/algo amp:{" "}
+                        {formatAmplitudeOrders(seriesAlgoAmp)}
                     </div>
 
                     <div className="pt-1">

@@ -13,6 +13,7 @@ import {
 import {
     buildConvergenceClassLegendTitle,
     buildConvergenceDetailPoints,
+    computeSeriesAlgoAmplitudeOrders,
     computeConvergenceDevStatsFromSeriesAccel,
     formatAmplitudeOrders,
     formatComplexValue,
@@ -50,6 +51,8 @@ interface CellSummary {
     lastN: number | null;
     lastMinusMin: number | null;
     amplitudeOrders: number | null;
+    maxAmplitudeOrders: number | null;
+    seriesAlgoAmplitudeOrders: number | null;
 }
 
 const EMPTY_CLASS_INFO = getConvergenceClassInfo("unknown", "unknown", {
@@ -65,6 +68,7 @@ const EMPTY_CLASS_INFO = getConvergenceClassInfo("unknown", "unknown", {
     lastN: null,
     lastMinusMin: null,
     amplitudeOrders: null,
+    maxAmplitudeOrders: null,
     plateauStartN: null,
 });
 
@@ -167,6 +171,22 @@ function getExportSideLabel(classInfo: ConvergenceClassInfo): string {
     return classInfo.kind.endsWith("_two_sided") ? "2s" : "1s";
 }
 
+function getSeriesMinDeviation(series: Experiment["seriesList"][number] | null | undefined): number | null {
+    let min: number | null = null;
+
+    for (const point of series?.computed ?? []) {
+        const deviation = point.deviation;
+        if (deviation == null || !Number.isFinite(deviation)) continue;
+
+        const absDeviation = Math.abs(deviation);
+        if (min == null || absDeviation < min) {
+            min = absDeviation;
+        }
+    }
+
+    return min;
+}
+
 interface ExportRow {
     algorithmKey: string;
     algorithmName: string;
@@ -188,6 +208,8 @@ interface ExportRow {
     lastN: number | null;
     lastMinusMin: number | null;
     amplitudeOrders: number | null;
+    maxAmplitudeOrders: number | null;
+    seriesAlgoAmplitudeOrders: number | null;
 }
 
 function buildOverviewSheet(args: {
@@ -234,7 +256,9 @@ function buildSummarySheet(rows: ExportRow[]): XLSX.WorkSheet {
             "last |A_n-lim|",
             "last n",
             "last - min",
-            "amp powers",
+            "last/min amp",
+            "max/min amp",
+            "series/algo amp",
         ],
         ...rows.map((row) => [
             row.algorithmName,
@@ -256,6 +280,8 @@ function buildSummarySheet(rows: ExportRow[]): XLSX.WorkSheet {
             row.lastN,
             row.lastMinusMin,
             row.amplitudeOrders,
+            row.maxAmplitudeOrders,
+            row.seriesAlgoAmplitudeOrders,
         ]),
     ];
 
@@ -280,13 +306,16 @@ function buildSummarySheet(rows: ExportRow[]): XLSX.WorkSheet {
             { wch: 10 },
             { wch: 16 },
             { wch: 12 },
+            { wch: 12 },
+            { wch: 14 },
         ],
         headerRows: 1,
         rowHeaderCols: 1,
         decorateCell: ({ rowIndex, colIndex, cell }) => {
             if (rowIndex === 0) return;
             if ([1, 10, 11, 12, 14, 16].includes(colIndex)) cell.z = "0";
-            if ([13, 15, 17, 18].includes(colIndex)) cell.z = "0.000E+00";
+            if ([13, 15, 17].includes(colIndex)) cell.z = "0.000E+00";
+            if ([18, 19, 20].includes(colIndex)) cell.z = "0.00";
         },
     });
 }
@@ -366,6 +395,8 @@ function buildSelectedMetaSheet(args: {
     lastN: number | null;
     lastMinusMin: number | null;
     amplitudeOrders: number | null;
+    maxAmplitudeOrders: number | null;
+    seriesAlgoAmplitudeOrders: number | null;
 }): XLSX.WorkSheet {
     return buildKeyValueSheet([
         { key: "algorithm", value: args.algorithmName },
@@ -387,7 +418,9 @@ function buildSelectedMetaSheet(args: {
         { key: "last |A_n-lim|", value: args.last },
         { key: "last n", value: args.lastN },
         { key: "last - min", value: args.lastMinusMin },
-        { key: "amp powers", value: args.amplitudeOrders },
+        { key: "last/min amp", value: args.amplitudeOrders },
+        { key: "max/min amp", value: args.maxAmplitudeOrders },
+        { key: "series/algo amp", value: args.seriesAlgoAmplitudeOrders },
     ]);
 }
 
@@ -462,6 +495,10 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
         () => new Map((experiment?.seriesList ?? []).map((series) => [series.id, series.limit ?? null])),
         [experiment]
     );
+    const seriesMinByKey = useMemo(
+        () => new Map((experiment?.seriesList ?? []).map((series) => [series.id, getSeriesMinDeviation(series)])),
+        [experiment]
+    );
 
     const cellSummaryByKey = useMemo(() => {
         const summary = new Map<string, CellSummary>();
@@ -487,6 +524,11 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 lastN: dev.lastN,
                 lastMinusMin: dev.lastMinusMin,
                 amplitudeOrders: dev.amplitudeOrders,
+                maxAmplitudeOrders: dev.maxAmplitudeOrders,
+                seriesAlgoAmplitudeOrders: computeSeriesAlgoAmplitudeOrders(
+                    seriesMinByKey.get(seriesAccel.series_id) ?? null,
+                    dev.min
+                ),
             });
         }
 
@@ -496,6 +538,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
         matrix.cells,
         maxSignChangesForOneSided,
         maxViolationsForMonotone,
+        seriesMinByKey,
         seriesLimitByKey,
     ]);
 
@@ -538,6 +581,8 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 lastN: summary.lastN,
                 lastMinusMin: summary.lastMinusMin,
                 amplitudeOrders: summary.amplitudeOrders,
+                maxAmplitudeOrders: summary.maxAmplitudeOrders,
+                seriesAlgoAmplitudeOrders: summary.seriesAlgoAmplitudeOrders,
             });
         }
 
@@ -651,6 +696,8 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                 lastN: selectedSummary.lastN,
                                 lastMinusMin: selectedSummary.lastMinusMin,
                                 amplitudeOrders: selectedSummary.amplitudeOrders,
+                                maxAmplitudeOrders: selectedSummary.maxAmplitudeOrders,
+                                seriesAlgoAmplitudeOrders: selectedSummary.seriesAlgoAmplitudeOrders,
                             }),
                             "selected_meta"
                         );
@@ -801,7 +848,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                     `min |A_n-lim|: ${formatDeviationValue(summary?.min ?? null)} at n=${summary?.minN ?? "—"}`
                 );
                 titleLines.push(
-                    `last-min: ${formatDeviationValue(summary?.lastMinusMin ?? null)} | amp: ${formatAmplitudeOrders(summary?.amplitudeOrders ?? null)}`
+                    `last-min: ${formatDeviationValue(summary?.lastMinusMin ?? null)} | last/min amp: ${formatAmplitudeOrders(summary?.amplitudeOrders ?? null)} | max/min amp: ${formatAmplitudeOrders(summary?.maxAmplitudeOrders ?? null)} | series/algo amp: ${formatAmplitudeOrders(summary?.seriesAlgoAmplitudeOrders ?? null)}`
                 );
                 titleLines.push(
                     `Число смен знака: ${analysis.signChangesCount}, ns: ${signNsText}`

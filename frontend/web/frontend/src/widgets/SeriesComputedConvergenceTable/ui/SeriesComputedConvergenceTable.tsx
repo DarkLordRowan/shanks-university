@@ -30,29 +30,19 @@ import {
     buildSheetFromAoa,
     createWorkbook,
 } from "@/shared/lib/xlsxExport";
+import {
+    getSeriesComputedColumnAnchorId,
+    SERIES_COMPUTED_TABLE_DOCS,
+    type SeriesComputedDocsColumnKey,
+} from "@/shared/lib/docs/tableDocs";
+import { DocsAnchorButton } from "@/shared/ui/docs/DocsAnchorButton";
 
 export interface SeriesComputedConvergenceTableProps {
     experiment: Experiment | null;
     className?: string;
 }
 
-type SortKey =
-    | "name"
-    | "precision"
-    | "args"
-    | "class"
-    | "k"
-    | "sign"
-    | "viol"
-    | "devMin"
-    | "minN"
-    | "devLast"
-    | "lastN"
-    | "devMean"
-    | "devMedian"
-    | "devMax"
-    | "lastMinusMin"
-    | "ampOrders";
+type SortKey = SeriesComputedDocsColumnKey;
 type SortDir = "asc" | "desc";
 
 interface RowData {
@@ -133,7 +123,8 @@ function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
         "last |S_n-S|",
         "last n",
         "last - min",
-        "amp powers",
+        "last/min amp",
+        "max/min amp",
         "mean |S_n-S|",
         "median |S_n-S|",
         "max |S_n-S|",
@@ -160,6 +151,7 @@ function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
             row.dev.lastN,
             row.dev.lastMinusMin,
             row.dev.amplitudeOrders,
+            row.dev.maxAmplitudeOrders,
             row.dev.mean,
             row.dev.median,
             row.dev.max,
@@ -185,6 +177,7 @@ function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
             { wch: 10 },
             { wch: 14 },
             { wch: 12 },
+            { wch: 12 },
             { wch: 16 },
             { wch: 16 },
             { wch: 16 },
@@ -194,8 +187,8 @@ function buildSummarySheet(rows: RowData[]): XLSX.WorkSheet {
         decorateCell: ({ rowIndex, colIndex, cell }) => {
             if (rowIndex === 0) return;
             if ([0, 8, 9, 10, 12, 14].includes(colIndex)) cell.z = "0";
-            if ([11, 13, 15, 17, 18, 19].includes(colIndex)) cell.z = "0.000E+00";
-            if (colIndex === 16) cell.z = "0.00";
+            if ([11, 13, 15, 18, 19, 20].includes(colIndex)) cell.z = "0.000E+00";
+            if ([16, 17].includes(colIndex)) cell.z = "0.00";
         },
     });
 }
@@ -226,7 +219,8 @@ function buildSelectedMetaSheet(selected: {
         ["last |S_n-S|", selected.dev.last],
         ["last n", selected.dev.lastN],
         ["last - min", selected.dev.lastMinusMin],
-        ["amp powers", selected.dev.amplitudeOrders],
+        ["last/min amp", selected.dev.amplitudeOrders],
+        ["max/min amp", selected.dev.maxAmplitudeOrders],
         ["mean |S_n-S|", selected.dev.mean],
         ["median |S_n-S|", selected.dev.median],
         ["max |S_n-S|", selected.dev.max],
@@ -355,6 +349,37 @@ const SeriesComputedConvergenceTableView: React.FC<
         [sort]
     );
 
+    const renderSortHeader = useCallback(
+        (
+            key: SortKey,
+            label: string,
+            title: string,
+            align: "left" | "right" = "left"
+        ) => (
+            <th
+                key={key}
+                className={[
+                    "group relative cursor-pointer select-none border-b border-border px-2 py-2",
+                    align === "right" ? "text-right" : "text-left",
+                ].join(" ")}
+                onClick={() => toggleSort(key)}
+                title={title}
+            >
+                <span className="pr-6">
+                    {label}
+                    <span className="ml-1 text-[9px] text-textDim/70">{sortMark(key)}</span>
+                </span>
+
+                <DocsAnchorButton
+                    anchorId={getSeriesComputedColumnAnchorId(key)}
+                    label={`${SERIES_COMPUTED_TABLE_DOCS.title}: ${label}`}
+                    className="absolute right-1 top-1"
+                />
+            </th>
+        ),
+        [sortMark, toggleSort]
+    );
+
     const rows = useMemo<RowData[]>(() => {
         return seriesList
             .map((series) => {
@@ -430,6 +455,8 @@ const SeriesComputedConvergenceTableView: React.FC<
                     return row.dev.lastMinusMin;
                 case "ampOrders":
                     return row.dev.amplitudeOrders;
+                case "maxAmpOrders":
+                    return row.dev.maxAmplitudeOrders;
             }
         };
 
@@ -444,7 +471,8 @@ const SeriesComputedConvergenceTableView: React.FC<
             sort.key === "devMedian" ||
             sort.key === "devMax" ||
             sort.key === "lastMinusMin" ||
-            sort.key === "ampOrders";
+            sort.key === "ampOrders" ||
+            sort.key === "maxAmpOrders";
 
         const result = [...rows];
         result.sort((left, right) => {
@@ -607,7 +635,15 @@ const SeriesComputedConvergenceTableView: React.FC<
                 {({ captureRef }) => (
                     <div ref={captureRef}>
                         <div className="mb-2 rounded-xl border border-border bg-panel p-3 text-[11px] text-textDim shadow-panel">
-                            <div className="mb-2 text-sm font-semibold">Частичные суммы: анализ по рядам</div>
+                            <div className="mb-2">
+                                <div className="group inline-flex items-center gap-2 text-sm font-semibold">
+                                    <span>Частичные суммы: анализ по рядам</span>
+                                    <DocsAnchorButton
+                                        anchorId={SERIES_COMPUTED_TABLE_DOCS.id}
+                                        label={SERIES_COMPUTED_TABLE_DOCS.title}
+                                    />
+                                </div>
+                            </div>
 
                             <div className="flex flex-col gap-2">
                                 <div className="flex items-center gap-2">
@@ -671,118 +707,96 @@ const SeriesComputedConvergenceTableView: React.FC<
                             <table className="min-w-full border-collapse text-[10px]">
                                 <thead className="sticky top-0 z-10 bg-surface/80">
                                     <tr>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-left"
-                                            onClick={() => toggleSort("name")}
-                                            title="Сортировать по имени ряда"
-                                        >
-                                            Ряд <span className="ml-1 text-[9px] text-textDim/70">{sortMark("name")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-left"
-                                            onClick={() => toggleSort("precision")}
-                                            title="Сортировать по precision"
-                                        >
-                                            prec <span className="ml-1 text-[9px] text-textDim/70">{sortMark("precision")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-left"
-                                            onClick={() => toggleSort("args")}
-                                            title="Сортировать по аргументам ряда"
-                                        >
-                                            args <span className="ml-1 text-[9px] text-textDim/70">{sortMark("args")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-left"
-                                            onClick={() => toggleSort("class")}
-                                            title={classLegendTitle}
-                                        >
-                                            класс <span className="ml-1 text-[9px] text-textDim/70">{sortMark("class")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("k")}
-                                            title="Сортировать по числу пар (n-1, n) в анализе"
-                                        >
-                                            k <span className="ml-1 text-[9px] text-textDim/70">{sortMark("k")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("sign")}
-                                            title="Сортировать по числу смен знака"
-                                        >
-                                            sign <span className="ml-1 text-[9px] text-textDim/70">{sortMark("sign")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("viol")}
-                                            title="Сортировать по числу ростов |S_n-S|"
-                                        >
-                                            viol <span className="ml-1 text-[9px] text-textDim/70">{sortMark("viol")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("devMin")}
-                                            title="min_n |S_n-S|"
-                                        >
-                                            min <span className="ml-1 text-[9px] text-textDim/70">{sortMark("devMin")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("minN")}
-                                            title="n, на котором достигается минимум |S_n-S|"
-                                        >
-                                            n min <span className="ml-1 text-[9px] text-textDim/70">{sortMark("minN")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("devLast")}
-                                            title="|S_last-S|"
-                                        >
-                                            last <span className="ml-1 text-[9px] text-textDim/70">{sortMark("devLast")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("lastN")}
-                                            title="Последний n с конечным |S_n-S|"
-                                        >
-                                            n last <span className="ml-1 text-[9px] text-textDim/70">{sortMark("lastN")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("lastMinusMin")}
-                                            title="Разность между |S_last-S| и min_n |S_n-S|"
-                                        >
-                                            last-min <span className="ml-1 text-[9px] text-textDim/70">{sortMark("lastMinusMin")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("ampOrders")}
-                                            title="Амплитуда степеней: log10(max) - log10(min)"
-                                        >
-                                            amp pow <span className="ml-1 text-[9px] text-textDim/70">{sortMark("ampOrders")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("devMean")}
-                                            title="mean_n |S_n-S|"
-                                        >
-                                            mean <span className="ml-1 text-[9px] text-textDim/70">{sortMark("devMean")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("devMedian")}
-                                            title="median_n |S_n-S|"
-                                        >
-                                            med <span className="ml-1 text-[9px] text-textDim/70">{sortMark("devMedian")}</span>
-                                        </th>
-                                        <th
-                                            className="cursor-pointer select-none border-b border-border px-2 py-2 text-right"
-                                            onClick={() => toggleSort("devMax")}
-                                            title="max_n |S_n-S|"
-                                        >
-                                            max <span className="ml-1 text-[9px] text-textDim/70">{sortMark("devMax")}</span>
-                                        </th>
+                                        {renderSortHeader("name", "Ряд", "Сортировать по имени ряда")}
+                                        {renderSortHeader(
+                                            "precision",
+                                            "prec",
+                                            "Сортировать по precision"
+                                        )}
+                                        {renderSortHeader(
+                                            "args",
+                                            "args",
+                                            "Сортировать по аргументам ряда"
+                                        )}
+                                        {renderSortHeader("class", "класс", classLegendTitle)}
+                                        {renderSortHeader(
+                                            "k",
+                                            "k",
+                                            "Сортировать по числу пар (n-1, n) в анализе",
+                                            "right"
+                                        )}
+                                        {renderSortHeader(
+                                            "sign",
+                                            "sign",
+                                            "Сортировать по числу смен знака",
+                                            "right"
+                                        )}
+                                        {renderSortHeader(
+                                            "viol",
+                                            "viol",
+                                            "Сортировать по числу ростов |S_n-S|",
+                                            "right"
+                                        )}
+                                        {renderSortHeader(
+                                            "devMin",
+                                            "min",
+                                            "min_n |S_n-S|",
+                                            "right"
+                                        )}
+                                        {renderSortHeader(
+                                            "minN",
+                                            "n min",
+                                            "n, на котором достигается минимум |S_n-S|",
+                                            "right"
+                                        )}
+                                        {renderSortHeader(
+                                            "devLast",
+                                            "last",
+                                            "|S_last-S|",
+                                            "right"
+                                        )}
+                                        {renderSortHeader(
+                                            "lastN",
+                                            "n last",
+                                            "Последний n с конечным |S_n-S|",
+                                            "right"
+                                        )}
+                                        {renderSortHeader(
+                                            "lastMinusMin",
+                                            "last-min",
+                                            "Разность между |S_last-S| и min_n |S_n-S|",
+                                            "right"
+                                        )}
+                                        {renderSortHeader(
+                                            "ampOrders",
+                                            "last/min amp",
+                                            "last/min amp = log10(last) - log10(min)",
+                                            "right"
+                                        )}
+                                        {renderSortHeader(
+                                            "maxAmpOrders",
+                                            "max/min amp",
+                                            "max/min amp = log10(max) - log10(min)",
+                                            "right"
+                                        )}
+                                        {renderSortHeader(
+                                            "devMean",
+                                            "mean",
+                                            "mean_n |S_n-S|",
+                                            "right"
+                                        )}
+                                        {renderSortHeader(
+                                            "devMedian",
+                                            "med",
+                                            "median_n |S_n-S|",
+                                            "right"
+                                        )}
+                                        {renderSortHeader(
+                                            "devMax",
+                                            "max",
+                                            "max_n |S_n-S|",
+                                            "right"
+                                        )}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -807,7 +821,8 @@ const SeriesComputedConvergenceTableView: React.FC<
                                             `min |S_n-S|: ${formatDeviationValue(row.dev.min)} at n=${row.dev.minN ?? "—"}`,
                                             `last |S_n-S|: ${formatDeviationValue(row.dev.last)} at n=${row.dev.lastN ?? "—"}`,
                                             `last - min: ${formatDeviationValue(row.dev.lastMinusMin)}`,
-                                            `amp powers: ${formatAmplitudeOrders(row.dev.amplitudeOrders)}`,
+                                            `last/min amp: ${formatAmplitudeOrders(row.dev.amplitudeOrders)}`,
+                                            `max/min amp: ${formatAmplitudeOrders(row.dev.maxAmplitudeOrders)}`,
                                             `mean |S_n-S|: ${formatDeviationValue(row.dev.mean)}`,
                                             `med |S_n-S|: ${formatDeviationValue(row.dev.median)}`,
                                             `max |S_n-S|: ${formatDeviationValue(row.dev.max)}`,
@@ -868,6 +883,9 @@ const SeriesComputedConvergenceTableView: React.FC<
                                                     {formatAmplitudeOrders(row.dev.amplitudeOrders)}
                                                 </td>
                                                 <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                                    {formatAmplitudeOrders(row.dev.maxAmplitudeOrders)}
+                                                </td>
+                                                <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
                                                     {formatDeviationValue(row.dev.mean)}
                                                 </td>
                                                 <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
@@ -910,7 +928,9 @@ const SeriesComputedConvergenceTableView: React.FC<
                                                 <span className="text-textDim/70"> | </span>
                                                 last-min: {formatDeviationValue(selected.dev.lastMinusMin)}
                                                 <span className="text-textDim/70"> | </span>
-                                                amp pow: {formatAmplitudeOrders(selected.dev.amplitudeOrders)}
+                                                last/min amp: {formatAmplitudeOrders(selected.dev.amplitudeOrders)}
+                                                <span className="text-textDim/70"> | </span>
+                                                max/min amp: {formatAmplitudeOrders(selected.dev.maxAmplitudeOrders)}
                                             </div>
                                         </div>
 

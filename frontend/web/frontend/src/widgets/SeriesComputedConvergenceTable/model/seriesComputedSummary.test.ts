@@ -21,7 +21,7 @@ function buildSeries(
 }
 
 describe("seriesComputedSummary", () => {
-    it("computes min n, last-minus-min, plateau, and amplitude orders", () => {
+    it("computes min n, last-minus-min, last/min amp, plateau, and max/min amp", () => {
         const series = buildSeries([
             { n: 1, value: { re: 1.1, im: 0 } },
             { n: 2, value: { re: 1.01, im: 0 } },
@@ -36,10 +36,11 @@ describe("seriesComputedSummary", () => {
         expect(stats.lastN).toBe(4);
         expect(stats.lastMinusMin).toBeCloseTo(0);
         expect(stats.plateauStartN).toBe(3);
-        expect(stats.amplitudeOrders).toBeCloseTo(2);
+        expect(stats.amplitudeOrders).toBeCloseTo(0);
+        expect(stats.maxAmplitudeOrders).toBeCloseTo(2);
     });
 
-    it("treats log10(0) as 0 when amplitude includes an exact hit", () => {
+    it("treats log10(0) as 0 for both last/min and max/min amp", () => {
         const series = buildSeries([
             { n: 1, value: { re: 1.1, im: 0 } },
             { n: 2, value: { re: 1, im: 0 } },
@@ -48,7 +49,8 @@ describe("seriesComputedSummary", () => {
         const stats = computeSeriesComputedDevStats(series);
 
         expect(stats.min).toBe(0);
-        expect(stats.amplitudeOrders).toBeCloseTo(-1);
+        expect(stats.amplitudeOrders).toBeCloseTo(0);
+        expect(stats.maxAmplitudeOrders).toBeCloseTo(-1);
     });
 
     it("assigns requested class order and legend text", () => {

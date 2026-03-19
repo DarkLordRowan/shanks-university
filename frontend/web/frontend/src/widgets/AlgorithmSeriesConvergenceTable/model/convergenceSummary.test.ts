@@ -3,6 +3,7 @@ import type { Complex, SeriesAccel } from "@/entities/experiment/model/experimen
 import {
     buildConvergenceClassLegendTitle,
     buildConvergenceDetailPoints,
+    computeSeriesAlgoAmplitudeOrders,
     computeConvergenceDevStats,
     computeConvergenceDevStatsFromSeriesAccel,
     getConvergenceClassInfo,
@@ -21,7 +22,7 @@ function buildSeriesAccel(computed: SeriesAccel["computed"]): SeriesAccel {
 const LIMIT: Complex = { re: 1, im: 0 };
 
 describe("convergenceSummary", () => {
-    it("computes min n, last-minus-min, plateau, and amplitude orders for A_n", () => {
+    it("computes min n, last-minus-min, last/min amp, plateau, and max/min amp for A_n", () => {
         const accel = buildSeriesAccel([
             { n: 4, value: { re: 1.001, im: 0 } },
             { n: 1, value: { re: 1.1, im: 0 } },
@@ -36,10 +37,11 @@ describe("convergenceSummary", () => {
         expect(stats.lastN).toBe(4);
         expect(stats.lastMinusMin).toBeCloseTo(0);
         expect(stats.plateauStartN).toBe(3);
-        expect(stats.amplitudeOrders).toBeCloseTo(2);
+        expect(stats.amplitudeOrders).toBeCloseTo(0);
+        expect(stats.maxAmplitudeOrders).toBeCloseTo(2);
     });
 
-    it("treats log10(0) as 0 when amplitude includes an exact hit", () => {
+    it("treats log10(0) as 0 for both last/min and max/min amp", () => {
         const accel = buildSeriesAccel([
             { n: 1, value: { re: 1.1, im: 0 } },
             { n: 2, value: { re: 1, im: 0 } },
@@ -48,7 +50,8 @@ describe("convergenceSummary", () => {
         const stats = computeConvergenceDevStatsFromSeriesAccel(accel, LIMIT);
 
         expect(stats.min).toBe(0);
-        expect(stats.amplitudeOrders).toBeCloseTo(-1);
+        expect(stats.amplitudeOrders).toBeCloseTo(0);
+        expect(stats.maxAmplitudeOrders).toBeCloseTo(-1);
     });
 
     it("matches stats built from detail points", () => {
@@ -65,6 +68,16 @@ describe("convergenceSummary", () => {
         expect(fromPoints.minN).toBe(fromSeriesAccel.minN);
         expect(fromPoints.lastMinusMin).toBeCloseTo(fromSeriesAccel.lastMinusMin ?? NaN);
         expect(fromPoints.amplitudeOrders).toBeCloseTo(fromSeriesAccel.amplitudeOrders ?? NaN);
+        expect(fromPoints.maxAmplitudeOrders).toBeCloseTo(
+            fromSeriesAccel.maxAmplitudeOrders ?? NaN
+        );
+    });
+
+    it("treats positive series/algo amp as algorithm better than the series", () => {
+        expect(computeSeriesAlgoAmplitudeOrders(1e-4, 1e-6)).toBeCloseTo(2);
+        expect(computeSeriesAlgoAmplitudeOrders(1e-6, 1e-4)).toBeCloseTo(-2);
+        expect(computeSeriesAlgoAmplitudeOrders(0, 1e-4)).toBeCloseTo(-4);
+        expect(computeSeriesAlgoAmplitudeOrders(0, 0)).toBe(0);
     });
 
     it("assigns requested class order and legend text", () => {
@@ -81,6 +94,7 @@ describe("convergenceSummary", () => {
             lastN: 2,
             lastMinusMin: 0,
             amplitudeOrders: 0,
+            maxAmplitudeOrders: 0,
             plateauStartN: 1,
         });
         const lateMinInfo = getConvergenceClassInfo("one_sided", "strict_decreasing_error", {
@@ -95,7 +109,8 @@ describe("convergenceSummary", () => {
             last: 0.01,
             lastN: 3,
             lastMinusMin: 0,
-            amplitudeOrders: 1.30103,
+            amplitudeOrders: 0,
+            maxAmplitudeOrders: 1.30103,
             plateauStartN: 3,
         });
         const firstMinInfo = getConvergenceClassInfo("two_sided", "random_error", {
@@ -111,6 +126,7 @@ describe("convergenceSummary", () => {
             lastN: 3,
             lastMinusMin: 0.199,
             amplitudeOrders: 2.30103,
+            maxAmplitudeOrders: 2.30103,
             plateauStartN: 1,
         });
 

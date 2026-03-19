@@ -17,6 +17,7 @@ export interface SeriesComputedDevStats {
     lastN: number | null;
     lastMinusMin: number | null;
     amplitudeOrders: number | null;
+    maxAmplitudeOrders: number | null;
     plateauStartN: number | null;
 }
 
@@ -72,6 +73,10 @@ function almostEqual(a: number, b: number): boolean {
 function safeLog10(value: number): number {
     if (value === 0) return 0;
     return Math.log10(value);
+}
+
+function computeAmplitudeOrders(left: number, right: number): number {
+    return safeLog10(left) - safeLog10(right);
 }
 
 function formatScalar(value: number | null | undefined): string {
@@ -261,6 +266,7 @@ export function computeSeriesComputedDevStats(series: Series): SeriesComputedDev
             lastN: null,
             lastMinusMin: null,
             amplitudeOrders: null,
+            maxAmplitudeOrders: null,
             plateauStartN: null,
         };
     }
@@ -307,7 +313,8 @@ export function computeSeriesComputedDevStats(series: Series): SeriesComputedDev
         }
     }
 
-    const amplitudeOrders = safeLog10(max) - safeLog10(min);
+    const amplitudeOrders = computeAmplitudeOrders(lastPoint.err, min);
+    const maxAmplitudeOrders = computeAmplitudeOrders(max, min);
 
     return {
         count: finiteErrors.length,
@@ -322,6 +329,7 @@ export function computeSeriesComputedDevStats(series: Series): SeriesComputedDev
         lastN: lastPoint.n,
         lastMinusMin: lastPoint.err - min,
         amplitudeOrders,
+        maxAmplitudeOrders,
         plateauStartN,
     };
 }

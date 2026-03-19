@@ -55,8 +55,9 @@ export const SeriesComputedDetailChart: React.FC<SeriesComputedDetailChartProps>
                         last: {formatDeviationValue(dev.last)} @ n={dev.lastN ?? "-"}
                     </div>
                     <div>
-                        last-min: {formatDeviationValue(dev.lastMinusMin)} | amp:{" "}
-                        {formatAmplitudeOrders(dev.amplitudeOrders)}
+                        last-min: {formatDeviationValue(dev.lastMinusMin)} | last/min amp:{" "}
+                        {formatAmplitudeOrders(dev.amplitudeOrders)} | max/min amp:{" "}
+                        {formatAmplitudeOrders(dev.maxAmplitudeOrders)}
                     </div>
 
                     <div className="pt-1">

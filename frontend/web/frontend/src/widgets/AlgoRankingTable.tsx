@@ -19,6 +19,12 @@ import {
     buildSheetFromAoa,
     createWorkbook,
 } from "@/shared/lib/xlsxExport";
+import {
+    ALGO_RANKING_TABLE_DOCS,
+    getAlgoRankingColumnAnchorId,
+    type AlgoRankingDocsColumnKey,
+} from "@/shared/lib/docs/tableDocs";
+import { DocsAnchorButton } from "@/shared/ui/docs/DocsAnchorButton";
 
 type SortDir = "asc" | "desc";
 
@@ -30,30 +36,7 @@ export interface AlgoRankingTableProps {
 
 type RowMeta = AlgoStats & { place: number; precisionLabel: string };
 
-type ColId =
-    | "precision"
-    | "m"
-    | "arg1"
-    | "arg2"
-    | "arg3"
-    | "seriesCount"
-    | "avgBestDeviation"
-    | "avgRelativeError"
-    | "avgOrdersGain"
-    | "avgAmpAtMinN"
-    | "avgMinDeviationN"
-    | "avgLastMinusMin"
-    | "avgStepsToTol"
-    | "fracReachedTol"
-    | "oneSidedShare"
-    | "bestMinShare"
-    | "worstMinShare"
-    | "bestLastShare"
-    | "worstLastShare"
-    | "rankPrecision"
-    | "rankSpeed"
-    | "rankStability"
-    | "totalRankScore";
+type ColId = AlgoRankingDocsColumnKey;
 
 type ColMeta = {
     id: ColId;
@@ -125,25 +108,33 @@ const BASE_COLUMNS: ColMeta[] = [
         id: "avgRelativeError",
         title: "avg rel error",
         description:
-            "Среднее отношение min |A_n - lim| алгоритма к min |S_n - lim| ряда. 1 = на уровне ряда, <1 = лучше ряда, >1 = хуже. В среднее входят только ряды с min |S_n - lim| > 0; случаи с нулевым минимумом ряда оцениваются через avg amp.",
+            "Среднее отношение min |A_n - lim| алгоритма к min |S_n - lim| ряда. 1 = на уровне ряда, <1 = лучше ряда, >1 = хуже. В среднее входят только ряды с min |S_n - lim| > 0; случаи с нулевым минимумом ряда оцениваются через avg series/algo amp.",
         sortKey: "avgRelativeError",
         defaultDir: "asc",
     },
     {
         id: "avgOrdersGain",
-        title: "avg amp",
+        title: "avg series/algo amp",
         description:
-            "Средний выигрыш по порядкам между минимумом ряда и минимумом алгоритма: log10(min |S_n - lim|) - log10(min |A_n - lim|). Больше лучше.",
+            "Средний выигрыш по порядкам между минимумом ряда и минимумом алгоритма: lg10(min |S_n - lim|) - lg10(min |A_n - lim|). Больше лучше.",
         sortKey: "avgOrdersGain",
         defaultDir: "desc",
     },
     {
         id: "avgAmpAtMinN",
-        title: "avg amp @ min n",
+        title: "avg series@min n/algo amp",
         description:
-            "Средний выигрыш по порядкам на первом n, где алгоритм достиг своего min |A_n - lim|: log10(|S_n - lim| на этом n) - log10(min |A_n - lim|). Больше лучше.",
+            "Средний выигрыш по порядкам на первом n, где алгоритм достиг своего min |A_n - lim|: lg10(|S_n - lim| на этом n) - lg10(min |A_n - lim|). Больше лучше.",
         sortKey: "avgAmpAtMinN",
         defaultDir: "desc",
+    },
+    {
+        id: "notBetterThanSeriesShare",
+        title: "min algo >= min series, %",
+        description:
+            "Доля рядов, где min |A_n - lim| оказалось не лучше частичных сумм: min |A_n - lim| >= min |S_n - lim|. Идеально 0%. Меньше лучше.",
+        sortKey: "notBetterThanSeriesShare",
+        defaultDir: "asc",
     },
     {
         id: "avgMinDeviationN",
@@ -187,7 +178,7 @@ const BASE_COLUMNS: ColMeta[] = [
         id: "bestMinShare",
         title: "best min div, %",
         description:
-            "Доля сравнимых рядов, где min |A_n - lim| у этого алгоритма был лучшим среди всех алгоритмов. Больше лучше.",
+            "Доля сравнимых рядов, где min |A_n - lim| у этого алгоритма был лучшим среди всех алгоритмов. Если несколько алгоритмов разделили одинаковый лучший минимум, процент засчитывается каждому из них, поэтому суммы по столбцу могут быть больше 100%. Больше лучше.",
         sortKey: "bestMinShare",
         defaultDir: "desc",
     },
@@ -195,7 +186,7 @@ const BASE_COLUMNS: ColMeta[] = [
         id: "worstMinShare",
         title: "worst min div, %",
         description:
-            "Доля сравнимых рядов, где min |A_n - lim| у этого алгоритма был худшим среди всех алгоритмов. Меньше лучше.",
+            "Доля сравнимых рядов, где min |A_n - lim| у этого алгоритма был худшим среди всех алгоритмов. Если несколько алгоритмов разделили одинаковый худший минимум, процент засчитывается каждому из них, поэтому суммы по столбцу могут быть больше 100%. Меньше лучше.",
         sortKey: "worstMinShare",
         defaultDir: "asc",
     },
@@ -219,7 +210,7 @@ const BASE_COLUMNS: ColMeta[] = [
         id: "rankPrecision",
         title: "rank precision",
         description:
-            "Итоговый rank по точности: avg min |dev| + avg rel error + avg amp + best min div + worst min div. Меньше лучше.",
+            "Итоговый rank по точности: avg min |dev| + avg rel error + avg series/algo amp + min algo >= min series, % + best min div + worst min div. Меньше лучше.",
         sortKey: "rankPrecision",
         defaultDir: "asc",
     },
@@ -349,6 +340,8 @@ function getCellText(row: RowMeta, colId: ColId): string {
             return formatNumber(row.avgOrdersGain);
         case "avgAmpAtMinN":
             return formatNumber(row.avgAmpAtMinN);
+        case "notBetterThanSeriesShare":
+            return row.seriesCount > 0 ? formatPercent(row.notBetterThanSeriesShare) : "-";
         case "avgMinDeviationN":
             return formatSteps(row.avgMinDeviationN);
         case "avgLastMinusMin":
@@ -412,6 +405,10 @@ function getExportValue(row: RowMeta, colId: ColId): string | number | null {
                 : row.avgAmpAtMinN === Number.NEGATIVE_INFINITY
                   ? "-∞"
                   : null;
+        case "notBetterThanSeriesShare":
+            return Number.isFinite(row.notBetterThanSeriesShare)
+                ? row.notBetterThanSeriesShare
+                : null;
         case "avgMinDeviationN":
             return Number.isFinite(row.avgMinDeviationN) ? row.avgMinDeviationN : null;
         case "avgLastMinusMin":
@@ -457,6 +454,7 @@ function getExportColumnWidth(colId: ColId): number {
         case "avgRelativeError":
         case "avgOrdersGain":
         case "avgAmpAtMinN":
+        case "notBetterThanSeriesShare":
         case "avgMinDeviationN":
         case "avgLastMinusMin":
         case "avgStepsToTol":
@@ -478,6 +476,7 @@ function getExportColumnWidth(colId: ColId): number {
 function getExportColumnFormat(colId: ColId): string | null {
     switch (colId) {
         case "fracReachedTol":
+        case "notBetterThanSeriesShare":
         case "oneSidedShare":
         case "bestMinShare":
         case "worstMinShare":
@@ -551,15 +550,23 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
         const icon = active ? (sortDir === "asc" ? "▲" : "▼") : "";
 
         return (
-            <button
-                type="button"
-                className="w-full px-1 py-1 text-[10px] text-left select-none"
-                onClick={() => handleSort(meta.sortKey, meta.defaultDir)}
-                title={buildColumnTooltip(meta, active, sortDir)}
-            >
-                <span className="truncate">{meta.title}</span>
-                {icon ? <span className="ml-1 text-[9px] text-textDim/70">{icon}</span> : null}
-            </button>
+            <div className="group relative">
+                <button
+                    type="button"
+                    className="w-full px-1 py-1 pr-6 text-[10px] text-left select-none"
+                    onClick={() => handleSort(meta.sortKey, meta.defaultDir)}
+                    title={buildColumnTooltip(meta, active, sortDir)}
+                >
+                    <span className="truncate">{meta.title}</span>
+                    {icon ? <span className="ml-1 text-[9px] text-textDim/70">{icon}</span> : null}
+                </button>
+
+                <DocsAnchorButton
+                    anchorId={getAlgoRankingColumnAnchorId(meta.id)}
+                    label={`${ALGO_RANKING_TABLE_DOCS.title}: ${meta.title}`}
+                    className="absolute right-1 top-1"
+                />
+            </div>
         );
     };
 
@@ -695,7 +702,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                 <div className="flex-1">
                     <input
                         type="range"
-                        min={-100}
+                        min={-1000}
                         max={-1}
                         step={1}
                         value={epsilonExp}
@@ -703,8 +710,8 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                         className="w-full"
                     />
                     <div className="mt-1 flex justify-between text-[10px]">
-                        <span>10^-100</span>
-                        <span>10^-50</span>
+                        <span>10^-1000</span>
+                        <span>10^-500</span>
                         <span>10^-1</span>
                     </div>
                 </div>
@@ -796,7 +803,15 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                                 tableClassName="border-separate border-spacing-0"
                                 thClassName="bg-surface"
                                 tdClassName="p-0"
-                                renderTitle={() => "Algorithm ranking"}
+                                renderTitle={() => (
+                                    <span className="group inline-flex items-center gap-2">
+                                        <span>Algorithm ranking</span>
+                                        <DocsAnchorButton
+                                            anchorId={ALGO_RANKING_TABLE_DOCS.id}
+                                            label={ALGO_RANKING_TABLE_DOCS.title}
+                                        />
+                                    </span>
+                                )}
                                 renderSubtitle={() =>
                                     precisionFilter
                                         ? `epsilon=${epsilon.toExponential(2)} · precision=${precisionFilter} · N=${rowsAxis.length}`

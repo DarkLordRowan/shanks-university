@@ -103,6 +103,7 @@ describe("AlgoRankingTable.model", () => {
         expect(fast?.avgRelativeError).toBeCloseTo(0.1);
         expect(fast?.avgOrdersGain).toBeCloseTo(0.5);
         expect(fast?.avgAmpAtMinN).toBeCloseTo(0.5);
+        expect(fast?.notBetterThanSeriesShare).toBeCloseTo(0.5);
         expect(fast?.avgMinDeviationN).toBe(2);
         expect(fast?.avgLastMinusMin).toBe(0);
         expect(fast?.avgStepsToTol).toBe(2);
@@ -117,6 +118,7 @@ describe("AlgoRankingTable.model", () => {
         expect(slow?.avgBestDeviation).toBeCloseTo(5.5e-4);
         expect(slow?.avgOrdersGain).toBeCloseTo(-1.5);
         expect(slow?.avgAmpAtMinN).toBeCloseTo(-1.5);
+        expect(slow?.notBetterThanSeriesShare).toBe(1);
         expect(slow?.avgMinDeviationN).toBe(2);
         expect(slow?.avgLastMinusMin).toBeCloseTo(4.5e-4);
         expect(slow?.bestMinShare).toBe(0);
