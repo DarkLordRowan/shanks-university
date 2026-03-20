@@ -2,6 +2,7 @@
 
 pub mod coordinator;
 pub mod data_tab;
+pub mod export;
 mod selection;
 
 use crate::cache::Cache;
@@ -131,6 +132,7 @@ pub struct ShanksApp {
     show_legend: bool,
 
     n_points: u64,
+    white_bg: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -156,7 +158,7 @@ impl ShanksApp {
             dev_tab_state: TabState::default(),
             deviation_mode: DeviationMode::Magnitude,
             show_interval_shading: true,
-            upd_data: false,
+            upd_data: true,
         });
         let (combos_tx, combos_rx) = watch::channel(AppSelection::default());
 
@@ -192,6 +194,7 @@ impl ShanksApp {
             show_interval_shading: true,
             show_legend: true,
             n_points,
+            white_bg: false,
         };
 
         app.rebuild_trees();
@@ -205,7 +208,7 @@ impl ShanksApp {
             dev_tab_state: self.dev_tab_state.clone(),
             deviation_mode: self.deviation_mode,
             show_interval_shading: self.show_interval_shading,
-            upd_data: self.selected_tab == PlotTab::Data,
+            upd_data: true,
         });
     }
 
@@ -938,6 +941,16 @@ impl eframe::App for ShanksApp {
                             }
                         });
                     }
+                    if ui.button("Export to CSV + Script").clicked() {
+                        let data = self.data_cache.load();
+                        let state = &self.main_tab_state;
+                        // For larger datasets, this block might briefly freeze the UI, but it's acceptable for an export button.
+                        if let Err(e) = crate::app::export::perform_export(&data, state.symlog, state.log_linthresh) {
+                            log::error!("Export failed: {}", e);
+                        } else {
+                            log::info!("Exported CSV and Py script successfully.");
+                        }
+                    }
                     if ui.button("Quit").clicked() {
                         ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                     }
@@ -951,6 +964,7 @@ impl eframe::App for ShanksApp {
                     ui.checkbox(&mut self.show_interval_shading, "Show Interval Shading");
                     ui.separator();
                     ui.checkbox(&mut self.show_legend, "Show Legend");
+                    ui.checkbox(&mut self.white_bg, "White Background");
                 });
                 ui.label(format!("Status: {}", *self.status_rx.borrow()));
             });
@@ -1070,8 +1084,17 @@ impl eframe::App for ShanksApp {
                 PlotTab::Data => unreachable!(),
             };
 
-            let mut plot =
-                egui_plot::Plot::new("main_plot").data_aspect(current_tab_state.aspect_ratio);
+            ui.scope(|ui| {
+                if self.white_bg {
+                    ui.style_mut().visuals = egui::Visuals::light();
+                }
+
+                let mut plot = egui_plot::Plot::new("main_plot")
+                    .data_aspect(current_tab_state.aspect_ratio);
+
+                // if self.white_bg {
+                //     plot = plot.fill(egui::Color32::WHITE);
+                // }
             if self.show_legend {
                 plot = plot.legend(
                     egui_plot::Legend::default()
@@ -1263,9 +1286,10 @@ impl eframe::App for ShanksApp {
                 }
             });
         });
+    });
 
-        ctx.request_repaint();
-    }
+    ctx.request_repaint();
+}
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

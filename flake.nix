@@ -10,7 +10,12 @@
   };
 
   outputs =
-    { nixpkgs, flake-utils, fenix, ... }:
+    {
+      nixpkgs,
+      flake-utils,
+      fenix,
+      ...
+    }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
@@ -42,11 +47,28 @@
                 numpy
                 pandas
                 mypy
+
+                matplotlib
+                scienceplots
               ]
             ))
             fenix.packages.${system}.latest.toolchain
+            qt6.qtwayland
+            xorg.xcbutilcursor
           ];
-          LD_LIBRARY_PATH = with pkgs; lib.makeLibraryPath [ libGL wayland libxkbcommon vulkan-loader ];
+
+          LD_LIBRARY_PATH =
+            with pkgs;
+            lib.makeLibraryPath [
+              libxcb
+              libGL
+              wayland
+              libxkbcommon
+              vulkan-loader
+              xorg.xcbutilcursor
+            ];
+          QT_QPA_PLATFORM = "wayland";
+          QT_PLUGIN_PATH = with pkgs.qt6; "${qtwayland}/${qtbase.qtPluginPrefix}";
         };
       }
     );
