@@ -1,4 +1,4 @@
-use crate::app::BakedLine;
+use crate::app::{BakedLine, Grid};
 use egui::Color32;
 use plotters::prelude::*;
 use std::path::Path;
@@ -35,11 +35,6 @@ pub fn get_baked_line_id(baked: &BakedLine) -> String {
         ArrLine::Interval(iv) => format!("Inf: {}, Sup: {}", iv.inf.0, iv.sup.0),
         ArrLine::CInterval(ci) => format!("CI: {}", ci.real.inf.0),
     }
-}
-
-pub enum Grid {
-    Normal,
-    Symlog { log_linthresh: f64 },
 }
 
 pub fn render_to_buffer(

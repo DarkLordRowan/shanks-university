@@ -6,7 +6,6 @@ pub mod export;
 pub mod export_plotters;
 mod selection;
 
-use crate::app::export_plotters::Grid;
 use crate::cache::Cache;
 use crate::compute::{self, AccelData, IsCancelled, SeriesData, SeriesEventKind};
 use crate::experiment::ExperimentConfig;
@@ -47,8 +46,8 @@ pub enum DeviationMode {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TabState {
-    pub symlog: bool, // TODO: DANGER: TAKE SYMLOG for actual plot rendering & export from the table.
-    pub log_linthresh: f64,
+    pub desired_symlog: bool,
+    pub desired_log_linthresh: f64,
     pub aspect_ratio: f32,
     pub reset_view: bool,
     pub last_bounds: PlotBounds,
@@ -57,8 +56,8 @@ pub struct TabState {
 impl Default for TabState {
     fn default() -> Self {
         Self {
-            symlog: false,
-            log_linthresh: -50.0,
+            desired_symlog: false,
+            desired_log_linthresh: -50.0,
             aspect_ratio: 10.0,
             reset_view: false,
             last_bounds: PlotBounds::NOTHING,
@@ -105,10 +104,24 @@ pub struct BakedLine {
     kind: LineKind,
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum Grid {
+    Normal,
+    Symlog { log_linthresh: f64 },
+}
+
+impl Default for Grid {
+    fn default() -> Self {
+        Grid::Normal
+    }
+}
+
 #[derive(Default)]
 pub struct PlotCache {
     lines_main: Vec<BakedLine>,
+    grid_main: Grid,
     lines_deviation: Vec<BakedLine>,
+    grid_deviation: Grid,
     export_preview_tex: Mutex<Option<egui::TextureHandle>>,
 }
 
@@ -704,10 +717,10 @@ impl ShanksApp {
         let mut main_raw = Vec::new();
         let mut dev_raw = Vec::new();
 
-        let main_symlog = main_tab_state.symlog;
-        let main_thresh = main_tab_state.log_linthresh;
-        let dev_symlog = dev_tab_state.symlog;
-        let dev_thresh = dev_tab_state.log_linthresh;
+        let main_symlog = main_tab_state.desired_symlog;
+        let main_thresh = main_tab_state.desired_log_linthresh;
+        let dev_symlog = dev_tab_state.desired_symlog;
+        let dev_thresh = dev_tab_state.desired_log_linthresh;
 
         let mut max_n = 0usize;
         for sdata in series_results.values() {
@@ -942,7 +955,21 @@ impl ShanksApp {
         }
         PlotCache {
             lines_main: Self::process_collected_lines(main_raw),
+            grid_main: if main_symlog {
+                Grid::Symlog {
+                    log_linthresh: main_thresh,
+                }
+            } else {
+                Grid::Normal
+            },
             lines_deviation: Self::process_collected_lines(dev_raw),
+            grid_deviation: if dev_symlog {
+                Grid::Symlog {
+                    log_linthresh: dev_thresh,
+                }
+            } else {
+                Grid::Normal
+            },
             export_preview_tex: Mutex::new(None),
         }
     }
@@ -1273,29 +1300,15 @@ impl eframe::App for ShanksApp {
                             }
 
                             ui.horizontal(|ui| {
+                                let cache_lock = self.plot_cache.load();
+                                let (live_lines, grid) = match self.selected_tab {
+                                    PlotTab::Main | PlotTab::Data => (&cache_lock.lines_main, cache_lock.grid_main),
+                                    PlotTab::Deviation => (&cache_lock.lines_deviation, cache_lock.grid_deviation),
+                                };
                                 if ui.button("📸 Render High-Res JPG").clicked() {
                                     let now = chrono::Local::now().format("%Y%m%d_%H%M%S");
                                     let p = format!("export_{}.jpg", now);
                                     let path = std::path::PathBuf::from(p);
-
-                                    let cache_lock = self.plot_cache.load();
-                                    let live_lines = if self.selected_tab == PlotTab::Main {
-                                        &cache_lock.lines_main
-                                    } else {
-                                        &cache_lock.lines_deviation
-                                    };
-
-                                    let (symlog, log_linthresh) = match self.selected_tab {
-                                        PlotTab::Main => (
-                                            self.main_tab_state.symlog,
-                                            self.main_tab_state.log_linthresh,
-                                        ),
-                                        PlotTab::Deviation => (
-                                            self.dev_tab_state.symlog,
-                                            self.dev_tab_state.log_linthresh,
-                                        ),
-                                        PlotTab::Data => (false, 0.0),
-                                    };
 
                                     if let Err(e) = crate::app::export_plotters::export_to_jpg(
                                         &path,
@@ -1303,11 +1316,7 @@ impl eframe::App for ShanksApp {
                                         live_lines,
                                         state.export_size.0,
                                         state.export_size.1,
-                                        if symlog {
-                                            Grid::Symlog { log_linthresh }
-                                        } else {
-                                            Grid::Normal
-                                        },
+                                        grid
                                     ) {
                                         log::error!("Plotters export failed: {}", e);
                                     } else {
@@ -1315,22 +1324,9 @@ impl eframe::App for ShanksApp {
                                     }
                                 }
 
-                                let symlog = match self.selected_tab {
-                                    PlotTab::Main => self.main_tab_state.symlog,
-                                    PlotTab::Deviation => self.dev_tab_state.symlog,
-                                    PlotTab::Data => false,
-                                };
-                                if ui.button(if symlog { "📄 (disable symlog for CSV export)" } else { "📄 Export CSV" }).clicked() {
-                                    if symlog {
-                                        log::error!("Cannot export CSV when Symlog mode is enabled. Disable Symlog to export CSV data.");
-                                    } else {
-                                        let cache_lock = self.plot_cache.load();
-                                        let live_lines = if self.selected_tab == PlotTab::Main {
-                                            &cache_lock.lines_main
-                                        } else {
-                                            &cache_lock.lines_deviation
-                                        };
-
+                                let exportable = grid == Grid::Normal;
+                                if ui.button(if exportable { "📄 Export CSV" } else  { "📄 (disable symlog for CSV export)" }).clicked() {
+                                    if exportable {
                                         if let Err(e) = crate::app::export::perform_export(
                                             live_lines,
                                             &state.settings,
@@ -1339,6 +1335,8 @@ impl eframe::App for ShanksApp {
                                         } else {
                                             log::info!("CSV exported successfully");
                                         }
+                                    } else {
+                                        log::error!("Cannot export CSV when Symlog mode is enabled. Disable Symlog to export CSV data.");
                                     }
                                 }
                             });
@@ -1375,14 +1373,19 @@ impl eframe::App for ShanksApp {
                             PlotTab::Data => unreachable!(),
                         };
 
-                        if ui.checkbox(&mut tab_state.symlog, "Symlog").changed() {
+                        if ui
+                            .checkbox(&mut tab_state.desired_symlog, "Symlog")
+                            .changed()
+                        {
                             config_changed = true;
                         }
-                        if tab_state.symlog {
+                        if tab_state.desired_symlog {
                             ui.label("Log Linthresh: e^");
-                            let slider =
-                                egui::Slider::new(&mut tab_state.log_linthresh, -100.0..=100.0)
-                                    .clamping(egui::SliderClamping::Never);
+                            let slider = egui::Slider::new(
+                                &mut tab_state.desired_log_linthresh,
+                                -100.0..=100.0,
+                            )
+                            .clamping(egui::SliderClamping::Never);
                             if ui.add(slider).changed() {
                                 config_changed = true;
                             }
@@ -1439,21 +1442,13 @@ impl eframe::App for ShanksApp {
                     let cache_lock = self.plot_cache.load();
                     let mut tex = cache_lock.export_preview_tex.lock().unwrap();
                     if state.settings_dirty || state.preview_size != (w, h) || tex.is_none() {
-                        let live_lines = if self.selected_tab == PlotTab::Main {
-                            &cache_lock.lines_main
-                        } else {
-                            &cache_lock.lines_deviation
-                        };
-
-                        let (symlog, log_linthresh) = match self.selected_tab {
-                            PlotTab::Main => (
-                                self.main_tab_state.symlog,
-                                self.main_tab_state.log_linthresh,
-                            ),
-                            PlotTab::Deviation => {
-                                (self.dev_tab_state.symlog, self.dev_tab_state.log_linthresh)
+                        let (live_lines, grid) = match self.selected_tab {
+                            PlotTab::Main | PlotTab::Data => {
+                                (&cache_lock.lines_main, cache_lock.grid_main)
                             }
-                            PlotTab::Data => (false, 0.0),
+                            PlotTab::Deviation => {
+                                (&cache_lock.lines_deviation, cache_lock.grid_deviation)
+                            }
                         };
 
                         let buf_res = crate::app::export_plotters::render_to_buffer(
@@ -1461,11 +1456,7 @@ impl eframe::App for ShanksApp {
                             live_lines,
                             w,
                             h,
-                            if symlog {
-                                Grid::Symlog { log_linthresh }
-                            } else {
-                                Grid::Normal
-                            },
+                            grid,
                         );
                         match buf_res {
                             Ok(buf) => {
@@ -1489,7 +1480,6 @@ impl eframe::App for ShanksApp {
                         ui.add(egui::Image::new(&*tex).fit_to_exact_size(size));
                     }
                 }
-            } else {
             }
 
             if self.selected_tab == PlotTab::Data {
@@ -1499,9 +1489,17 @@ impl eframe::App for ShanksApp {
             }
 
             let cache_lock = self.plot_cache.load();
-            let (plot_lines, current_tab_state) = match self.selected_tab {
-                PlotTab::Main => (&cache_lock.lines_main, &mut self.main_tab_state),
-                PlotTab::Deviation => (&cache_lock.lines_deviation, &mut self.dev_tab_state),
+            let (plot_lines, current_tab_state, grid) = match self.selected_tab {
+                PlotTab::Main => (
+                    &cache_lock.lines_main,
+                    &mut self.main_tab_state,
+                    cache_lock.grid_main,
+                ),
+                PlotTab::Deviation => (
+                    &cache_lock.lines_deviation,
+                    &mut self.dev_tab_state,
+                    cache_lock.grid_deviation,
+                ),
                 PlotTab::Data => unreachable!(),
             };
 
@@ -1517,24 +1515,23 @@ impl eframe::App for ShanksApp {
                     );
                 }
 
-                if current_tab_state.symlog {
-                    let thresh = current_tab_state.log_linthresh;
-                    plot = plot.y_axis_formatter(move |grid_mark, _range| {
-                        crate::plot::symlog_grid_formatter(grid_mark.value, thresh)
-                    });
-                } else {
-                    plot = plot.y_axis_formatter(|grid_mark, _range| {
-                        crate::plot::format_grid_value(grid_mark.value)
-                    });
+                match grid {
+                    Grid::Symlog { log_linthresh } => {
+                        plot = plot.y_axis_formatter(move |grid_mark, _range| {
+                            crate::plot::symlog_grid_formatter(grid_mark.value, log_linthresh)
+                        })
+                    }
+                    Grid::Normal => {
+                        plot = plot.y_axis_formatter(|grid_mark, _range| {
+                            crate::plot::format_grid_value(grid_mark.value)
+                        })
+                    }
                 }
 
                 if current_tab_state.reset_view {
                     plot = plot.reset();
                     current_tab_state.reset_view = false;
                 }
-
-                let symlog = current_tab_state.symlog;
-                let thresh = current_tab_state.log_linthresh;
 
                 plot = plot.label_formatter(move |name, value| {
                     if name.is_empty() {
@@ -1544,10 +1541,11 @@ impl eframe::App for ShanksApp {
                             crate::plot::format_value(value.y)
                         );
                     }
-                    let y_str = if symlog {
-                        crate::plot::symlog_formatter(value.y, thresh)
-                    } else {
-                        crate::plot::format_value(value.y)
+                    let y_str = match grid {
+                        Grid::Normal => crate::plot::format_value(value.y),
+                        Grid::Symlog { log_linthresh } => {
+                            crate::plot::symlog_formatter(value.y, log_linthresh)
+                        }
                     };
                     format!("{}\nn = {:.0}\ny = {}", name, value.x, y_str)
                 });
