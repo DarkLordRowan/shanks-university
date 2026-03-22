@@ -12,7 +12,7 @@ struct utils::cast<OpsWrapperMacro(To), From> {
 };
 
 template <FloatLike To, FloatLike From>
-OpsWrapperMacro(To) utils::cast<OpsWrapperMacro(To), From>::operator()(const From & x, std::size_t precision) {
+OpsWrapperMacro(To) utils::cast<OpsWrapperMacro(To), From>::operator()(const From& x, std::size_t precision) {
     return OpsWrapperMacro(To)(utils::cast<To, From>()(x, precision));
 }
 

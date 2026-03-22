@@ -61,11 +61,13 @@ public:
     T next(K n, std::pair<T, T>& state) const override {
         const size_t precision = utils::helpers<T>::get_precision(this->x);
         if (n == 0)
-            state = std::make_pair(utils::cast<T, int>()(0, precision), utils::cast<T, int>()(109225, precision) /
-                                                                            utils::cast<T, int>()(43691.0, precision));
+            state = std::make_pair(
+                utils::cast<T, int>()(0, precision),
+                this->x + utils::cast<T, int>()(109225, precision) / utils::cast<T, int>()(43691.0, precision));
         else if (n == 1)
-            state = std::make_pair(utils::cast<T, int>()(109225, precision) / utils::cast<T, int>()(43691.0, precision),
-                                   utils::cast<T, int>()(10923, precision) / utils::cast<T, int>()(4369.0, precision));
+            state = std::make_pair(
+                this->x + utils::cast<T, int>()(109225, precision) / utils::cast<T, int>()(43691.0, precision),
+                utils::cast<T, int>()(10923, precision) / utils::cast<T, int>()(4369.0, precision));
         else {
             state.first =
                 utils::cast<T, double>()(56.5, precision) +
