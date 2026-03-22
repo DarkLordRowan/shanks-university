@@ -5,9 +5,11 @@ use crate::compute::{self, ComputeEvent, ComputeTask, SeriesDesc};
 use crate::experiment::{
     AccelInstance, ExperimentConfig, FilterInstance, NoiseInstance, SeriesInstance,
 };
-use crate::export::parquet::{AccelExportRow, AccelFilteredData, ExportData, ParquetExporter, SeriesExportRow};
+use crate::export::parquet::{
+    AccelExportRow, AccelFilteredData, ExportData, ParquetExporter, SeriesExportRow,
+};
 use anyhow::Result;
-use std::collections::{HashMap, BTreeSet};
+use std::collections::{BTreeSet, HashMap};
 use std::path::PathBuf;
 use tokio::sync::mpsc;
 
@@ -94,7 +96,8 @@ impl HeadlessRunner {
         let (tx, mut rx) = mpsc::channel(32);
 
         // Key: (task_id, accel_name, m, args_json)
-        let mut grouped_accels: HashMap<(usize, String, i64, String), AccelExportRow> = HashMap::new();
+        let mut grouped_accels: HashMap<(usize, String, i64, String), AccelExportRow> =
+            HashMap::new();
 
         for task in tasks {
             compute::spawn_task(task, self.cache.clone(), tx.clone());
@@ -115,12 +118,12 @@ impl HeadlessRunner {
                         };
                         arguments.insert(k.clone(), vs);
                     }
-                    
+
                     if let Some(ref noise) = id.1.noise {
                         arguments.insert("noise_type".to_string(), noise.noise_type.clone());
                         arguments.insert("noise_method".to_string(), noise.method.clone());
                         arguments.insert("noise_seed".to_string(), noise.seed.to_string());
-                        
+
                         for (k, v) in &noise.args {
                             let vs = match v {
                                 serde_json::Value::String(s) => s.clone(),
@@ -192,19 +195,23 @@ impl HeadlessRunner {
                         if row.filtered.is_none() {
                             row.filtered = Some(AccelFilteredData {
                                 start_n: data.start_offset as i64,
-                                segment_length: crate::export::parquet::arr_len(&data.result.sn) as i64,
+                                segment_length: crate::export::parquet::arr_len(&data.result.sn)
+                                    as i64,
                                 methods: HashMap::new(),
                             });
                         }
-                        
+
                         if let Some(ref mut filt) = row.filtered {
-                             // Convert Arr to Vec<Value> for export
-                             let n = crate::export::parquet::arr_len(&data.result.sn);
-                             let mut vals = Vec::with_capacity(n);
-                             for i in 0..n {
-                                 vals.push(crate::export::parquet::arr_index_to_value(&data.result.sn, i));
-                             }
-                             filt.methods.insert(filter.filter_type.clone(), vals);
+                            // Convert Arr to Vec<Value> for export
+                            let n = crate::export::parquet::arr_len(&data.result.sn);
+                            let mut vals = Vec::with_capacity(n);
+                            for i in 0..n {
+                                vals.push(crate::export::parquet::arr_index_to_value(
+                                    &data.result.sn,
+                                    i,
+                                ));
+                            }
+                            filt.methods.insert(filter.filter_type.clone(), vals);
                         }
                     } else {
                         // This is the main unfiltered result
@@ -247,11 +254,12 @@ impl HeadlessRunner {
                         let mut task_accels = Vec::new();
                         // This is a bit inefficient (O(N_accels_total)) but simple for now.
                         // Optimization: keep a map of task_id -> list of keys if needed.
-                        let keys_to_remove: Vec<_> = grouped_accels.keys()
+                        let keys_to_remove: Vec<_> = grouped_accels
+                            .keys()
                             .filter(|k| k.0 == task_idx)
                             .cloned()
                             .collect();
-                        
+
                         for k in keys_to_remove {
                             if let Some(row) = grouped_accels.remove(&k) {
                                 task_accels.push(row);
@@ -259,8 +267,16 @@ impl HeadlessRunner {
                         }
 
                         if !task_accels.is_empty() {
-                            if let Err(e) = ParquetExporter::export_incremental_accel_batch(task_idx as i64, &task_accels, path) {
-                                log::error!("Failed to export incremental accels for task {}: {}", task_idx, e);
+                            if let Err(e) = ParquetExporter::export_incremental_accel_batch(
+                                task_idx as i64,
+                                &task_accels,
+                                path,
+                            ) {
+                                log::error!(
+                                    "Failed to export incremental accels for task {}: {}",
+                                    task_idx,
+                                    e
+                                );
                             }
                         }
                     }
@@ -275,12 +291,7 @@ impl HeadlessRunner {
         }
 
         if let Some(ref path) = self.export {
-            ParquetExporter::export(
-                ExportData {
-                    series_results,
-                },
-                path,
-            )?;
+            ParquetExporter::export(ExportData { series_results }, path)?;
         }
 
         summary.total_time_secs = start_time.elapsed().as_secs_f64();

@@ -55,6 +55,8 @@
             fenix.packages.${system}.latest.toolchain
             qt6.qtwayland
             xorg.xcbutilcursor
+            fontconfig
+            freetype
           ];
 
           LD_LIBRARY_PATH =
@@ -66,6 +68,8 @@
               libxkbcommon
               vulkan-loader
               xorg.xcbutilcursor
+              fontconfig
+              freetype
             ];
           QT_QPA_PLATFORM = "wayland";
           QT_PLUGIN_PATH = with pkgs.qt6; "${qtwayland}/${qtbase.qtPluginPrefix}";

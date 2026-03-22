@@ -143,6 +143,69 @@ pub fn symlog_formatter(val: f64, log_linthresh: f64) -> String {
     format_value(true_x)
 }
 
+/// Format a value for grid/axis labels with reduced precision to avoid epsilon floating errors.
+pub fn format_grid_value(val: f64) -> String {
+    if val == 0.0 {
+        return "0".to_string();
+    }
+    if !val.is_finite() {
+        return format!("{val}");
+    }
+
+    let abs_val = val.abs();
+    let log10 = abs_val.log10();
+    let exponent = log10.floor() as i32;
+
+    if exponent >= -5 && exponent <= 5 {
+        let s = format!("{:.5}", val);
+        if s.contains('.') {
+            let trimmed = s.trim_end_matches('0').trim_end_matches('.');
+            if trimmed.is_empty() || trimmed == "-" {
+                "0".to_string()
+            } else {
+                trimmed.to_string()
+            }
+        } else {
+            s
+        }
+    } else {
+        let s = format!("{:.3e}", val);
+        if let Some(e_pos) = s.find('e') {
+            let (mantissa, exp) = s.split_at(e_pos);
+            let mem = mantissa.trim_end_matches('0').trim_end_matches('.');
+            // Clean up e format (e.g. e-05 to e-5)
+            let exp_clean = if exp.starts_with("e-0") {
+                format!("e-{}", &exp[3..])
+            } else if exp.starts_with("e0") {
+                format!("e{}", &exp[2..])
+            } else if exp.starts_with("e+0") {
+                format!("e{}", &exp[3..])
+            } else if exp.starts_with("e+") {
+                format!("e{}", &exp[2..])
+            } else {
+                exp.to_string()
+            };
+            format!("{}{}", mem, exp_clean)
+        } else {
+            s
+        }
+    }
+}
+
+/// Convert symlog-transformed value back to a formatted string for grid display.
+pub fn symlog_grid_formatter(val: f64, log_linthresh: f64) -> String {
+    if val == 0.0 {
+        return "0".to_string();
+    }
+
+    // Use the EXACT inverse: |x| = L * (10^|y| - 1)
+    let linthresh = 10f64.powf(log_linthresh);
+    let true_abs_x = linthresh * (10f64.powf(val.abs()) - 1.0);
+    let true_x = true_abs_x * val.signum();
+
+    format_grid_value(true_x)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

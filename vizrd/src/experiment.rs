@@ -244,11 +244,13 @@ impl SeriesDef {
             let arg_combinations = arg_combinations.clone();
             let x = x.clone();
             let name = self.name.clone();
-            arg_combinations.into_iter().map(move |args| SeriesInstance {
-                name: name.clone(),
-                args,
-                x: x.clone(),
-            })
+            arg_combinations
+                .into_iter()
+                .map(move |args| SeriesInstance {
+                    name: name.clone(),
+                    args,
+                    x: x.clone(),
+                })
         })
     }
 }

@@ -3,6 +3,7 @@
 pub mod coordinator;
 pub mod data_tab;
 pub mod export;
+pub mod export_plotters;
 mod selection;
 
 use crate::cache::Cache;
@@ -106,6 +107,15 @@ pub struct PlotCache {
     lines_deviation: Vec<BakedLine>,
 }
 
+pub struct ExportState {
+    pub settings: export_plotters::ExportSettings,
+    pub preview_tex: Option<egui::TextureHandle>,
+    pub dirty: bool,
+    pub last_size: (u32, u32),
+    pub export_width: u32,
+    pub export_height: u32,
+}
+
 pub struct ShanksApp {
     cfg: Option<ExperimentConfig>,
     cache: Cache,
@@ -132,7 +142,9 @@ pub struct ShanksApp {
     show_legend: bool,
 
     n_points: u64,
-    white_bg: bool,
+    light_theme: bool,
+    export_mode: bool,
+    export_state: Option<ExportState>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -194,7 +206,9 @@ impl ShanksApp {
             show_interval_shading: true,
             show_legend: true,
             n_points,
-            white_bg: false,
+            light_theme: true,
+            export_mode: false,
+            export_state: None,
         };
 
         app.rebuild_trees();
@@ -930,6 +944,12 @@ impl ShanksApp {
 
 impl eframe::App for ShanksApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        ctx.set_theme(if self.light_theme {
+            egui::Theme::Light
+        } else {
+            egui::Theme::Dark
+        });
+
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
@@ -941,14 +961,18 @@ impl eframe::App for ShanksApp {
                             }
                         });
                     }
-                    if ui.button("Export to CSV + Script").clicked() {
+                    if ui.button("Export to CSV").clicked() {
                         let data = self.data_cache.load();
                         let state = &self.main_tab_state;
                         // For larger datasets, this block might briefly freeze the UI, but it's acceptable for an export button.
-                        if let Err(e) = crate::app::export::perform_export(&data, state.symlog, state.log_linthresh) {
+                        if let Err(e) = crate::app::export::perform_export(
+                            &data,
+                            state.symlog,
+                            state.log_linthresh,
+                        ) {
                             log::error!("Export failed: {}", e);
                         } else {
-                            log::info!("Exported CSV and Py script successfully.");
+                            log::info!("Exported CSV successfully.");
                         }
                     }
                     if ui.button("Quit").clicked() {
@@ -964,7 +988,7 @@ impl eframe::App for ShanksApp {
                     ui.checkbox(&mut self.show_interval_shading, "Show Interval Shading");
                     ui.separator();
                     ui.checkbox(&mut self.show_legend, "Show Legend");
-                    ui.checkbox(&mut self.white_bg, "White Background");
+                    ui.checkbox(&mut self.light_theme, "Light Theme");
                 });
                 ui.label(format!("Status: {}", *self.status_rx.borrow()));
             });
@@ -973,26 +997,299 @@ impl eframe::App for ShanksApp {
         egui::SidePanel::left("left_panel")
             .resizable(true)
             .show(ctx, |ui| {
-                egui::ScrollArea::vertical().show(ui, |ui| {
-                    let mut trees_changed = false;
-                    if let Some(app_select) = &mut self.app_select {
-                        trees_changed = app_select.draw(ui);
+                ui.horizontal(|ui| {
+                    if ui.selectable_label(!self.export_mode, "⚙ Standard").clicked() {
+                        self.export_mode = false;
                     }
-                    if trees_changed {
-                        self.trigger_combinations();
+                    if ui.selectable_label(self.export_mode, "🎨 Export Options").clicked() {
+                        self.export_mode = true;
+                        if self.export_state.is_none() {
+                            self.export_state = Some(ExportState {
+                                settings: crate::app::export_plotters::ExportSettings {
+                                    line_configs: std::collections::HashMap::new(),
+                                    axis_labels: ("n".to_string(), "Sn".to_string()),
+                                    legend_pos: 1,
+                                    legend_font_size: 15,
+                                    x_min: 0.0,
+                                    x_max: self.n_points as f64,
+                                    y_min: -1.0,
+                                    y_max: 1.0,
+                                },
+                                preview_tex: None,
+                                dirty: true,
+                                last_size: (0, 0),
+                                export_width: 1920,
+                                export_height: 1080,
+                            });
+                        } else {
+                            self.export_state.as_mut().unwrap().dirty = true;
+                        }
                     }
-                    ui.separator();
-                    ui.label("N:");
-                    let n = egui::Slider::new(&mut self.n_points, 0..=1000)
-                        .clamping(egui::SliderClamping::Never);
-                    if ui.add(n).changed() {
-                        self.trigger_config_update();
-                    }
-                    ui.label(self.last_err_rx.borrow().as_str());
                 });
+                ui.separator();
+
+                if !self.export_mode {
+
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        let mut trees_changed = false;
+                        if let Some(app_select) = &mut self.app_select {
+                            trees_changed = app_select.draw(ui);
+                        }
+                        if trees_changed {
+                            self.trigger_combinations();
+                        }
+                        ui.separator();
+                        ui.label("N:");
+                        let n = egui::Slider::new(&mut self.n_points, 0..=1000)
+                            .clamping(egui::SliderClamping::Never);
+                        if ui.add(n).changed() {
+                            self.trigger_config_update();
+                        }
+                        ui.label(self.last_err_rx.borrow().as_str());
+                    });
+                } else {
+
+                    if let Some(ref mut state) = self.export_state {
+                        egui::ScrollArea::both().show(ui, |ui| {
+                            let mut changed = false;
+
+                            egui::CollapsingHeader::new("⚙ General Settings")
+                                .default_open(true)
+                                .show(ui, |ui| {
+                                    egui::Grid::new("export_gen_grid")
+                                        .num_columns(2)
+                                        .spacing([10.0, 10.0])
+                                        .show(ui, |ui| {
+                                            ui.label("X-Axis:");
+                                            if ui
+                                                .text_edit_singleline(
+                                                    &mut state.settings.axis_labels.0,
+                                                )
+                                                .changed()
+                                            {
+                                                changed = true;
+                                            }
+                                            ui.end_row();
+
+                                            ui.label("Y-Axis:");
+                                            if ui
+                                                .text_edit_singleline(
+                                                    &mut state.settings.axis_labels.1,
+                                                )
+                                                .changed()
+                                            {
+                                                changed = true;
+                                            }
+                                            ui.end_row();
+                                        });
+                                });
+
+                            ui.separator();
+
+                            egui::CollapsingHeader::new("🔍 Region of Interest (ROI)")
+                                .default_open(true)
+                                .show(ui, |ui| {
+                                    egui::Grid::new("export_roi_grid")
+                                        .num_columns(2)
+                                        .spacing([10.0, 8.0])
+                                        .show(ui, |ui| {
+                                            ui.label("X Min:");
+                                            if ui
+                                                .add(egui::DragValue::new(
+                                                    &mut state.settings.x_min,
+                                                ))
+                                                .changed()
+                                            {
+                                                changed = true;
+                                            }
+                                            ui.end_row();
+
+                                            ui.label("X Max:");
+                                            if ui
+                                                .add(egui::DragValue::new(
+                                                    &mut state.settings.x_max,
+                                                ))
+                                                .changed()
+                                            {
+                                                changed = true;
+                                            }
+                                            ui.end_row();
+
+                                            ui.label("Y Min:");
+                                            if ui
+                                                .add(egui::DragValue::new(
+                                                    &mut state.settings.y_min,
+                                                ))
+                                                .changed()
+                                            {
+                                                changed = true;
+                                            }
+                                            ui.end_row();
+
+                                            ui.label("Y Max:");
+                                            if ui
+                                                .add(egui::DragValue::new(
+                                                    &mut state.settings.y_max,
+                                                ))
+                                                .changed()
+                                            {
+                                                changed = true;
+                                            }
+                                            ui.end_row();
+                                        });
+                                });
+
+                            ui.separator();
+
+                            egui::CollapsingHeader::new("📈 Lines & Series")
+                                .default_open(true)
+                                .show(ui, |ui| {
+                                    let cache_lock = self.plot_cache.load();
+                                    let live_lines = if self.selected_tab == PlotTab::Main {
+                                        &cache_lock.lines_main
+                                    } else {
+                                        &cache_lock.lines_deviation
+                                    };
+
+                                    for baked in live_lines {
+                                        let id = crate::app::export_plotters::get_baked_line_id(baked);
+                                        state.settings.line_configs.entry(id.clone()).or_insert_with(|| {
+                                            crate::app::export_plotters::ExportLineConfig {
+                                                id: id.clone(),
+                                                custom_name: id.clone(),
+                                                color: baked.color,
+                                                width: baked.width,
+                                                visible: true,
+                                                style: 0,
+                                            }
+                                        });
+
+                                        let l = state.settings.line_configs.get_mut(&id).unwrap();
+                                        ui.horizontal(|ui| {
+                                            if ui.checkbox(&mut l.visible, "").changed() { changed = true; }
+                                            if ui.color_edit_button_srgba(&mut l.color).changed() { changed = true; }
+                                            if ui.add(egui::Slider::new(&mut l.width, 1.0..=10.0)).changed() { changed = true; }
+                                            if ui.add(egui::TextEdit::singleline(&mut l.custom_name).desired_width(120.0)).changed() { changed = true; }
+                                        });
+                                    }
+                                });
+
+                            ui.separator();
+
+                            egui::CollapsingHeader::new("💾 Output Dimensions")
+                                .default_open(true)
+                                .show(ui, |ui| {
+                                    egui::Grid::new("export_dim_grid")
+                                        .num_columns(2)
+                                        .spacing([10.0, 8.0])
+                                        .show(ui, |ui| {
+                                            ui.label("Width:");
+                                            ui.add(egui::DragValue::new(&mut state.export_width));
+                                            ui.end_row();
+
+                                            ui.label("Height:");
+                                            ui.add(egui::DragValue::new(&mut state.export_height));
+                                            ui.end_row();
+                                        });
+                                });
+
+                            if changed {
+                                state.dirty = true;
+                            }
+
+                            if ui.button("📸 Render High-Res JPG").clicked() {
+                                let now = chrono::Local::now().format("%Y%m%d_%H%M%S");
+                                let p = format!("export_{}.jpg", now);
+                                let path = std::path::PathBuf::from(p);
+
+                                let cache_lock = self.plot_cache.load();
+                                let live_lines = if self.selected_tab == PlotTab::Main {
+                                    &cache_lock.lines_main
+                                } else {
+                                    &cache_lock.lines_deviation
+                                };
+
+                                let (symlog, thresh) = match self.selected_tab {
+                                    PlotTab::Main => (self.main_tab_state.symlog, self.main_tab_state.log_linthresh),
+                                    PlotTab::Deviation => (self.dev_tab_state.symlog, self.dev_tab_state.log_linthresh),
+                                    PlotTab::Data => (false, 0.0),
+                                };
+
+                                if let Err(e) = crate::app::export_plotters::export_to_jpg(
+                                    &path,
+                                    &state.settings,
+                                    live_lines,
+                                    state.export_width,
+                                    state.export_height,
+                                    symlog,
+                                    thresh,
+                                ) {
+                                    log::error!("Plotters export failed: {}", e);
+                                } else {
+                                    log::info!("Saved export to {}", path.display());
+                                }
+                            }
+                        });
+                    }
+                }
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
+            if self.export_mode {
+                if let Some(ref mut state) = self.export_state {
+                    let mut size = ui.available_size();
+                    size.x = size.x.max(100.0);
+                    size.y = size.y.max(100.0);
+                    let w = (size.x as u32).min(3000);
+                    let h = (size.y as u32).min(3000);
+
+                    if state.dirty || state.last_size != (w, h) {
+                        let cache_lock = self.plot_cache.load();
+                        let live_lines = if self.selected_tab == PlotTab::Main {
+                            &cache_lock.lines_main
+                        } else {
+                            &cache_lock.lines_deviation
+                        };
+
+                        let (symlog, thresh) = match self.selected_tab {
+                            PlotTab::Main => (self.main_tab_state.symlog, self.main_tab_state.log_linthresh),
+                            PlotTab::Deviation => (self.dev_tab_state.symlog, self.dev_tab_state.log_linthresh),
+                            PlotTab::Data => (false, 0.0),
+                        };
+
+                        let buf_res = crate::app::export_plotters::render_to_buffer(
+                            &state.settings,
+                            live_lines,
+                            w,
+                            h,
+                            symlog,
+                            thresh,
+                        );
+                        match buf_res {
+                            Ok(buf) => {
+                                let image =
+                                    egui::ColorImage::from_rgb([w as usize, h as usize], &buf);
+                                state.preview_tex = Some(ctx.load_texture(
+                                    "plot_preview",
+                                    image,
+                                    egui::TextureOptions::LINEAR,
+                                ));
+                                state.last_size = (w, h);
+                                state.dirty = false;
+                            }
+                            Err(e) => {
+                                log::error!("Failed to render preview: {}", e);
+                            }
+                        }
+                    }
+
+                    if let Some(tex) = &state.preview_tex {
+                        ui.add(egui::Image::new(&*tex).fit_to_exact_size(size));
+                    }
+                }
+                return;
+            }
+
             ui.horizontal(|ui| {
                 let mut changed_tab = false;
                 changed_tab |= ui
@@ -1085,211 +1382,219 @@ impl eframe::App for ShanksApp {
             };
 
             ui.scope(|ui| {
-                if self.white_bg {
-                    ui.style_mut().visuals = egui::Visuals::light();
-                }
+                let mut plot =
+                    egui_plot::Plot::new("main_plot").data_aspect(current_tab_state.aspect_ratio);
 
-                let mut plot = egui_plot::Plot::new("main_plot")
-                    .data_aspect(current_tab_state.aspect_ratio);
-
-                // if self.white_bg {
-                //     plot = plot.fill(egui::Color32::WHITE);
-                // }
-            if self.show_legend {
-                plot = plot.legend(
-                    egui_plot::Legend::default()
-                        .follow_insertion_order(true)
-                        .grouping(egui_plot::LegendGrouping::ById),
-                );
-            }
-
-            if current_tab_state.symlog {
-                let thresh = current_tab_state.log_linthresh;
-                plot = plot.y_axis_formatter(move |grid_mark, _range| {
-                    crate::plot::symlog_formatter(grid_mark.value, thresh)
-                });
-            } else {
-                plot = plot.y_axis_formatter(|grid_mark, _range| {
-                    crate::plot::format_value(grid_mark.value)
-                });
-            }
-
-            if current_tab_state.reset_view {
-                plot = plot.reset();
-                current_tab_state.reset_view = false;
-            }
-
-            let symlog = current_tab_state.symlog;
-            let thresh = current_tab_state.log_linthresh;
-
-            plot = plot.label_formatter(move |name, value| {
-                if name.is_empty() {
-                    return format!(
-                        "n = {:.0}\ny = {}",
-                        value.x,
-                        crate::plot::format_value(value.y)
+                if self.show_legend {
+                    plot = plot.legend(
+                        egui_plot::Legend::default()
+                            .follow_insertion_order(true)
+                            .grouping(egui_plot::LegendGrouping::ById),
                     );
                 }
-                let y_str = if symlog {
-                    crate::plot::symlog_formatter(value.y, thresh)
+
+                if current_tab_state.symlog {
+                    let thresh = current_tab_state.log_linthresh;
+                    plot = plot.y_axis_formatter(move |grid_mark, _range| {
+                        crate::plot::symlog_grid_formatter(grid_mark.value, thresh)
+                    });
                 } else {
-                    crate::plot::format_value(value.y)
-                };
-                format!("{}\nn = {:.0}\ny = {}", name, value.x, y_str)
-            });
-
-            fn limit_pts_slice<'a>(pts: &'a [PlotPoint], max_n: u64) -> &'a [PlotPoint] {
-                &pts[0..(max_n as usize).min(pts.len())]
-            }
-
-            plot.show(ui, |plot_ui| {
-                for baked in plot_lines {
-                    // Filter by View toggles — no cache rebuild needed
-                    match baked.kind {
-                        LineKind::Sn if !self.show_sn => continue,
-                        LineKind::An if !self.show_an => continue,
-                        LineKind::Limit if !self.show_limit_lines => continue,
-                        _ => {}
-                    }
-
-                    if self.show_events {
-                        for ev_group in &baked.events {
-                            let points = egui_plot::Points::new(
-                                &ev_group.text,
-                                PlotPoints::Borrowed(&ev_group.points),
-                            )
-                            .shape(ev_group.shape)
-                            .color(ev_group.color)
-                            .radius(5.0)
-                            .id(Id::new(ev_group.kind));
-
-                            plot_ui.points(points);
-                        }
-                    }
-
-                    if self.show_interval_shading {
-                        for poly_pts in &baked.shading_polygons {
-                            plot_ui.polygon(
-                                egui_plot::Polygon::new(
-                                    "",
-                                    PlotPoints::Borrowed(limit_pts_slice(poly_pts, self.n_points)),
-                                )
-                                .fill_color(baked.color.gamma_multiply(0.2))
-                                .stroke(egui::Stroke::NONE),
-                            );
-                        }
-                    }
-
-                    match &baked.data {
-                        ArrLine::Real((name, v)) => {
-                            plot_ui.line(
-                                Line::new(
-                                    name,
-                                    PlotPoints::Borrowed(limit_pts_slice(v, self.n_points)),
-                                )
-                                .color(baked.color)
-                                .width(baked.width)
-                                .style(baked.style),
-                            );
-                        }
-                        ArrLine::Complex(c) => {
-                            plot_ui.line(
-                                Line::new(
-                                    &c.real.0,
-                                    PlotPoints::Borrowed(limit_pts_slice(&c.real.1, self.n_points)),
-                                )
-                                .color(baked.color)
-                                .width(baked.width)
-                                .style(baked.style),
-                            );
-                            plot_ui.line(
-                                Line::new(
-                                    &c.imag.0,
-                                    PlotPoints::Borrowed(limit_pts_slice(&c.imag.1, self.n_points)),
-                                )
-                                .color(baked.color)
-                                .width(baked.width)
-                                .style(baked.style),
-                            );
-                        }
-                        ArrLine::Interval(iv) => {
-                            plot_ui.line(
-                                Line::new(
-                                    &iv.inf.0,
-                                    PlotPoints::Borrowed(limit_pts_slice(&iv.inf.1, self.n_points)),
-                                )
-                                .color(baked.color)
-                                .width(baked.width)
-                                .style(baked.style),
-                            );
-                            plot_ui.line(
-                                Line::new(
-                                    &iv.sup.0,
-                                    PlotPoints::Borrowed(limit_pts_slice(&iv.sup.1, self.n_points)),
-                                )
-                                .color(baked.color)
-                                .width(baked.width)
-                                .style(baked.style),
-                            );
-                        }
-                        ArrLine::CInterval(ci) => {
-                            plot_ui.line(
-                                Line::new(
-                                    &ci.real.inf.0,
-                                    PlotPoints::Borrowed(limit_pts_slice(
-                                        &ci.real.inf.1,
-                                        self.n_points,
-                                    )),
-                                )
-                                .color(baked.color)
-                                .width(baked.width)
-                                .style(baked.style),
-                            );
-                            plot_ui.line(
-                                Line::new(
-                                    &ci.real.sup.0,
-                                    PlotPoints::Borrowed(limit_pts_slice(
-                                        &ci.real.sup.1,
-                                        self.n_points,
-                                    )),
-                                )
-                                .color(baked.color)
-                                .width(baked.width)
-                                .style(baked.style),
-                            );
-                            plot_ui.line(
-                                Line::new(
-                                    &ci.imag.inf.0,
-                                    PlotPoints::Borrowed(limit_pts_slice(
-                                        &ci.imag.inf.1,
-                                        self.n_points,
-                                    )),
-                                )
-                                .color(baked.color)
-                                .width(baked.width)
-                                .style(baked.style),
-                            );
-                            plot_ui.line(
-                                Line::new(
-                                    &ci.imag.sup.0,
-                                    PlotPoints::Borrowed(limit_pts_slice(
-                                        &ci.imag.sup.1,
-                                        self.n_points,
-                                    )),
-                                )
-                                .color(baked.color)
-                                .width(baked.width)
-                                .style(baked.style),
-                            );
-                        }
-                    }
+                    plot = plot.y_axis_formatter(|grid_mark, _range| {
+                        crate::plot::format_grid_value(grid_mark.value)
+                    });
                 }
+
+                if current_tab_state.reset_view {
+                    plot = plot.reset();
+                    current_tab_state.reset_view = false;
+                }
+
+                let symlog = current_tab_state.symlog;
+                let thresh = current_tab_state.log_linthresh;
+
+                plot = plot.label_formatter(move |name, value| {
+                    if name.is_empty() {
+                        return format!(
+                            "n = {:.0}\ny = {}",
+                            value.x,
+                            crate::plot::format_value(value.y)
+                        );
+                    }
+                    let y_str = if symlog {
+                        crate::plot::symlog_formatter(value.y, thresh)
+                    } else {
+                        crate::plot::format_value(value.y)
+                    };
+                    format!("{}\nn = {:.0}\ny = {}", name, value.x, y_str)
+                });
+
+                fn limit_pts_slice<'a>(pts: &'a [PlotPoint], max_n: u64) -> &'a [PlotPoint] {
+                    &pts[0..(max_n as usize).min(pts.len())]
+                }
+
+                plot.show(ui, |plot_ui| {
+                    for baked in plot_lines {
+                        // Filter by View toggles — no cache rebuild needed
+                        match baked.kind {
+                            LineKind::Sn if !self.show_sn => continue,
+                            LineKind::An if !self.show_an => continue,
+                            LineKind::Limit if !self.show_limit_lines => continue,
+                            _ => {}
+                        }
+
+                        if self.show_events {
+                            for ev_group in &baked.events {
+                                let points = egui_plot::Points::new(
+                                    &ev_group.text,
+                                    PlotPoints::Borrowed(&ev_group.points),
+                                )
+                                .shape(ev_group.shape)
+                                .color(ev_group.color)
+                                .radius(5.0)
+                                .id(Id::new(ev_group.kind));
+
+                                plot_ui.points(points);
+                            }
+                        }
+
+                        if self.show_interval_shading {
+                            for poly_pts in &baked.shading_polygons {
+                                plot_ui.polygon(
+                                    egui_plot::Polygon::new(
+                                        "",
+                                        PlotPoints::Borrowed(limit_pts_slice(
+                                            poly_pts,
+                                            self.n_points,
+                                        )),
+                                    )
+                                    .fill_color(baked.color.gamma_multiply(0.2))
+                                    .stroke(egui::Stroke::NONE),
+                                );
+                            }
+                        }
+
+                        match &baked.data {
+                            ArrLine::Real((name, v)) => {
+                                plot_ui.line(
+                                    Line::new(
+                                        name,
+                                        PlotPoints::Borrowed(limit_pts_slice(v, self.n_points)),
+                                    )
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                                );
+                            }
+                            ArrLine::Complex(c) => {
+                                plot_ui.line(
+                                    Line::new(
+                                        &c.real.0,
+                                        PlotPoints::Borrowed(limit_pts_slice(
+                                            &c.real.1,
+                                            self.n_points,
+                                        )),
+                                    )
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                                );
+                                plot_ui.line(
+                                    Line::new(
+                                        &c.imag.0,
+                                        PlotPoints::Borrowed(limit_pts_slice(
+                                            &c.imag.1,
+                                            self.n_points,
+                                        )),
+                                    )
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                                );
+                            }
+                            ArrLine::Interval(iv) => {
+                                plot_ui.line(
+                                    Line::new(
+                                        &iv.inf.0,
+                                        PlotPoints::Borrowed(limit_pts_slice(
+                                            &iv.inf.1,
+                                            self.n_points,
+                                        )),
+                                    )
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                                );
+                                plot_ui.line(
+                                    Line::new(
+                                        &iv.sup.0,
+                                        PlotPoints::Borrowed(limit_pts_slice(
+                                            &iv.sup.1,
+                                            self.n_points,
+                                        )),
+                                    )
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                                );
+                            }
+                            ArrLine::CInterval(ci) => {
+                                plot_ui.line(
+                                    Line::new(
+                                        &ci.real.inf.0,
+                                        PlotPoints::Borrowed(limit_pts_slice(
+                                            &ci.real.inf.1,
+                                            self.n_points,
+                                        )),
+                                    )
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                                );
+                                plot_ui.line(
+                                    Line::new(
+                                        &ci.real.sup.0,
+                                        PlotPoints::Borrowed(limit_pts_slice(
+                                            &ci.real.sup.1,
+                                            self.n_points,
+                                        )),
+                                    )
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                                );
+                                plot_ui.line(
+                                    Line::new(
+                                        &ci.imag.inf.0,
+                                        PlotPoints::Borrowed(limit_pts_slice(
+                                            &ci.imag.inf.1,
+                                            self.n_points,
+                                        )),
+                                    )
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                                );
+                                plot_ui.line(
+                                    Line::new(
+                                        &ci.imag.sup.0,
+                                        PlotPoints::Borrowed(limit_pts_slice(
+                                            &ci.imag.sup.1,
+                                            self.n_points,
+                                        )),
+                                    )
+                                    .color(baked.color)
+                                    .width(baked.width)
+                                    .style(baked.style),
+                                );
+                            }
+                        }
+                    }
+                });
             });
         });
-    });
 
-    ctx.request_repaint();
-}
+        ctx.request_repaint();
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
