@@ -145,6 +145,7 @@ pub struct ShanksApp {
     light_theme: bool,
     export_mode: bool,
     export_state: Option<ExportState>,
+    show_cache_dialog: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -209,6 +210,7 @@ impl ShanksApp {
             light_theme: true,
             export_mode: false,
             export_state: None,
+            show_cache_dialog: false,
         };
 
         app.rebuild_trees();
@@ -748,7 +750,7 @@ impl ShanksApp {
                 "Sn".to_string(),
                 Self::arr_to_f64(&sdata.result.sn, main_symlog, main_thresh),
                 base_color.gamma_multiply(0.4),
-                1.0,
+                2.0,
                 LineStyle::Dashed { length: 4.0 },
                 Vec::new(),
                 0,
@@ -954,12 +956,7 @@ impl eframe::App for ShanksApp {
             egui::MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Clear Cache").clicked() {
-                        let cache = self.cache.clone();
-                        tokio::spawn(async move {
-                            if let Err(e) = cache.clear_all().await {
-                                log::error!("Failed to clear cache: {}", e);
-                            }
-                        });
+                        self.show_cache_dialog = true;
                     }
                     if ui.button("Export to CSV").clicked() {
                         let data = self.data_cache.load();
@@ -994,14 +991,43 @@ impl eframe::App for ShanksApp {
             });
         });
 
+        if self.show_cache_dialog {
+            egui::Window::new("Clear Cache")
+                .collapsible(false)
+                .resizable(false)
+                .show(ctx, |ui| {
+                    ui.label("Are you sure you want to clear the cache?");
+                    ui.horizontal(|ui| {
+                        if ui.button("Yes").clicked() {
+                            let cache = self.cache.clone();
+                            tokio::spawn(async move {
+                                if let Err(e) = cache.clear_all().await {
+                                    log::error!("Failed to clear cache: {}", e);
+                                }
+                            });
+                            self.show_cache_dialog = false;
+                        }
+                        if ui.button("No").clicked() {
+                            self.show_cache_dialog = false;
+                        }
+                    });
+                });
+        }
+
         egui::SidePanel::left("left_panel")
             .resizable(true)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
-                    if ui.selectable_label(!self.export_mode, "⚙ Standard").clicked() {
+                    if ui
+                        .selectable_label(!self.export_mode, "⚙ Standard")
+                        .clicked()
+                    {
                         self.export_mode = false;
                     }
-                    if ui.selectable_label(self.export_mode, "🎨 Export Options").clicked() {
+                    if ui
+                        .selectable_label(self.export_mode, "🎨 Export Options")
+                        .clicked()
+                    {
                         self.export_mode = true;
                         if self.export_state.is_none() {
                             self.export_state = Some(ExportState {
@@ -1029,8 +1055,14 @@ impl eframe::App for ShanksApp {
                 ui.separator();
 
                 if !self.export_mode {
-
                     egui::ScrollArea::vertical().show(ui, |ui| {
+                        ui.label("N:");
+                        let n = egui::Slider::new(&mut self.n_points, 0..=1000)
+                            .clamping(egui::SliderClamping::Never);
+                        if ui.add(n).changed() {
+                            self.trigger_config_update();
+                        }
+                        ui.separator();
                         let mut trees_changed = false;
                         if let Some(app_select) = &mut self.app_select {
                             trees_changed = app_select.draw(ui);
@@ -1039,16 +1071,9 @@ impl eframe::App for ShanksApp {
                             self.trigger_combinations();
                         }
                         ui.separator();
-                        ui.label("N:");
-                        let n = egui::Slider::new(&mut self.n_points, 0..=1000)
-                            .clamping(egui::SliderClamping::Never);
-                        if ui.add(n).changed() {
-                            self.trigger_config_update();
-                        }
                         ui.label(self.last_err_rx.borrow().as_str());
                     });
                 } else {
-
                     if let Some(ref mut state) = self.export_state {
                         egui::ScrollArea::both().show(ui, |ui| {
                             let mut changed = false;
@@ -1076,6 +1101,18 @@ impl eframe::App for ShanksApp {
                                                 .text_edit_singleline(
                                                     &mut state.settings.axis_labels.1,
                                                 )
+                                                .changed()
+                                            {
+                                                changed = true;
+                                            }
+                                            ui.end_row();
+
+                                            ui.label("Legend Font:");
+                                            if ui
+                                                .add(egui::Slider::new(
+                                                    &mut state.settings.legend_font_size,
+                                                    8..=30,
+                                                ))
                                                 .changed()
                                             {
                                                 changed = true;
@@ -1152,24 +1189,79 @@ impl eframe::App for ShanksApp {
                                     };
 
                                     for baked in live_lines {
-                                        let id = crate::app::export_plotters::get_baked_line_id(baked);
-                                        state.settings.line_configs.entry(id.clone()).or_insert_with(|| {
-                                            crate::app::export_plotters::ExportLineConfig {
-                                                id: id.clone(),
-                                                custom_name: id.clone(),
-                                                color: baked.color,
-                                                width: baked.width,
-                                                visible: true,
-                                                style: 0,
-                                            }
-                                        });
+                                        let id =
+                                            crate::app::export_plotters::get_baked_line_id(baked);
+                                        state
+                                            .settings
+                                            .line_configs
+                                            .entry(id.clone())
+                                            .or_insert_with(|| {
+                                                crate::app::export_plotters::ExportLineConfig {
+                                                    id: id.clone(),
+                                                    custom_name: id.clone(),
+                                                    color: baked.color,
+                                                    width: baked.width,
+                                                    visible: true,
+                                                    style: 0,
+                                                    marker_type: 0,
+                                                    marker_size: 4,
+                                                }
+                                            });
 
                                         let l = state.settings.line_configs.get_mut(&id).unwrap();
                                         ui.horizontal(|ui| {
-                                            if ui.checkbox(&mut l.visible, "").changed() { changed = true; }
-                                            if ui.color_edit_button_srgba(&mut l.color).changed() { changed = true; }
-                                            if ui.add(egui::Slider::new(&mut l.width, 1.0..=10.0)).changed() { changed = true; }
-                                            if ui.add(egui::TextEdit::singleline(&mut l.custom_name).desired_width(120.0)).changed() { changed = true; }
+                                            if ui.checkbox(&mut l.visible, "").changed() {
+                                                changed = true;
+                                            }
+                                            if ui.color_edit_button_srgba(&mut l.color).changed() {
+                                                changed = true;
+                                            }
+                                            if ui
+                                                .add(egui::Slider::new(&mut l.width, 1.0..=10.0))
+                                                .changed()
+                                            {
+                                                changed = true;
+                                            }
+                                            if ui
+                                                .add(
+                                                    egui::TextEdit::singleline(&mut l.custom_name)
+                                                        .desired_width(120.0),
+                                                )
+                                                .changed()
+                                            {
+                                                changed = true;
+                                            }
+                                        });
+                                        ui.horizontal(|ui| {
+                                            ui.label("Marker:");
+                                            egui::ComboBox::from_id_salt(id.clone())
+                                                .selected_text(marker_name(l.marker_type))
+                                                .show_ui(ui, |ui| {
+                                                    for i in 0..=4 {
+                                                        if ui
+                                                            .selectable_value(
+                                                                &mut l.marker_type,
+                                                                i,
+                                                                marker_name(i),
+                                                            )
+                                                            .changed()
+                                                        {
+                                                            changed = true;
+                                                        }
+                                                    }
+                                                });
+                                            if l.marker_type > 0 {
+                                                ui.label("Size:");
+                                                if ui
+                                                    .add(egui::Slider::new(
+                                                        &mut l.marker_size,
+                                                        1..=15,
+                                                    ))
+                                                    .changed()
+                                                {
+                                                    changed = true;
+                                                }
+                                            }
                                         });
                                     }
                                 });
@@ -1210,8 +1302,14 @@ impl eframe::App for ShanksApp {
                                 };
 
                                 let (symlog, thresh) = match self.selected_tab {
-                                    PlotTab::Main => (self.main_tab_state.symlog, self.main_tab_state.log_linthresh),
-                                    PlotTab::Deviation => (self.dev_tab_state.symlog, self.dev_tab_state.log_linthresh),
+                                    PlotTab::Main => (
+                                        self.main_tab_state.symlog,
+                                        self.main_tab_state.log_linthresh,
+                                    ),
+                                    PlotTab::Deviation => (
+                                        self.dev_tab_state.symlog,
+                                        self.dev_tab_state.log_linthresh,
+                                    ),
                                     PlotTab::Data => (false, 0.0),
                                 };
 
@@ -1252,8 +1350,13 @@ impl eframe::App for ShanksApp {
                         };
 
                         let (symlog, thresh) = match self.selected_tab {
-                            PlotTab::Main => (self.main_tab_state.symlog, self.main_tab_state.log_linthresh),
-                            PlotTab::Deviation => (self.dev_tab_state.symlog, self.dev_tab_state.log_linthresh),
+                            PlotTab::Main => (
+                                self.main_tab_state.symlog,
+                                self.main_tab_state.log_linthresh,
+                            ),
+                            PlotTab::Deviation => {
+                                (self.dev_tab_state.symlog, self.dev_tab_state.log_linthresh)
+                            }
                             PlotTab::Data => (false, 0.0),
                         };
 
@@ -1594,6 +1697,17 @@ impl eframe::App for ShanksApp {
         });
 
         ctx.request_repaint();
+    }
+}
+
+fn marker_name(idx: usize) -> &'static str {
+    match idx {
+        0 => "None",
+        1 => "Circle",
+        2 => "Square",
+        3 => "Triangle",
+        4 => "Cross",
+        _ => "?",
     }
 }
 

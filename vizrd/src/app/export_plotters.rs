@@ -10,7 +10,9 @@ pub struct ExportLineConfig {
     pub color: Color32,
     pub width: f32,
     pub visible: bool,
-    pub style: usize, // 0 solid, 1 dashed, 2 dotted
+    pub style: usize,       // 0 solid, 1 dashed, 2 dotted
+    pub marker_type: usize, // 0 none, 1 circle, 2 square, 3 triangle, 4 cross
+    pub marker_size: u32,   // default 4
 }
 
 #[derive(Clone)]
@@ -120,13 +122,15 @@ where
 
         let color = plotters::style::RGBColor(cfg.color.r(), cfg.color.g(), cfg.color.b());
 
-        let pts_iter = extract_pts_iter(baked);
-        let filtered = pts_iter
-            .filter(|(x, y)| *x >= min_x && *x <= max_x && *y >= min_y && *y <= max_y);
-
         let stroke_width = cfg.width as u32;
 
-        let series = plotters::series::LineSeries::new(filtered, color.stroke_width(stroke_width));
+        let in_bounds =
+            |(x, y): &(f64, f64)| *x >= min_x && *x <= max_x && *y >= min_y && *y <= max_y;
+
+        let series = plotters::series::LineSeries::new(
+            extract_pts_iter(baked).filter(in_bounds),
+            color.stroke_width(stroke_width),
+        );
         chart
             .draw_series(series)
             .map_err(|_| "Series error")?
@@ -137,6 +141,67 @@ where
                     color.stroke_width(stroke_width),
                 )
             });
+
+        if cfg.marker_type > 0 {
+            let marker_color = color.filled();
+            let marker_size = cfg.marker_size;
+            let pts = extract_pts_iter(baked).filter(in_bounds);
+
+            match cfg.marker_type {
+                1 => {
+                    chart
+                        .draw_series(plotters::series::PointSeries::of_element(
+                            pts,
+                            marker_size,
+                            marker_color,
+                            &|coord, size, style| {
+                                plotters::element::Circle::new(coord, size, style)
+                            },
+                        ))
+                        .map_err(|_| "Marker error")?;
+                }
+                2 => {
+                    chart
+                        .draw_series(plotters::series::PointSeries::of_element(
+                            pts,
+                            marker_size,
+                            marker_color,
+                            &|coord, size, style| {
+                                let mut rect = plotters::element::Rectangle::new(
+                                    [(coord.0, coord.1), (coord.0, coord.1)],
+                                    style,
+                                );
+                                rect.set_margin(size, size, size, size);
+                                rect
+                            },
+                        ))
+                        .map_err(|_| "Marker error")?;
+                }
+                3 => {
+                    chart
+                        .draw_series(plotters::series::PointSeries::of_element(
+                            pts,
+                            marker_size,
+                            marker_color,
+                            &|coord, size, style| {
+                                plotters::element::TriangleMarker::new(coord, size, style)
+                            },
+                        ))
+                        .map_err(|_| "Marker error")?;
+                }
+                4 => {
+                    chart
+                        .draw_series(plotters::series::PointSeries::of_element(
+                            pts,
+                            marker_size,
+                            marker_color,
+                            &|coord, size, style| plotters::element::Cross::new(coord, size, style),
+                        ))
+                        .map_err(|_| "Marker error")?;
+                }
+                _ => {}
+            }
+        }
     }
 
     chart
@@ -144,6 +209,7 @@ where
         .background_style(&plotters::style::WHITE.mix(0.8))
         .border_style(&plotters::style::BLACK)
         .position(plotters::chart::SeriesLabelPosition::UpperRight)
+        .label_font(("sans-serif", config.legend_font_size).into_font())
         .draw()
         .map_err(|_| "Label error")?;
 
