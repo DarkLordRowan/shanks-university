@@ -13,8 +13,10 @@ use crate::ffi::{Arr, ArrF64, ArrLine, ComplexOf, IntervalOf, Value};
 use arc_swap::ArcSwap;
 use egui::Id;
 use egui_plot::{Line, LineStyle, PlotPoint, PlotPoints};
-use std::collections::{BTreeMap, HashMap, HashSet};
-use std::sync::Arc;
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    sync::{Arc, Mutex},
+};
 use tokio::sync::watch;
 
 pub use selection::{AppSelect, AppSelection};
@@ -101,16 +103,16 @@ struct BakedLine {
     kind: LineKind,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub struct PlotCache {
     lines_main: Vec<BakedLine>,
     lines_deviation: Vec<BakedLine>,
+    export_preview_tex: Mutex<Option<egui::TextureHandle>>,
 }
 
 pub struct ExportState {
     pub settings: export_plotters::ExportSettings,
-    pub preview_tex: Option<egui::TextureHandle>,
-    pub dirty: bool,
+    pub settings_dirty: bool,
     pub last_size: (u32, u32),
     pub export_width: u32,
     pub export_height: u32,
@@ -940,6 +942,7 @@ impl ShanksApp {
         PlotCache {
             lines_main: Self::process_collected_lines(main_raw),
             lines_deviation: Self::process_collected_lines(dev_raw),
+            export_preview_tex: Mutex::new(None),
         }
     }
 }
@@ -1018,16 +1021,10 @@ impl eframe::App for ShanksApp {
             .resizable(true)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
-                    if ui
-                        .selectable_label(!self.export_mode, "⚙ Standard")
-                        .clicked()
-                    {
+                    if ui.selectable_label(!self.export_mode, "⚙ Select").clicked() {
                         self.export_mode = false;
                     }
-                    if ui
-                        .selectable_label(self.export_mode, "🎨 Export Options")
-                        .clicked()
-                    {
+                    if ui.selectable_label(self.export_mode, "🎨 Export").clicked() {
                         self.export_mode = true;
                         if self.export_state.is_none() {
                             self.export_state = Some(ExportState {
@@ -1041,14 +1038,13 @@ impl eframe::App for ShanksApp {
                                     y_min: -1.0,
                                     y_max: 1.0,
                                 },
-                                preview_tex: None,
-                                dirty: true,
+                                settings_dirty: true,
                                 last_size: (0, 0),
                                 export_width: 1920,
                                 export_height: 1080,
                             });
                         } else {
-                            self.export_state.as_mut().unwrap().dirty = true;
+                            self.export_state.as_mut().unwrap().settings_dirty = true;
                         }
                     }
                 });
@@ -1286,7 +1282,7 @@ impl eframe::App for ShanksApp {
                                 });
 
                             if changed {
-                                state.dirty = true;
+                                state.settings_dirty = true;
                             }
 
                             if ui.button("📸 Render High-Res JPG").clicked() {
@@ -1333,66 +1329,6 @@ impl eframe::App for ShanksApp {
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            if self.export_mode {
-                if let Some(ref mut state) = self.export_state {
-                    let mut size = ui.available_size();
-                    size.x = size.x.max(100.0);
-                    size.y = size.y.max(100.0);
-                    let w = (size.x as u32).min(3000);
-                    let h = (size.y as u32).min(3000);
-
-                    if state.dirty || state.last_size != (w, h) {
-                        let cache_lock = self.plot_cache.load();
-                        let live_lines = if self.selected_tab == PlotTab::Main {
-                            &cache_lock.lines_main
-                        } else {
-                            &cache_lock.lines_deviation
-                        };
-
-                        let (symlog, thresh) = match self.selected_tab {
-                            PlotTab::Main => (
-                                self.main_tab_state.symlog,
-                                self.main_tab_state.log_linthresh,
-                            ),
-                            PlotTab::Deviation => {
-                                (self.dev_tab_state.symlog, self.dev_tab_state.log_linthresh)
-                            }
-                            PlotTab::Data => (false, 0.0),
-                        };
-
-                        let buf_res = crate::app::export_plotters::render_to_buffer(
-                            &state.settings,
-                            live_lines,
-                            w,
-                            h,
-                            symlog,
-                            thresh,
-                        );
-                        match buf_res {
-                            Ok(buf) => {
-                                let image =
-                                    egui::ColorImage::from_rgb([w as usize, h as usize], &buf);
-                                state.preview_tex = Some(ctx.load_texture(
-                                    "plot_preview",
-                                    image,
-                                    egui::TextureOptions::LINEAR,
-                                ));
-                                state.last_size = (w, h);
-                                state.dirty = false;
-                            }
-                            Err(e) => {
-                                log::error!("Failed to render preview: {}", e);
-                            }
-                        }
-                    }
-
-                    if let Some(tex) = &state.preview_tex {
-                        ui.add(egui::Image::new(&*tex).fit_to_exact_size(size));
-                    }
-                }
-                return;
-            }
-
             ui.horizontal(|ui| {
                 let mut changed_tab = false;
                 changed_tab |= ui
@@ -1470,6 +1406,67 @@ impl eframe::App for ShanksApp {
                     }
                 }
             });
+
+            if self.export_mode {
+                if let Some(ref mut state) = self.export_state {
+                    let mut size = ui.available_size();
+                    size.x = size.x.max(100.0);
+                    size.y = size.y.max(100.0);
+                    let w = (size.x as u32).min(3000);
+                    let h = (size.y as u32).min(3000);
+
+                    let cache_lock = self.plot_cache.load();
+                    let mut tex = cache_lock.export_preview_tex.lock().unwrap();
+                    if state.settings_dirty || state.last_size != (w, h) || tex.is_none() {
+                        let live_lines = if self.selected_tab == PlotTab::Main {
+                            &cache_lock.lines_main
+                        } else {
+                            &cache_lock.lines_deviation
+                        };
+
+                        let (symlog, thresh) = match self.selected_tab {
+                            PlotTab::Main => (
+                                self.main_tab_state.symlog,
+                                self.main_tab_state.log_linthresh,
+                            ),
+                            PlotTab::Deviation => {
+                                (self.dev_tab_state.symlog, self.dev_tab_state.log_linthresh)
+                            }
+                            PlotTab::Data => (false, 0.0),
+                        };
+
+                        let buf_res = crate::app::export_plotters::render_to_buffer(
+                            &state.settings,
+                            live_lines,
+                            w,
+                            h,
+                            symlog,
+                            thresh,
+                        );
+                        match buf_res {
+                            Ok(buf) => {
+                                let image =
+                                    egui::ColorImage::from_rgb([w as usize, h as usize], &buf);
+                                *tex = Some(ctx.load_texture(
+                                    "plot_preview",
+                                    image,
+                                    egui::TextureOptions::LINEAR,
+                                ));
+                                state.last_size = (w, h);
+                                state.settings_dirty = false;
+                            }
+                            Err(e) => {
+                                log::error!("Failed to render preview: {}", e);
+                            }
+                        }
+                    }
+
+                    if let Some(tex) = &*tex {
+                        ui.add(egui::Image::new(&*tex).fit_to_exact_size(size));
+                    }
+                }
+            } else {
+            }
 
             if self.selected_tab == PlotTab::Data {
                 let dlock = self.data_cache.load();
