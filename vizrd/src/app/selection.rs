@@ -17,7 +17,7 @@ pub enum SelectionState {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) struct DrawResult {
+pub struct DrawResult {
     changed: bool,
     state: SelectionState,
 }
@@ -84,7 +84,7 @@ impl<T> Block<T> {
 // ─── Button ─────────────────────────────────────────────────────────────────
 
 /// A leaf selectable value. `(checked, value, display_label)`.
-pub(crate) struct Button<T>(bool, T, String);
+pub struct Button<T>(bool, T, String);
 
 fn draw_button(ui: &mut egui::Ui, b: &mut bool, label: impl Into<WidgetText>) -> DrawResult {
     let mut clicked = false;
@@ -111,7 +111,7 @@ fn draw_button(ui: &mut egui::Ui, b: &mut bool, label: impl Into<WidgetText>) ->
 
 // ─── Selectable trait ───────────────────────────────────────────────────────
 
-pub(crate) trait Selectable {
+pub trait Selectable {
     fn force(&mut self, val: bool);
     fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult;
 }

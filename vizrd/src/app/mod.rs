@@ -6,13 +6,14 @@ pub mod export;
 pub mod export_plotters;
 mod selection;
 
+use crate::app::export_plotters::Grid;
 use crate::cache::Cache;
 use crate::compute::{self, AccelData, IsCancelled, SeriesData, SeriesEventKind};
 use crate::experiment::ExperimentConfig;
 use crate::ffi::{Arr, ArrF64, ArrLine, ComplexOf, IntervalOf, Value};
 use arc_swap::ArcSwap;
 use egui::Id;
-use egui_plot::{Line, LineStyle, PlotPoint, PlotPoints};
+use egui_plot::{Line, LineStyle, PlotBounds, PlotPoint, PlotPoints};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     sync::{Arc, Mutex},
@@ -44,13 +45,13 @@ pub enum DeviationMode {
     Components,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TabState {
     pub symlog: bool,
     pub log_linthresh: f64,
     pub aspect_ratio: f32,
-    #[serde(skip)]
     pub reset_view: bool,
+    pub last_bounds: PlotBounds,
 }
 
 impl Default for TabState {
@@ -60,6 +61,7 @@ impl Default for TabState {
             log_linthresh: -50.0,
             aspect_ratio: 10.0,
             reset_view: false,
+            last_bounds: PlotBounds::NOTHING,
         }
     }
 }
@@ -93,7 +95,7 @@ struct BakedEventGroup {
 }
 
 #[derive(Clone)]
-struct BakedLine {
+pub struct BakedLine {
     data: ArrLine,
     color: egui::Color32,
     width: f32,
@@ -113,9 +115,8 @@ pub struct PlotCache {
 pub struct ExportState {
     pub settings: export_plotters::ExportSettings,
     pub settings_dirty: bool,
-    pub last_size: (u32, u32),
-    pub export_width: u32,
-    pub export_height: u32,
+    pub preview_size: (u32, u32),
+    pub export_size: (u32, u32),
 }
 
 pub struct ShanksApp {
@@ -963,13 +964,8 @@ impl eframe::App for ShanksApp {
                     }
                     if ui.button("Export to CSV").clicked() {
                         let data = self.data_cache.load();
-                        let state = &self.main_tab_state;
                         // For larger datasets, this block might briefly freeze the UI, but it's acceptable for an export button.
-                        if let Err(e) = crate::app::export::perform_export(
-                            &data,
-                            state.symlog,
-                            state.log_linthresh,
-                        ) {
+                        if let Err(e) = crate::app::export::perform_export(&data) {
                             log::error!("Export failed: {}", e);
                         } else {
                             log::info!("Exported CSV successfully.");
@@ -1039,9 +1035,8 @@ impl eframe::App for ShanksApp {
                                     y_max: 1.0,
                                 },
                                 settings_dirty: true,
-                                last_size: (0, 0),
-                                export_width: 1920,
-                                export_height: 1080,
+                                preview_size: (0, 0),
+                                export_size: (1920, 1080),
                             });
                         } else {
                             self.export_state.as_mut().unwrap().settings_dirty = true;
@@ -1272,11 +1267,11 @@ impl eframe::App for ShanksApp {
                                         .spacing([10.0, 8.0])
                                         .show(ui, |ui| {
                                             ui.label("Width:");
-                                            ui.add(egui::DragValue::new(&mut state.export_width));
+                                            ui.add(egui::DragValue::new(&mut state.export_size.0));
                                             ui.end_row();
 
                                             ui.label("Height:");
-                                            ui.add(egui::DragValue::new(&mut state.export_height));
+                                            ui.add(egui::DragValue::new(&mut state.export_size.1));
                                             ui.end_row();
                                         });
                                 });
@@ -1297,7 +1292,7 @@ impl eframe::App for ShanksApp {
                                     &cache_lock.lines_deviation
                                 };
 
-                                let (symlog, thresh) = match self.selected_tab {
+                                let (symlog, log_linthresh) = match self.selected_tab {
                                     PlotTab::Main => (
                                         self.main_tab_state.symlog,
                                         self.main_tab_state.log_linthresh,
@@ -1313,10 +1308,13 @@ impl eframe::App for ShanksApp {
                                     &path,
                                     &state.settings,
                                     live_lines,
-                                    state.export_width,
-                                    state.export_height,
-                                    symlog,
-                                    thresh,
+                                    state.export_size.0,
+                                    state.export_size.1,
+                                    if symlog {
+                                        Grid::Symlog { log_linthresh }
+                                    } else {
+                                        Grid::Normal
+                                    },
                                 ) {
                                     log::error!("Plotters export failed: {}", e);
                                 } else {
@@ -1369,16 +1367,18 @@ impl eframe::App for ShanksApp {
                             }
                         }
 
-                        if ui.button("Home").clicked() {
-                            tab_state.reset_view = true;
-                        }
+                        if !self.export_mode {
+                            if ui.button("Home").clicked() {
+                                tab_state.reset_view = true;
+                            }
 
-                        ui.separator();
-                        ui.label("Aspect Ratio");
-                        ui.add(
-                            egui::Slider::new(&mut tab_state.aspect_ratio, 0.1..=100.0)
-                                .logarithmic(true),
-                        );
+                            ui.separator();
+                            ui.label("Aspect Ratio");
+                            ui.add(
+                                egui::Slider::new(&mut tab_state.aspect_ratio, 0.1..=100.0)
+                                    .logarithmic(true),
+                            );
+                        }
                     }
                     if config_changed {
                         self.trigger_config_update();
@@ -1417,14 +1417,14 @@ impl eframe::App for ShanksApp {
 
                     let cache_lock = self.plot_cache.load();
                     let mut tex = cache_lock.export_preview_tex.lock().unwrap();
-                    if state.settings_dirty || state.last_size != (w, h) || tex.is_none() {
+                    if state.settings_dirty || state.preview_size != (w, h) || tex.is_none() {
                         let live_lines = if self.selected_tab == PlotTab::Main {
                             &cache_lock.lines_main
                         } else {
                             &cache_lock.lines_deviation
                         };
 
-                        let (symlog, thresh) = match self.selected_tab {
+                        let (symlog, log_linthresh) = match self.selected_tab {
                             PlotTab::Main => (
                                 self.main_tab_state.symlog,
                                 self.main_tab_state.log_linthresh,
@@ -1440,8 +1440,11 @@ impl eframe::App for ShanksApp {
                             live_lines,
                             w,
                             h,
-                            symlog,
-                            thresh,
+                            if symlog {
+                                Grid::Symlog { log_linthresh }
+                            } else {
+                                Grid::Normal
+                            },
                         );
                         match buf_res {
                             Ok(buf) => {
@@ -1452,7 +1455,7 @@ impl eframe::App for ShanksApp {
                                     image,
                                     egui::TextureOptions::LINEAR,
                                 ));
-                                state.last_size = (w, h);
+                                state.preview_size = (w, h);
                                 state.settings_dirty = false;
                             }
                             Err(e) => {

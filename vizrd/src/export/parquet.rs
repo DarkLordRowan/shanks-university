@@ -716,7 +716,7 @@ fn append_args_struct(
 }
 
 /// Number of elements in an `Arr`.
-pub(crate) fn arr_len(arr: &Arr) -> usize {
+pub fn arr_len(arr: &Arr) -> usize {
     match arr {
         Arr::Real(v) => v.len(),
         Arr::Complex(c) => c.real.len(),
@@ -770,7 +770,7 @@ fn arr_index_f64(arr: &Arr, idx: usize) -> Option<f64> {
 }
 
 /// Get the `idx`-th element of an `Arr` as a `Value`.
-pub(crate) fn arr_index_to_value(arr: &Arr, idx: usize) -> Value {
+pub fn arr_index_to_value(arr: &Arr, idx: usize) -> Value {
     let zero = RealValue {
         mantissa: 0.0,
         exponent: 0,

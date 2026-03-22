@@ -37,18 +37,22 @@ pub fn get_baked_line_id(baked: &BakedLine) -> String {
     }
 }
 
+pub enum Grid {
+    Normal,
+    Symlog { log_linthresh: f64 },
+}
+
 pub fn render_to_buffer(
     config: &ExportSettings,
     live_lines: &[BakedLine],
     width: u32,
     height: u32,
-    symlog: bool,
-    log_linthresh: f64,
+    grid: Grid,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let mut buffer = vec![0; (width * height * 3) as usize];
     {
         let root = BitMapBackend::with_buffer(&mut buffer, (width, height)).into_drawing_area();
-        draw_chart(&root, config, live_lines, symlog, log_linthresh)?;
+        draw_chart(&root, config, live_lines, grid)?;
         root.present()?;
     }
     Ok(buffer)
@@ -60,11 +64,10 @@ pub fn export_to_jpg(
     live_lines: &[BakedLine],
     width: u32,
     height: u32,
-    symlog: bool,
-    log_linthresh: f64,
+    grid: Grid,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let root = BitMapBackend::new(path, (width, height)).into_drawing_area();
-    draw_chart(&root, config, live_lines, symlog, log_linthresh)?;
+    draw_chart(&root, config, live_lines, grid)?;
     root.present()?;
     Ok(())
 }
@@ -73,8 +76,7 @@ fn draw_chart<DB: DrawingBackend>(
     root: &DrawingArea<DB, plotters::coord::Shift>,
     config: &ExportSettings,
     live_lines: &[BakedLine],
-    symlog: bool,
-    log_linthresh: f64,
+    grid: Grid,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
     DB::ErrorType: 'static,
@@ -99,16 +101,15 @@ where
     mesh.x_desc(config.axis_labels.0.clone())
         .y_desc(config.axis_labels.1.clone());
 
-    let symlog_fmt = |y: &f64| crate::plot::symlog_grid_formatter(*y, log_linthresh);
-    let normal_fmt = |y: &f64| crate::plot::format_grid_value(*y);
-
-    if symlog {
-        mesh.y_label_formatter(&symlog_fmt);
-        mesh.draw().map_err(|_| "Mesh error")?;
-    } else {
-        mesh.y_label_formatter(&normal_fmt);
-        mesh.draw().map_err(|_| "Mesh error")?;
-    }
+    let symlog_fmt;
+    match grid {
+        Grid::Normal => mesh.y_label_formatter(&|y: &f64| crate::plot::format_grid_value(*y)),
+        Grid::Symlog { log_linthresh } => {
+            symlog_fmt = move |y: &f64| crate::plot::symlog_grid_formatter(*y, log_linthresh);
+            mesh.y_label_formatter(&symlog_fmt)
+        }
+    };
+    mesh.draw().map_err(|_| "Mesh error")?;
 
     for baked in live_lines {
         let id = get_baked_line_id(baked);

@@ -1,14 +1,11 @@
-use crate::app::data_tab::{DataCache, DataNode};
+use crate::app::data_tab::DataCache;
 use crate::ffi::Arr;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 
-pub fn perform_export(
-    data: &DataCache,
-    use_symlog: bool,
-    log_linthresh: f64,
-) -> std::io::Result<()> {
+// TODO: INCLUDE SYMLOG DATA?
+pub fn perform_export(data: &DataCache) -> std::io::Result<()> {
     let now = chrono::Local::now().format("%Y%m%d_%H%M%S");
     let export_dir = PathBuf::from(format!("article_export_{}", now));
 
