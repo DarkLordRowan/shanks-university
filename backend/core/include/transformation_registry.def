@@ -102,11 +102,11 @@ TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_u_transformation_id, "Recurrent Levi
 TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_t_transformation_id, "Recurrent Levin Sidi-L T Transformation", "recLevinAlgorithmT", levin_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::t_type, true, static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_v_transformation_id, "Recurrent Levin Sidi-L V Transformation", "recLevinAlgorithmT~", levin_algorithm, BIND_NONE, { 
-    return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type, true, static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
-})
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_t_wave_transformation_id, "Recurrent Levin Sidi-L T Wave Transformation", "recLevinAlgorithmV", levin_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_v_transformation_id, "Recurrent Levin Sidi-L V Transformation", "recLevinAlgorithmV", levin_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::v_type, true, static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
+})
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_t_wave_transformation_id, "Recurrent Levin Sidi-L T Wave Transformation", "recLevinAlgorithmT~", levin_algorithm, BIND_NONE, { 
+    return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type, true, static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
 })
 TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_v_wave_transformation_id, "Recurrent Levin Sidi-L V Wave Transformation", "recLevinAlgorithmV~", levin_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::v_wave_type, true, static_cast<typename real_of<T>::value>(std::stod(::shanks::utils_json::get_json_val_required(params_json, "beta")))); 
@@ -139,11 +139,11 @@ TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_u_transformation_id, "Recurrent Levi
 TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_t_transformation_id, "Recurrent Levin Sidi-S T Transformation", "recLevinSidiSAlgorithmT", levin_sidi_s_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::t_type, true); 
 })
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_v_transformation_id, "Recurrent Levin Sidi-S V Transformation", "recLevinSidiSAlgorithmT~", levin_sidi_s_algorithm, BIND_NONE, { 
-    return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type, true); 
-})
-TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_t_wave_transformation_id, "Recurrent Levin Sidi-S T Wave Transformation", "recLevinSidiSAlgorithmV", levin_sidi_s_algorithm, BIND_NONE, { 
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_v_transformation_id, "Recurrent Levin Sidi-S V Transformation", "recLevinSidiSAlgorithmV", levin_sidi_s_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::v_type, true); 
+})
+TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_t_wave_transformation_id, "Recurrent Levin Sidi-S T Wave Transformation", "recLevinSidiSAlgorithmT~", levin_sidi_s_algorithm, BIND_NONE, { 
+    return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type, true); 
 })
 TRANSFORMATION_ENTRY(recurrent_levin_sidi_s_v_wave_transformation_id, "Recurrent Levin Sidi-S V Wave Transformation", "recLevinSidiSAlgorithmV~", levin_sidi_s_algorithm, BIND_NONE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::v_wave_type, true); 
