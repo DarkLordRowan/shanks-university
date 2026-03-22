@@ -8,8 +8,8 @@
 //! accelerations (id, series_id, accel_name, m_value, args_json,
 //!                filter_type, filter_args_json, n_points)
 //!   — one row per (accel, filter) combination; NULL filter_type means "no filter".
-//! accel_data    (accel_id → val/an/dev blobs)
-//! events        (accel_id, n, name, description)
+//! accel_data    (accel_id → val/an/dev blobs + events_blob)
+//!   — events_blob contains serialized C++ error events (postcard format).
 //! ```
 //!
 //! All methods are `async (&self)`. The inner `tokio_rusqlite::Connection` is
@@ -19,8 +19,6 @@ use anyhow::Result;
 use rusqlite::params;
 use std::path::Path;
 use tokio_rusqlite::Connection;
-
-use crate::compute::{SeriesEvent, SeriesEventKind};
 
 // ---------------------------------------------------------------------------
 // Plain data types (no FFI, no UniquePtr)
@@ -60,6 +58,8 @@ pub struct CachedSeriesData {
 pub struct CachedAccelData {
     pub start_offset: u64,
     pub result: CachedResultData,
+    /// Serialized C++ error events (postcard format).
+    pub events_blob: Vec<u8>,
 }
 
 // ---------------------------------------------------------------------------
@@ -137,32 +137,23 @@ impl Cache {
 
                 -- Accel numerical data (val=accelerated sn, an, dev)
                 CREATE TABLE IF NOT EXISTS accel_data (
-                    accel_id  INTEGER PRIMARY KEY REFERENCES accelerations(id),
-                    val_kind  INTEGER NOT NULL DEFAULT 0,
-                    val_len   INTEGER NOT NULL DEFAULT 0,
+                    accel_id    INTEGER PRIMARY KEY REFERENCES accelerations(id),
+                    val_kind    INTEGER NOT NULL DEFAULT 0,
+                    val_len     INTEGER NOT NULL DEFAULT 0,
                     val_m0 BLOB, val_m1 BLOB, val_m2 BLOB, val_m3 BLOB,
-                    an_kind   INTEGER NOT NULL DEFAULT 0,
-                    an_len    INTEGER NOT NULL DEFAULT 0,
+                    an_kind     INTEGER NOT NULL DEFAULT 0,
+                    an_len      INTEGER NOT NULL DEFAULT 0,
                     an_m0 BLOB,  an_m1 BLOB,  an_m2 BLOB,  an_m3 BLOB,
-                    dev_kind  INTEGER NOT NULL DEFAULT 0,
-                    dev_len   INTEGER NOT NULL DEFAULT 0,
+                    dev_kind    INTEGER NOT NULL DEFAULT 0,
+                    dev_len     INTEGER NOT NULL DEFAULT 0,
                     dev_m0 BLOB, dev_m1 BLOB, dev_m2 BLOB, dev_m3 BLOB,
-                    start_n INTEGER NOT NULL DEFAULT 0
-                );
-
-                -- Events emitted during accel computation
-                CREATE TABLE IF NOT EXISTS events (
-                    id          INTEGER PRIMARY KEY,
-                    accel_id    INTEGER NOT NULL REFERENCES accelerations(id),
-                    n           INTEGER NOT NULL,
-                    name        TEXT    NOT NULL,
-                    description TEXT    NOT NULL DEFAULT ''
+                    start_n     INTEGER NOT NULL DEFAULT 0,
+                    events_blob BLOB
                 );
 
                 CREATE INDEX IF NOT EXISTS idx_series_name     ON series(name);
                 CREATE INDEX IF NOT EXISTS idx_accel_series    ON accelerations(series_id);
                 CREATE INDEX IF NOT EXISTS idx_accel_name      ON accelerations(accel_name);
-                CREATE INDEX IF NOT EXISTS idx_events_accel    ON events(accel_id);
             "#,
             )
             .map_err(tokio_rusqlite::Error::Rusqlite)?;
@@ -484,7 +475,8 @@ impl Cache {
             let res = c.query_row(
                 "SELECT val_kind,val_len,val_m0,val_m1,val_m2,val_m3,
                         an_kind,an_len,an_m0,an_m1,an_m2,an_m3,
-                        dev_kind,dev_len,dev_m0,dev_m1,dev_m2,dev_m3,start_n
+                        dev_kind,dev_len,dev_m0,dev_m1,dev_m2,dev_m3,start_n,
+                        events_blob
                  FROM accel_data WHERE accel_id=?1",
                 params![accel_id],
                 |r| {
@@ -508,6 +500,7 @@ impl Cache {
                             deviations: load(12)?,
                         },
                         start_offset: r.get::<_, u64>(18).unwrap_or(0),
+                        events_blob: r.get::<_, Vec<u8>>(19).unwrap_or_default(),
                     })
                 },
             );
@@ -532,8 +525,9 @@ impl Cache {
                  (accel_id,
                   val_kind,val_len,val_m0,val_m1,val_m2,val_m3,
                   an_kind,an_len,an_m0,an_m1,an_m2,an_m3,
-                  dev_kind,dev_len,dev_m0,dev_m1,dev_m2,dev_m3,start_n)
-                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20)",
+                  dev_kind,dev_len,dev_m0,dev_m1,dev_m2,dev_m3,start_n,
+                  events_blob)
+                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21)",
                 params![
                     accel_id,
                     data.result.values.kind,
@@ -554,60 +548,12 @@ impl Cache {
                     data.result.deviations.m[1],
                     data.result.deviations.m[2],
                     data.result.deviations.m[3],
-                    data.start_offset
+                    data.start_offset,
+                    data.events_blob
                 ],
             )
             .map_err(tokio_rusqlite::Error::Rusqlite)?;
             Ok(())
-        })
-        .await
-        .map_err(Into::into)
-    }
-
-    // -----------------------------------------------------------------------
-    // Events
-    // -----------------------------------------------------------------------
-
-    /// Insert events for an accel row (replaces all existing events for that accel).
-    pub async fn insert_events(&self, accel_id: i64, events: Vec<SeriesEvent>) -> Result<()> {
-        let Some(conn) = &self.conn else {
-            return Ok(());
-        };
-        conn.call(move |c| {
-            let tx = c.transaction()?;
-            tx.execute("DELETE FROM events WHERE accel_id=?1", params![accel_id])?;
-            for ev in &events {
-                tx.execute(
-                    "INSERT INTO events (accel_id,n,kind,description) VALUES (?1,?2,?3,?4,?5)",
-                    params![accel_id, ev.n as i64, ev.kind.to_string(), ev.description],
-                )?;
-            }
-            tx.commit()?;
-            Ok(())
-        })
-        .await
-        .map_err(Into::into)
-    }
-
-    /// Load events for an accel row.
-    pub async fn get_events(&self, accel_id: i64) -> Result<Vec<SeriesEvent>> {
-        let Some(conn) = &self.conn else {
-            return Ok(Vec::new());
-        };
-        conn.call(move |c| {
-            let mut stmt = c.prepare(
-                "SELECT n, kind, name, description FROM events WHERE accel_id=?1 ORDER BY n",
-            )?;
-            let rows = stmt.query_map(params![accel_id], |r| {
-                Ok(SeriesEvent {
-                    n: r.get::<_, i64>(0)? as u64,
-                    kind: serde_json::from_str(&r.get::<_, String>(1)?)
-                        .unwrap_or(SeriesEventKind::Error),
-                    description: r.get::<_, Option<String>>(3)?.unwrap_or_default(),
-                })
-            })?;
-            rows.collect::<rusqlite::Result<Vec<_>>>()
-                .map_err(tokio_rusqlite::Error::Rusqlite)
         })
         .await
         .map_err(Into::into)
@@ -623,8 +569,7 @@ impl Cache {
         };
         conn.call(|c| {
             c.execute_batch(
-                "DELETE FROM events;
-                 DELETE FROM accel_data;
+                "DELETE FROM accel_data;
                  DELETE FROM accelerations;
                  DELETE FROM series_data;
                  DELETE FROM series;",

@@ -15,7 +15,6 @@ use anyhow::Result;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use std::{
-    cmp,
     collections::BTreeMap,
     fmt::Display,
     sync::{
@@ -33,6 +32,9 @@ use crate::{
         bridge::ffi::{self as bridge, ArrKind, RawArr, RawValue, RealValue, ValueKind},
     },
 };
+
+pub mod events;
+pub use events::{CachedCppEvents, SeriesEvents};
 
 pub struct Cancellable {
     handle: JoinHandle<()>,
@@ -305,21 +307,45 @@ where
         // Emit cached unfiltered if available
         if let Some((aid, _)) = cached_accel {
             if let Ok(Some(ad)) = cache.get_accel_data(aid).await {
-                let events = cache.get_events(aid).await.unwrap_or_default();
-                let mut adata = accel_data_from_cache(&ad, events);
+                // Deserialize cached C++ events from blob
+                let cached_cpp_events: CachedCppEvents = if ad.events_blob.is_empty() {
+                    CachedCppEvents { events: vec![] }
+                } else {
+                    match postcard::from_bytes(&ad.events_blob) {
+                        Ok(events) => events,
+                        Err(e) => {
+                            log::warn!(
+                                "Failed to deserialize cached events for accel {}: {}",
+                                aid,
+                                e
+                            );
+                            CachedCppEvents { events: vec![] }
+                        }
+                    }
+                };
 
-                // Derived events for cache results
-                if let Some(ref sdata) = sdata_opt {
-                    let (volatile, _trigger_n) = process_events(
-                        &adata.result.sn,
-                        &adata.result.an,
-                        &adata.result.deviations,
+                // Calculate all events using SeriesEvents
+                let series_events = if let Some(ref sdata) = sdata_opt {
+                    SeriesEvents::from_cached(
                         &sdata.result.deviations,
+                        &arr_from_blobs(&ad.result.values),
+                        &arr_from_blobs(&ad.result.an),
+                        &arr_from_blobs(&ad.result.deviations),
+                        cached_cpp_events,
                         &task.events,
-                    );
-                    adata.events.extend(volatile);
-                    adata.events.sort_by_key(|e| e.n);
-                }
+                    )
+                } else {
+                    SeriesEvents::from_cached(
+                        &Arr::Real(Vec::new()),
+                        &arr_from_blobs(&ad.result.values),
+                        &arr_from_blobs(&ad.result.an),
+                        &arr_from_blobs(&ad.result.deviations),
+                        cached_cpp_events,
+                        &task.events,
+                    )
+                };
+
+                let adata = accel_data_from_cache(&ad, series_events.into_vec());
 
                 let _ = tx
                     .send(ComputeEvent::AccelDone {
@@ -360,21 +386,45 @@ where
             } else if let Some((aid, _)) = cached_filt {
                 // Emit cached filtered if available
                 if let Ok(Some(ad)) = cache.get_accel_data(aid).await {
-                    let events = cache.get_events(aid).await.unwrap_or_default();
-                    let mut adata = accel_data_from_cache(&ad, events);
+                    // Deserialize cached C++ events from blob
+                    let cached_cpp_events: CachedCppEvents = if ad.events_blob.is_empty() {
+                        CachedCppEvents { events: vec![] }
+                    } else {
+                        match postcard::from_bytes(&ad.events_blob) {
+                            Ok(events) => events,
+                            Err(e) => {
+                                log::warn!(
+                                    "Failed to deserialize cached events for filtered accel {}: {}",
+                                    aid,
+                                    e
+                                );
+                                CachedCppEvents { events: vec![] }
+                            }
+                        }
+                    };
 
-                    // Derived events for cache filtered results
-                    if let Some(ref sdata) = sdata_opt {
-                        let (volatile, _trigger_n) = process_events(
-                            &adata.result.sn,
-                            &adata.result.an,
-                            &adata.result.deviations,
+                    // Calculate all events using SeriesEvents
+                    let series_events = if let Some(ref sdata) = sdata_opt {
+                        SeriesEvents::from_cached(
                             &sdata.result.deviations,
+                            &arr_from_blobs(&ad.result.values),
+                            &arr_from_blobs(&ad.result.an),
+                            &arr_from_blobs(&ad.result.deviations),
+                            cached_cpp_events,
                             &task.events,
-                        );
-                        adata.events.extend(volatile);
-                        adata.events.sort_by_key(|e| e.n);
-                    }
+                        )
+                    } else {
+                        SeriesEvents::from_cached(
+                            &Arr::Real(Vec::new()),
+                            &arr_from_blobs(&ad.result.values),
+                            &arr_from_blobs(&ad.result.an),
+                            &arr_from_blobs(&ad.result.deviations),
+                            cached_cpp_events,
+                            &task.events,
+                        )
+                    };
+
+                    let adata = accel_data_from_cache(&ad, series_events.into_vec());
 
                     let _ = tx
                         .send(ComputeEvent::AccelDone {
@@ -541,24 +591,15 @@ where
                 let dev = arr_from_raw(bridge::get_deviation(&*ptr));
                 let s_dev = arr_from_raw(bridge::get_deviation(&**s_ptr));
 
-                let (mut processed_events, stop_n) =
-                    process_events(&sn, &an, &dev, &s_dev, &task.events);
-
-                // Pull C++ errors
+                // Get C++ errors from the bridge
                 let cpp_errors = bridge::get_errors(&*ptr);
-                for err in cpp_errors {
-                    let kind = if err.message.to_lowercase().contains("division by zero") {
-                        SeriesEventKind::DivisionByZero
-                    } else {
-                        SeriesEventKind::Error
-                    };
-                    processed_events.push(SeriesEvent {
-                        n: err.n,
-                        kind,
-                        description: err.message,
-                    });
-                }
-                processed_events.sort_by_key(|e| e.n);
+
+                // Use SeriesEvents to calculate all events (C++ errors + derived)
+                let series_events =
+                    SeriesEvents::new(&s_dev, &sn, &an, &dev, cpp_errors, &task.events);
+
+                let stop_n = series_events.stop_n();
+                let processed_events = series_events.into_vec();
 
                 lazy_accels.insert(a_idx, (ptr, stop_n, processed_events));
             }
@@ -699,6 +740,11 @@ where
                         .filter
                         .as_ref()
                         .map(|f| sorted_args_json(&f.args).unwrap_or_default());
+
+                    // Serialize C++ events only (derived events are recalculated on load)
+                    let cached_cpp = SeriesEvents::from_events(data.events.clone()).cached_events();
+                    let events_blob = postcard::to_stdvec(&cached_cpp).unwrap_or_default();
+
                     let ablobs = CachedAccelData {
                         start_offset: data.start_offset,
                         result: CachedResultData {
@@ -706,6 +752,7 @@ where
                             an: arr_to_blobs(&data.result.an),
                             deviations: arr_to_blobs(&data.result.deviations),
                         },
+                        events_blob,
                     };
                     tokio::spawn(async move {
                         let aid = c
@@ -723,9 +770,6 @@ where
                             .unwrap_or(-1);
                         if aid != -1 {
                             let _ = c.insert_accel_data(aid, ablobs).await;
-                            if !data.events.is_empty() {
-                                let _ = c.insert_events(aid, data.events).await;
-                            }
                         }
                     });
                 }
@@ -901,148 +945,6 @@ fn accel_data_from_cache(ad: &CachedAccelData, events: Vec<SeriesEvent>) -> Acce
 // Misc helpers
 // ---------------------------------------------------------------------------
 
-fn rv_abs_cmp(a: &bridge::RealValue, b: &bridge::RealValue) -> std::cmp::Ordering {
-    if let Some(d) = a.exponent.partial_cmp(&b.exponent)
-        && d != cmp::Ordering::Equal
-    {
-        d
-    } else {
-        a.mantissa
-            .abs()
-            .partial_cmp(&b.mantissa.abs())
-            .unwrap_or(std::cmp::Ordering::Equal)
-    }
-}
-
-fn rv_to_f64(rv: &bridge::RealValue) -> f64 {
-    rv.mantissa * 2.0f64.powi(rv.exponent as i32)
-}
-
-fn process_events(
-    sn: &Arr,
-    _an: &Arr,
-    dev: &Arr,
-    s_dev: &Arr,
-    config: &BTreeMap<SeriesEventKind, crate::experiment::EventConfig>,
-) -> (Vec<SeriesEvent>, Option<u64>) {
-    let mut events = Vec::new();
-    let mut stop_n: Option<u64> = None;
-
-    let dev_r = match dev {
-        Arr::Real(v) => v,
-        _ => return (events, None),
-    };
-    let s_dev_r = match s_dev {
-        Arr::Real(v) => v,
-        _ => return (events, None),
-    };
-    let sn_r = match sn {
-        Arr::Real(v) => v,
-        _ => return (events, None),
-    };
-
-    let mut counters: BTreeMap<SeriesEventKind, i64> = BTreeMap::new();
-    let n_total = dev_r.len();
-
-    for k in 0..n_total {
-        let mut triggered = Vec::new();
-
-        // 1. Slow Accel
-        if k < s_dev_r.len() && rv_abs_cmp(&dev_r[k], &s_dev_r[k]) == std::cmp::Ordering::Greater {
-            triggered.push((
-                SeriesEventKind::SlowAccel,
-                format!(
-                    "Deviation {} > series baseline {}",
-                    rv_to_f64(&dev_r[k]),
-                    rv_to_f64(&s_dev_r[k])
-                ),
-            ));
-        }
-
-        // 2. Monotone/Divergent
-        if k > 0 {
-            match rv_abs_cmp(&dev_r[k], &dev_r[k - 1]) {
-                std::cmp::Ordering::Greater => {
-                    triggered.push((
-                        SeriesEventKind::DivergentAccel,
-                        format!(
-                            "Deviation increased from {} to {}",
-                            rv_to_f64(&dev_r[k - 1]),
-                            rv_to_f64(&dev_r[k])
-                        ),
-                    ));
-                }
-                std::cmp::Ordering::Equal => {
-                    triggered.push((
-                        SeriesEventKind::Monotone,
-                        format!("Deviation stuck at {}", rv_to_f64(&dev_r[k])),
-                    ));
-                }
-                _ => {}
-            }
-        }
-
-        // 3. Sign Changed
-        if k > 0 {
-            let s_k = rv_to_f64(&dev_r[k]);
-            let s_k1 = rv_to_f64(&dev_r[k - 1]);
-            // If they have opposite signs, product is negative (or one is zero and other is not)
-            // But usually we care about crosses: sign flips.
-            if (s_k > 0.0 && s_k1 < 0.0) || (s_k < 0.0 && s_k1 > 0.0) {
-                triggered.push((
-                    SeriesEventKind::SignChanged,
-                    format!("Error sign flipped from {} to {}", s_k1, s_k),
-                ));
-            }
-        }
-
-        // 4. Second Diff
-        if k >= 2 {
-            let v_k = rv_to_f64(&sn_r[k]);
-            let v_k1 = rv_to_f64(&sn_r[k - 1]);
-            let v_k2 = rv_to_f64(&sn_r[k - 2]);
-            let diff1 = (v_k - v_k1).abs();
-            let diff2 = (v_k1 - v_k2).abs();
-            if diff1 >= diff2 {
-                triggered.push((
-                    SeriesEventKind::SecondDiff,
-                    format!("Second diff growth: |{:.2e}| >= |{:.2e}|", diff1, diff2),
-                ));
-            }
-        }
-
-        // Process triggered events
-        for (kind, desc) in triggered {
-            let count = counters.entry(kind).or_insert(0);
-            *count += 1;
-
-            events.push(SeriesEvent {
-                n: k as u64,
-                kind,
-                description: desc,
-            });
-
-            if let Some(cfg) = config.get(&kind) {
-                if let Some(limit) = cfg.filter_after {
-                    if *count >= limit && stop_n.is_none() {
-                        stop_n = Some(k as u64);
-                        events.push(SeriesEvent {
-                            n: k as u64,
-                            kind: SeriesEventKind::Trigger,
-                            description: format!(
-                                "Filters triggered due to {} limit ({})",
-                                kind.to_string(),
-                                limit
-                            ),
-                        });
-                    }
-                }
-            }
-        }
-    }
-
-    (events, stop_n)
-}
 fn sorted_args_json(params: &BTreeMap<String, serde_json::Value>) -> Result<String> {
     Ok(serde_json::to_string(params)?)
 }
