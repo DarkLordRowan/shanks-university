@@ -117,6 +117,7 @@ pub enum SeriesEventKind {
     SignChanged,
     SecondDiff,
     Trigger,
+    DivisionByZero,
     Error,
 }
 
@@ -129,6 +130,7 @@ impl Display for SeriesEventKind {
             SeriesEventKind::SignChanged => write!(f, "sign_changed"),
             SeriesEventKind::SecondDiff => write!(f, "second_diff"),
             SeriesEventKind::Trigger => write!(f, "trigger"),
+            SeriesEventKind::DivisionByZero => write!(f, "division_by_zero"),
             SeriesEventKind::Error => write!(f, "error"),
         }
     }
@@ -143,6 +145,7 @@ impl SeriesEventKind {
             Self::SignChanged => "±",
             Self::SecondDiff => "Δ²",
             Self::Trigger => "🎯",
+            Self::DivisionByZero => "÷0",
             Self::Error => "❌",
         }
     }
@@ -544,9 +547,14 @@ where
                 // Pull C++ errors
                 let cpp_errors = bridge::get_errors(&*ptr);
                 for err in cpp_errors {
+                    let kind = if err.message.to_lowercase().contains("division by zero") {
+                        SeriesEventKind::DivisionByZero
+                    } else {
+                        SeriesEventKind::Error
+                    };
                     processed_events.push(SeriesEvent {
                         n: err.n,
-                        kind: SeriesEventKind::Error,
+                        kind,
                         description: err.message,
                     });
                 }

@@ -646,7 +646,12 @@ impl ShanksApp {
                         compute::SeriesEventKind::Trigger => {
                             (MarkerShape::Plus, egui::Color32::from_rgb(255, 215, 0))
                         } // Gold
-                        compute::SeriesEventKind::Error => (MarkerShape::Cross, egui::Color32::RED),
+                        compute::SeriesEventKind::Error => {
+                            (MarkerShape::Asterisk, egui::Color32::PURPLE)
+                        }
+                        compute::SeriesEventKind::DivisionByZero => {
+                            (MarkerShape::Cross, egui::Color32::RED)
+                        }
                     };
                     baked_events.push(BakedEventGroup {
                         text: format!("{}{}: {}", kind.symbol(), kind, desc),
