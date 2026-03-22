@@ -47,7 +47,7 @@ pub enum DeviationMode {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TabState {
-    pub symlog: bool,
+    pub symlog: bool, // TODO: DANGER: TAKE SYMLOG for actual plot rendering & export from the table.
     pub log_linthresh: f64,
     pub aspect_ratio: f32,
     pub reset_view: bool,
@@ -96,7 +96,7 @@ struct BakedEventGroup {
 
 #[derive(Clone)]
 pub struct BakedLine {
-    data: ArrLine,
+    pub data: ArrLine,
     color: egui::Color32,
     width: f32,
     style: LineStyle,
@@ -962,15 +962,7 @@ impl eframe::App for ShanksApp {
                     if ui.button("Clear Cache").clicked() {
                         self.show_cache_dialog = true;
                     }
-                    if ui.button("Export to CSV").clicked() {
-                        let data = self.data_cache.load();
-                        // For larger datasets, this block might briefly freeze the UI, but it's acceptable for an export button.
-                        if let Err(e) = crate::app::export::perform_export(&data) {
-                            log::error!("Export failed: {}", e);
-                        } else {
-                            log::info!("Exported CSV successfully.");
-                        }
-                    }
+                    // CSV export moved to Export tab with filtering and symlog checks
                     if ui.button("Quit").clicked() {
                         ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                     }
@@ -1280,47 +1272,76 @@ impl eframe::App for ShanksApp {
                                 state.settings_dirty = true;
                             }
 
-                            if ui.button("📸 Render High-Res JPG").clicked() {
-                                let now = chrono::Local::now().format("%Y%m%d_%H%M%S");
-                                let p = format!("export_{}.jpg", now);
-                                let path = std::path::PathBuf::from(p);
+                            ui.horizontal(|ui| {
+                                if ui.button("📸 Render High-Res JPG").clicked() {
+                                    let now = chrono::Local::now().format("%Y%m%d_%H%M%S");
+                                    let p = format!("export_{}.jpg", now);
+                                    let path = std::path::PathBuf::from(p);
 
-                                let cache_lock = self.plot_cache.load();
-                                let live_lines = if self.selected_tab == PlotTab::Main {
-                                    &cache_lock.lines_main
-                                } else {
-                                    &cache_lock.lines_deviation
-                                };
-
-                                let (symlog, log_linthresh) = match self.selected_tab {
-                                    PlotTab::Main => (
-                                        self.main_tab_state.symlog,
-                                        self.main_tab_state.log_linthresh,
-                                    ),
-                                    PlotTab::Deviation => (
-                                        self.dev_tab_state.symlog,
-                                        self.dev_tab_state.log_linthresh,
-                                    ),
-                                    PlotTab::Data => (false, 0.0),
-                                };
-
-                                if let Err(e) = crate::app::export_plotters::export_to_jpg(
-                                    &path,
-                                    &state.settings,
-                                    live_lines,
-                                    state.export_size.0,
-                                    state.export_size.1,
-                                    if symlog {
-                                        Grid::Symlog { log_linthresh }
+                                    let cache_lock = self.plot_cache.load();
+                                    let live_lines = if self.selected_tab == PlotTab::Main {
+                                        &cache_lock.lines_main
                                     } else {
-                                        Grid::Normal
-                                    },
-                                ) {
-                                    log::error!("Plotters export failed: {}", e);
-                                } else {
-                                    log::info!("Saved export to {}", path.display());
+                                        &cache_lock.lines_deviation
+                                    };
+
+                                    let (symlog, log_linthresh) = match self.selected_tab {
+                                        PlotTab::Main => (
+                                            self.main_tab_state.symlog,
+                                            self.main_tab_state.log_linthresh,
+                                        ),
+                                        PlotTab::Deviation => (
+                                            self.dev_tab_state.symlog,
+                                            self.dev_tab_state.log_linthresh,
+                                        ),
+                                        PlotTab::Data => (false, 0.0),
+                                    };
+
+                                    if let Err(e) = crate::app::export_plotters::export_to_jpg(
+                                        &path,
+                                        &state.settings,
+                                        live_lines,
+                                        state.export_size.0,
+                                        state.export_size.1,
+                                        if symlog {
+                                            Grid::Symlog { log_linthresh }
+                                        } else {
+                                            Grid::Normal
+                                        },
+                                    ) {
+                                        log::error!("Plotters export failed: {}", e);
+                                    } else {
+                                        log::info!("Saved export to {}", path.display());
+                                    }
                                 }
-                            }
+
+                                let symlog = match self.selected_tab {
+                                    PlotTab::Main => self.main_tab_state.symlog,
+                                    PlotTab::Deviation => self.dev_tab_state.symlog,
+                                    PlotTab::Data => false,
+                                };
+                                if ui.button(if symlog { "📄 (disable symlog for CSV export)" } else { "📄 Export CSV" }).clicked() {
+                                    if symlog {
+                                        log::error!("Cannot export CSV when Symlog mode is enabled. Disable Symlog to export CSV data.");
+                                    } else {
+                                        let cache_lock = self.plot_cache.load();
+                                        let live_lines = if self.selected_tab == PlotTab::Main {
+                                            &cache_lock.lines_main
+                                        } else {
+                                            &cache_lock.lines_deviation
+                                        };
+
+                                        if let Err(e) = crate::app::export::perform_export(
+                                            live_lines,
+                                            &state.settings,
+                                        ) {
+                                            log::error!("CSV export failed: {}", e);
+                                        } else {
+                                            log::info!("CSV exported successfully");
+                                        }
+                                    }
+                                }
+                            });
                         });
                     }
                 }

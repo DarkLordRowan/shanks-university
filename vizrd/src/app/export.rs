@@ -1,11 +1,15 @@
-use crate::app::data_tab::DataCache;
-use crate::ffi::Arr;
+use crate::app::export_plotters::ExportSettings;
+use crate::app::BakedLine;
+use crate::ffi::ArrLine;
+use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 
-// TODO: INCLUDE SYMLOG DATA?
-pub fn perform_export(data: &DataCache) -> std::io::Result<()> {
+pub fn perform_export(
+    lines: &[BakedLine],
+    settings: &ExportSettings,
+) -> Result<(), Box<dyn std::error::Error>> {
     let now = chrono::Local::now().format("%Y%m%d_%H%M%S");
     let export_dir = PathBuf::from(format!("article_export_{}", now));
 
@@ -18,60 +22,38 @@ pub fn perform_export(data: &DataCache) -> std::io::Result<()> {
 
     let mut csv_file = fs::File::create(&csv_path)?;
 
-    // 1. Collect lines: For each root (Series) and its children (Accels), extract Sn (the main series).
-    let mut columns: Vec<(String, Vec<f64>)> = Vec::new();
+    // Build a map from line ID to config for quick lookup
+    let config_map: HashMap<String, &crate::app::export_plotters::ExportLineConfig> = settings
+        .line_configs
+        .iter()
+        .map(|(k, v)| (k.clone(), v))
+        .collect();
 
-    fn extract_sn(arr: &Arr) -> Vec<f64> {
-        match arr {
-            Arr::Real(v) => v.iter().map(|x| x.to_f64()).collect(),
-            Arr::Complex(c) => c
-                .real
-                .iter()
-                .zip(c.imag.iter())
-                .map(|(r, i)| r.to_f64().hypot(i.to_f64()))
-                .collect(), // Take magnitude for complex
-            Arr::Interval(i) => i
-                .inf
-                .iter()
-                .zip(i.sup.iter())
-                .map(|(inf, sup)| (inf.to_f64() + sup.to_f64()) / 2.0)
-                .collect(),
-            Arr::CInterval(c) => c
-                .real
-                .inf
-                .iter()
-                .zip(c.imag.inf.iter())
-                .map(|(re, im)| re.to_f64().hypot(im.to_f64()))
-                .collect(), // Simplified mag
-        }
-    }
+    // Collect visible lines with their custom names and data
+    let mut columns: Vec<(String, Vec<(f64, f64)>)> = Vec::new();
 
-    fn clean_name(name: &str) -> String {
-        name.replace("Series: ", "")
-            .replace("Accel: ", "")
-            .split(" (")
-            .next()
-            .unwrap_or(name)
-            .to_string()
-    }
+    for line in lines {
+        let line_id = crate::app::export_plotters::get_baked_line_id(line);
 
-    for root in &data.roots {
-        let root_clean = clean_name(&root.name);
-        if let Some(seq) = &root.sequence {
-            columns.push((root_clean.clone(), extract_sn(&seq.sn)));
-        }
-        for child in &root.children {
-            if let Some(seq) = &child.sequence {
-                let child_clean = clean_name(&child.name);
-                columns.push((
-                    format!("{} + {}", root_clean, child_clean),
-                    extract_sn(&seq.sn),
-                ));
+        // Check if line is visible in export settings
+        if let Some(config) = config_map.get(&line_id) {
+            if !config.visible {
+                continue;
+            }
+
+            // Extract points from the line based on its data type
+            let points = extract_points_from_line(line);
+            if !points.is_empty() {
+                columns.push((config.custom_name.clone(), points));
             }
         }
     }
 
-    // 2. Write CSV Header
+    if columns.is_empty() {
+        return Err("No visible lines to export".into());
+    }
+
+    // Write CSV Header
     write!(csv_file, "n")?;
     for (name, _) in &columns {
         let clean_name = name.replace("\"", "\"\"");
@@ -79,13 +61,22 @@ pub fn perform_export(data: &DataCache) -> std::io::Result<()> {
     }
     writeln!(csv_file)?;
 
-    // 3. Write CSV Body
+    // Find max length
     let max_len = columns.iter().map(|(_, v)| v.len()).max().unwrap_or(0);
-    for n in 0..max_len {
-        write!(csv_file, "{}", n)?;
+
+    // Write CSV Body
+    for idx in 0..max_len {
+        // Get x value from first column (assuming all columns have same x values)
+        let x_val = columns
+            .first()
+            .and_then(|(_, pts)| pts.get(idx))
+            .map(|(x, _)| *x as usize)
+            .unwrap_or(idx);
+
+        write!(csv_file, "{}", x_val)?;
         for (_, col) in &columns {
-            if n < col.len() {
-                write!(csv_file, ",{}", col[n])?;
+            if idx < col.len() {
+                write!(csv_file, ",{}", col[idx].1)?;
             } else {
                 write!(csv_file, ",")?;
             }
@@ -94,4 +85,13 @@ pub fn perform_export(data: &DataCache) -> std::io::Result<()> {
     }
 
     Ok(())
+}
+
+fn extract_points_from_line(line: &BakedLine) -> Vec<(f64, f64)> {
+    match &line.data {
+        ArrLine::Real((_, pts)) => pts.iter().map(|p| (p.x, p.y)).collect(),
+        ArrLine::Complex(c) => c.real.1.iter().map(|p| (p.x, p.y)).collect(),
+        ArrLine::Interval(iv) => iv.inf.1.iter().map(|p| (p.x, p.y)).collect(),
+        ArrLine::CInterval(ci) => ci.real.inf.1.iter().map(|p| (p.x, p.y)).collect(),
+    }
 }
