@@ -53,6 +53,7 @@ int main() {
                 std::cout << "1 - double\n";
                 std::cout << "2 - long double\n";
                 std::cout << "3 - mpreal\n";
+                std::cout << "4 - float_precision\n";
                 int type_to_use = console_IO<unsigned long>::input("type:");
                 console_effects::clear_console();
                 switch (type_to_use) {
@@ -72,6 +73,10 @@ int main() {
                         test_series<mpfr::mpreal>();
                         break;
                     }
+                    case 4: {
+                        test_series<arb::float_precision>();
+                        break;
+                    }
                 }
                 break;
             }
@@ -81,6 +86,7 @@ int main() {
                 std::cout << "1 - double\n";
                 std::cout << "2 - long double\n";
                 std::cout << "3 - mpreal\n";
+                std::cout << "4 - float_precision\n";
                 int type_to_use = console_IO<unsigned long>::input("type:");
 
                 std::cout << "0 - plain\n";
@@ -109,6 +115,10 @@ int main() {
                                 main_testing_function<mpfr::mpreal, size_t>();
                                 break;
                             }
+                            case 4: {
+                                main_testing_function<arb::float_precision, size_t>();
+                                break;
+                            }
                         }
                         break;
                     case 1:
@@ -129,6 +139,10 @@ int main() {
                                 main_testing_function<intprec::interval<mpfr::mpreal>, size_t>();
                                 break;
                             }
+                            case 4: {
+                                main_testing_function<intprec::interval<arb::float_precision>, size_t>();
+                                break;
+                            }
                         }
                         break;
                     case 2:
@@ -147,6 +161,10 @@ int main() {
                             }
                             case 3: {
                                 main_testing_function<std::complex<mpfr::mpreal>, size_t>();
+                                break;
+                            }
+                            case 4: {
+                                main_testing_function<std::complex<arb::float_precision>, size_t>();
                                 break;
                             }
                         }

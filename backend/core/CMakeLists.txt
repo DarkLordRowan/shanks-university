@@ -36,7 +36,7 @@ include_directories(
 add_executable(shanks
     ${CMAKE_SOURCE_DIR}/../../vizrd/ffi/src/series_registry_impl.cpp
     ${CMAKE_SOURCE_DIR}/test/src/main.cpp
- 
+    ${CMAKE_SOURCE_DIR}/src/precisioncore.cpp
 )
 
 target_link_libraries(shanks PRIVATE MPFR::MPFR GMP::GMP Eigen3::Eigen GSL::gsl GSL::gslcblas)

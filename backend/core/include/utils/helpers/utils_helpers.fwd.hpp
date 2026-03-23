@@ -19,6 +19,7 @@ struct utils::helpers {
     static T numeric_max(std::size_t precision = std::size_t{0});
 };
 
+#include "fprecision/utils_helpers_fprecision.hpp"
 #include "interval/utils_helpers_interval.hpp"
 #include "mpreal/utils_helpers_mpreal.hpp"
 #include "operation_counter/utils_helpers_op_counter.hpp"

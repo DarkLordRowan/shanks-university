@@ -107,11 +107,11 @@ inline mpfr::mpreal utils::math<mpfr::mpreal>::lambertW0(const mpfr::mpreal& x) 
 #endif
 
 inline mpfr::mpreal utils::math<mpfr::mpreal>::e_x(const mpfr::mpreal& x) {
-    return mpfr::mpreal(std::comp_ellint_2(static_cast<double>(x)), x.get_prec());
+    return mpfr::mpreal(std::comp_ellint_2(static_cast<long double>(x)), x.get_prec());
 }
 
 inline mpfr::mpreal utils::math<mpfr::mpreal>::k_x(const mpfr::mpreal& x) {
-    return mpfr::mpreal(std::comp_ellint_1(static_cast<double>(x)), x.get_prec());
+    return mpfr::mpreal(std::comp_ellint_1(static_cast<long double>(x)), x.get_prec());
 }
 
 inline mpfr::mpreal utils::math<mpfr::mpreal>::inc_gamma(const mpfr::mpreal& x, const mpfr::mpreal& alpha) {

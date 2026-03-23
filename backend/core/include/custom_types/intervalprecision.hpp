@@ -74,15 +74,7 @@
 
 /* define version string */
 
-static char _VinterP_[] = "@(#)intervalprecision.h 02.06 -- Copyright (C) Henrik Vestermark";
-
-#include <algorithm>
-#include <cstdint>
-#include <limits>
-#include <sstream>
-#include <string>
-#include <type_traits>
-#include <utility>
+[[maybe_unused]] static char _VinterP_[] = "@(#)intervalprecision.h 02.06 -- Copyright (C) Henrik Vestermark";
 
 static_assert(__cplusplus >= 201703L, "The intervalprecision.h code requires c++17 or higher.");
 
@@ -116,6 +108,14 @@ inline mpfr::mpreal infinity_interval<mpfr::mpreal>() {
     return mpfr::const_infinity();
 }
 #endif
+
+#ifdef INC_FPRECISION
+template <>
+inline arb::float_precision infinity_interval<arb::float_precision>() {
+    return arb::FP_INFINITY;
+}
+#endif
+
 #ifdef SHANKS_ENABLE_PROFILING
 template <>
 inline shanks::profiling::OperationCounting<float> infinity_interval<shanks::profiling::OperationCounting<float>>() {
@@ -135,6 +135,13 @@ template <>
 inline shanks::profiling::OperationCounting<mpfr::mpreal>
 infinity_interval<shanks::profiling::OperationCounting<mpfr::mpreal>>() {
     return shanks::profiling::OperationCounting<mpfr::mpreal>(infinity_interval<mpfr::mpreal>());
+}
+#endif
+#ifdef INC_FPRECISION
+template <>
+inline shanks::profiling::OperationCounting<arb::float_precision>
+infinity_interval<shanks::profiling::OperationCounting<arb::float_precision>>() {
+    return shanks::profiling::OperationCounting<arb::float_precision>(infinity_interval<arb::float_precision>());
 }
 #endif
 #endif
@@ -161,6 +168,14 @@ inline mpfr::mpreal underflow_interval<mpfr::mpreal>() {
     return mpfr::minval();
 }
 #endif
+
+#ifdef INC_FPRECISION
+template <>
+inline arb::float_precision underflow_interval<arb::float_precision>() {
+    return arb::float_precision(0);
+}
+#endif
+
 #ifdef SHANKS_ENABLE_PROFILING
 template <>
 inline shanks::profiling::OperationCounting<float> underflow_interval<shanks::profiling::OperationCounting<float>>() {
@@ -180,6 +195,13 @@ template <>
 inline shanks::profiling::OperationCounting<mpfr::mpreal>
 underflow_interval<shanks::profiling::OperationCounting<mpfr::mpreal>>() {
     return shanks::profiling::OperationCounting<mpfr::mpreal>(underflow_interval<mpfr::mpreal>());
+}
+#endif
+#ifdef INC_FPRECISION
+template <>
+inline shanks::profiling::OperationCounting<arb::float_precision>
+underflow_interval<shanks::profiling::OperationCounting<arb::float_precision>>() {
+    return shanks::profiling::OperationCounting<arb::float_precision>(arb::float_precision(0));
 }
 #endif
 #endif
@@ -340,27 +362,27 @@ inline interval<IT>::interval(const _X& x) {
     const IT infi(infinity_interval<IT>());  // infi(INFINITY);
 
     // up promoting is accurate
-    left = IT(x);
-    right = IT(x);
+    left = utils::cast<IT, _X>()(x);
+    right = utils::cast<IT, _X>()(x);
     if (isTargetFloat && isSourceDoubleOrLongDouble) {  // Downpromoting from double to float.
         // Uppromotion from float to double is always accurate
         auto adjustBoundaries = [&](const _X& val) {
-            _X e = val - _X(left);
+            _X e = val - utils::cast<_X, IT>()(left);
             if (e < _X(0)) left = utils::helpers<IT>::nextafter(left, -infi);
-            e = val - _X(right);
+            e = val - utils::cast<_X, IT>()(right);
             if (e > _X(0)) right = utils::helpers<IT>::nextafter(right, infi);
         };
         adjustBoundaries(x);
     }
     if (isIntegral) {  // Handle integer promotion to IT
-        const intmax_t absX = intmax_t(utils::math<IT>::abs(x));
+        const intmax_t absX = intmax_t(utils::math<_X>::abs(x));
         auto maxFloat = 16'777'216;              // 2^24
         auto maxDouble = 9'007'199'254'740'992;  // 2^53
         bool exceedsFloat = isTargetFloat && absX > maxFloat;
         bool exceedsDouble = !isTargetFloat && absX > maxDouble;
 
         if (exceedsFloat || exceedsDouble) {
-            _X e = x - _X(left);
+            _X e = x - utils::cast<_X, IT>()(left);
             if (e > _X(0)) right = utils::helpers<IT>::nextafter(right, infi);
             if (e < _X(0)) left = utils::helpers<IT>::nextafter(left, -infi);
         }
@@ -2505,6 +2527,14 @@ constexpr interval<IT> pi_interval(const size_t precision) {
         return interval<IT>(mpfr::const_pi(),
                             utils::helpers<IT>::nextafter(mpfr::const_pi(), mpfr::const_pi() + mpfr::mpreal(1.0f)));
 #endif
+#ifdef INC_FPRECISION
+    else if (std::is_same<IT, arb::float_precision>::value) {
+        arb::float_precision pi(0, precision, arb::ROUND_DOWN);
+        // Get PI with one higher decimal accuracy to be able to get left side of interval correctly
+        pi = arb::_float_table(arb::_PI, precision + 1);
+        return interval<arb::float_precision>(pi, arb::nextafter(pi, arb::FP_INFINITY));
+    }
+#endif
 #ifdef SHANKS_ENABLE_PROFILING
     else if constexpr (is_profiling<IT>::value) {
         interval<typename IT::value_type> temp = pi_interval<typename IT::value_type>(precision);
@@ -2532,6 +2562,14 @@ constexpr interval<IT> e_interval(const std::size_t precision) {
             mpfr::const_euler(mpfr::digits2bits(precision)),
             utils::helpers<IT>::nextafter(mpfr::const_euler(mpfr::digits2bits(precision)),
                                           mpfr::const_euler(mpfr::digits2bits(precision)) + mpfr::mpreal(1.0f)));
+#endif
+#ifdef INC_FPRECISION
+    else if (std::is_same<IT, arb::float_precision>::value) {
+        arb::float_precision e1(0, precision, arb::ROUND_DOWN);
+        // Get e with one higher decimal accuracy to be able to get left side of interval correctly
+        e1 = arb::_float_table(arb::_EXP1, precision + 1);
+        return interval<arb::float_precision>(e1, arb::nextafter(e1, arb::FP_INFINITY));
+    }
 #endif
 #ifdef SHANKS_ENABLE_PROFILING
     else if constexpr (is_profiling<IT>::value) {
@@ -2561,6 +2599,14 @@ constexpr interval<IT> ln2_interval(const std::size_t precision) {
             utils::helpers<IT>::nextafter(mpfr::const_log2(mpfr::digits2bits(precision)),
                                           mpfr::const_log2(mpfr::digits2bits(precision)) + mpfr::mpreal(1.0f)));
 #endif
+#ifdef INC_FPRECISION
+    else if (std::is_same<IT, arb::float_precision>::value) {
+        arb::float_precision ln2(0, precision, arb::ROUND_DOWN);
+        // Get LN2 with one higher decimal accuracy to be able to get left side of interval correctly
+        ln2 = arb::_float_table(arb::_LN2, precision + 1);
+        return interval<arb::float_precision>(ln2, arb::nextafter(ln2, arb::FP_INFINITY));
+    }
+#endif
 #ifdef SHANKS_ENABLE_PROFILING
     else if constexpr (is_profiling<IT>::value) {
         interval<typename IT::value_type> temp = ln2_interval<typename IT::value_type>(precision);
@@ -2589,6 +2635,14 @@ constexpr interval<IT> ln10_interval(const std::size_t precision) {
                                 mpfr::log(mpfr::mpreal("10", mpfr::digits2bits(precision))),
                                 mpfr::log(mpfr::mpreal("10", mpfr::digits2bits(precision))) + mpfr::mpreal(1.0f)));
 #endif
+#ifdef INC_FPRECISION
+    else if (std::is_same<IT, arb::float_precision>::value) {
+        arb::float_precision ln10(0, precision, arb::ROUND_DOWN);
+        // Get LN2 with one higher decimal accuracy to be able to get left side of interval correctly
+        ln10 = arb::_float_table(arb::_LN10, precision + 1);
+        return interval<arb::float_precision>(ln10, arb::nextafter(ln10, arb::FP_INFINITY));
+    }
+#endif
 #ifdef SHANKS_ENABLE_PROFILING
     else if constexpr (is_profiling<IT>::value) {
         interval<typename IT::value_type> temp = ln10_interval<typename IT::value_type>(precision);
@@ -2608,7 +2662,7 @@ constexpr interval<IT> ln10_interval(const std::size_t precision) {
 template <FloatLike IT>
 inline interval<IT> atan2(const interval<IT>& y, const interval<IT>& x) {
     using std::atan2;
-    if (x.inf() > 0) {
+    if (x.inf() > static_cast<IT>(0)) {
         return interval<IT>(atan2(y.inf(), x.sup()), atan2(y.sup(), x.inf()));
     }
     // Naive fallback for now

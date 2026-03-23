@@ -1,11 +1,5 @@
 #pragma once
 
-#include <concepts>
-#include <iostream>
-#include <string>
-
-#include "console_effects.hpp"
-
 /**
  * @file console_IO.hpp
  * @brief This file contains console functions for different types of precisions.
@@ -25,7 +19,7 @@ struct console_IO {
      * @param var_name (std::string)
      * @return InputType
      */
-    InputType inline static input(const std::string& var_name = "x") {
+    static InputType input(const std::string& var_name = "x") {
         InputType x;
         // Reading from standard input
         std::cout << var_name << " : ";
@@ -47,39 +41,31 @@ struct console_IO<InputType> {
      * @param var_name (std::string)
      * @return InputType
      */
-    InputType inline static input(const std::string& var_name = "x");
+    static InputType input(const std::string& var_name = "x");
 };
-
-// For arbitrary precision types.
-#ifdef INC_FPRECISION
-template <>
-struct console_IO<float_precision> {
-    float_precision inline static input(const std::string& var_name = "x");
-};
-
-// For complex precision.
-#ifdef INC_COMPLEXPRECISION
-template <FloatLike InputType>
-struct console_IO<complex_precision<InputType>> {
-    complex_precision<InputType> inline static input(const std::string& var_name = "x");
-};
-#endif
-#endif
 
 // For interval precision types.
 #ifdef INC_INTERVALPRECISION
 template <FloatLike InputType>
 struct console_IO<intprec::interval<InputType>> {
-    intprec::interval<InputType> inline static input(const std::string& var_name = "x");
+    static intprec::interval<InputType> input(const std::string& var_name = "x");
 };
 #endif
+
+/**
+ * @brief Specialization for std::complex<T> inputs
+ */
+template <std::floating_point T>
+struct console_IO<std::complex<T>> {
+    static std::complex<T> input(const std::string& var_name = "x");
+};
 
 /**
  * @brief Processing console inputs for different cases with error handling and validation.
  */
 template <typename InputType>
     requires std::floating_point<InputType> || std::unsigned_integral<InputType> || std::is_enum<InputType>::value
-InputType inline console_IO<InputType>::input(const std::string& var_name) {
+InputType console_IO<InputType>::input(const std::string& var_name) {
     std::string init_string = "";
     InputType x = static_cast<InputType>(0);
     bool valid_input = false;
@@ -159,9 +145,10 @@ InputType inline console_IO<InputType>::input(const std::string& var_name) {
 /**
  * @brief Input implementation for float_precision type
  */
-float_precision inline console_IO<float_precision>::input(const std::string& var_name) {
+template <>
+arb::float_precision console_IO<arb::float_precision>::input(const std::string& var_name) {
     std::string init_string = "";
-    float_precision x = 0;
+    arb::float_precision x = 0;
     bool valid_input = false;
     bool error_triggered = false;
     const std::string error_mes_invalid_arg = "invalid input was given : ";
@@ -180,14 +167,14 @@ float_precision inline console_IO<float_precision>::input(const std::string& var
         std::getline(std::cin, init_string);
 
         try {
-            x = float_precision(init_string);
+            x = arb::float_precision(init_string);
             valid_input = true;
 
-        } catch (float_precision::bad_int_syntax& e) {
+        } catch (arb::float_precision::bad_int_syntax& e) {
             error_handler(error_mes_invalid_arg);
-        } catch (float_precision::bad_float_syntax& e) {
+        } catch (arb::float_precision::bad_float_syntax& e) {
             error_handler(error_mes_invalid_arg);
-        } catch (float_precision::out_of_range& e) {
+        } catch (arb::float_precision::out_of_range& e) {
             error_handler(error_mes_out_of_range);
         }
     }
@@ -199,9 +186,8 @@ float_precision inline console_IO<float_precision>::input(const std::string& var
 
     // Requesting precision for the arbitrary precision type
     size_t precision = console_IO<size_t>::input("precision");
-    x.precision(precision);
 
-    return x;
+    return arb::float_precision(init_string, precision);
 }
 #endif
 
@@ -210,7 +196,7 @@ float_precision inline console_IO<float_precision>::input(const std::string& var
  * @brief Input implementation for complex_precision types
  */
 template <FloatLike InputType>
-complex_precision<InputType> inline console_IO<complex_precision<InputType>>::input(const std::string& var_name) {
+complex_precision<InputType> console_IO<complex_precision<InputType>>::input(const std::string& var_name) {
     // Separately reading real and imaginary parts
     InputType real_x = console_IO<InputType>::input("Re(x)");
     InputType imag_x = console_IO<InputType>::input("Im(x)");
@@ -223,7 +209,7 @@ complex_precision<InputType> inline console_IO<complex_precision<InputType>>::in
  * @brief Input implementation for interval types
  */
 template <FloatLike InputType>
-intprec::interval<InputType> inline console_IO<intprec::interval<InputType>>::input(
+intprec::interval<InputType> console_IO<intprec::interval<InputType>>::input(
     [[maybe_unused]] const std::string& var_name) {
     // Reading left and right boundaries of the interval
     InputType left_x = console_IO<InputType>::input("left border");
@@ -237,7 +223,7 @@ intprec::interval<InputType> inline console_IO<intprec::interval<InputType>>::in
  * @brief Input implementation for MPFR mpreal type
  */
 template <>
-mpfr::mpreal inline console_IO<mpfr::mpreal>::input(const std::string& var_name) {
+mpfr::mpreal console_IO<mpfr::mpreal>::input(const std::string& var_name) {
     std::string float_value;
     std::cout << "Value of " << var_name << " : ";
     std::getline(std::cin, float_value);
@@ -251,7 +237,7 @@ mpfr::mpreal inline console_IO<mpfr::mpreal>::input(const std::string& var_name)
  * @brief Input implementation for complex MPFR mpreal type
  */
 template <>
-std::complex<mpfr::mpreal> inline console_IO<std::complex<mpfr::mpreal>>::input(const std::string& var_name) {
+std::complex<mpfr::mpreal> console_IO<std::complex<mpfr::mpreal>>::input(const std::string& var_name) {
     std::string real_value;
     std::cout << "Real of " << var_name << " : ";
     std::getline(std::cin, real_value);
@@ -267,16 +253,8 @@ std::complex<mpfr::mpreal> inline console_IO<std::complex<mpfr::mpreal>>::input(
 }
 #endif
 
-/**
- * @brief Specialization for std::complex<T> inputs
- */
 template <std::floating_point T>
-struct console_IO<std::complex<T>> {
-    std::complex<T> inline static input(const std::string& var_name = "x");
-};
-
-template <std::floating_point T>
-std::complex<T> inline console_IO<std::complex<T>>::input([[maybe_unused]] const std::string& var_name) {
+std::complex<T> console_IO<std::complex<T>>::input([[maybe_unused]] const std::string& var_name) {
     // Standard input for complex numbers via real and imaginary parts
     T real_value = console_IO<T>::input("Real of x");
     T imag_value = console_IO<T>::input("Imag of x");

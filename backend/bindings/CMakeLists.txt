@@ -56,6 +56,7 @@ pybind11_add_module(pyshanks
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bind_algos_complex.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bind_noise.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bind_filters.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../core/src/precisioncore.cpp
 )
 target_link_libraries(pyshanks PRIVATE MPFR::MPFR GMP::GMP Eigen3::Eigen GSL::gsl GSL::gslcblas)
 set_target_properties(pyshanks PROPERTIES PREFIX "")

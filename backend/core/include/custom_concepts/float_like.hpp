@@ -27,6 +27,16 @@ struct isFloatLike<shanks::profiling::OperationCounting<mpfr::mpreal>> : public 
 #endif
 #endif
 
+/// FOR arb::float_precision
+#ifdef INC_FPRECISION
+template <>
+struct isFloatLike<arb::float_precision> : public std::true_type {};
+#ifdef SHANKS_ENABLE_PROFILING
+template <>
+struct isFloatLike<shanks::profiling::OperationCounting<arb::float_precision>> : public std::true_type {};
+#endif
+#endif
+
 template <typename T>
 concept FloatLike = isFloatLike<T>::value;
 

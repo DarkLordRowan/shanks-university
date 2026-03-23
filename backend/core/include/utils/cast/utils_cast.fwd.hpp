@@ -20,6 +20,7 @@ To utils::cast<To, From>::operator()(const From& x, [[maybe_unused]] std::size_t
     return static_cast<To>(x);
 }
 
+#include "fprecision/utils_cast_fprecision.hpp"
 #include "mpreal/utils_cast_mpreal.hpp"
 #include "operation_counter/utils_cast_op_counter.hpp"
 #include "std_complex/utils_cast_std_complex.hpp"

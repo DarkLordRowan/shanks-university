@@ -37,6 +37,23 @@ inline mpfr::mpreal uniform_noise<mpfr::mpreal>::generate(const mpfr::mpreal& le
 
 #endif
 
+#ifdef INC_FPRECISION
+template <>
+struct uniform_noise<arb::float_precision> {
+    static arb::float_precision generate(const arb::float_precision& left, const arb::float_precision& right,
+                                         std::mt19937_64& rng);
+};
+
+inline arb::float_precision uniform_noise<arb::float_precision>::generate(const arb::float_precision& left,
+                                                                          const arb::float_precision& right,
+                                                                          std::mt19937_64& rng) {
+    std::uniform_real_distribution<double> distrb{0.0L, 1.0L};
+    return left + (right - left) *
+                      arb::float_precision(distrb(rng), utils::helpers<arb::float_precision>::get_precision(left));
+}
+
+#endif
+
 template <typename T>
     requires ComplexLike<T> || IntervalLike<T>
 struct uniform_noise<T> {

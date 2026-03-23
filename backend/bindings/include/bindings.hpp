@@ -36,24 +36,28 @@ using OP = T;
 #endif
 
 // Common types tuples and suffixes for splitting compilation
-using types_real = std::tuple<std::tuple<OP<float>, size_t>, std::tuple<OP<double>, size_t>,
-                              std::tuple<OP<long double>, size_t>, std::tuple<OP<mpfr::mpreal>, size_t>>;
+using types_real =
+    std::tuple<std::tuple<OP<float>, size_t>, std::tuple<OP<double>, size_t>, std::tuple<OP<long double>, size_t>,
+               std::tuple<OP<mpfr::mpreal>, size_t>, std::tuple<OP<arb::float_precision>, size_t>>;
 
 using types_complex =
     std::tuple<std::tuple<std::complex<OP<float>>, size_t>, std::tuple<std::complex<OP<double>>, size_t>,
-               std::tuple<std::complex<OP<long double>>, size_t>, std::tuple<std::complex<OP<mpfr::mpreal>>, size_t>>;
+               std::tuple<std::complex<OP<long double>>, size_t>, std::tuple<std::complex<OP<mpfr::mpreal>>, size_t>,
+               std::tuple<std::complex<OP<arb::float_precision>>, size_t>>;
 
-constexpr std::array<const char*, 4> suffixes_real{"F32", "F64", "FLong", "Arb"};
-constexpr std::array<const char*, 4> suffixes_complex{"CF32", "CF64", "CFLong", "CArb"};
+constexpr std::array<const char*, 5> suffixes_real{"F32", "F64", "FLong", "Arb", "FPrec"};
+constexpr std::array<const char*, 5> suffixes_complex{"CF32", "CF64", "CFLong", "CArb", "CFPrec"};
 
 // Common types tuple and suffixes for all binding units (kept for simple cases)
 using types_to_bind =
     std::tuple<std::tuple<OP<float>, size_t>, std::tuple<OP<double>, size_t>, std::tuple<OP<long double>, size_t>,
                std::tuple<OP<mpfr::mpreal>, size_t>, std::tuple<std::complex<OP<float>>, size_t>,
                std::tuple<std::complex<OP<double>>, size_t>, std::tuple<std::complex<OP<long double>>, size_t>,
-               std::tuple<std::complex<OP<mpfr::mpreal>>, size_t>>;
+               std::tuple<std::complex<OP<mpfr::mpreal>>, size_t>,
+               std::tuple<std::complex<OP<arb::float_precision>>, size_t>>;
 
-constexpr std::array<const char*, 8> suffixes{"F32", "F64", "FLong", "Arb", "CF32", "CF64", "CFLong", "CArb"};
+constexpr std::array<const char*, 10> suffixes{"F32",  "F64",  "FLong",  "Arb",  "FPrec",
+                                               "CF32", "CF64", "CFLong", "CArb", "CFPrec"};
 
 // --- Template Helper for multiple types ---
 

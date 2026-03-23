@@ -5,6 +5,30 @@
 // clang-format off
 // Critical Section
 
+// system includes and std
+#include <algorithm>
+#include <assert.h>
+#include <concepts>
+#include <iomanip>
+#include <cassert>
+#include <climits>
+#include <cstdint>
+#include <string>
+#include <array>
+#include <vector>
+#include <complex>   // Need <complex> to support FFT functions for fast multiplications
+#include <cstdlib>
+#include <random>	// Needed for random_precision class and PRNGs in general
+#include <limits>
+#include <sstream>
+#include <type_traits>
+#include <utility>
+#include <cfloat>
+#include <cmath>
+#include <cstring>
+#include <iostream>
+#include <stdexcept>
+
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Core>
 
@@ -14,6 +38,9 @@
 
 #include "custom_types/mpreal.h"
 #include "custom_types/operation_counter.fwd.hpp"
+#include "custom_types/iprecision.hpp"
+#include "custom_types/fprecision.hpp"
+#include "custom_types/fractionprecision.hpp"
 
 #include "custom_concepts/float_like.hpp"
 
@@ -27,9 +54,6 @@
 
 template <typename T>
 concept AcceptedLike = requires { requires FloatLike<T> || ComplexLike<T> || IntervalLike<T>; };
-
-#include <iomanip>
-#include <cassert>
 
 #include "utils.hpp"
 
@@ -110,6 +134,8 @@ struct NumTraits<intprec::interval<long double>>
     };
 };
 
+#ifdef __MPREAL_H__
+
 template <>
 struct NumTraits<intprec::interval<mpfr::mpreal>>
     : NumTraits<double>  // permits to get the epsilon, dummy_precision, lowest, highest functions
@@ -128,6 +154,32 @@ struct NumTraits<intprec::interval<mpfr::mpreal>>
         MulCost = 3
     };
 };
+
+#endif
+
+#ifdef INC_FPRECISION
+
+template <>
+struct NumTraits<intprec::interval<arb::float_precision>>
+    : NumTraits<double>  // permits to get the epsilon, dummy_precision, lowest, highest functions
+{
+    typedef intprec::interval<arb::float_precision> Real;
+    typedef intprec::interval<arb::float_precision> NonInteger;
+    typedef intprec::interval<arb::float_precision> Nested;
+
+    enum {
+        IsComplex = 0,
+        IsInteger = 0,
+        IsSigned = 1,
+        RequireInitialization = 1,
+        ReadCost = 1,
+        AddCost = 3,
+        MulCost = 3
+    };
+};
+
+#endif
+
 }  // namespace Eigen
 
 #endif

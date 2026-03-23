@@ -348,6 +348,7 @@ struct utils::math {
     using has_lambertW0 = std::false_type;
 };
 
+#include "fprecision/utils_math_fprecision.hpp"
 #include "interval/utils_math_interval.hpp"
 #include "mpreal/utils_math_mpreal.hpp"
 #include "operation_counter/utils_math_op_counter.hpp"

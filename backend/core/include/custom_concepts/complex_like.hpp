@@ -48,6 +48,16 @@ struct isComplexLike<std::complex<shanks::profiling::OperationCounting<mpfr::mpr
 #endif
 #endif
 
+#ifdef INC_FPRECISION
+template <>
+struct isComplexLike<std::complex<arb::float_precision>> : public std::true_type {};
+#ifdef SHANKS_ENABLE_PROFILING
+template <>
+struct isComplexLike<std::complex<shanks::profiling::OperationCounting<arb::float_precision>>> : public std::true_type {
+};
+#endif
+#endif
+
 template <typename T>
 concept ComplexLike = isComplexLike<T>::value;
 

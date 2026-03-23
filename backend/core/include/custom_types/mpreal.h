@@ -52,17 +52,6 @@
 
 #include <stdint.h>
 
-#include <algorithm>
-#include <cfloat>
-#include <cmath>
-#include <complex>
-#include <cstring>
-#include <iostream>
-#include <limits>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-
 // Options
 #define MPREAL_HAVE_MSVC_DEBUGVIEW  // Enable Debugger Visualizer for "Debug" builds in MSVC.
 #ifndef MPREAL_HAVE_DYNAMIC_STD_NUMERIC_LIMITS
