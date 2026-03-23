@@ -106,11 +106,12 @@ pub fn perform_export_json<'a>(
     let mut export_lines = Vec::new();
 
     for line in lines {
+        // Force alpha to 255 (fully opaque) - ignore any transparency from gamma_multiply
         let color = [
             line.color.r(),
             line.color.g(),
             line.color.b(),
-            line.color.a(),
+            255, // Always export with full opacity
         ];
         let width = line.width;
         let style = match line.style {

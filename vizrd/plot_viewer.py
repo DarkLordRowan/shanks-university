@@ -207,6 +207,7 @@ class PlotWindow(QtWidgets.QMainWindow):
                 'width': line_data['width'],
                 'style': line_data['style'],
                 'marker': 'None',
+                'marker_size': 6,
                 'visible': True,
                 'x': x_vals,
                 'y': y_vals
@@ -385,12 +386,19 @@ class PlotWindow(QtWidgets.QMainWindow):
             combo_marker.addItems(['None', 'Circle', 'Square', 'Triangle', 'Cross', 'Star', 'Plus'])
             combo_marker.currentTextChanged.connect(lambda text, i=idx: self.update_line_cfg(i, 'marker', text))
 
+            # Marker Size
+            spin_marker_size = QtWidgets.QSpinBox()
+            spin_marker_size.setRange(1, 50)
+            spin_marker_size.setValue(cfg.get('marker_size', 6))
+            spin_marker_size.valueChanged.connect(lambda val, i=idx: self.update_line_cfg(i, 'marker_size', val))
+
             form.addRow(cb_vis)
             form.addRow("Name:", edit_name)
             form.addRow("Color:", btn_color)
             form.addRow("Width:", spin_width)
             form.addRow("Style:", combo_style)
             form.addRow("Marker:", combo_marker)
+            form.addRow("Marker Size:", spin_marker_size)
 
             lines_layout.addWidget(line_box)
 
@@ -448,7 +456,7 @@ class PlotWindow(QtWidgets.QMainWindow):
 
     def update_line_cfg(self, idx, key, val):
         self.line_configs[idx][key] = val
-        if key in ['style', 'marker', 'width', 'name', 'visible', 'color']:
+        if key in ['style', 'marker', 'marker_size', 'width', 'name', 'visible', 'color']:
             self.update_plot()
 
     def pick_color(self, idx, btn):
@@ -490,6 +498,7 @@ class PlotWindow(QtWidgets.QMainWindow):
             has_data = True
             ls = style_map.get(cfg['style'], '-')
             mk = marker_map.get(cfg['marker'], '')
+            marker_size = cfg.get('marker_size', 6)
             self.ax.plot(
                 cfg['x'], cfg['y'],
                 label=cfg['name'],
@@ -497,7 +506,7 @@ class PlotWindow(QtWidgets.QMainWindow):
                 linewidth=cfg['width'],
                 linestyle=ls,
                 marker=mk,
-                markersize=6
+                markersize=marker_size
             )
 
         self.ax.set_xlabel(self.grid_settings.get('x_label', DEFAULT_X_LABEL))
