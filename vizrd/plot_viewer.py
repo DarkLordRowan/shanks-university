@@ -355,7 +355,7 @@ class PlotWindow(QtWidgets.QMainWindow):
             # Vis
             cb_vis = QtWidgets.QCheckBox("Visible")
             cb_vis.setChecked(True)
-            cb_vis.stateChanged.connect(lambda state, i=idx: self.update_line_cfg(i, 'visible', state == QtCore.Qt.Checked))
+            cb_vis.stateChanged.connect(lambda state, i=idx: self.update_line_cfg(i, 'visible', state == QtCore.Qt.CheckState.Checked))
 
             # Name
             edit_name = QtWidgets.QLineEdit(cfg['name'])
@@ -454,7 +454,7 @@ class PlotWindow(QtWidgets.QMainWindow):
     def pick_color(self, idx, btn):
         curr = self.line_configs[idx]['color']
         initial = QtGui.QColor(int(curr[0]*255), int(curr[1]*255), int(curr[2]*255), int(curr[3]*255))
-        color = QtWidgets.QColorDialog.getColor(initial, self, "Pick Color", QtWidgets.QColorDialog.ShowAlphaChannel)
+        color = QtWidgets.QColorDialog.getColor(initial, self, "Pick Color", QtWidgets.QColorDialog.ColorDialogOption.ShowAlphaChannel)
         if color.isValid():
             r, g, b, a = color.getRgbF()
             self.line_configs[idx]['color'] = [r, g, b, a]
