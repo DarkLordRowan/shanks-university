@@ -130,7 +130,7 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.plot_container = QtWidgets.QWidget()
         self.plot_layout = QtWidgets.QVBoxLayout(self.plot_container)
         
-        self.figure = Figure()
+        self.figure = Figure(constrained_layout=True)
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
         
@@ -145,7 +145,8 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.line_configs = []
         self.init_data()
         self.build_ui()
-        self.update_plot()
+        # Defer initial plot to let Qt layout settle first
+        QtCore.QTimer.singleShot(0, self.update_plot)
 
     def init_data(self):
         # Read grid configuration
@@ -186,7 +187,7 @@ class PlotWindow(QtWidgets.QMainWindow):
 
         self.global_cfg = {
             'legend_visible': True,
-            'legend_loc': 'upper right',
+            'legend_loc': 'outside right',
         }
 
     def build_ui(self):
@@ -199,7 +200,7 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.cb_legend.stateChanged.connect(self.on_global_changed)
 
         self.combo_legend_loc = QtWidgets.QComboBox()
-        self.combo_legend_loc.addItems(['best', 'upper right', 'upper left', 'lower left', 'lower right', 'right', 'center left', 'center right', 'lower center', 'upper center', 'center'])
+        self.combo_legend_loc.addItems(['best', 'upper right', 'upper left', 'lower left', 'lower right', 'right', 'center left', 'center right', 'lower center', 'upper center', 'center', 'outside right', 'outside left', 'outside bottom'])
         self.combo_legend_loc.setCurrentText(self.global_cfg['legend_loc'])
         self.combo_legend_loc.currentTextChanged.connect(self.on_global_changed)
 
@@ -391,7 +392,16 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.ax.set_ylim(self.bounds['y_min'], self.bounds['y_max'])
 
         if has_data and self.global_cfg['legend_visible']:
-            self.ax.legend(loc=self.global_cfg['legend_loc'])
+            loc = self.global_cfg['legend_loc']
+            
+            if loc == 'outside right':
+                self.ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1), borderaxespad=0)
+            elif loc == 'outside left':
+                self.ax.legend(loc='upper right', bbox_to_anchor=(-0.02, 1), borderaxespad=0)
+            elif loc == 'outside bottom':
+                self.ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), borderaxespad=0, ncol=2)
+            else:
+                self.ax.legend(loc=loc)
 
         self.canvas.draw()
 
