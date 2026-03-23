@@ -7,7 +7,35 @@ matplotlib.use('qtagg')
 from PyQt6 import QtWidgets, QtCore, QtGui
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib.figure import Figure
-from matplotlib.ticker import FuncFormatter
+from matplotlib.ticker import FuncFormatter, MultipleLocator, FixedLocator, AutoLocator, Locator
+
+
+# Default axis labels
+DEFAULT_X_LABEL = 'Шаг n'
+DEFAULT_Y_LABEL = 'Значение x\u2099'  # x with subscript n (Unicode U+2099)
+
+
+class CombinedLocator(Locator):
+    """A locator that combines standard spacing with custom ticks."""
+    def __init__(self, base_locator, custom_ticks):
+        super().__init__()
+        self.base_locator = base_locator
+        self.custom_ticks = sorted(set(custom_ticks)) if custom_ticks else []
+    
+    def __call__(self):
+        # Get ticks from base locator
+        base_ticks = self.base_locator()
+        
+        # Combine with custom ticks
+        all_ticks = list(base_ticks) + [t for t in self.custom_ticks if t not in base_ticks]
+        return sorted(set(all_ticks))
+    
+    def view_limits(self, vmin, vmax):
+        return self.base_locator.view_limits(vmin, vmax)
+    
+    def set_axis(self, axis):
+        super().set_axis(axis)
+        self.base_locator.set_axis(axis)
 import math
 
 def format_value(val):
@@ -190,6 +218,16 @@ class PlotWindow(QtWidgets.QMainWindow):
             'legend_loc': 'outside right',
         }
 
+        # Grid configuration with defaults
+        self.grid_settings = {
+            'x_step': 0,  # 0 = auto
+            'y_step': 0,  # 0 = auto
+            'x_ticks': [],
+            'y_ticks': [],
+            'x_label': DEFAULT_X_LABEL,
+            'y_label': DEFAULT_Y_LABEL
+        }
+
     def build_ui(self):
         # Global Settings
         global_group = QtWidgets.QGroupBox("Global Settings")
@@ -253,6 +291,59 @@ class PlotWindow(QtWidgets.QMainWindow):
 
         self.panel_layout.addWidget(roi_group)
 
+        # Grid Settings
+        grid_group = QtWidgets.QGroupBox("Grid Configuration")
+        grid_layout = QtWidgets.QFormLayout(grid_group)
+
+        # X Step
+        self.spin_x_step = QtWidgets.QDoubleSpinBox()
+        self.spin_x_step.setRange(0, 1e308)
+        self.spin_x_step.setDecimals(10)
+        self.spin_x_step.setValue(0)
+        self.spin_x_step.setSpecialValueText("Auto")
+        self.spin_x_step.valueChanged.connect(self.on_grid_changed)
+        grid_layout.addRow("X Step:", self.spin_x_step)
+
+        # Y Step
+        self.spin_y_step = QtWidgets.QDoubleSpinBox()
+        self.spin_y_step.setRange(0, 1e308)
+        self.spin_y_step.setDecimals(10)
+        self.spin_y_step.setValue(0)
+        self.spin_y_step.setSpecialValueText("Auto")
+        self.spin_y_step.valueChanged.connect(self.on_grid_changed)
+        grid_layout.addRow("Y Step:", self.spin_y_step)
+
+        # Custom X Ticks
+        self.edit_x_ticks = QtWidgets.QLineEdit()
+        self.edit_x_ticks.setPlaceholderText("e.g. 1, 2.5, 5, 10")
+        self.edit_x_ticks.textChanged.connect(self.on_grid_changed)
+        grid_layout.addRow("Custom X Ticks:", self.edit_x_ticks)
+
+        # Custom Y Ticks
+        self.edit_y_ticks = QtWidgets.QLineEdit()
+        self.edit_y_ticks.setPlaceholderText("e.g. -1, 0, 1, 2")
+        self.edit_y_ticks.textChanged.connect(self.on_grid_changed)
+        grid_layout.addRow("Custom Y Ticks:", self.edit_y_ticks)
+
+        # X Axis Label
+        self.edit_x_label = QtWidgets.QLineEdit()
+        self.edit_x_label.setText(self.grid_settings.get('x_label', DEFAULT_X_LABEL))
+        self.edit_x_label.textChanged.connect(self.on_grid_changed)
+        grid_layout.addRow("X Axis Label:", self.edit_x_label)
+
+        # Y Axis Label
+        self.edit_y_label = QtWidgets.QLineEdit()
+        self.edit_y_label.setText(self.grid_settings.get('y_label', DEFAULT_Y_LABEL))
+        self.edit_y_label.textChanged.connect(self.on_grid_changed)
+        grid_layout.addRow("Y Axis Label:", self.edit_y_label)
+
+        # Reset button
+        self.btn_reset_grid = QtWidgets.QPushButton("Reset to Auto")
+        self.btn_reset_grid.clicked.connect(self.on_reset_grid)
+        grid_layout.addRow(self.btn_reset_grid)
+
+        self.panel_layout.addWidget(grid_group)
+
         # Lines Settings
         lines_group = QtWidgets.QGroupBox("Line Configurations")
         lines_layout = QtWidgets.QVBoxLayout(lines_group)
@@ -264,7 +355,7 @@ class PlotWindow(QtWidgets.QMainWindow):
             # Vis
             cb_vis = QtWidgets.QCheckBox("Visible")
             cb_vis.setChecked(True)
-            cb_vis.stateChanged.connect(lambda state, i=idx: self.update_line_cfg(i, 'visible', state == QtCore.Qt.Checked))
+            cb_vis.stateChanged.connect(lambda state, i=idx: self.update_line_cfg(i, 'visible', state == QtCore.Qt.CheckState.Checked))
 
             # Name
             edit_name = QtWidgets.QLineEdit(cfg['name'])
@@ -318,6 +409,43 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.bounds['y_max'] = self.spin_y_max.value()
         self.update_plot()
 
+    def on_grid_changed(self, *_):
+        self.grid_settings = {
+            'x_step': self.spin_x_step.value(),
+            'y_step': self.spin_y_step.value(),
+            'x_ticks': self.parse_ticks(self.edit_x_ticks.text()),
+            'y_ticks': self.parse_ticks(self.edit_y_ticks.text()),
+            'x_label': self.edit_x_label.text() or DEFAULT_X_LABEL,
+            'y_label': self.edit_y_label.text() or DEFAULT_Y_LABEL
+        }
+        self.update_plot()
+
+    def on_reset_grid(self):
+        self.spin_x_step.setValue(0)
+        self.spin_y_step.setValue(0)
+        self.edit_x_ticks.clear()
+        self.edit_y_ticks.clear()
+        self.edit_x_label.setText(DEFAULT_X_LABEL)
+        self.edit_y_label.setText(DEFAULT_Y_LABEL)
+        self.grid_settings = {
+            'x_step': 0,
+            'y_step': 0,
+            'x_ticks': [],
+            'y_ticks': [],
+            'x_label': 'Шаг n',
+            'y_label': 'Значение x\u2099'
+        }
+        self.update_plot()
+
+    def parse_ticks(self, text):
+        """Parse comma-separated tick values"""
+        if not text.strip():
+            return []
+        try:
+            return [float(x.strip()) for x in text.split(',') if x.strip()]
+        except ValueError:
+            return []
+
     def update_line_cfg(self, idx, key, val):
         self.line_configs[idx][key] = val
         if key in ['style', 'marker', 'width', 'name', 'visible', 'color']:
@@ -326,7 +454,7 @@ class PlotWindow(QtWidgets.QMainWindow):
     def pick_color(self, idx, btn):
         curr = self.line_configs[idx]['color']
         initial = QtGui.QColor(int(curr[0]*255), int(curr[1]*255), int(curr[2]*255), int(curr[3]*255))
-        color = QtWidgets.QColorDialog.getColor(initial, self, "Pick Color", QtWidgets.QColorDialog.ShowAlphaChannel)
+        color = QtWidgets.QColorDialog.getColor(initial, self, "Pick Color", QtWidgets.QColorDialog.ColorDialogOption.ShowAlphaChannel)
         if color.isValid():
             r, g, b, a = color.getRgbF()
             self.line_configs[idx]['color'] = [r, g, b, a]
@@ -355,9 +483,6 @@ class PlotWindow(QtWidgets.QMainWindow):
             'Plus': '+'
         }
 
-        # Handle grid conditionally based on exported grid type
-        self.ax.grid(True, which='both', linestyle='--', alpha=0.5)
-
         has_data = False
         for cfg in self.line_configs:
             if not cfg['visible']:
@@ -375,8 +500,8 @@ class PlotWindow(QtWidgets.QMainWindow):
                 markersize=6
             )
 
-        self.ax.set_xlabel('n')
-        self.ax.set_ylabel('Value')
+        self.ax.set_xlabel(self.grid_settings.get('x_label', DEFAULT_X_LABEL))
+        self.ax.set_ylabel(self.grid_settings.get('y_label', DEFAULT_Y_LABEL))
 
         # Data is already symlog-transformed, so always use linear scale
         self.ax.set_yscale('linear')
@@ -390,6 +515,33 @@ class PlotWindow(QtWidgets.QMainWindow):
         # Set initial bounds from exported data
         self.ax.set_xlim(self.bounds['x_min'], self.bounds['x_max'])
         self.ax.set_ylim(self.bounds['y_min'], self.bounds['y_max'])
+        
+        # Configure grid and tick locators (MUST be after set_yscale!)
+        self.ax.grid(True, which='both', linestyle='--', alpha=0.5)
+        
+        # X-axis tick configuration - combine standard spacing with custom ticks
+        if self.grid_settings['x_step'] > 0:
+            x_base = MultipleLocator(self.grid_settings['x_step'])
+        else:
+            x_base = AutoLocator()
+        
+        if self.grid_settings['x_ticks']:
+            x_locator = CombinedLocator(x_base, self.grid_settings['x_ticks'])
+        else:
+            x_locator = x_base
+        self.ax.xaxis.set_major_locator(x_locator)
+        
+        # Y-axis tick configuration - combine standard spacing with custom ticks
+        if self.grid_settings['y_step'] > 0:
+            y_base = MultipleLocator(self.grid_settings['y_step'])
+        else:
+            y_base = AutoLocator()
+        
+        if self.grid_settings['y_ticks']:
+            y_locator = CombinedLocator(y_base, self.grid_settings['y_ticks'])
+        else:
+            y_locator = y_base
+        self.ax.yaxis.set_major_locator(y_locator)
 
         if has_data and self.global_cfg['legend_visible']:
             loc = self.global_cfg['legend_loc']
