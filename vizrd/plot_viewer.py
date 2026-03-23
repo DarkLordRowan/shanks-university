@@ -7,7 +7,30 @@ matplotlib.use('qtagg')
 from PyQt6 import QtWidgets, QtCore, QtGui
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib.figure import Figure
-from matplotlib.ticker import FuncFormatter
+from matplotlib.ticker import FuncFormatter, MultipleLocator, FixedLocator, AutoLocator, Locator
+
+
+class CombinedLocator(Locator):
+    """A locator that combines standard spacing with custom ticks."""
+    def __init__(self, base_locator, custom_ticks):
+        super().__init__()
+        self.base_locator = base_locator
+        self.custom_ticks = sorted(set(custom_ticks)) if custom_ticks else []
+    
+    def __call__(self):
+        # Get ticks from base locator
+        base_ticks = self.base_locator()
+        
+        # Combine with custom ticks
+        all_ticks = list(base_ticks) + [t for t in self.custom_ticks if t not in base_ticks]
+        return sorted(set(all_ticks))
+    
+    def view_limits(self, vmin, vmax):
+        return self.base_locator.view_limits(vmin, vmax)
+    
+    def set_axis(self, axis):
+        super().set_axis(axis)
+        self.base_locator.set_axis(axis)
 import math
 
 def format_value(val):
@@ -190,6 +213,14 @@ class PlotWindow(QtWidgets.QMainWindow):
             'legend_loc': 'outside right',
         }
 
+        # Grid configuration with defaults
+        self.grid_settings = {
+            'x_step': 0,  # 0 = auto
+            'y_step': 0,  # 0 = auto
+            'x_ticks': [],
+            'y_ticks': []
+        }
+
     def build_ui(self):
         # Global Settings
         global_group = QtWidgets.QGroupBox("Global Settings")
@@ -252,6 +283,47 @@ class PlotWindow(QtWidgets.QMainWindow):
         roi_layout.addRow("Y Max:", self.spin_y_max)
 
         self.panel_layout.addWidget(roi_group)
+
+        # Grid Settings
+        grid_group = QtWidgets.QGroupBox("Grid Configuration")
+        grid_layout = QtWidgets.QFormLayout(grid_group)
+
+        # X Step
+        self.spin_x_step = QtWidgets.QDoubleSpinBox()
+        self.spin_x_step.setRange(0, 1e308)
+        self.spin_x_step.setDecimals(10)
+        self.spin_x_step.setValue(0)
+        self.spin_x_step.setSpecialValueText("Auto")
+        self.spin_x_step.valueChanged.connect(self.on_grid_changed)
+        grid_layout.addRow("X Step:", self.spin_x_step)
+
+        # Y Step
+        self.spin_y_step = QtWidgets.QDoubleSpinBox()
+        self.spin_y_step.setRange(0, 1e308)
+        self.spin_y_step.setDecimals(10)
+        self.spin_y_step.setValue(0)
+        self.spin_y_step.setSpecialValueText("Auto")
+        self.spin_y_step.valueChanged.connect(self.on_grid_changed)
+        grid_layout.addRow("Y Step:", self.spin_y_step)
+
+        # Custom X Ticks
+        self.edit_x_ticks = QtWidgets.QLineEdit()
+        self.edit_x_ticks.setPlaceholderText("e.g. 1, 2.5, 5, 10")
+        self.edit_x_ticks.textChanged.connect(self.on_grid_changed)
+        grid_layout.addRow("Custom X Ticks:", self.edit_x_ticks)
+
+        # Custom Y Ticks
+        self.edit_y_ticks = QtWidgets.QLineEdit()
+        self.edit_y_ticks.setPlaceholderText("e.g. -1, 0, 1, 2")
+        self.edit_y_ticks.textChanged.connect(self.on_grid_changed)
+        grid_layout.addRow("Custom Y Ticks:", self.edit_y_ticks)
+
+        # Reset button
+        self.btn_reset_grid = QtWidgets.QPushButton("Reset to Auto")
+        self.btn_reset_grid.clicked.connect(self.on_reset_grid)
+        grid_layout.addRow(self.btn_reset_grid)
+
+        self.panel_layout.addWidget(grid_group)
 
         # Lines Settings
         lines_group = QtWidgets.QGroupBox("Line Configurations")
@@ -318,6 +390,37 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.bounds['y_max'] = self.spin_y_max.value()
         self.update_plot()
 
+    def on_grid_changed(self, *_):
+        self.grid_settings = {
+            'x_step': self.spin_x_step.value(),
+            'y_step': self.spin_y_step.value(),
+            'x_ticks': self.parse_ticks(self.edit_x_ticks.text()),
+            'y_ticks': self.parse_ticks(self.edit_y_ticks.text())
+        }
+        self.update_plot()
+
+    def on_reset_grid(self):
+        self.spin_x_step.setValue(0)
+        self.spin_y_step.setValue(0)
+        self.edit_x_ticks.clear()
+        self.edit_y_ticks.clear()
+        self.grid_settings = {
+            'x_step': 0,
+            'y_step': 0,
+            'x_ticks': [],
+            'y_ticks': []
+        }
+        self.update_plot()
+
+    def parse_ticks(self, text):
+        """Parse comma-separated tick values"""
+        if not text.strip():
+            return []
+        try:
+            return [float(x.strip()) for x in text.split(',') if x.strip()]
+        except ValueError:
+            return []
+
     def update_line_cfg(self, idx, key, val):
         self.line_configs[idx][key] = val
         if key in ['style', 'marker', 'width', 'name', 'visible', 'color']:
@@ -355,9 +458,6 @@ class PlotWindow(QtWidgets.QMainWindow):
             'Plus': '+'
         }
 
-        # Handle grid conditionally based on exported grid type
-        self.ax.grid(True, which='both', linestyle='--', alpha=0.5)
-
         has_data = False
         for cfg in self.line_configs:
             if not cfg['visible']:
@@ -390,6 +490,33 @@ class PlotWindow(QtWidgets.QMainWindow):
         # Set initial bounds from exported data
         self.ax.set_xlim(self.bounds['x_min'], self.bounds['x_max'])
         self.ax.set_ylim(self.bounds['y_min'], self.bounds['y_max'])
+        
+        # Configure grid and tick locators (MUST be after set_yscale!)
+        self.ax.grid(True, which='both', linestyle='--', alpha=0.5)
+        
+        # X-axis tick configuration - combine standard spacing with custom ticks
+        if self.grid_settings['x_step'] > 0:
+            x_base = MultipleLocator(self.grid_settings['x_step'])
+        else:
+            x_base = AutoLocator()
+        
+        if self.grid_settings['x_ticks']:
+            x_locator = CombinedLocator(x_base, self.grid_settings['x_ticks'])
+        else:
+            x_locator = x_base
+        self.ax.xaxis.set_major_locator(x_locator)
+        
+        # Y-axis tick configuration - combine standard spacing with custom ticks
+        if self.grid_settings['y_step'] > 0:
+            y_base = MultipleLocator(self.grid_settings['y_step'])
+        else:
+            y_base = AutoLocator()
+        
+        if self.grid_settings['y_ticks']:
+            y_locator = CombinedLocator(y_base, self.grid_settings['y_ticks'])
+        else:
+            y_locator = y_base
+        self.ax.yaxis.set_major_locator(y_locator)
 
         if has_data and self.global_cfg['legend_visible']:
             loc = self.global_cfg['legend_loc']
