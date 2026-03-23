@@ -27,7 +27,8 @@ fn main() {
             .file("ffi/src/bridge_f64.cpp")
             .file("ffi/src/bridge_flong.cpp")
             .file("ffi/src/bridge_arb.cpp")
-            .file("ffi/src/series_registry_impl.cpp");
+            .file("ffi/src/series_registry_impl.cpp")
+            .file("ffi/../../backend/core/src/precisioncore.cpp");
     }
 
     build

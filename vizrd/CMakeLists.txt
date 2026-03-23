@@ -16,6 +16,7 @@ add_library(shanks_ffi_cpp STATIC
     ffi/src/bridge_flong.cpp
     ffi/src/bridge_arb.cpp
     ffi/src/series_registry_impl.cpp
+    ${CMAKE_SOURCE_DIR}/../backend/core/src/precisioncore.cpp
 )
 
 # We need cxxbridge to generate the headers

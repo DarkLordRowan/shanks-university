@@ -238,6 +238,19 @@ series_registry<mpfr::mpreal, size_t>::s_entries = [] {
     };
 }();
 
+// ---------------------------------------------------------------------------
+// arb::float_precision, size_t
+// ---------------------------------------------------------------------------
+template <>
+const std::vector<series_registry<arb::float_precision, size_t>::entry>
+series_registry<arb::float_precision, size_t>::s_entries = [] {
+    using T [[maybe_unused]] = arb::float_precision;
+    using K [[maybe_unused]] = size_t;
+    return std::vector<series_registry<arb::float_precision, size_t>::entry>{
+#include "../../core/include/series_registry.def"
+    };
+}();
+
 #ifndef SHANKS_SKIP_PRECISION
 // ---------------------------------------------------------------------------
 // std::complex<float>, size_t
@@ -292,6 +305,19 @@ series_registry<std::complex<mpfr::mpreal>, size_t>::s_entries = [] {
     };
 }();
 
+// ---------------------------------------------------------------------------
+// std::complex<arb::float_precision>, size_t
+// ---------------------------------------------------------------------------
+template <>
+const std::vector<series_registry<std::complex<arb::float_precision>, size_t>::entry>
+series_registry<std::complex<arb::float_precision>, size_t>::s_entries = [] {
+    using T [[maybe_unused]] = std::complex<arb::float_precision>;
+    using K [[maybe_unused]] = size_t;
+    return std::vector<series_registry<std::complex<arb::float_precision>, size_t>::entry>{
+#include "../../core/include/series_registry.def"
+    };
+}();
+
 #ifndef SHANKS_SKIP_PRECISION
 // ---------------------------------------------------------------------------
 // intprec::interval<float>, size_t
@@ -342,6 +368,19 @@ series_registry<intprec::interval<mpfr::mpreal>, size_t>::s_entries = [] {
     using T [[maybe_unused]] = intprec::interval<mpfr::mpreal>;
     using K [[maybe_unused]] = size_t;
     return std::vector<series_registry<intprec::interval<mpfr::mpreal>, size_t>::entry>{
+#include "../../core/include/series_registry.def"
+    };
+}();
+
+// ---------------------------------------------------------------------------
+// intprec::interval<arb::float_precision>, size_t
+// ---------------------------------------------------------------------------
+template <>
+const std::vector<series_registry<intprec::interval<arb::float_precision>, size_t>::entry>
+series_registry<intprec::interval<arb::float_precision>, size_t>::s_entries = [] {
+    using T [[maybe_unused]] = intprec::interval<arb::float_precision>;
+    using K [[maybe_unused]] = size_t;
+    return std::vector<series_registry<intprec::interval<arb::float_precision>, size_t>::entry>{
 #include "../../core/include/series_registry.def"
     };
 }();
@@ -402,6 +441,19 @@ series_registry<std::complex<intprec::interval<mpfr::mpreal>>, size_t>::s_entrie
     };
 }();
 
+// ---------------------------------------------------------------------------
+// std::complex<intprec::interval<arb::float_precision>>, size_t
+// ---------------------------------------------------------------------------
+template <>
+const std::vector<series_registry<std::complex<intprec::interval<arb::float_precision>>, size_t>::entry>
+series_registry<std::complex<intprec::interval<arb::float_precision>>, size_t>::s_entries = [] {
+    using T [[maybe_unused]] = std::complex<intprec::interval<arb::float_precision>>;
+    using K [[maybe_unused]] = size_t;
+    return std::vector<series_registry<std::complex<intprec::interval<arb::float_precision>>, size_t>::entry>{
+#include "../../core/include/series_registry.def"
+    };
+}();
+
 // MinGW GCC typeinfo linker bug workaround:
 // explicitly instantiate a dummy derived class of series_base_succ to FORCE 
 // the compiler to emit typeinfo for series_base_succ<CInterval, size_t>.
@@ -419,6 +471,7 @@ template class dummy_succ_force_rtti<std::complex<intprec::interval<double>>, si
 template class dummy_succ_force_rtti<std::complex<intprec::interval<long double>>, size_t>;
 #endif
 template class dummy_succ_force_rtti<std::complex<intprec::interval<mpfr::mpreal>>, size_t>;
+template class dummy_succ_force_rtti<std::complex<intprec::interval<arb::float_precision>>, size_t>;
 
 }} // namespace shanks::series
 
@@ -439,6 +492,7 @@ template class series_registry<double,      size_t>;
 template class series_registry<long double, size_t>;
 #endif
 template class series_registry<mpfr::mpreal, size_t>;
+template class series_registry<arb::float_precision, size_t>;
 
 #ifndef SHANKS_SKIP_PRECISION
 template class series_registry<std::complex<float>,       size_t>;
@@ -446,6 +500,7 @@ template class series_registry<std::complex<double>,      size_t>;
 template class series_registry<std::complex<long double>, size_t>;
 #endif
 template class series_registry<std::complex<mpfr::mpreal>, size_t>;
+template class series_registry<std::complex<arb::float_precision>, size_t>;
 
 #ifndef SHANKS_SKIP_PRECISION
 template class series_registry<intprec::interval<float>,       size_t>;
@@ -453,5 +508,6 @@ template class series_registry<intprec::interval<double>,      size_t>;
 template class series_registry<intprec::interval<long double>, size_t>;
 #endif
 template class series_registry<intprec::interval<mpfr::mpreal>, size_t>;
+template class series_registry<intprec::interval<arb::float_precision>, size_t>;
 
 }} // namespace shanks::series
