@@ -10,6 +10,11 @@ from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter, MultipleLocator, FixedLocator, AutoLocator, Locator
 
 
+# Default axis labels
+DEFAULT_X_LABEL = 'Шаг n'
+DEFAULT_Y_LABEL = 'Значение x\u2099'  # x with subscript n (Unicode U+2099)
+
+
 class CombinedLocator(Locator):
     """A locator that combines standard spacing with custom ticks."""
     def __init__(self, base_locator, custom_ticks):
@@ -218,7 +223,9 @@ class PlotWindow(QtWidgets.QMainWindow):
             'x_step': 0,  # 0 = auto
             'y_step': 0,  # 0 = auto
             'x_ticks': [],
-            'y_ticks': []
+            'y_ticks': [],
+            'x_label': DEFAULT_X_LABEL,
+            'y_label': DEFAULT_Y_LABEL
         }
 
     def build_ui(self):
@@ -318,6 +325,18 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.edit_y_ticks.textChanged.connect(self.on_grid_changed)
         grid_layout.addRow("Custom Y Ticks:", self.edit_y_ticks)
 
+        # X Axis Label
+        self.edit_x_label = QtWidgets.QLineEdit()
+        self.edit_x_label.setText(self.grid_settings.get('x_label', DEFAULT_X_LABEL))
+        self.edit_x_label.textChanged.connect(self.on_grid_changed)
+        grid_layout.addRow("X Axis Label:", self.edit_x_label)
+
+        # Y Axis Label
+        self.edit_y_label = QtWidgets.QLineEdit()
+        self.edit_y_label.setText(self.grid_settings.get('y_label', DEFAULT_Y_LABEL))
+        self.edit_y_label.textChanged.connect(self.on_grid_changed)
+        grid_layout.addRow("Y Axis Label:", self.edit_y_label)
+
         # Reset button
         self.btn_reset_grid = QtWidgets.QPushButton("Reset to Auto")
         self.btn_reset_grid.clicked.connect(self.on_reset_grid)
@@ -395,7 +414,9 @@ class PlotWindow(QtWidgets.QMainWindow):
             'x_step': self.spin_x_step.value(),
             'y_step': self.spin_y_step.value(),
             'x_ticks': self.parse_ticks(self.edit_x_ticks.text()),
-            'y_ticks': self.parse_ticks(self.edit_y_ticks.text())
+            'y_ticks': self.parse_ticks(self.edit_y_ticks.text()),
+            'x_label': self.edit_x_label.text() or DEFAULT_X_LABEL,
+            'y_label': self.edit_y_label.text() or DEFAULT_Y_LABEL
         }
         self.update_plot()
 
@@ -404,11 +425,15 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.spin_y_step.setValue(0)
         self.edit_x_ticks.clear()
         self.edit_y_ticks.clear()
+        self.edit_x_label.setText(DEFAULT_X_LABEL)
+        self.edit_y_label.setText(DEFAULT_Y_LABEL)
         self.grid_settings = {
             'x_step': 0,
             'y_step': 0,
             'x_ticks': [],
-            'y_ticks': []
+            'y_ticks': [],
+            'x_label': 'Шаг n',
+            'y_label': 'Значение x\u2099'
         }
         self.update_plot()
 
@@ -475,8 +500,8 @@ class PlotWindow(QtWidgets.QMainWindow):
                 markersize=6
             )
 
-        self.ax.set_xlabel('n')
-        self.ax.set_ylabel('Value')
+        self.ax.set_xlabel(self.grid_settings.get('x_label', DEFAULT_X_LABEL))
+        self.ax.set_ylabel(self.grid_settings.get('y_label', DEFAULT_Y_LABEL))
 
         # Data is already symlog-transformed, so always use linear scale
         self.ax.set_yscale('linear')
