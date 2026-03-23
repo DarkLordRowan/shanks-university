@@ -80,6 +80,7 @@ jobs:
           mkdir vizrd-windows
           cp vizrd/target/release/vizrd.exe vizrd-windows/
           cp -r vizrd/config vizrd-windows/
+          cp -r vizrd/plot_viewer.py vizrd-windows/
           # Dynamically find and copy all required MSYS2/MinGW DLLs
           ldd vizrd/target/release/vizrd.exe | grep '\/mingw.*\.dll' -o | xargs -I{} cp "{}" vizrd-windows/
 

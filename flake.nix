@@ -54,6 +54,7 @@
             ))
             fenix.packages.${system}.latest.toolchain
             qt6.qtwayland
+            qt6.qtbase
             xorg.xcbutilcursor
             fontconfig
             freetype
@@ -72,7 +73,9 @@
               freetype
             ];
           QT_QPA_PLATFORM = "wayland";
-          QT_PLUGIN_PATH = with pkgs.qt6; "${qtwayland}/${qtbase.qtPluginPrefix}";
+          QT_PLUGIN_PATH =
+            with pkgs.qt6;
+            "${qtbase}/${qtbase.qtPluginPrefix}:${qtwayland}/${qtbase.qtPluginPrefix}";
         };
       }
     );

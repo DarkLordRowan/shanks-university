@@ -3,7 +3,6 @@
 pub mod coordinator;
 pub mod data_tab;
 pub mod export;
-pub mod export_plotters;
 mod selection;
 
 use crate::cache::Cache;
@@ -15,7 +14,7 @@ use egui::Id;
 use egui_plot::{Line, LineStyle, PlotBounds, PlotPoint, PlotPoints};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
 use tokio::sync::watch;
 
@@ -122,14 +121,6 @@ pub struct PlotCache {
     grid_main: Grid,
     lines_deviation: Vec<BakedLine>,
     grid_deviation: Grid,
-    export_preview_tex: Mutex<Option<egui::TextureHandle>>,
-}
-
-pub struct ExportState {
-    pub settings: export_plotters::ExportSettings,
-    pub settings_dirty: bool,
-    pub preview_size: (u32, u32),
-    pub export_size: (u32, u32),
 }
 
 pub struct ShanksApp {
@@ -159,8 +150,7 @@ pub struct ShanksApp {
 
     n_points: u64,
     light_theme: bool,
-    export_mode: bool,
-    export_state: Option<ExportState>,
+
     show_cache_dialog: bool,
 }
 
@@ -224,8 +214,7 @@ impl ShanksApp {
             show_legend: true,
             n_points,
             light_theme: true,
-            export_mode: false,
-            export_state: None,
+
             show_cache_dialog: false,
         };
 
@@ -975,7 +964,6 @@ impl ShanksApp {
             } else {
                 Grid::Normal
             },
-            export_preview_tex: Mutex::new(None),
         }
     }
 }
@@ -1040,314 +1028,75 @@ impl eframe::App for ShanksApp {
         egui::SidePanel::left("left_panel")
             .resizable(true)
             .show(ctx, |ui| {
-                ui.horizontal(|ui| {
-                    if ui.selectable_label(!self.export_mode, "⚙ Select").clicked() {
-                        self.export_mode = false;
+                egui::ScrollArea::vertical().show(ui, |ui| {
+                    ui.label("N:");
+                    let n = egui::Slider::new(&mut self.n_points, 0..=1000)
+                        .clamping(egui::SliderClamping::Never);
+                    if ui.add(n).changed() {
+                        self.trigger_config_update();
                     }
-                    if ui.selectable_label(self.export_mode, "🎨 Export").clicked() {
-                        self.export_mode = true;
-                        if self.export_state.is_none() {
-                            self.export_state = Some(ExportState {
-                                settings: crate::app::export_plotters::ExportSettings {
-                                    line_configs: std::collections::HashMap::new(),
-                                    axis_labels: ("n".to_string(), "Sn".to_string()),
-                                    legend_pos: 1,
-                                    legend_font_size: 15,
-                                    x_min: 0.0,
-                                    x_max: self.n_points as f64,
-                                    y_min: -1.0,
-                                    y_max: 1.0,
-                                },
-                                settings_dirty: true,
-                                preview_size: (0, 0),
-                                export_size: (1920, 1080),
-                            });
-                        } else {
-                            self.export_state.as_mut().unwrap().settings_dirty = true;
-                        }
+                    ui.separator();
+                    let mut trees_changed = false;
+                    if let Some(app_select) = &mut self.app_select {
+                        trees_changed = app_select.draw(ui);
                     }
-                });
-                ui.separator();
+                    if trees_changed {
+                        self.trigger_combinations();
+                    }
+                    ui.separator();
 
-                if !self.export_mode {
-                    egui::ScrollArea::vertical().show(ui, |ui| {
-                        ui.label("N:");
-                        let n = egui::Slider::new(&mut self.n_points, 0..=1000)
-                            .clamping(egui::SliderClamping::Never);
-                        if ui.add(n).changed() {
-                            self.trigger_config_update();
-                        }
-                        ui.separator();
-                        let mut trees_changed = false;
-                        if let Some(app_select) = &mut self.app_select {
-                            trees_changed = app_select.draw(ui);
-                        }
-                        if trees_changed {
-                            self.trigger_combinations();
-                        }
-                        ui.separator();
-                        ui.label(self.last_err_rx.borrow().as_str());
-                    });
-                } else {
-                    if let Some(ref mut state) = self.export_state {
-                        egui::ScrollArea::both().show(ui, |ui| {
-                            let mut changed = false;
+                    ui.heading("📄 Export Data");
+                    ui.horizontal(|ui| {
+                        let cache_lock = self.plot_cache.load();
+                        let (live_lines, grid, last_bounds) = match self.selected_tab {
+                            PlotTab::Main | PlotTab::Data => (
+                                &cache_lock.lines_main,
+                                cache_lock.grid_main,
+                                self.main_tab_state.last_bounds,
+                            ),
+                            PlotTab::Deviation => (
+                                &cache_lock.lines_deviation,
+                                cache_lock.grid_deviation,
+                                self.main_tab_state.last_bounds,
+                            ),
+                        };
 
-                            egui::CollapsingHeader::new("⚙ General Settings")
-                                .default_open(true)
-                                .show(ui, |ui| {
-                                    egui::Grid::new("export_gen_grid")
-                                        .num_columns(2)
-                                        .spacing([10.0, 10.0])
-                                        .show(ui, |ui| {
-                                            ui.label("X-Axis:");
-                                            if ui
-                                                .text_edit_singleline(
-                                                    &mut state.settings.axis_labels.0,
-                                                )
-                                                .changed()
-                                            {
-                                                changed = true;
-                                            }
-                                            ui.end_row();
-
-                                            ui.label("Y-Axis:");
-                                            if ui
-                                                .text_edit_singleline(
-                                                    &mut state.settings.axis_labels.1,
-                                                )
-                                                .changed()
-                                            {
-                                                changed = true;
-                                            }
-                                            ui.end_row();
-
-                                            ui.label("Legend Font:");
-                                            if ui
-                                                .add(egui::Slider::new(
-                                                    &mut state.settings.legend_font_size,
-                                                    8..=30,
-                                                ))
-                                                .changed()
-                                            {
-                                                changed = true;
-                                            }
-                                            ui.end_row();
-                                        });
-                                });
-
-                            ui.separator();
-
-                            egui::CollapsingHeader::new("🔍 Region of Interest (ROI)")
-                                .default_open(true)
-                                .show(ui, |ui| {
-                                    egui::Grid::new("export_roi_grid")
-                                        .num_columns(2)
-                                        .spacing([10.0, 8.0])
-                                        .show(ui, |ui| {
-                                            ui.label("X Min:");
-                                            if ui
-                                                .add(egui::DragValue::new(
-                                                    &mut state.settings.x_min,
-                                                ))
-                                                .changed()
-                                            {
-                                                changed = true;
-                                            }
-                                            ui.end_row();
-
-                                            ui.label("X Max:");
-                                            if ui
-                                                .add(egui::DragValue::new(
-                                                    &mut state.settings.x_max,
-                                                ))
-                                                .changed()
-                                            {
-                                                changed = true;
-                                            }
-                                            ui.end_row();
-
-                                            ui.label("Y Min:");
-                                            if ui
-                                                .add(egui::DragValue::new(
-                                                    &mut state.settings.y_min,
-                                                ))
-                                                .changed()
-                                            {
-                                                changed = true;
-                                            }
-                                            ui.end_row();
-
-                                            ui.label("Y Max:");
-                                            if ui
-                                                .add(egui::DragValue::new(
-                                                    &mut state.settings.y_max,
-                                                ))
-                                                .changed()
-                                            {
-                                                changed = true;
-                                            }
-                                            ui.end_row();
-                                        });
-                                });
-
-                            ui.separator();
-
-                            egui::CollapsingHeader::new("📈 Lines & Series")
-                                .default_open(true)
-                                .show(ui, |ui| {
-                                    let cache_lock = self.plot_cache.load();
-                                    let live_lines = if self.selected_tab == PlotTab::Main {
-                                        &cache_lock.lines_main
-                                    } else {
-                                        &cache_lock.lines_deviation
-                                    };
-
-                                    for baked in live_lines {
-                                        let id =
-                                            crate::app::export_plotters::get_baked_line_id(baked);
-                                        state
-                                            .settings
-                                            .line_configs
-                                            .entry(id.clone())
-                                            .or_insert_with(|| {
-                                                crate::app::export_plotters::ExportLineConfig {
-                                                    id: id.clone(),
-                                                    custom_name: id.clone(),
-                                                    color: baked.color,
-                                                    width: baked.width,
-                                                    visible: true,
-                                                    style: 0,
-                                                    marker_type: 0,
-                                                    marker_size: 4,
-                                                }
-                                            });
-
-                                        let l = state.settings.line_configs.get_mut(&id).unwrap();
-                                        ui.horizontal(|ui| {
-                                            if ui.checkbox(&mut l.visible, "").changed() {
-                                                changed = true;
-                                            }
-                                            if ui.color_edit_button_srgba(&mut l.color).changed() {
-                                                changed = true;
-                                            }
-                                            if ui
-                                                .add(egui::Slider::new(&mut l.width, 1.0..=10.0))
-                                                .changed()
-                                            {
-                                                changed = true;
-                                            }
-                                            if ui
-                                                .add(
-                                                    egui::TextEdit::singleline(&mut l.custom_name)
-                                                        .desired_width(120.0),
-                                                )
-                                                .changed()
-                                            {
-                                                changed = true;
-                                            }
-                                        });
-                                        ui.horizontal(|ui| {
-                                            ui.label("Marker:");
-                                            egui::ComboBox::from_id_salt(id.clone())
-                                                .selected_text(marker_name(l.marker_type))
-                                                .show_ui(ui, |ui| {
-                                                    for i in 0..=4 {
-                                                        if ui
-                                                            .selectable_value(
-                                                                &mut l.marker_type,
-                                                                i,
-                                                                marker_name(i),
-                                                            )
-                                                            .changed()
-                                                        {
-                                                            changed = true;
-                                                        }
-                                                    }
-                                                });
-                                            if l.marker_type > 0 {
-                                                ui.label("Size:");
-                                                if ui
-                                                    .add(egui::Slider::new(
-                                                        &mut l.marker_size,
-                                                        1..=15,
-                                                    ))
-                                                    .changed()
-                                                {
-                                                    changed = true;
-                                                }
-                                            }
-                                        });
-                                    }
-                                });
-
-                            ui.separator();
-
-                            egui::CollapsingHeader::new("💾 Output Dimensions")
-                                .default_open(true)
-                                .show(ui, |ui| {
-                                    egui::Grid::new("export_dim_grid")
-                                        .num_columns(2)
-                                        .spacing([10.0, 8.0])
-                                        .show(ui, |ui| {
-                                            ui.label("Width:");
-                                            ui.add(egui::DragValue::new(&mut state.export_size.0));
-                                            ui.end_row();
-
-                                            ui.label("Height:");
-                                            ui.add(egui::DragValue::new(&mut state.export_size.1));
-                                            ui.end_row();
-                                        });
-                                });
-
-                            if changed {
-                                state.settings_dirty = true;
+                        let exportable = grid == Grid::Normal;
+                        if ui
+                            .button(if exportable {
+                                "CSV"
+                            } else {
+                                "CSV (disable symlog)"
+                            })
+                            .clicked()
+                        {
+                            if exportable {
+                                if let Err(e) = crate::app::export::perform_export(live_lines) {
+                                    log::error!("CSV export failed: {}", e);
+                                } else {
+                                    log::info!("CSV exported successfully");
+                                }
+                            } else {
+                                log::error!("Cannot export CSV when Symlog mode is enabled.");
                             }
+                        }
 
-                            ui.horizontal(|ui| {
-                                let cache_lock = self.plot_cache.load();
-                                let (live_lines, grid) = match self.selected_tab {
-                                    PlotTab::Main | PlotTab::Data => (&cache_lock.lines_main, cache_lock.grid_main),
-                                    PlotTab::Deviation => (&cache_lock.lines_deviation, cache_lock.grid_deviation),
-                                };
-                                if ui.button("📸 Render High-Res JPG").clicked() {
-                                    let now = chrono::Local::now().format("%Y%m%d_%H%M%S");
-                                    let p = format!("export_{}.jpg", now);
-                                    let path = std::path::PathBuf::from(p);
+                        if ui.button("JSON").clicked() {
+                            if let Err(e) = crate::app::export::perform_export_json(
+                                live_lines,
+                                grid,
+                                last_bounds,
+                            ) {
+                                log::error!("JSON export failed: {}", e);
+                            } else {
+                                log::info!("JSON exported successfully");
+                            }
+                        }
+                    });
 
-                                    if let Err(e) = crate::app::export_plotters::export_to_jpg(
-                                        &path,
-                                        &state.settings,
-                                        live_lines,
-                                        state.export_size.0,
-                                        state.export_size.1,
-                                        grid
-                                    ) {
-                                        log::error!("Plotters export failed: {}", e);
-                                    } else {
-                                        log::info!("Saved export to {}", path.display());
-                                    }
-                                }
-
-                                let exportable = grid == Grid::Normal;
-                                if ui.button(if exportable { "📄 Export CSV" } else  { "📄 (disable symlog for CSV export)" }).clicked() {
-                                    if exportable {
-                                        if let Err(e) = crate::app::export::perform_export(
-                                            live_lines,
-                                            &state.settings,
-                                        ) {
-                                            log::error!("CSV export failed: {}", e);
-                                        } else {
-                                            log::info!("CSV exported successfully");
-                                        }
-                                    } else {
-                                        log::error!("Cannot export CSV when Symlog mode is enabled. Disable Symlog to export CSV data.");
-                                    }
-                                }
-                            });
-                        });
-                    }
-                }
+                    ui.separator();
+                    ui.label(self.last_err_rx.borrow().as_str());
+                });
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -1396,18 +1145,16 @@ impl eframe::App for ShanksApp {
                             }
                         }
 
-                        if !self.export_mode {
-                            if ui.button("Home").clicked() {
-                                tab_state.reset_view = true;
-                            }
-
-                            ui.separator();
-                            ui.label("Aspect Ratio");
-                            ui.add(
-                                egui::Slider::new(&mut tab_state.aspect_ratio, 0.1..=100.0)
-                                    .logarithmic(true),
-                            );
+                        if ui.button("Home").clicked() {
+                            tab_state.reset_view = true;
                         }
+
+                        ui.separator();
+                        ui.label("Aspect Ratio");
+                        ui.add(
+                            egui::Slider::new(&mut tab_state.aspect_ratio, 0.1..=100.0)
+                                .logarithmic(true),
+                        );
                     }
                     if config_changed {
                         self.trigger_config_update();
@@ -1435,57 +1182,6 @@ impl eframe::App for ShanksApp {
                     }
                 }
             });
-
-            if self.export_mode {
-                if let Some(ref mut state) = self.export_state {
-                    let mut size = ui.available_size();
-                    size.x = size.x.max(100.0);
-                    size.y = size.y.max(100.0);
-                    let w = (size.x as u32).min(3000);
-                    let h = (size.y as u32).min(3000);
-
-                    let cache_lock = self.plot_cache.load();
-                    let mut tex = cache_lock.export_preview_tex.lock().unwrap();
-                    if state.settings_dirty || state.preview_size != (w, h) || tex.is_none() {
-                        let (live_lines, grid) = match self.selected_tab {
-                            PlotTab::Main | PlotTab::Data => {
-                                (&cache_lock.lines_main, cache_lock.grid_main)
-                            }
-                            PlotTab::Deviation => {
-                                (&cache_lock.lines_deviation, cache_lock.grid_deviation)
-                            }
-                        };
-
-                        let buf_res = crate::app::export_plotters::render_to_buffer(
-                            &state.settings,
-                            live_lines,
-                            w,
-                            h,
-                            grid,
-                        );
-                        match buf_res {
-                            Ok(buf) => {
-                                let image =
-                                    egui::ColorImage::from_rgb([w as usize, h as usize], &buf);
-                                *tex = Some(ctx.load_texture(
-                                    "plot_preview",
-                                    image,
-                                    egui::TextureOptions::LINEAR,
-                                ));
-                                state.preview_size = (w, h);
-                                state.settings_dirty = false;
-                            }
-                            Err(e) => {
-                                log::error!("Failed to render preview: {}", e);
-                            }
-                        }
-                    }
-
-                    if let Some(tex) = &*tex {
-                        ui.add(egui::Image::new(&*tex).fit_to_exact_size(size));
-                    }
-                }
-            }
 
             if self.selected_tab == PlotTab::Data {
                 let dlock = self.data_cache.load();
@@ -1559,7 +1255,7 @@ impl eframe::App for ShanksApp {
                     &pts[0..(max_n as usize).min(pts.len())]
                 }
 
-                plot.show(ui, |plot_ui| {
+                let plot_response = plot.show(ui, |plot_ui| {
                     for baked in plot_lines {
                         // Filter by View toggles — no cache rebuild needed
                         match baked.kind {
@@ -1717,21 +1413,11 @@ impl eframe::App for ShanksApp {
                         }
                     }
                 });
+                current_tab_state.last_bounds = *plot_response.transform.bounds();
             });
         });
 
         ctx.request_repaint();
-    }
-}
-
-fn marker_name(idx: usize) -> &'static str {
-    match idx {
-        0 => "None",
-        1 => "Circle",
-        2 => "Square",
-        3 => "Triangle",
-        4 => "Cross",
-        _ => "?",
     }
 }
 
