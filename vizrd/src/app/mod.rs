@@ -77,7 +77,7 @@ impl ResultKey {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum LineKind {
+pub enum LineKind {
     Sn,
     An,
     Limit,
@@ -95,12 +95,12 @@ struct BakedEventGroup {
 #[derive(Clone)]
 pub struct BakedLine {
     pub data: ArrLine,
-    color: egui::Color32,
-    width: f32,
-    style: LineStyle,
-    shading_polygons: Vec<Vec<PlotPoint>>,
-    events: Vec<BakedEventGroup>,
-    kind: LineKind,
+    pub color: egui::Color32,
+    pub width: f32,
+    pub style: LineStyle,
+    pub shading_polygons: Vec<Vec<PlotPoint>>,
+    pub events: Vec<BakedEventGroup>,
+    pub kind: LineKind,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -121,6 +121,26 @@ pub struct PlotCache {
     grid_main: Grid,
     lines_deviation: Vec<BakedLine>,
     grid_deviation: Grid,
+}
+
+impl PlotCache {
+    pub fn iter_visible_lines(
+        &self,
+        tab: PlotTab,
+        show_sn: bool,
+        show_an: bool,
+        show_limit: bool,
+    ) -> impl Iterator<Item = &BakedLine> {
+        let lines = match tab {
+            PlotTab::Main | PlotTab::Data => &self.lines_main,
+            PlotTab::Deviation => &self.lines_deviation,
+        };
+        lines.iter().filter(move |baked| match baked.kind {
+            LineKind::Sn => show_sn,
+            LineKind::An => show_an,
+            LineKind::Limit => show_limit,
+        })
+    }
 }
 
 pub struct ShanksApp {
@@ -1048,14 +1068,12 @@ impl eframe::App for ShanksApp {
                     ui.heading("📄 Export Data");
                     ui.horizontal(|ui| {
                         let cache_lock = self.plot_cache.load();
-                        let (live_lines, grid, last_bounds) = match self.selected_tab {
+                        let (grid, last_bounds) = match self.selected_tab {
                             PlotTab::Main | PlotTab::Data => (
-                                &cache_lock.lines_main,
                                 cache_lock.grid_main,
                                 self.main_tab_state.last_bounds,
                             ),
                             PlotTab::Deviation => (
-                                &cache_lock.lines_deviation,
                                 cache_lock.grid_deviation,
                                 self.main_tab_state.last_bounds,
                             ),
@@ -1071,7 +1089,14 @@ impl eframe::App for ShanksApp {
                             .clicked()
                         {
                             if exportable {
-                                if let Err(e) = crate::app::export::perform_export(live_lines) {
+                                if let Err(e) = crate::app::export::perform_export(
+                                    cache_lock.iter_visible_lines(
+                                        self.selected_tab,
+                                        self.show_sn,
+                                        self.show_an,
+                                        self.show_limit_lines,
+                                    ),
+                                ) {
                                     log::error!("CSV export failed: {}", e);
                                 } else {
                                     log::info!("CSV exported successfully");
@@ -1083,7 +1108,12 @@ impl eframe::App for ShanksApp {
 
                         if ui.button("JSON").clicked() {
                             if let Err(e) = crate::app::export::perform_export_json(
-                                live_lines,
+                                cache_lock.iter_visible_lines(
+                                    self.selected_tab,
+                                    self.show_sn,
+                                    self.show_an,
+                                    self.show_limit_lines,
+                                ),
                                 grid,
                                 last_bounds,
                             ) {
@@ -1190,17 +1220,9 @@ impl eframe::App for ShanksApp {
             }
 
             let cache_lock = self.plot_cache.load();
-            let (plot_lines, current_tab_state, grid) = match self.selected_tab {
-                PlotTab::Main => (
-                    &cache_lock.lines_main,
-                    &mut self.main_tab_state,
-                    cache_lock.grid_main,
-                ),
-                PlotTab::Deviation => (
-                    &cache_lock.lines_deviation,
-                    &mut self.dev_tab_state,
-                    cache_lock.grid_deviation,
-                ),
+            let (current_tab_state, grid) = match self.selected_tab {
+                PlotTab::Main => (&mut self.main_tab_state, cache_lock.grid_main),
+                PlotTab::Deviation => (&mut self.dev_tab_state, cache_lock.grid_deviation),
                 PlotTab::Data => unreachable!(),
             };
 
@@ -1256,14 +1278,12 @@ impl eframe::App for ShanksApp {
                 }
 
                 let plot_response = plot.show(ui, |plot_ui| {
-                    for baked in plot_lines {
-                        // Filter by View toggles — no cache rebuild needed
-                        match baked.kind {
-                            LineKind::Sn if !self.show_sn => continue,
-                            LineKind::An if !self.show_an => continue,
-                            LineKind::Limit if !self.show_limit_lines => continue,
-                            _ => {}
-                        }
+                    for baked in cache_lock.iter_visible_lines(
+                        self.selected_tab,
+                        self.show_sn,
+                        self.show_an,
+                        self.show_limit_lines,
+                    ) {
 
                         if self.show_events {
                             for ev_group in &baked.events {

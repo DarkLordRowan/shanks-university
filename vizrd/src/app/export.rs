@@ -6,7 +6,9 @@ use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 
-pub fn perform_export(lines: &[BakedLine]) -> Result<(), Box<dyn std::error::Error>> {
+pub fn perform_export<'a>(
+    lines: impl Iterator<Item = &'a BakedLine>,
+) -> Result<(), Box<dyn std::error::Error>> {
     let now = chrono::Local::now().format("%Y%m%d_%H%M%S");
     let csv_path = PathBuf::from(format!("series_data_{}.csv", now));
 
@@ -92,8 +94,8 @@ struct ExportLine {
     y: Vec<f64>,
 }
 
-pub fn perform_export_json(
-    lines: &[BakedLine],
+pub fn perform_export_json<'a>(
+    lines: impl Iterator<Item = &'a BakedLine>,
     grid: Grid,
     bounds: PlotBounds,
 ) -> Result<(), Box<dyn std::error::Error>> {
