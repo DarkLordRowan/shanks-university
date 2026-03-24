@@ -1,42 +1,54 @@
-import sys
 import json
+import sys
+
 import matplotlib
 
-matplotlib.use('qtagg')
+matplotlib.use("qtagg")
 
-from PyQt6 import QtWidgets, QtCore, QtGui
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib.figure import Figure
-from matplotlib.ticker import FuncFormatter, MultipleLocator, FixedLocator, AutoLocator, Locator
-
+from matplotlib.ticker import (
+    AutoLocator,
+    FixedLocator,
+    FuncFormatter,
+    Locator,
+    MultipleLocator,
+)
+from PyQt6 import QtCore, QtGui, QtWidgets
 
 # Default axis labels
-DEFAULT_X_LABEL = 'Шаг n'
-DEFAULT_Y_LABEL = 'Значение x\u2099'  # x with subscript n (Unicode U+2099)
+DEFAULT_X_LABEL = "Шаг n"
+DEFAULT_Y_LABEL = "Значение x\u2099"  # x with subscript n (Unicode U+2099)
 
 
 class CombinedLocator(Locator):
     """A locator that combines standard spacing with custom ticks."""
+
     def __init__(self, base_locator, custom_ticks):
         super().__init__()
         self.base_locator = base_locator
         self.custom_ticks = sorted(set(custom_ticks)) if custom_ticks else []
-    
+
     def __call__(self):
         # Get ticks from base locator
         base_ticks = self.base_locator()
-        
+
         # Combine with custom ticks
-        all_ticks = list(base_ticks) + [t for t in self.custom_ticks if t not in base_ticks]
+        all_ticks = list(base_ticks) + [
+            t for t in self.custom_ticks if t not in base_ticks
+        ]
         return sorted(set(all_ticks))
-    
+
     def view_limits(self, vmin, vmax):
         return self.base_locator.view_limits(vmin, vmax)
-    
+
     def set_axis(self, axis):
         super().set_axis(axis)
         self.base_locator.set_axis(axis)
+
+
 import math
+
 
 def format_value(val):
     """Format a value for display, avoiding scientific notation for small exponents."""
@@ -44,27 +56,28 @@ def format_value(val):
         return "0"
     if not math.isfinite(val):
         return str(val)
-    
+
     abs_val = abs(val)
     log10 = math.log10(abs_val)
     exponent = int(math.floor(log10))
-    
+
     # Avoid scientific notation for 10^-8 to 10^12
     if -7 <= exponent <= 7:
         s = f"{val:.18f}"
-        if '.' in s:
-            s = s.rstrip('0').rstrip('.')
-            if s == '' or s == '-':
+        if "." in s:
+            s = s.rstrip("0").rstrip(".")
+            if s == "" or s == "-":
                 return "0"
         return s
     else:
         # Use scientific notation with high precision
         s = f"{val:.15e}"
-        if 'e' in s:
-            mantissa, exp = s.split('e', 1)
-            mantissa = mantissa.rstrip('0').rstrip('.')
+        if "e" in s:
+            mantissa, exp = s.split("e", 1)
+            mantissa = mantissa.rstrip("0").rstrip(".")
             return f"{mantissa}e{exp}"
         return s
+
 
 def format_grid_value(val):
     """Format a value for grid/axis labels with reduced precision."""
@@ -72,66 +85,69 @@ def format_grid_value(val):
         return "0"
     if not math.isfinite(val):
         return str(val)
-    
+
     abs_val = abs(val)
     log10 = math.log10(abs_val)
     exponent = int(math.floor(log10))
-    
+
     if -5 <= exponent <= 5:
         s = f"{val:.5f}"
-        if '.' in s:
-            s = s.rstrip('0').rstrip('.')
-            if s == '' or s == '-':
+        if "." in s:
+            s = s.rstrip("0").rstrip(".")
+            if s == "" or s == "-":
                 return "0"
         return s
     else:
         s = f"{val:.3e}"
-        if 'e' in s:
-            mantissa, exp = s.split('e', 1)
-            mantissa = mantissa.rstrip('0').rstrip('.')
+        if "e" in s:
+            mantissa, exp = s.split("e", 1)
+            mantissa = mantissa.rstrip("0").rstrip(".")
             # Clean up e format
-            if exp.startswith('-0'):
+            if exp.startswith("-0"):
                 exp = f"-{exp[2:]}"
-            elif exp.startswith('0'):
+            elif exp.startswith("0"):
                 exp = exp[1:]
-            elif exp.startswith('+0'):
+            elif exp.startswith("+0"):
                 exp = exp[2:]
-            elif exp.startswith('+'):
+            elif exp.startswith("+"):
                 exp = exp[1:]
             return f"{mantissa}e{exp}"
         return s
 
+
 def symlog_formatter_factory(log_linthresh):
     """Create a formatter that converts symlog-transformed values back to original."""
-    linthresh = 10 ** log_linthresh
-    
+    linthresh = 10**log_linthresh
+
     def formatter(y, pos):
         if y == 0.0:
             return "0"
-        
+
         # Use the EXACT inverse: |x| = L * (10^|y| - 1)
         true_abs_x = linthresh * (10 ** abs(y) - 1.0)
         true_x = true_abs_x * (1.0 if y >= 0 else -1.0)
-        
+
         return format_value(true_x)
-    
+
     return formatter
+
 
 def symlog_grid_formatter_factory(log_linthresh):
     """Create a grid formatter that converts symlog-transformed values back to original."""
-    linthresh = 10 ** log_linthresh
-    
+    linthresh = 10**log_linthresh
+
     def formatter(y, pos):
         if y == 0.0:
             return "0"
-        
+
         # Use the EXACT inverse: |x| = L * (10^|y| - 1)
         true_abs_x = linthresh * (10 ** abs(y) - 1.0)
         true_x = true_abs_x * (1.0 if y >= 0 else -1.0)
-        
+
         return format_grid_value(true_x)
-    
+
     return formatter
+
 
 class PlotWindow(QtWidgets.QMainWindow):
     def __init__(self, data):
@@ -149,7 +165,7 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.scroll_area = QtWidgets.QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setFixedWidth(400)
-        
+
         self.panel_widget = QtWidgets.QWidget()
         self.scroll_area.setWidget(self.panel_widget)
         self.panel_layout = QtWidgets.QVBoxLayout(self.panel_widget)
@@ -157,11 +173,11 @@ class PlotWindow(QtWidgets.QMainWindow):
         # Right Panel (Plot)
         self.plot_container = QtWidgets.QWidget()
         self.plot_layout = QtWidgets.QVBoxLayout(self.plot_container)
-        
+
         self.figure = Figure(constrained_layout=True)
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
-        
+
         self.plot_layout.addWidget(self.toolbar)
         self.plot_layout.addWidget(self.canvas)
 
@@ -178,55 +194,55 @@ class PlotWindow(QtWidgets.QMainWindow):
 
     def init_data(self):
         # Read grid configuration
-        grid_config = self.data.get('grid', {'type': 'Normal'})
-        self.grid_type = grid_config.get('type', 'Normal')
+        grid_config = self.data.get("grid", {"type": "Normal"})
+        self.grid_type = grid_config.get("type", "Normal")
         # log_linthresh is log10 of the actual threshold, so convert it
-        self.log_linthresh = grid_config.get('log_linthresh', -10.0)
-        self.linthresh = 10 ** self.log_linthresh
+        self.log_linthresh = grid_config.get("log_linthresh", -10.0)
+        self.linthresh = 10**self.log_linthresh
 
         # Read bounds
-        bounds = self.data.get('bounds', {})
+        bounds = self.data.get("bounds", {})
         self.bounds = {
-            'x_min': bounds.get('x_min', 0.0),
-            'x_max': bounds.get('x_max', 100.0),
-            'y_min': bounds.get('y_min', -1.0),
-            'y_max': bounds.get('y_max', 1.0)
+            "x_min": bounds.get("x_min", 0.0),
+            "x_max": bounds.get("x_max", 100.0),
+            "y_min": bounds.get("y_min", -1.0),
+            "y_max": bounds.get("y_max", 1.0),
         }
 
-        for line_data in self.data.get('lines', []):
+        for line_data in self.data.get("lines", []):
             # y values are already transformed screen-space values
-            y_vals = line_data['y']
-            x_vals = line_data['x']
-            
-            color = [c/255.0 for c in line_data['color']]
-            
+            y_vals = line_data["y"]
+            x_vals = line_data["x"]
+
+            color = [c / 255.0 for c in line_data["color"]]
+
             cfg = {
-                'original_name': line_data['name'],
-                'name': line_data['name'],
-                'color': color,
-                'width': line_data['width'],
-                'style': line_data['style'],
-                'marker': 'None',
-                'marker_size': 6,
-                'visible': True,
-                'x': x_vals,
-                'y': y_vals
+                "original_name": line_data["name"],
+                "name": line_data["name"],
+                "color": color,
+                "width": line_data["width"],
+                "style": line_data["style"],
+                "marker": "None",
+                "marker_size": 6,
+                "visible": True,
+                "x": x_vals,
+                "y": y_vals,
             }
             self.line_configs.append(cfg)
 
         self.global_cfg = {
-            'legend_visible': True,
-            'legend_loc': 'outside right',
+            "legend_visible": True,
+            "legend_loc": "outside right",
         }
 
         # Grid configuration with defaults
         self.grid_settings = {
-            'x_step': 0,  # 0 = auto
-            'y_step': 0,  # 0 = auto
-            'x_ticks': [],
-            'y_ticks': [],
-            'x_label': DEFAULT_X_LABEL,
-            'y_label': DEFAULT_Y_LABEL
+            "x_step": 0,  # 0 = auto
+            "y_step": 0,  # 0 = auto
+            "x_ticks": [],
+            "y_ticks": [],
+            "x_label": DEFAULT_X_LABEL,
+            "y_label": DEFAULT_Y_LABEL,
         }
 
     def build_ui(self):
@@ -235,12 +251,29 @@ class PlotWindow(QtWidgets.QMainWindow):
         global_layout = QtWidgets.QFormLayout(global_group)
 
         self.cb_legend = QtWidgets.QCheckBox("Show Legend")
-        self.cb_legend.setChecked(self.global_cfg['legend_visible'])
+        self.cb_legend.setChecked(self.global_cfg["legend_visible"])
         self.cb_legend.stateChanged.connect(self.on_global_changed)
 
         self.combo_legend_loc = QtWidgets.QComboBox()
-        self.combo_legend_loc.addItems(['best', 'upper right', 'upper left', 'lower left', 'lower right', 'right', 'center left', 'center right', 'lower center', 'upper center', 'center', 'outside right', 'outside left', 'outside bottom'])
-        self.combo_legend_loc.setCurrentText(self.global_cfg['legend_loc'])
+        self.combo_legend_loc.addItems(
+            [
+                "best",
+                "upper right",
+                "upper left",
+                "lower left",
+                "lower right",
+                "right",
+                "center left",
+                "center right",
+                "lower center",
+                "upper center",
+                "center",
+                "outside right",
+                "outside left",
+                "outside bottom",
+            ]
+        )
+        self.combo_legend_loc.setCurrentText(self.global_cfg["legend_loc"])
         self.combo_legend_loc.currentTextChanged.connect(self.on_global_changed)
 
         global_layout.addRow(self.cb_legend)
@@ -248,8 +281,10 @@ class PlotWindow(QtWidgets.QMainWindow):
 
         # Show grid info
         grid_info = QtWidgets.QLabel(f"Grid: {self.grid_type}")
-        if self.grid_type == 'Symlog':
-            grid_info.setText(f"Grid: {self.grid_type} (log_linthresh={self.log_linthresh})")
+        if self.grid_type == "Symlog":
+            grid_info.setText(
+                f"Grid: {self.grid_type} (log_linthresh={self.log_linthresh})"
+            )
         global_layout.addRow(grid_info)
 
         self.panel_layout.addWidget(global_group)
@@ -262,7 +297,7 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.spin_x_min = QtWidgets.QDoubleSpinBox()
         self.spin_x_min.setRange(-1e308, 1e308)
         self.spin_x_min.setDecimals(10)
-        self.spin_x_min.setValue(self.bounds['x_min'])
+        self.spin_x_min.setValue(self.bounds["x_min"])
         self.spin_x_min.valueChanged.connect(self.on_roi_changed)
         roi_layout.addRow("X Min:", self.spin_x_min)
 
@@ -270,7 +305,7 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.spin_x_max = QtWidgets.QDoubleSpinBox()
         self.spin_x_max.setRange(-1e308, 1e308)
         self.spin_x_max.setDecimals(10)
-        self.spin_x_max.setValue(self.bounds['x_max'])
+        self.spin_x_max.setValue(self.bounds["x_max"])
         self.spin_x_max.valueChanged.connect(self.on_roi_changed)
         roi_layout.addRow("X Max:", self.spin_x_max)
 
@@ -278,7 +313,7 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.spin_y_min = QtWidgets.QDoubleSpinBox()
         self.spin_y_min.setRange(-1e308, 1e308)
         self.spin_y_min.setDecimals(10)
-        self.spin_y_min.setValue(self.bounds['y_min'])
+        self.spin_y_min.setValue(self.bounds["y_min"])
         self.spin_y_min.valueChanged.connect(self.on_roi_changed)
         roi_layout.addRow("Y Min:", self.spin_y_min)
 
@@ -286,7 +321,7 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.spin_y_max = QtWidgets.QDoubleSpinBox()
         self.spin_y_max.setRange(-1e308, 1e308)
         self.spin_y_max.setDecimals(10)
-        self.spin_y_max.setValue(self.bounds['y_max'])
+        self.spin_y_max.setValue(self.bounds["y_max"])
         self.spin_y_max.valueChanged.connect(self.on_roi_changed)
         roi_layout.addRow("Y Max:", self.spin_y_max)
 
@@ -328,13 +363,13 @@ class PlotWindow(QtWidgets.QMainWindow):
 
         # X Axis Label
         self.edit_x_label = QtWidgets.QLineEdit()
-        self.edit_x_label.setText(self.grid_settings.get('x_label', DEFAULT_X_LABEL))
+        self.edit_x_label.setText(self.grid_settings.get("x_label", DEFAULT_X_LABEL))
         self.edit_x_label.textChanged.connect(self.on_grid_changed)
         grid_layout.addRow("X Axis Label:", self.edit_x_label)
 
         # Y Axis Label
         self.edit_y_label = QtWidgets.QLineEdit()
-        self.edit_y_label.setText(self.grid_settings.get('y_label', DEFAULT_Y_LABEL))
+        self.edit_y_label.setText(self.grid_settings.get("y_label", DEFAULT_Y_LABEL))
         self.edit_y_label.textChanged.connect(self.on_grid_changed)
         grid_layout.addRow("Y Axis Label:", self.edit_y_label)
 
@@ -348,83 +383,164 @@ class PlotWindow(QtWidgets.QMainWindow):
         # Lines Settings
         lines_group = QtWidgets.QGroupBox("Line Configurations")
         lines_layout = QtWidgets.QVBoxLayout(lines_group)
+        lines_layout.setSpacing(4)
 
         for idx, cfg in enumerate(self.line_configs):
-            line_box = QtWidgets.QGroupBox(f"{cfg['original_name']}")
-            form = QtWidgets.QFormLayout(line_box)
+            # Main container for each line
+            line_container = QtWidgets.QFrame()
+            line_container.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+            line_container.setStyleSheet(
+                "QFrame { border: 1px solid #666; border-radius: 3px; }"
+            )
+            line_main_layout = QtWidgets.QVBoxLayout(line_container)
+            line_main_layout.setContentsMargins(4, 4, 4, 4)
+            line_main_layout.setSpacing(2)
 
-            # Vis
-            cb_vis = QtWidgets.QCheckBox("Visible")
-            cb_vis.setChecked(cfg['visible'])
-            cb_vis.stateChanged.connect(lambda state, i=idx, cb=cb_vis: self.update_line_cfg(i, 'visible', cb.isChecked()))
+            # Compact header row: [>] [x] [color] [name]
+            header_layout = QtWidgets.QHBoxLayout()
+            header_layout.setSpacing(4)
 
-            # Name
-            edit_name = QtWidgets.QLineEdit(cfg['name'])
-            edit_name.textChanged.connect(lambda text, i=idx: self.update_line_cfg(i, 'name', text))
+            # Expand/collapse button
+            btn_expand = QtWidgets.QPushButton(">")
+            btn_expand.setFixedSize(24, 24)
+            btn_expand.setCheckable(True)
+            btn_expand.setChecked(False)
+            btn_expand.setToolTip("Show/Hide details")
+            btn_expand.setStyleSheet(
+                "QPushButton { font-weight: bold; font-size: 10px; }"
+            )
 
-            # Color
-            btn_color = QtWidgets.QPushButton("Choose")
-            r,g,b,a = cfg['color']
-            btn_color.setStyleSheet(f"background-color: rgba({int(r*255)},{int(g*255)},{int(b*255)}, {a});")
-            btn_color.clicked.connect(lambda _, i=idx, btn=btn_color: self.pick_color(i, btn))
+            # Visibility checkbox (compact)
+            cb_vis = QtWidgets.QCheckBox()
+            cb_vis.setChecked(cfg["visible"])
+            cb_vis.setToolTip("Visible")
+            cb_vis.setFixedSize(20, 20)
+            cb_vis.stateChanged.connect(
+                lambda state, i=idx, cb=cb_vis: self.update_line_cfg(
+                    i, "visible", cb.isChecked()
+                )
+            )
+
+            # Color selector (compact square button)
+            btn_color = QtWidgets.QPushButton()
+            btn_color.setFixedSize(24, 24)
+            btn_color.setToolTip("Click to change color")
+            btn_color.setFlat(True)
+            r, g, b, a = cfg["color"]
+            btn_color.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: rgb({int(r * 255)},{int(g * 255)},{int(b * 255)});
+                    border: 2px solid #666;
+                    border-radius: 3px;
+                }}
+                QPushButton:hover {{
+                    border: 2px solid #000;
+                }}
+                QPushButton:pressed {{
+                    background-color: rgb({int(r * 255)},{int(g * 255)},{int(b * 255)});
+                }}
+            """)
+            btn_color.clicked.connect(
+                lambda _, i=idx, btn=btn_color: self.pick_color(i, btn)
+            )
+
+            # Name field (no label)
+            edit_name = QtWidgets.QLineEdit(cfg["name"])
+            edit_name.setPlaceholderText("Line name")
+            edit_name.textChanged.connect(
+                lambda text, i=idx: self.update_line_cfg(i, "name", text)
+            )
+
+            header_layout.addWidget(btn_expand)
+            header_layout.addWidget(cb_vis)
+            header_layout.addWidget(btn_color)
+            header_layout.addWidget(edit_name, stretch=1)
+
+            line_main_layout.addLayout(header_layout)
+
+            # Collapsible details container
+            details_widget = QtWidgets.QWidget()
+            details_widget.setVisible(False)  # Hidden by default
+            details_layout = QtWidgets.QFormLayout(details_widget)
+            details_layout.setContentsMargins(0, 0, 0, 0)
+            details_layout.setSpacing(4)
 
             # Width
             spin_width = QtWidgets.QDoubleSpinBox()
             spin_width.setRange(0.0, 20.0)
             spin_width.setSingleStep(0.5)
-            spin_width.setValue(cfg['width'])
-            spin_width.valueChanged.connect(lambda val, i=idx: self.update_line_cfg(i, 'width', val))
+            spin_width.setValue(cfg["width"])
+            spin_width.valueChanged.connect(
+                lambda val, i=idx: self.update_line_cfg(i, "width", val)
+            )
+            details_layout.addRow("Width:", spin_width)
 
             # Style
             combo_style = QtWidgets.QComboBox()
-            combo_style.addItems(['Solid', 'Dashed', 'Dotted', 'Dash-Dot', 'None'])
-            combo_style.setCurrentText(cfg['style'])
-            combo_style.currentTextChanged.connect(lambda text, i=idx: self.update_line_cfg(i, 'style', text))
+            combo_style.addItems(["Solid", "Dashed", "Dotted", "Dash-Dot", "None"])
+            combo_style.setCurrentText(cfg["style"])
+            combo_style.currentTextChanged.connect(
+                lambda text, i=idx: self.update_line_cfg(i, "style", text)
+            )
+            details_layout.addRow("Style:", combo_style)
 
-            # Marker
+            # Marker row with size
+            marker_row = QtWidgets.QHBoxLayout()
             combo_marker = QtWidgets.QComboBox()
-            combo_marker.addItems(['None', 'Circle', 'Square', 'Triangle', 'Cross', 'Star', 'Plus'])
-            combo_marker.currentTextChanged.connect(lambda text, i=idx: self.update_line_cfg(i, 'marker', text))
+            combo_marker.addItems(
+                ["None", "Circle", "Square", "Triangle", "Cross", "Star", "Plus"]
+            )
+            combo_marker.currentTextChanged.connect(
+                lambda text, i=idx: self.update_line_cfg(i, "marker", text)
+            )
 
-            # Marker Size
             spin_marker_size = QtWidgets.QSpinBox()
             spin_marker_size.setRange(1, 50)
-            spin_marker_size.setValue(cfg.get('marker_size', 6))
-            spin_marker_size.valueChanged.connect(lambda val, i=idx: self.update_line_cfg(i, 'marker_size', val))
+            spin_marker_size.setValue(cfg.get("marker_size", 6))
+            spin_marker_size.setFixedWidth(50)
+            spin_marker_size.valueChanged.connect(
+                lambda val, i=idx: self.update_line_cfg(i, "marker_size", val)
+            )
 
-            form.addRow(cb_vis)
-            form.addRow("Name:", edit_name)
-            form.addRow("Color:", btn_color)
-            form.addRow("Width:", spin_width)
-            form.addRow("Style:", combo_style)
-            form.addRow("Marker:", combo_marker)
-            form.addRow("Marker Size:", spin_marker_size)
+            marker_row.addWidget(combo_marker, stretch=1)
+            marker_row.addWidget(spin_marker_size)
+            details_layout.addRow("Marker:", marker_row)
 
-            lines_layout.addWidget(line_box)
+            line_main_layout.addWidget(details_widget)
+
+            # Toggle visibility of details
+            btn_expand.toggled.connect(
+                lambda checked, dw=details_widget, btn=btn_expand: (
+                    dw.setVisible(checked),
+                    btn.setText("▼" if checked else ">"),
+                )
+            )
+
+            lines_layout.addWidget(line_container)
 
         self.panel_layout.addWidget(lines_group)
         self.panel_layout.addStretch()
 
     def on_global_changed(self, *_):
-        self.global_cfg['legend_visible'] = self.cb_legend.isChecked()
-        self.global_cfg['legend_loc'] = self.combo_legend_loc.currentText()
+        self.global_cfg["legend_visible"] = self.cb_legend.isChecked()
+        self.global_cfg["legend_loc"] = self.combo_legend_loc.currentText()
         self.update_plot()
 
     def on_roi_changed(self, *_):
-        self.bounds['x_min'] = self.spin_x_min.value()
-        self.bounds['x_max'] = self.spin_x_max.value()
-        self.bounds['y_min'] = self.spin_y_min.value()
-        self.bounds['y_max'] = self.spin_y_max.value()
+        self.bounds["x_min"] = self.spin_x_min.value()
+        self.bounds["x_max"] = self.spin_x_max.value()
+        self.bounds["y_min"] = self.spin_y_min.value()
+        self.bounds["y_max"] = self.spin_y_max.value()
         self.update_plot()
 
     def on_grid_changed(self, *_):
         self.grid_settings = {
-            'x_step': self.spin_x_step.value(),
-            'y_step': self.spin_y_step.value(),
-            'x_ticks': self.parse_ticks(self.edit_x_ticks.text()),
-            'y_ticks': self.parse_ticks(self.edit_y_ticks.text()),
-            'x_label': self.edit_x_label.text() or DEFAULT_X_LABEL,
-            'y_label': self.edit_y_label.text() or DEFAULT_Y_LABEL
+            "x_step": self.spin_x_step.value(),
+            "y_step": self.spin_y_step.value(),
+            "x_ticks": self.parse_ticks(self.edit_x_ticks.text()),
+            "y_ticks": self.parse_ticks(self.edit_y_ticks.text()),
+            "x_label": self.edit_x_label.text() or DEFAULT_X_LABEL,
+            "y_label": self.edit_y_label.text() or DEFAULT_Y_LABEL,
         }
         self.update_plot()
 
@@ -436,12 +552,12 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.edit_x_label.setText(DEFAULT_X_LABEL)
         self.edit_y_label.setText(DEFAULT_Y_LABEL)
         self.grid_settings = {
-            'x_step': 0,
-            'y_step': 0,
-            'x_ticks': [],
-            'y_ticks': [],
-            'x_label': 'Шаг n',
-            'y_label': 'Значение x\u2099'
+            "x_step": 0,
+            "y_step": 0,
+            "x_ticks": [],
+            "y_ticks": [],
+            "x_label": "Шаг n",
+            "y_label": "Значение x\u2099",
         }
         self.update_plot()
 
@@ -450,133 +566,179 @@ class PlotWindow(QtWidgets.QMainWindow):
         if not text.strip():
             return []
         try:
-            return [float(x.strip()) for x in text.split(',') if x.strip()]
+            return [float(x.strip()) for x in text.split(",") if x.strip()]
         except ValueError:
             return []
 
     def update_line_cfg(self, idx, key, val):
         self.line_configs[idx][key] = val
-        if key in ['style', 'marker', 'marker_size', 'width', 'name', 'visible', 'color']:
+        if key in [
+            "style",
+            "marker",
+            "marker_size",
+            "width",
+            "name",
+            "visible",
+            "color",
+        ]:
             self.update_plot()
 
     def pick_color(self, idx, btn):
-        curr = self.line_configs[idx]['color']
-        initial = QtGui.QColor(int(curr[0]*255), int(curr[1]*255), int(curr[2]*255), int(curr[3]*255))
-        color = QtWidgets.QColorDialog.getColor(initial, self, "Pick Color", QtWidgets.QColorDialog.ColorDialogOption.ShowAlphaChannel)
+        curr = self.line_configs[idx]["color"]
+        initial = QtGui.QColor(
+            int(curr[0] * 255),
+            int(curr[1] * 255),
+            int(curr[2] * 255),
+            int(curr[3] * 255),
+        )
+        color = QtWidgets.QColorDialog.getColor(
+            initial,
+            self,
+            "Pick Color",
+            QtWidgets.QColorDialog.ColorDialogOption.ShowAlphaChannel,
+        )
         if color.isValid():
             r, g, b, a = color.getRgbF()
-            self.line_configs[idx]['color'] = [r, g, b, a]
-            rgba_css = f"rgba({int(r*255)}, {int(g*255)}, {int(b*255)}, {a})"
-            btn.setStyleSheet(f"background-color: {rgba_css};")
+            self.line_configs[idx]["color"] = [r, g, b, a]
+            btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: rgb({int(r * 255)},{int(g * 255)},{int(b * 255)});
+                    border: 2px solid #666;
+                    border-radius: 3px;
+                }}
+                QPushButton:hover {{
+                    border: 2px solid #000;
+                }}
+                QPushButton:pressed {{
+                    background-color: rgb({int(r * 255)},{int(g * 255)},{int(b * 255)});
+                }}
+            """)
             self.update_plot()
 
     def update_plot(self):
         self.ax.clear()
 
         style_map = {
-            'Solid': '-',
-            'Dashed': '--',
-            'Dotted': ':',
-            'Dash-Dot': '-.',
-            'None': ''
+            "Solid": "-",
+            "Dashed": "--",
+            "Dotted": ":",
+            "Dash-Dot": "-.",
+            "None": "",
         }
-        
+
         marker_map = {
-            'None': '',
-            'Circle': 'o',
-            'Square': 's',
-            'Triangle': '^',
-            'Cross': 'x',
-            'Star': '*',
-            'Plus': '+'
+            "None": "",
+            "Circle": "o",
+            "Square": "s",
+            "Triangle": "^",
+            "Cross": "x",
+            "Star": "*",
+            "Plus": "+",
         }
 
         has_data = False
         for cfg in self.line_configs:
-            if not cfg['visible']:
+            if not cfg["visible"]:
                 continue
             has_data = True
-            ls = style_map.get(cfg['style'], '-')
-            mk = marker_map.get(cfg['marker'], '')
-            marker_size = cfg.get('marker_size', 6)
+            ls = style_map.get(cfg["style"], "-")
+            mk = marker_map.get(cfg["marker"], "")
+            marker_size = cfg.get("marker_size", 6)
             self.ax.plot(
-                cfg['x'], cfg['y'],
-                label=cfg['name'],
-                color=cfg['color'],
-                linewidth=cfg['width'],
+                cfg["x"],
+                cfg["y"],
+                label=cfg["name"],
+                color=cfg["color"],
+                linewidth=cfg["width"],
                 linestyle=ls,
                 marker=mk,
-                markersize=marker_size
+                markersize=marker_size,
             )
 
-        self.ax.set_xlabel(self.grid_settings.get('x_label', DEFAULT_X_LABEL))
-        self.ax.set_ylabel(self.grid_settings.get('y_label', DEFAULT_Y_LABEL))
+        self.ax.set_xlabel(self.grid_settings.get("x_label", DEFAULT_X_LABEL))
+        self.ax.set_ylabel(self.grid_settings.get("y_label", DEFAULT_Y_LABEL))
 
         # Data is already symlog-transformed, so always use linear scale
-        self.ax.set_yscale('linear')
-        
+        self.ax.set_yscale("linear")
+
         # Set custom formatter to display original values
-        if self.grid_type == 'Symlog':
-            self.ax.yaxis.set_major_formatter(FuncFormatter(symlog_grid_formatter_factory(self.log_linthresh)))
+        if self.grid_type == "Symlog":
+            self.ax.yaxis.set_major_formatter(
+                FuncFormatter(symlog_grid_formatter_factory(self.log_linthresh))
+            )
         else:
-            self.ax.yaxis.set_major_formatter(FuncFormatter(lambda y, pos: format_grid_value(y)))
+            self.ax.yaxis.set_major_formatter(
+                FuncFormatter(lambda y, pos: format_grid_value(y))
+            )
 
         # Set initial bounds from exported data
-        self.ax.set_xlim(self.bounds['x_min'], self.bounds['x_max'])
-        self.ax.set_ylim(self.bounds['y_min'], self.bounds['y_max'])
-        
+        self.ax.set_xlim(self.bounds["x_min"], self.bounds["x_max"])
+        self.ax.set_ylim(self.bounds["y_min"], self.bounds["y_max"])
+
         # Configure grid and tick locators (MUST be after set_yscale!)
-        self.ax.grid(True, which='both', linestyle='--', alpha=0.5)
-        
+        self.ax.grid(True, which="both", linestyle="--", alpha=0.5)
+
         # X-axis tick configuration - combine standard spacing with custom ticks
-        if self.grid_settings['x_step'] > 0:
-            x_base = MultipleLocator(self.grid_settings['x_step'])
+        if self.grid_settings["x_step"] > 0:
+            x_base = MultipleLocator(self.grid_settings["x_step"])
         else:
             x_base = AutoLocator()
-        
-        if self.grid_settings['x_ticks']:
-            x_locator = CombinedLocator(x_base, self.grid_settings['x_ticks'])
+
+        if self.grid_settings["x_ticks"]:
+            x_locator = CombinedLocator(x_base, self.grid_settings["x_ticks"])
         else:
             x_locator = x_base
         self.ax.xaxis.set_major_locator(x_locator)
-        
+
         # Y-axis tick configuration - combine standard spacing with custom ticks
-        if self.grid_settings['y_step'] > 0:
-            y_base = MultipleLocator(self.grid_settings['y_step'])
+        if self.grid_settings["y_step"] > 0:
+            y_base = MultipleLocator(self.grid_settings["y_step"])
         else:
             y_base = AutoLocator()
-        
-        if self.grid_settings['y_ticks']:
-            y_locator = CombinedLocator(y_base, self.grid_settings['y_ticks'])
+
+        if self.grid_settings["y_ticks"]:
+            y_locator = CombinedLocator(y_base, self.grid_settings["y_ticks"])
         else:
             y_locator = y_base
         self.ax.yaxis.set_major_locator(y_locator)
 
-        if has_data and self.global_cfg['legend_visible']:
-            loc = self.global_cfg['legend_loc']
-            
-            if loc == 'outside right':
-                self.ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1), borderaxespad=0)
-            elif loc == 'outside left':
-                self.ax.legend(loc='upper right', bbox_to_anchor=(-0.02, 1), borderaxespad=0)
-            elif loc == 'outside bottom':
-                self.ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), borderaxespad=0, ncol=2)
+        if has_data and self.global_cfg["legend_visible"]:
+            loc = self.global_cfg["legend_loc"]
+
+            if loc == "outside right":
+                self.ax.legend(
+                    loc="upper left", bbox_to_anchor=(1.02, 1), borderaxespad=0
+                )
+            elif loc == "outside left":
+                self.ax.legend(
+                    loc="upper right", bbox_to_anchor=(-0.02, 1), borderaxespad=0
+                )
+            elif loc == "outside bottom":
+                self.ax.legend(
+                    loc="upper center",
+                    bbox_to_anchor=(0.5, -0.1),
+                    borderaxespad=0,
+                    ncol=2,
+                )
             else:
                 self.ax.legend(loc=loc)
 
         self.canvas.draw()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    
+
     if len(sys.argv) > 1:
         path = sys.argv[1]
     else:
-        path, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select series_data.json", "", "JSON Files (*.json)")
-        
+        path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            None, "Select series_data.json", "", "JSON Files (*.json)"
+        )
+
     if path:
         try:
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 data = json.load(f)
             window = PlotWindow(data)
             window.show()
