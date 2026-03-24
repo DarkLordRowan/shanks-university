@@ -355,8 +355,8 @@ class PlotWindow(QtWidgets.QMainWindow):
 
             # Vis
             cb_vis = QtWidgets.QCheckBox("Visible")
-            cb_vis.setChecked(True)
-            cb_vis.stateChanged.connect(lambda state, i=idx: self.update_line_cfg(i, 'visible', state == QtCore.Qt.CheckState.Checked))
+            cb_vis.setChecked(cfg['visible'])
+            cb_vis.stateChanged.connect(lambda state, i=idx, cb=cb_vis: self.update_line_cfg(i, 'visible', cb.isChecked()))
 
             # Name
             edit_name = QtWidgets.QLineEdit(cfg['name'])
