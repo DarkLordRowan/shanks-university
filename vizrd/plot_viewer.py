@@ -323,10 +323,10 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.global_cfg = {
             "legend_visible": True,
             "legend_loc": "outside right",
-            "legend_fontsize": 4,
+            "font_size": 10,
             "legend_frame": True,
             "legend_title": "",
-            "legend_title_fontsize": 10,
+            "legend_title_fontsize": 12,
             "fig_width": 10.0,
             "fig_height": 6.0,
         }
@@ -375,12 +375,12 @@ class PlotWindow(QtWidgets.QMainWindow):
         global_layout.addRow(self.cb_legend)
         global_layout.addRow("Legend Loc:", self.combo_legend_loc)
 
-        # Legend font size
-        self.spin_legend_fontsize = QtWidgets.QSpinBox()
-        self.spin_legend_fontsize.setRange(1, 72)
-        self.spin_legend_fontsize.setValue(self.global_cfg["legend_fontsize"])
-        self.spin_legend_fontsize.valueChanged.connect(self.on_global_changed)
-        global_layout.addRow("Legend Font Size:", self.spin_legend_fontsize)
+        # Font size (for axis labels, ticks, legend)
+        self.spin_font_size = QtWidgets.QSpinBox()
+        self.spin_font_size.setRange(4, 72)
+        self.spin_font_size.setValue(self.global_cfg["font_size"])
+        self.spin_font_size.valueChanged.connect(self.on_global_changed)
+        global_layout.addRow("Font Size:", self.spin_font_size)
 
         # Legend frame
         self.cb_legend_frame = QtWidgets.QCheckBox("Show Frame")
@@ -705,7 +705,7 @@ class PlotWindow(QtWidgets.QMainWindow):
     def on_global_changed(self, *_):
         self.global_cfg["legend_visible"] = self.cb_legend.isChecked()
         self.global_cfg["legend_loc"] = self.combo_legend_loc.currentText()
-        self.global_cfg["legend_fontsize"] = self.spin_legend_fontsize.value()
+        self.global_cfg["font_size"] = self.spin_font_size.value()
         self.global_cfg["legend_frame"] = self.cb_legend_frame.isChecked()
         self.global_cfg["legend_title"] = self.edit_legend_title.text()
         self.global_cfg["legend_title_fontsize"] = (
@@ -998,8 +998,13 @@ class PlotWindow(QtWidgets.QMainWindow):
                 markersize=marker_size,
             )
 
-        self.ax.set_xlabel(self.grid_settings.get("x_label", DEFAULT_X_LABEL))
-        self.ax.set_ylabel(self.grid_settings.get("y_label", DEFAULT_Y_LABEL))
+        font_size = self.global_cfg["font_size"]
+        self.ax.set_xlabel(
+            self.grid_settings.get("x_label", DEFAULT_X_LABEL), fontsize=font_size
+        )
+        self.ax.set_ylabel(
+            self.grid_settings.get("y_label", DEFAULT_Y_LABEL), fontsize=font_size
+        )
 
         # Data is already symlog-transformed, so always use linear scale
         self.ax.set_yscale("linear")
@@ -1034,6 +1039,7 @@ class PlotWindow(QtWidgets.QMainWindow):
         else:
             x_locator = x_base
         self.ax.xaxis.set_major_locator(x_locator)
+        self.ax.tick_params(axis="both", labelsize=font_size)
 
         # Y-axis tick configuration - combine standard spacing with custom ticks
         if self.grid_settings["y_step"] > 0:
@@ -1050,7 +1056,7 @@ class PlotWindow(QtWidgets.QMainWindow):
         if has_data and self.global_cfg["legend_visible"]:
             loc = self.global_cfg["legend_loc"]
             legend_kwargs = {
-                "fontsize": self.global_cfg["legend_fontsize"],
+                "fontsize": font_size,
                 "frameon": self.global_cfg["legend_frame"],
             }
             title = self.global_cfg["legend_title"]
