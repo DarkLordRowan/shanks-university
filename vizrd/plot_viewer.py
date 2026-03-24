@@ -185,11 +185,12 @@ class PlotWindow(QtWidgets.QMainWindow):
         main_layout.addWidget(self.plot_container, stretch=1)
 
         self.ax = self.figure.add_subplot(111)
+        self._updating_from_plot = False
 
         self.line_configs = []
         self.init_data()
         self.build_ui()
-        # Defer initial plot to let Qt layout settle first
+        self.canvas.mpl_connect("draw_event", self.on_canvas_draw)
         QtCore.QTimer.singleShot(0, self.update_plot)
 
     def init_data(self):
@@ -208,6 +209,7 @@ class PlotWindow(QtWidgets.QMainWindow):
             "y_min": bounds.get("y_min", -1.0),
             "y_max": bounds.get("y_max", 1.0),
         }
+        self.default_bounds = dict(self.bounds)
 
         for line_data in self.data.get("lines", []):
             # y values are already transformed screen-space values
@@ -324,6 +326,10 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.spin_y_max.setValue(self.bounds["y_max"])
         self.spin_y_max.valueChanged.connect(self.on_roi_changed)
         roi_layout.addRow("Y Max:", self.spin_y_max)
+
+        self.btn_reset_roi = QtWidgets.QPushButton("Reset ROI to Default")
+        self.btn_reset_roi.clicked.connect(self.on_reset_roi)
+        roi_layout.addRow(self.btn_reset_roi)
 
         self.panel_layout.addWidget(roi_group)
 
@@ -533,6 +539,53 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.bounds["y_max"] = self.spin_y_max.value()
         self.update_plot()
 
+    def on_reset_roi(self):
+        self.bounds = dict(self.default_bounds)
+        self.spin_x_min.blockSignals(True)
+        self.spin_x_max.blockSignals(True)
+        self.spin_y_min.blockSignals(True)
+        self.spin_y_max.blockSignals(True)
+        self.spin_x_min.setValue(self.bounds["x_min"])
+        self.spin_x_max.setValue(self.bounds["x_max"])
+        self.spin_y_min.setValue(self.bounds["y_min"])
+        self.spin_y_max.setValue(self.bounds["y_max"])
+        self.spin_x_min.blockSignals(False)
+        self.spin_x_max.blockSignals(False)
+        self.spin_y_min.blockSignals(False)
+        self.spin_y_max.blockSignals(False)
+        self.update_plot()
+
+    def on_canvas_draw(self, event):
+        if self._updating_from_plot:
+            return
+        xlim = self.ax.get_xlim()
+        ylim = self.ax.get_ylim()
+        if (
+            abs(self.bounds["x_min"] - xlim[0]) < 1e-12
+            and abs(self.bounds["x_max"] - xlim[1]) < 1e-12
+            and abs(self.bounds["y_min"] - ylim[0]) < 1e-12
+            and abs(self.bounds["y_max"] - ylim[1]) < 1e-12
+        ):
+            return
+        self._updating_from_plot = True
+        self.spin_x_min.blockSignals(True)
+        self.spin_x_max.blockSignals(True)
+        self.spin_y_min.blockSignals(True)
+        self.spin_y_max.blockSignals(True)
+        self.spin_x_min.setValue(xlim[0])
+        self.spin_x_max.setValue(xlim[1])
+        self.spin_y_min.setValue(ylim[0])
+        self.spin_y_max.setValue(ylim[1])
+        self.bounds["x_min"] = xlim[0]
+        self.bounds["x_max"] = xlim[1]
+        self.bounds["y_min"] = ylim[0]
+        self.bounds["y_max"] = ylim[1]
+        self.spin_x_min.blockSignals(False)
+        self.spin_x_max.blockSignals(False)
+        self.spin_y_min.blockSignals(False)
+        self.spin_y_max.blockSignals(False)
+        self._updating_from_plot = False
+
     def on_grid_changed(self, *_):
         self.grid_settings = {
             "x_step": self.spin_x_step.value(),
@@ -672,8 +725,10 @@ class PlotWindow(QtWidgets.QMainWindow):
             )
 
         # Set initial bounds from exported data
+        self._updating_from_plot = True
         self.ax.set_xlim(self.bounds["x_min"], self.bounds["x_max"])
         self.ax.set_ylim(self.bounds["y_min"], self.bounds["y_max"])
+        self._updating_from_plot = False
 
         # Configure grid and tick locators (MUST be after set_yscale!)
         self.ax.grid(True, which="both", linestyle="--", alpha=0.5)
