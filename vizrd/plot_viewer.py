@@ -188,6 +188,8 @@ class PlotWindow(QtWidgets.QMainWindow):
         self._updating_from_plot = False
 
         self.line_configs = []
+        self.line_containers = []  # Store references to line UI containers
+        self.lines_layout = None  # Will hold the QVBoxLayout for lines
         self.init_data()
         self.build_ui()
         self.canvas.mpl_connect("draw_event", self.on_canvas_draw)
@@ -388,8 +390,8 @@ class PlotWindow(QtWidgets.QMainWindow):
 
         # Lines Settings
         lines_group = QtWidgets.QGroupBox("Line Configurations")
-        lines_layout = QtWidgets.QVBoxLayout(lines_group)
-        lines_layout.setSpacing(4)
+        self.lines_layout = QtWidgets.QVBoxLayout(lines_group)
+        self.lines_layout.setSpacing(4)
 
         for idx, cfg in enumerate(self.line_configs):
             # Main container for each line
@@ -398,11 +400,12 @@ class PlotWindow(QtWidgets.QMainWindow):
             line_container.setStyleSheet(
                 "QFrame { border: 1px solid #666; border-radius: 3px; }"
             )
+            line_container.setProperty("line_id", idx)
             line_main_layout = QtWidgets.QVBoxLayout(line_container)
             line_main_layout.setContentsMargins(4, 4, 4, 4)
             line_main_layout.setSpacing(2)
 
-            # Compact header row: [>] [x] [color] [name]
+            # Compact header row: [>] [x] [color] [name] [up/down]
             header_layout = QtWidgets.QHBoxLayout()
             header_layout.setSpacing(4)
 
@@ -422,8 +425,8 @@ class PlotWindow(QtWidgets.QMainWindow):
             cb_vis.setToolTip("Visible")
             cb_vis.setFixedSize(20, 20)
             cb_vis.stateChanged.connect(
-                lambda state, i=idx, cb=cb_vis: self.update_line_cfg(
-                    i, "visible", cb.isChecked()
+                lambda state, c=line_container: self.update_line_cfg(
+                    c.property("line_id"), "visible", bool(state)
                 )
             )
 
@@ -447,20 +450,51 @@ class PlotWindow(QtWidgets.QMainWindow):
                 }}
             """)
             btn_color.clicked.connect(
-                lambda _, i=idx, btn=btn_color: self.pick_color(i, btn)
+                lambda _, c=line_container, btn=btn_color: self.pick_color(
+                    c.property("line_id"), btn
+                )
             )
 
             # Name field (no label)
             edit_name = QtWidgets.QLineEdit(cfg["name"])
             edit_name.setPlaceholderText("Line name")
             edit_name.textChanged.connect(
-                lambda text, i=idx: self.update_line_cfg(i, "name", text)
+                lambda text, c=line_container: self.update_line_cfg(
+                    c.property("line_id"), "name", text
+                )
             )
+
+            # Up/Down buttons container
+            move_buttons_layout = QtWidgets.QVBoxLayout()
+            move_buttons_layout.setSpacing(0)
+            move_buttons_layout.setContentsMargins(0, 0, 0, 0)
+
+            # Up button
+            btn_up = QtWidgets.QPushButton("▲")
+            btn_up.setFixedSize(24, 12)
+            btn_up.setToolTip("Move up")
+            btn_up.setStyleSheet(
+                "QPushButton { font-size: 8px; padding: 0px; }"
+            )
+            btn_up.clicked.connect(self.move_line_up)
+
+            # Down button
+            btn_down = QtWidgets.QPushButton("▼")
+            btn_down.setFixedSize(24, 12)
+            btn_down.setToolTip("Move down")
+            btn_down.setStyleSheet(
+                "QPushButton { font-size: 8px; padding: 0px; }"
+            )
+            btn_down.clicked.connect(self.move_line_down)
+
+            move_buttons_layout.addWidget(btn_up)
+            move_buttons_layout.addWidget(btn_down)
 
             header_layout.addWidget(btn_expand)
             header_layout.addWidget(cb_vis)
             header_layout.addWidget(btn_color)
             header_layout.addWidget(edit_name, stretch=1)
+            header_layout.addLayout(move_buttons_layout)
 
             line_main_layout.addLayout(header_layout)
 
@@ -477,7 +511,9 @@ class PlotWindow(QtWidgets.QMainWindow):
             spin_width.setSingleStep(0.5)
             spin_width.setValue(cfg["width"])
             spin_width.valueChanged.connect(
-                lambda val, i=idx: self.update_line_cfg(i, "width", val)
+                lambda val, c=line_container: self.update_line_cfg(
+                    c.property("line_id"), "width", val
+                )
             )
             details_layout.addRow("Width:", spin_width)
 
@@ -486,7 +522,9 @@ class PlotWindow(QtWidgets.QMainWindow):
             combo_style.addItems(["Solid", "Dashed", "Dotted", "Dash-Dot", "None"])
             combo_style.setCurrentText(cfg["style"])
             combo_style.currentTextChanged.connect(
-                lambda text, i=idx: self.update_line_cfg(i, "style", text)
+                lambda text, c=line_container: self.update_line_cfg(
+                    c.property("line_id"), "style", text
+                )
             )
             details_layout.addRow("Style:", combo_style)
 
@@ -497,7 +535,9 @@ class PlotWindow(QtWidgets.QMainWindow):
                 ["None", "Circle", "Square", "Triangle", "Cross", "Star", "Plus"]
             )
             combo_marker.currentTextChanged.connect(
-                lambda text, i=idx: self.update_line_cfg(i, "marker", text)
+                lambda text, c=line_container: self.update_line_cfg(
+                    c.property("line_id"), "marker", text
+                )
             )
 
             spin_marker_size = QtWidgets.QSpinBox()
@@ -505,7 +545,9 @@ class PlotWindow(QtWidgets.QMainWindow):
             spin_marker_size.setValue(cfg.get("marker_size", 6))
             spin_marker_size.setFixedWidth(50)
             spin_marker_size.valueChanged.connect(
-                lambda val, i=idx: self.update_line_cfg(i, "marker_size", val)
+                lambda val, c=line_container: self.update_line_cfg(
+                    c.property("line_id"), "marker_size", val
+                )
             )
 
             marker_row.addWidget(combo_marker, stretch=1)
@@ -522,7 +564,8 @@ class PlotWindow(QtWidgets.QMainWindow):
                 )
             )
 
-            lines_layout.addWidget(line_container)
+            self.lines_layout.addWidget(line_container)
+            self.line_containers.append(line_container)
 
         self.panel_layout.addWidget(lines_group)
         self.panel_layout.addStretch()
@@ -667,6 +710,102 @@ class PlotWindow(QtWidgets.QMainWindow):
                 }}
             """)
             self.update_plot()
+
+    def move_line_up(self):
+        """Move the line whose up button was clicked one position up."""
+        btn = self.sender()
+        if not btn:
+            return
+
+        # Find the line container that contains this button
+        container = btn.parentWidget()
+        while container and not isinstance(container, QtWidgets.QFrame):
+            container = container.parentWidget()
+
+        if not container:
+            return
+
+        idx = container.property("line_id")
+        if idx is None or idx <= 0:
+            return
+
+        # Swap configs
+        self.line_configs[idx - 1], self.line_configs[idx] = (
+            self.line_configs[idx],
+            self.line_configs[idx - 1],
+        )
+
+        # Swap widgets in layout
+        self.lines_layout.removeWidget(self.line_containers[idx - 1])
+        self.lines_layout.removeWidget(self.line_containers[idx])
+        self.lines_layout.insertWidget(idx - 1, self.line_containers[idx])
+        self.lines_layout.insertWidget(idx, self.line_containers[idx - 1])
+
+        # Update container references
+        self.line_containers[idx - 1], self.line_containers[idx] = (
+            self.line_containers[idx],
+            self.line_containers[idx - 1],
+        )
+
+        # Update line_id properties
+        self.line_containers[idx - 1].setProperty("line_id", idx - 1)
+        self.line_containers[idx].setProperty("line_id", idx)
+
+        self._update_move_buttons()
+        self.update_plot()
+
+    def move_line_down(self):
+        """Move the line whose down button was clicked one position down."""
+        btn = self.sender()
+        if not btn:
+            return
+
+        # Find the line container that contains this button
+        container = btn.parentWidget()
+        while container and not isinstance(container, QtWidgets.QFrame):
+            container = container.parentWidget()
+
+        if not container:
+            return
+
+        idx = container.property("line_id")
+        if idx is None or idx >= len(self.line_configs) - 1:
+            return
+
+        # Swap configs
+        self.line_configs[idx], self.line_configs[idx + 1] = (
+            self.line_configs[idx + 1],
+            self.line_configs[idx],
+        )
+
+        # Swap widgets in layout
+        self.lines_layout.removeWidget(self.line_containers[idx])
+        self.lines_layout.removeWidget(self.line_containers[idx + 1])
+        self.lines_layout.insertWidget(idx, self.line_containers[idx + 1])
+        self.lines_layout.insertWidget(idx + 1, self.line_containers[idx])
+
+        # Update container references
+        self.line_containers[idx], self.line_containers[idx + 1] = (
+            self.line_containers[idx + 1],
+            self.line_containers[idx],
+        )
+
+        # Update line_id properties
+        self.line_containers[idx].setProperty("line_id", idx)
+        self.line_containers[idx + 1].setProperty("line_id", idx + 1)
+
+        self._update_move_buttons()
+        self.update_plot()
+
+    def _update_move_buttons(self):
+        """Enable/disable up/down buttons based on line positions."""
+        for i, container in enumerate(self.line_containers):
+            # Find the up/down buttons in the container
+            for child in container.findChildren(QtWidgets.QPushButton):
+                if child.text() == "▲":
+                    child.setEnabled(i > 0)
+                elif child.text() == "▼":
+                    child.setEnabled(i < len(self.line_containers) - 1)
 
     def update_plot(self):
         self.ax.clear()
