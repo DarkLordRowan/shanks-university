@@ -174,7 +174,7 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.plot_container = QtWidgets.QWidget()
         self.plot_layout = QtWidgets.QVBoxLayout(self.plot_container)
 
-        self.figure = Figure(constrained_layout=True)
+        self.figure = Figure(constrained_layout=True, dpi=300)
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
 
@@ -237,6 +237,10 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.global_cfg = {
             "legend_visible": True,
             "legend_loc": "outside right",
+            "legend_fontsize": 4,
+            "legend_frame": True,
+            "legend_title": "",
+            "legend_title_fontsize": 10,
         }
 
         # Grid configuration with defaults
@@ -282,6 +286,35 @@ class PlotWindow(QtWidgets.QMainWindow):
 
         global_layout.addRow(self.cb_legend)
         global_layout.addRow("Legend Loc:", self.combo_legend_loc)
+
+        # Legend font size
+        self.spin_legend_fontsize = QtWidgets.QSpinBox()
+        self.spin_legend_fontsize.setRange(1, 72)
+        self.spin_legend_fontsize.setValue(self.global_cfg["legend_fontsize"])
+        self.spin_legend_fontsize.valueChanged.connect(self.on_global_changed)
+        global_layout.addRow("Legend Font Size:", self.spin_legend_fontsize)
+
+        # Legend frame
+        self.cb_legend_frame = QtWidgets.QCheckBox("Show Frame")
+        self.cb_legend_frame.setChecked(self.global_cfg["legend_frame"])
+        self.cb_legend_frame.stateChanged.connect(self.on_global_changed)
+        global_layout.addRow(self.cb_legend_frame)
+
+        # Legend title
+        self.edit_legend_title = QtWidgets.QLineEdit()
+        self.edit_legend_title.setPlaceholderText("Optional title")
+        self.edit_legend_title.setText(self.global_cfg["legend_title"])
+        self.edit_legend_title.textChanged.connect(self.on_global_changed)
+        global_layout.addRow("Legend Title:", self.edit_legend_title)
+
+        # Legend title font size
+        self.spin_legend_title_fontsize = QtWidgets.QSpinBox()
+        self.spin_legend_title_fontsize.setRange(4, 72)
+        self.spin_legend_title_fontsize.setValue(
+            self.global_cfg["legend_title_fontsize"]
+        )
+        self.spin_legend_title_fontsize.valueChanged.connect(self.on_global_changed)
+        global_layout.addRow("Title Font Size:", self.spin_legend_title_fontsize)
 
         # Show grid info
         grid_info = QtWidgets.QLabel(f"Grid: {self.grid_type}")
@@ -473,18 +506,14 @@ class PlotWindow(QtWidgets.QMainWindow):
             btn_up = QtWidgets.QPushButton("▲")
             btn_up.setFixedSize(24, 12)
             btn_up.setToolTip("Move up")
-            btn_up.setStyleSheet(
-                "QPushButton { font-size: 8px; padding: 0px; }"
-            )
+            btn_up.setStyleSheet("QPushButton { font-size: 8px; padding: 0px; }")
             btn_up.clicked.connect(self.move_line_up)
 
             # Down button
             btn_down = QtWidgets.QPushButton("▼")
             btn_down.setFixedSize(24, 12)
             btn_down.setToolTip("Move down")
-            btn_down.setStyleSheet(
-                "QPushButton { font-size: 8px; padding: 0px; }"
-            )
+            btn_down.setStyleSheet("QPushButton { font-size: 8px; padding: 0px; }")
             btn_down.clicked.connect(self.move_line_down)
 
             move_buttons_layout.addWidget(btn_up)
@@ -573,6 +602,12 @@ class PlotWindow(QtWidgets.QMainWindow):
     def on_global_changed(self, *_):
         self.global_cfg["legend_visible"] = self.cb_legend.isChecked()
         self.global_cfg["legend_loc"] = self.combo_legend_loc.currentText()
+        self.global_cfg["legend_fontsize"] = self.spin_legend_fontsize.value()
+        self.global_cfg["legend_frame"] = self.cb_legend_frame.isChecked()
+        self.global_cfg["legend_title"] = self.edit_legend_title.text()
+        self.global_cfg["legend_title_fontsize"] = (
+            self.spin_legend_title_fontsize.value()
+        )
         self.update_plot()
 
     def on_roi_changed(self, *_):
@@ -898,24 +933,48 @@ class PlotWindow(QtWidgets.QMainWindow):
 
         if has_data and self.global_cfg["legend_visible"]:
             loc = self.global_cfg["legend_loc"]
+            legend_kwargs = {
+                "fontsize": self.global_cfg["legend_fontsize"],
+                "frameon": self.global_cfg["legend_frame"],
+            }
+            title = self.global_cfg["legend_title"]
+            if title:
+                legend_kwargs["title"] = title
+                legend_kwargs["title_fontsize"] = self.global_cfg[
+                    "legend_title_fontsize"
+                ]
 
             if loc == "outside right":
-                self.ax.legend(
-                    loc="upper left", bbox_to_anchor=(1.02, 1), borderaxespad=0
+                legend_kwargs.update(
+                    {
+                        "loc": "upper left",
+                        "bbox_to_anchor": (1.02, 1),
+                        "borderaxespad": 0,
+                    }
                 )
+                self.ax.legend(**legend_kwargs)
             elif loc == "outside left":
-                self.ax.legend(
-                    loc="upper right", bbox_to_anchor=(-0.02, 1), borderaxespad=0
+                legend_kwargs.update(
+                    {
+                        "loc": "upper right",
+                        "bbox_to_anchor": (-0.02, 1),
+                        "borderaxespad": 0,
+                    }
                 )
+                self.ax.legend(**legend_kwargs)
             elif loc == "outside bottom":
-                self.ax.legend(
-                    loc="upper center",
-                    bbox_to_anchor=(0.5, -0.1),
-                    borderaxespad=0,
-                    ncol=2,
+                legend_kwargs.update(
+                    {
+                        "loc": "upper center",
+                        "bbox_to_anchor": (0.5, -0.1),
+                        "borderaxespad": 0,
+                        "ncol": 2,
+                    }
                 )
+                self.ax.legend(**legend_kwargs)
             else:
-                self.ax.legend(loc=loc)
+                legend_kwargs["loc"] = loc
+                self.ax.legend(**legend_kwargs)
 
         self.canvas.draw()
 
