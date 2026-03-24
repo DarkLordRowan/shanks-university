@@ -7,6 +7,14 @@ matplotlib.use("qtagg")
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib.figure import Figure
+import matplotlib
+
+matplotlib.use("qtagg")
+matplotlib.rcParams['savefig.dpi'] = 300
+
+from matplotlib.backend_bases import ResizeEvent
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
+from matplotlib.figure import Figure
 from matplotlib.ticker import (
     AutoLocator,
     FixedLocator,
@@ -149,6 +157,82 @@ def symlog_grid_formatter_factory(log_linthresh):
     return formatter
 
 
+class PreviewCanvas(FigureCanvasQTAgg):
+    def __init__(self, figure, target_w, target_h):
+        self.target_width_inches = target_w
+        self.target_height_inches = target_h
+        self.base_dpi = 100.0
+        self._in_resize_event = False
+        super().__init__(figure)
+
+    def set_target_size(self, w_inch, h_inch):
+        self.target_width_inches = w_inch
+        self.target_height_inches = h_inch
+        self.resizeEvent(QtGui.QResizeEvent(self.size(), self.size()))
+
+    def resizeEvent(self, event):
+        if self._in_resize_event:
+            return
+        if self.figure is None:
+            return
+            
+        self._in_resize_event = True
+        try:
+            w = event.size().width() * self.device_pixel_ratio
+            h = event.size().height() * self.device_pixel_ratio
+
+            if self.target_width_inches > 0 and self.target_height_inches > 0:
+                dpi = w / self.target_width_inches
+                self.figure.set_size_inches(self.target_width_inches, self.target_height_inches, forward=False)
+                self.figure.set_dpi(dpi)
+                
+            QtWidgets.QWidget.resizeEvent(self, event)
+            ResizeEvent("resize_event", self)._process()
+            self.draw_idle()
+        finally:
+            self._in_resize_event = False
+
+
+class PlotContainerWidget(QtWidgets.QWidget):
+    def __init__(self, canvas):
+        super().__init__()
+        self.canvas = canvas
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.canvas, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+
+    def update_scaling(self):
+        self.resizeEvent(QtGui.QResizeEvent(self.size(), self.size()))
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+
+        available_w = event.size().width()
+        available_h = event.size().height()
+
+        if available_w <= 0 or available_h <= 0:
+            return
+
+        desired_w = self.canvas.target_width_inches * self.canvas.base_dpi
+        desired_h = self.canvas.target_height_inches * self.canvas.base_dpi
+
+        if desired_w <= 0 or desired_h <= 0:
+            return
+
+        if desired_w > available_w or desired_h > available_h:
+            scale_w = available_w / desired_w
+            scale_h = available_h / desired_h
+            scale = min(scale_w, scale_h)
+        else:
+            scale = 1.0
+
+        final_w = int(max(1, desired_w * scale))
+        final_h = int(max(1, desired_h * scale))
+
+        if self.canvas.size() != QtCore.QSize(final_w, final_h):
+            self.canvas.setFixedSize(final_w, final_h)
+
+
 class PlotWindow(QtWidgets.QMainWindow):
     def __init__(self, data):
         super().__init__()
@@ -175,11 +259,13 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.plot_layout = QtWidgets.QVBoxLayout(self.plot_container)
 
         self.figure = Figure(constrained_layout=True, dpi=300)
-        self.canvas = FigureCanvasQTAgg(self.figure)
+        self.canvas = PreviewCanvas(self.figure, 10.0, 6.0)
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
 
+        self.preview_container = PlotContainerWidget(self.canvas)
+
         self.plot_layout.addWidget(self.toolbar)
-        self.plot_layout.addWidget(self.canvas)
+        self.plot_layout.addWidget(self.preview_container, stretch=1)
 
         main_layout.addWidget(self.scroll_area)
         main_layout.addWidget(self.plot_container, stretch=1)
@@ -241,6 +327,8 @@ class PlotWindow(QtWidgets.QMainWindow):
             "legend_frame": True,
             "legend_title": "",
             "legend_title_fontsize": 10,
+            "fig_width": 10.0,
+            "fig_height": 6.0,
         }
 
         # Grid configuration with defaults
@@ -315,6 +403,21 @@ class PlotWindow(QtWidgets.QMainWindow):
         )
         self.spin_legend_title_fontsize.valueChanged.connect(self.on_global_changed)
         global_layout.addRow("Title Font Size:", self.spin_legend_title_fontsize)
+
+        # Figure Size controls
+        self.spin_fig_width = QtWidgets.QDoubleSpinBox()
+        self.spin_fig_width.setRange(1.0, 50.0)
+        self.spin_fig_width.setSingleStep(0.5)
+        self.spin_fig_width.setValue(self.global_cfg["fig_width"])
+        self.spin_fig_width.valueChanged.connect(self.on_global_changed)
+        global_layout.addRow("Fig Width (in):", self.spin_fig_width)
+
+        self.spin_fig_height = QtWidgets.QDoubleSpinBox()
+        self.spin_fig_height.setRange(1.0, 50.0)
+        self.spin_fig_height.setSingleStep(0.5)
+        self.spin_fig_height.setValue(self.global_cfg["fig_height"])
+        self.spin_fig_height.valueChanged.connect(self.on_global_changed)
+        global_layout.addRow("Fig Height (in):", self.spin_fig_height)
 
         # Show grid info
         grid_info = QtWidgets.QLabel(f"Grid: {self.grid_type}")
@@ -608,6 +711,19 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.global_cfg["legend_title_fontsize"] = (
             self.spin_legend_title_fontsize.value()
         )
+        
+        old_w = self.global_cfg.get("fig_width")
+        old_h = self.global_cfg.get("fig_height")
+        new_w = self.spin_fig_width.value()
+        new_h = self.spin_fig_height.value()
+
+        self.global_cfg["fig_width"] = new_w
+        self.global_cfg["fig_height"] = new_h
+
+        if old_w != new_w or old_h != new_h:
+            self.canvas.set_target_size(new_w, new_h)
+            self.preview_container.update_scaling()
+
         self.update_plot()
 
     def on_roi_changed(self, *_):
