@@ -312,9 +312,9 @@ class PlotWindow(QtWidgets.QMainWindow):
                 "color": color,
                 "width": line_data["width"],
                 "style": line_data["style"],
-                "marker": "None",
-                "marker_size": 6,
-                "visible": True,
+                "marker": line_data.get("marker", "None"),
+                "marker_size": line_data.get("marker_size", 6),
+                "visible": line_data.get("visible", True),
                 "x": x_vals,
                 "y": y_vals,
             }
@@ -340,6 +340,46 @@ class PlotWindow(QtWidgets.QMainWindow):
             "x_label": DEFAULT_X_LABEL,
             "y_label": DEFAULT_Y_LABEL,
         }
+
+        # Load config from JSON if present (new format)
+        config = self.data.get("config", {})
+        if config:
+            try:
+                # Load bounds
+                config_bounds = config.get("bounds", {})
+                if config_bounds and isinstance(config_bounds, dict):
+                    self.bounds.update(config_bounds)
+                
+                # Load global config
+                config_global = config.get("global_cfg", {})
+                if config_global and isinstance(config_global, dict):
+                    self.global_cfg.update(config_global)
+                
+                # Load grid settings
+                config_grid = config.get("grid_settings", {})
+                if config_grid and isinstance(config_grid, dict):
+                    self.grid_settings.update(config_grid)
+                
+                # Load line configs
+                config_lines = config.get("line_configs", [])
+                if config_lines and isinstance(config_lines, list):
+                    if len(config_lines) > len(self.line_configs):
+                        print(f"Warning: Config contains {len(config_lines)} lines but data only has {len(self.line_configs)}")
+                    for i, line_cfg in enumerate(config_lines):
+                        if i < len(self.line_configs) and isinstance(line_cfg, dict):
+                            # Update existing line config with saved values
+                            self.line_configs[i]["name"] = line_cfg.get("name", self.line_configs[i]["name"])
+                            self.line_configs[i]["original_name"] = line_cfg.get("original_name", self.line_configs[i]["original_name"])
+                            # Color conversion: saved as 0-255, internal format is 0-1
+                            if "color" in line_cfg:
+                                self.line_configs[i]["color"] = [c / 255.0 for c in line_cfg["color"]]
+                            self.line_configs[i]["width"] = line_cfg.get("width", self.line_configs[i]["width"])
+                            self.line_configs[i]["style"] = line_cfg.get("style", self.line_configs[i]["style"])
+                            self.line_configs[i]["marker"] = line_cfg.get("marker", self.line_configs[i]["marker"])
+                            self.line_configs[i]["marker_size"] = line_cfg.get("marker_size", self.line_configs[i]["marker_size"])
+                            self.line_configs[i]["visible"] = line_cfg.get("visible", self.line_configs[i]["visible"])
+            except Exception as e:
+                print(f"Warning: Failed to load config section: {e}. Using defaults.")
 
     def build_ui(self):
         # Global Settings
@@ -371,6 +411,11 @@ class PlotWindow(QtWidgets.QMainWindow):
         )
         self.combo_legend_loc.setCurrentText(self.global_cfg["legend_loc"])
         self.combo_legend_loc.currentTextChanged.connect(self.on_global_changed)
+
+        # Save Config button
+        self.btn_save_config = QtWidgets.QPushButton("Save Config")
+        self.btn_save_config.clicked.connect(self.save_config)
+        global_layout.addRow(self.btn_save_config)
 
         global_layout.addRow(self.cb_legend)
         global_layout.addRow("Legend Loc:", self.combo_legend_loc)
@@ -465,6 +510,13 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.spin_y_max.valueChanged.connect(self.on_roi_changed)
         roi_layout.addRow("Y Max:", self.spin_y_max)
 
+        # Set initial values from config if loaded (bounds always exists at this point)
+        if self.bounds:
+            self.spin_x_min.setValue(self.bounds["x_min"])
+            self.spin_x_max.setValue(self.bounds["x_max"])
+            self.spin_y_min.setValue(self.bounds["y_min"])
+            self.spin_y_max.setValue(self.bounds["y_max"])
+
         self.btn_reset_roi = QtWidgets.QPushButton("Reset ROI to Default")
         self.btn_reset_roi.clicked.connect(self.on_reset_roi)
         roi_layout.addRow(self.btn_reset_roi)
@@ -479,7 +531,7 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.spin_x_step = QtWidgets.QDoubleSpinBox()
         self.spin_x_step.setRange(0, 1e308)
         self.spin_x_step.setDecimals(10)
-        self.spin_x_step.setValue(0)
+        self.spin_x_step.setValue(self.grid_settings.get("x_step", 0))
         self.spin_x_step.setSpecialValueText("Auto")
         self.spin_x_step.valueChanged.connect(self.on_grid_changed)
         grid_layout.addRow("X Step:", self.spin_x_step)
@@ -488,19 +540,23 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.spin_y_step = QtWidgets.QDoubleSpinBox()
         self.spin_y_step.setRange(0, 1e308)
         self.spin_y_step.setDecimals(10)
-        self.spin_y_step.setValue(0)
+        self.spin_y_step.setValue(self.grid_settings.get("y_step", 0))
         self.spin_y_step.setSpecialValueText("Auto")
         self.spin_y_step.valueChanged.connect(self.on_grid_changed)
         grid_layout.addRow("Y Step:", self.spin_y_step)
 
         # Custom X Ticks
         self.edit_x_ticks = QtWidgets.QLineEdit()
+        x_ticks = self.grid_settings.get("x_ticks", [])
+        self.edit_x_ticks.setText(", ".join(map(str, x_ticks)) if x_ticks else "")
         self.edit_x_ticks.setPlaceholderText("e.g. 1, 2.5, 5, 10")
         self.edit_x_ticks.textChanged.connect(self.on_grid_changed)
         grid_layout.addRow("Custom X Ticks:", self.edit_x_ticks)
 
         # Custom Y Ticks
         self.edit_y_ticks = QtWidgets.QLineEdit()
+        y_ticks = self.grid_settings.get("y_ticks", [])
+        self.edit_y_ticks.setText(", ".join(map(str, y_ticks)) if y_ticks else "")
         self.edit_y_ticks.setPlaceholderText("e.g. -1, 0, 1, 2")
         self.edit_y_ticks.textChanged.connect(self.on_grid_changed)
         grid_layout.addRow("Custom Y Ticks:", self.edit_y_ticks)
@@ -666,6 +722,7 @@ class PlotWindow(QtWidgets.QMainWindow):
             combo_marker.addItems(
                 ["None", "Circle", "Square", "Triangle", "Cross", "Star", "Plus"]
             )
+            combo_marker.setCurrentText(cfg.get("marker", "None"))
             combo_marker.currentTextChanged.connect(
                 lambda text, c=line_container: self.update_line_cfg(
                     c.property("line_id"), "marker", text
@@ -1099,6 +1156,72 @@ class PlotWindow(QtWidgets.QMainWindow):
                 self.ax.legend(**legend_kwargs)
 
         self.canvas.draw()
+
+    def save_config(self):
+        """Save current plot configuration to JSON file."""
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Save Config", "", "JSON Files (*.json)"
+        )
+        
+        if not path:
+            return
+        
+        # Ensure .json extension
+        if not path.endswith(".json"):
+            path += ".json"
+        
+        # Build config dictionary
+        config_data = {
+            "grid": {
+                "type": self.grid_type,
+                "log_linthresh": self.log_linthresh
+            },
+            "bounds": self.bounds,
+            "lines": [],
+            "config": {
+                "bounds": self.bounds,
+                "global_cfg": self.global_cfg,
+                "grid_settings": self.grid_settings,
+                "line_configs": []
+            }
+        }
+        
+        # Add line data and configs
+        for cfg in self.line_configs:
+            # Original line data
+            line_data = {
+                "name": cfg["original_name"],
+                "x": cfg["x"],
+                "y": cfg["y"],
+                "color": [int(c * 255) for c in cfg["color"]],
+                "width": cfg["width"],
+                "style": cfg["style"],
+                "marker": cfg["marker"],
+                "marker_size": cfg["marker_size"],
+                "visible": cfg["visible"]
+            }
+            config_data["lines"].append(line_data)
+            
+            # Config for this line (without x/y data)
+            line_config = {
+                "name": cfg["name"],
+                "original_name": cfg["original_name"],
+                "color": [int(c * 255) for c in cfg["color"]],
+                "width": cfg["width"],
+                "style": cfg["style"],
+                "marker": cfg["marker"],
+                "marker_size": cfg["marker_size"],
+                "visible": cfg["visible"]
+            }
+            config_data["config"]["line_configs"].append(line_config)
+        
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(config_data, f, indent=2, ensure_ascii=False)
+            print(f"Configuration saved to: {path}")
+        except Exception as e:
+            print(f"Failed to save configuration: {e}")
+            QtWidgets.QMessageBox.critical(self, "Error", f"Failed to save configuration:\n{str(e)}")
 
 
 if __name__ == "__main__":
