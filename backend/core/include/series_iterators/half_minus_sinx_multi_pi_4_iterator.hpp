@@ -2,8 +2,6 @@
 #define HALF_MINUS_SINX_MULTI_PI_4_ITERATOR_HPP
 #pragma once
 
-#include <numbers>
-
 #include "../series_base.hpp"
 
 /**

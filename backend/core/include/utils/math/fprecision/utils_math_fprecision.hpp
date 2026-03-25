@@ -23,6 +23,8 @@ struct utils::math<arb::float_precision> {
     static arb::float_precision ci_x(const arb::float_precision& x);
     static arb::float_precision si_x(const arb::float_precision& x);
     static arb::float_precision lambertW0(const arb::float_precision& x);
+    static arb::float_precision airy_ai(const arb::float_precision& x);
+    static arb::float_precision clausen(const arb::float_precision& x);
 #endif
     static arb::float_precision e_x(const arb::float_precision& x);
     static arb::float_precision k_x(const arb::float_precision& x);
@@ -47,9 +49,13 @@ struct utils::math<arb::float_precision> {
 #ifdef __GSL_SF_EXPINT_H__
     using has_ci_x = std::true_type;
     using has_si_x = std::true_type;
+    using has_airy_ai = std::true_type;
+    using has_clausen = std::true_type;
 #else
     using has_ci_x = std::false_type;
     using has_si_x = std::false_type;
+    using has_airy_ai = std::false_type;
+    using has_clausen = std::false_type;
 #endif
     using has_e_x = std::true_type;
     using has_k_x = std::true_type;
@@ -115,6 +121,14 @@ inline arb::float_precision utils::math<arb::float_precision>::ci_x(const arb::f
 
 inline arb::float_precision utils::math<arb::float_precision>::si_x(const arb::float_precision& x) {
     return arb::float_precision(gsl_sf_Si(static_cast<double>(x)), x.precision());
+}
+
+inline arb::float_precision utils::math<arb::float_precision>::airy_ai(const arb::float_precision& x) {
+    return arb::float_precision(gsl_sf_airy_Ai(static_cast<double>(x), GSL_PREC_DOUBLE), x.precision());
+}
+
+inline arb::float_precision utils::math<arb::float_precision>::clausen(const arb::float_precision& x) {
+    return arb::float_precision(gsl_sf_clausen(static_cast<double>(x)), x.precision());
 }
 #endif
 

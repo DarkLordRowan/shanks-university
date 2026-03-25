@@ -176,22 +176,25 @@ public:
 
         return series_acceleration<T, K>::acceleration_name;
     }
+
+    static inline std::size_t how_much(const std::size_t n, const std::size_t order,
+                                       const shanks::numerators::numerator_type type) {
+        return n + order + std::size_t{1} + order * std::size_t(type == shanks::numerators::numerator_type::rho_type);
+    }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T wynn_rho_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Ensure we have enough data points to compute the transformation
-    const K required_size =
-        n + order + static_cast<K>(1) +
-        order * static_cast<K>(numerator_type_in_use == shanks::numerators::numerator_type::rho_type);
-    const size_t precision =
+    const std::size_t required_size = wynn_rho_algorithm<T, K>::how_much(n, order, numerator_type_in_use);
+    const std::size_t precision =
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for wynn_rho_{" +
-                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
+        throw std::out_of_range("The Sn or an smaller then required for wynn_rho(" +
+                                utils::helpers<K>::to_string(order) + ", " + utils::helpers<K>::to_string(n) + ")\n" +
                                 "the size of Sn and an must be at least " +
-                                utils::helpers<size_t>::to_string(required_size));
+                                utils::helpers<std::size_t>::to_string(required_size));
     }
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
     // Base cases: return partial sum for n=0 or order=0

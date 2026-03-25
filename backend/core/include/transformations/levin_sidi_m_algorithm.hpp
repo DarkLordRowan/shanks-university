@@ -148,6 +148,14 @@ public:
 
         return series_acceleration<T, K>::acceleration_name;
     }
+
+    static inline std::size_t how_much(const std::size_t n, const std::size_t order,
+                                       const shanks::remainders::remainder_type type) {
+        return n + order + std::size_t(1) +
+               std::size_t(type == shanks::remainders::remainder_type::t_wave_type ||
+                           type == shanks::remainders::remainder_type::v_type) +
+               std::size_t(2) * std::size_t(type == shanks::remainders::remainder_type::v_wave_type);
+    }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
@@ -186,11 +194,7 @@ void levin_sidi_m_algorithm<T, K>::update_type(const shanks::remainders::remaind
 template <AcceptedLike T, UnsignedIntLike K>
 T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Determine the total number of terms required for both Sn and an vectors
-    const K required_size =
-        n + order + static_cast<K>(1) +
-        static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
-                       remainder_type_in_use == shanks::remainders::remainder_type::v_type) +
-        static_cast<K>(2) * static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
+    const std::size_t required_size = levin_sidi_m_algorithm<T, K>::how_much(n, order, remainder_type_in_use);
     const size_t precision =
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 

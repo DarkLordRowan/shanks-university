@@ -3812,7 +3812,7 @@ static uintmax_t ipow_modulo(uintmax_t a, uintmax_t b, uintmax_t c) {
             p = (p * p) % c;
         else
             p = imul_mod(p, p, c);
-        if (res < 0) res = res;
+        // if (res < 0) res = res;
     }
     return res;
 }
@@ -4288,7 +4288,7 @@ static bool baillie_PSW(const uintmax_t n, const bool spp = false) {
     };
 
     // Do one Miller Rabin step with base ==2
-    if (::arb::miller_rabin(2, n) ==
+    if (miller_rabin(2, n) ==
         false)         // if (miller_rabin(2, d, n, s) && miller_rabin(3, d, n, s) && miller_rabin(5, d, n, s));
         return false;  // Composite number
 
@@ -4385,7 +4385,7 @@ bool baillie_PSW(const int_precision& n, const bool spp) {
     };
 
     // Do one Miller Rabin step with base ==2
-    if (::arb::miller_rabin(c2, n) ==
+    if (miller_rabin(c2, n) ==
         false)         // if (miller_rabin(2, d, n, s) && miller_rabin(3, d, n, s) && miller_rabin(5, d, n, s));
         return false;  // Composite number
 
@@ -8255,7 +8255,7 @@ static void binarysplittingEuler4(const uintmax_t a, const uintmax_t b, const st
 static float_precision computeEulerdigits4(const uintmax_t precision) {
     const uintmax_t EXTRA = 1;
     const uintmax_t n = (uintmax_t)std::ceil((precision * std::log(10) + std::log(3.14159265)) / 4);
-    const double nd = ((precision * std::log(10) + std::log(3.14159265358979323846)) / 4);
+    // const double nd = ((precision * std::log(10) + std::log(3.14159265358979323846)) / 4);
     const uintmax_t k = uintmax_t(std::ceil(n * 3.5911214766686221366));
     const size_t workprec = (size_t)std::ceil(precision + EXTRA + 1 * std::log(k));
     const int_precision nsq(n * n);
@@ -8865,7 +8865,7 @@ static float_precision computeLemniscatedigits(const uintmax_t precision) {
 //	Added Euler-Mascheroni constant
 //  Notice precision and round_mode is optinal parameters if missing default value will apply
 //
-float_precision _float_table(const enum table_type tt, size_t precision, const enum round_mode mode) {
+float_precision _float_table(const enum table_type tt, size_t precision, [[maybe_unused]] const enum round_mode mode) {
     static float_precision ln2(0, 0, ROUND_NEAR);
     static float_precision ln3(0, 0, ROUND_NEAR);
     static float_precision ln5(0, 0, ROUND_NEAR);

@@ -18,6 +18,7 @@ struct utils::math<T> {
     using has_zeta = std::false_type;
     using has_ci_x = std::false_type;
     using has_si_x = std::false_type;
+    using has_airy_ai = std::false_type;
     using has_e_x = std::false_type;
     using has_k_x = std::false_type;
     using has_inc_gamma = std::false_type;

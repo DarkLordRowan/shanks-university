@@ -71,19 +71,21 @@ public:
      * @throws std::overflow_error if division by zero or numerical instability occurs.
      */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
+
+    static inline std::size_t how_much(const std::size_t n) { return n; }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
     // Ensure we have enough data points to compute the transformation at index n
-    const K required_size = n;
-    const size_t precision =
+    const std::size_t required_size = n;
+    const std::size_t precision =
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for ford_sidi_3_{" +
                                 utils::helpers<K>::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
-                                utils::helpers<size_t>::to_string(required_size));
+                                utils::helpers<std::size_t>::to_string(required_size));
     }
 
     // For theory, see: Ford & Sidi (1987), Section 1 - Input validation

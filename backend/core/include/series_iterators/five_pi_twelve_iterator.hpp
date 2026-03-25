@@ -2,8 +2,6 @@
 #define FIVE_PI_TWELVE_ITERATOR_HPP
 #pragma once
 
-#include <numbers>
-
 #include "../series_base.hpp"
 
 /**

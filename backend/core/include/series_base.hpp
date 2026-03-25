@@ -103,6 +103,18 @@ public:
     bool is_invalid() const override { return true; }
 };
 
+template <AcceptedLike T, UnsignedIntLike K>
+class series_base2_succ : public series_base_iter<T, K, std::pair<T, T>> {
+public:
+    explicit series_base2_succ(T x) : series_base_iter<T, K, T>(x) {}
+
+    virtual T get_sum() const override = 0;
+    T initial_state() const { return utils::cast<T, int>()(0, utils::helpers<T>::get_precision(this->x)); };
+    virtual T next(K index, T& state) const = 0;
+
+    bool is_invalid() const override { return true; }
+};
+
 template <AcceptedLike T, UnsignedIntLike K, typename State>
 class series_base_seq_iter : public series_base<T, K> {
 public:

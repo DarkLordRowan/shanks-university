@@ -22,6 +22,8 @@ struct utils::math<mpfr::mpreal> {
     static mpfr::mpreal ci_x(const mpfr::mpreal& x);
     static mpfr::mpreal si_x(const mpfr::mpreal& x);
     static mpfr::mpreal lambertW0(const mpfr::mpreal& x);
+    static mpfr::mpreal airy_ai(const mpfr::mpreal& x);
+    static mpfr::mpreal clausen(const mpfr::mpreal& x);
 #endif
     static mpfr::mpreal e_x(const mpfr::mpreal& x);
     static mpfr::mpreal k_x(const mpfr::mpreal& x);
@@ -47,10 +49,14 @@ struct utils::math<mpfr::mpreal> {
     using has_ci_x = std::true_type;
     using has_si_x = std::true_type;
     using has_lambertW0 = std::true_type;
+    using has_airy_ai = std::true_type;
+    using has_clausen = std::true_type;
 #else
     using has_ci_x = std::false_type;
     using has_si_x = std::false_type;
     using has_lambertW0 = std::false_type;
+    using has_airy_ai = std::false_type;
+    using has_clausen = std::false_type;
 #endif
     using has_e_x = std::true_type;
     using has_k_x = std::true_type;
@@ -103,6 +109,14 @@ inline mpfr::mpreal utils::math<mpfr::mpreal>::si_x(const mpfr::mpreal& x) {
 
 inline mpfr::mpreal utils::math<mpfr::mpreal>::lambertW0(const mpfr::mpreal& x) {
     return mpfr::mpreal(gsl_sf_lambert_W0(static_cast<double>(x)), x.get_prec());
+}
+
+inline mpfr::mpreal utils::math<mpfr::mpreal>::airy_ai(const mpfr::mpreal& x) {
+    return mpfr::mpreal(gsl_sf_airy_Ai(static_cast<double>(x), GSL_PREC_DOUBLE), x.get_prec());
+}
+
+inline mpfr::mpreal utils::math<mpfr::mpreal>::clausen(const mpfr::mpreal& x) {
+    return mpfr::mpreal(gsl_sf_clausen(static_cast<double>(x)), x.get_prec());
 }
 #endif
 

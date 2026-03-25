@@ -78,16 +78,18 @@ public:
      * @throws std::domain_error if n is 0.
      * @throws std::overflow_error if a non-finite result is encountered despite stability checks.
      */
-    T operator()(const K n, const K order,
+    T operator()(const K n, const K order, const series_result<T>& data) const override;
 
-                 const series_result<T>& data) const override;
+    static inline std::size_t how_much(const std::size_t n, const std::size_t order) {
+        return n + std::size_t(2) * order + std::size_t(1);
+    }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T wynn_epsilon_2_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Ensure sufficient terms are available: 2*order + n + 1 terms are required
-    const K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
-    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
+    const std::size_t required_size = wynn_epsilon_2_algorithm<T, K>::how_much(n, order);
+    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
         throw std::out_of_range("The Sn vector is smaller than required for Wynn epsilon 2 computation.");

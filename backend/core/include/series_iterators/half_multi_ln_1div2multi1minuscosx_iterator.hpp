@@ -2,8 +2,6 @@
 #define HALF_MULTI_LN_1DIV2MULTI1MISUSCOSX_ITERATOR_HPP
 #pragma once
 
-#include <numbers>
-
 #include "../series_base.hpp"
 
 /**

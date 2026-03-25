@@ -23,6 +23,8 @@ struct utils::math<T> {
     static T si_x(const T& x);
     static T inc_gamma(const T& x, const T& alpha);
     static T lambertW0(const T& x);
+    static T airy_ai(const T& x);
+    static T clausen(const T& x);
 #endif
     static T sin(const T& x);
     static T asin(const T& x);
@@ -46,11 +48,15 @@ struct utils::math<T> {
     using has_si_x = std::true_type;
     using has_inc_gamma = std::true_type;
     using has_lambertW0 = std::true_type;
+    using has_airy_ai = std::true_type;
+    using has_clausen = std::true_type;
 #else
     using has_ci_x = std::false_type;
     using has_si_x = std::false_type;
     using has_inc_gamma = std::false_type;
     using has_lambertW0 = std::false_type;
+    using has_airy_ai = std::false_type;
+    using has_clausen = std::false_type;
 #endif
     using has_e_x = std::true_type;
     using has_k_x = std::true_type;
@@ -105,10 +111,6 @@ T utils::math<T>::zeta(const T& x) {
     return std::riemann_zeta(x);
 }
 #ifdef __GSL_SF_EXPINT_H__
-#include <gsl/gsl_errno.h>
-
-#include <stdexcept>
-#include <string>
 
 template <std::floating_point T>
 T utils::math<T>::ci_x(const T& x) {
@@ -146,6 +148,26 @@ T utils::math<T>::lambertW0(const T& x) {
     }
     return static_cast<T>(res.val);
 }
+template <std::floating_point T>
+T utils::math<T>::airy_ai(const T& x) {
+    gsl_sf_result res;
+    int status = gsl_sf_airy_Ai_e(static_cast<double>(x), GSL_PREC_DOUBLE, &res);
+    if (status != GSL_SUCCESS) {
+        throw std::runtime_error("GSL Error (airy_ai): " + std::string(gsl_strerror(status)));
+    }
+    return static_cast<T>(res.val);
+}
+
+template <std::floating_point T>
+T utils::math<T>::clausen(const T& x) {
+    gsl_sf_result res;
+    int status = gsl_sf_clausen_e(static_cast<double>(x), &res);
+    if (status != GSL_SUCCESS) {
+        throw std::runtime_error("GSL Error (airy_ai): " + std::string(gsl_strerror(status)));
+    }
+    return static_cast<T>(res.val);
+}
+
 #endif
 
 template <std::floating_point T>

@@ -70,18 +70,20 @@ public:
      * @throws std::overflow_error if division by zero or numerical instability occurs.
      */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
+
+    static inline std::size_t how_much(const std::size_t n) { return n + std::size_t{2}; }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_2_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
     // Check if we have enough partial sums (at least n+2)
-    const K required_size = n + static_cast<K>(2);
-    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
+    const std::size_t required_size = ford_sidi_2_algorithm<T, K>::how_much(n);
+    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
         throw std::out_of_range("The Sn smaller then required for ford_sidi2_{" + utils::helpers<K>::to_string(n) +
                                 "}\n" + "the size of Sn must be at least " +
-                                utils::helpers<size_t>::to_string(required_size));
+                                utils::helpers<std::size_t>::to_string(required_size));
     }
 
     // For theory, see: Ford & Sidi (1987), Section 1 - Input validation

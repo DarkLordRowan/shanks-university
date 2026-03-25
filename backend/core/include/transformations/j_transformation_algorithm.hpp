@@ -85,6 +85,10 @@ public:
      */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
 
+    static inline std::size_t how_much(const std::size_t n, const std::size_t order) {
+        return n + order + std::size_t{1};
+    }
+
 private:
     K max_order_;          /**< Maximum order of J-transformation       */
     float_type safeguard_; /**< Small value to prevent division by zero */
@@ -182,12 +186,12 @@ T j_transformation_algorithm<T, K>::recursive_formula(const K n, const K order, 
 template <AcceptedLike T, UnsignedIntLike K>
 T j_transformation_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Check if we have enough data
-    const K required_size = n + order + 1;
+    const std::size_t required_size = j_transformation_algorithm<T, K>::how_much(n, order);
 
     if (data.Sn.size() < required_size) {
         throw std::out_of_range(
-            "Insufficient data in Sn vector: size=" + utils::helpers<size_t>::to_string(data.Sn.size()) +
-            ", required at least " + utils::helpers<size_t>::to_string(required_size));
+            "Insufficient data in Sn vector: size=" + utils::helpers<std::size_t>::to_string(data.Sn.size()) +
+            ", required at least " + utils::helpers<std::size_t>::to_string(required_size));
     }
 
     // Validate order parameter

@@ -49,18 +49,24 @@ public:
      * @throws std::overflow_error if numerical instability or division by zero occurs.
      */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
+
+    static inline std::size_t how_much(const K n, const K order = utils::cast<K, int>()(0)) {
+        return n + std::size_t{2} * order + std::size_t{1};
+    }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T overholt_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
-    if (data.Sn.size() < n + order + static_cast<K>(1) || data.an.size() < n + 2 * order + static_cast<K>(1)) {
+    const std::size_t required_size = overholt_algorithm<T, K>::how_much(n, order);
+
+    if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn smaller then required for V_{" + utils::helpers<K>::to_string(order) + "}^{" +
                                 utils::helpers<K>::to_string(n) + "}\n" + "the size of Sn must be at least " +
-                                utils::helpers<K>::to_string(n + order + static_cast<K>(1)) + "and size of an - " +
-                                utils::helpers<K>::to_string(n + order + static_cast<K>(1)));
+                                utils::helpers<K>::to_string(required_size) + "and size of an - " +
+                                utils::helpers<K>::to_string(required_size));
     }
 
-    const size_t precision =
+    const std::size_t precision =
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     std::vector<T> V(order + 1, utils::cast<T, int>()(0, precision));

@@ -38,6 +38,8 @@ struct utils::math<intprec::interval<T>> {
     using has_k_x = std::false_type;
     using has_inc_gamma = std::false_type;
     using has_lambertW0 = std::false_type;
+    using has_airy_ai = std::false_type;
+    using has_clausen = std::false_type;
 };
 
 template <typename T>

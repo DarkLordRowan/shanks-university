@@ -1,9 +1,6 @@
 #ifndef LAMBERT_W_FUNC_ITERATOR_HPP
 #define LAMBERT_W_FUNC_ITERATOR_HPP
-
 #pragma once
-#include <cassert>
-#include <numbers>
 
 #include "../series_base.hpp"
 

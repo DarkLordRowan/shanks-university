@@ -78,21 +78,22 @@ public:
      * @throws std::overflow_error if division by zero or numerical instability occurs
      */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
+
+    static inline std::size_t how_much(const std::size_t n) { return n + std::size_t{1}; }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
-T richardson_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
+T richardson_algorithm<T, K>::operator()(const K n, [[maybe_unused]] const K /*order*/,
+                                         const series_result<T>& data) const {
     // Ensure we have enough partial sums to perform the extrapolation
-    const K required_size = n + static_cast<K>(1);
-    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
+    const std::size_t required_size = richardson_algorithm<T, K>::how_much(n);
+    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
-        throw std::out_of_range("The Sn smaller then required for richardson_{" + utils::helpers<K>::to_string(order) +
-                                "}^{" + utils::helpers<K>::to_string(n) + "}\n" + "the size of Sn must be at least " +
-                                utils::helpers<size_t>::to_string(required_size));
+        throw std::out_of_range("The Sn smaller then required for richardson(" + utils::helpers<K>::to_string(n) +
+                                ")\n" + "the size of Sn must be at least " +
+                                utils::helpers<std::size_t>::to_string(required_size));
     }
-
-    if (order == static_cast<K>(0)) return data.Sn.at(n);
 
     // in the method we don't use order, it's only a stub
     if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");

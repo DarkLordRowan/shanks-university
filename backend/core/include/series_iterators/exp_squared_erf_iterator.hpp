@@ -1,8 +1,6 @@
 #ifndef EXP_SQUARED_ERF_ITERATOR_HPP
 #define EXP_SQUARED_ERF_ITERATOR_HPP
 #pragma once
-#include <cassert>
-#include <numbers>
 
 #include "../series_base.hpp"
 

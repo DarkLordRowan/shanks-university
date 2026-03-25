@@ -2,9 +2,6 @@
 #define CI_X_ITERATOR_HPP
 #pragma once
 
-#include <cassert>
-#include <numbers>
-
 #include "../series_base.hpp"
 
 /**

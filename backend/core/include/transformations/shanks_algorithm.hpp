@@ -61,23 +61,27 @@ public:
      * @throws std::overflow_error if division by zero or numerical instability occurs.
      */
     T operator()(const K n, const K order, const series_result<T>& data) const;
+
+    static inline std::size_t how_much(const std::size_t n, const std::size_t order) {
+        return std::size_t(2) * order + n + std::size_t(1);
+    }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T shanks_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Validation: required size is 2*order + n + 1
-    const K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
-    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
+    const std::size_t required_size = shanks_algorithm<T, K>::how_much(n, order);
+    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for shanks_{" +
-                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
+        throw std::out_of_range("The Sn or an smaller then required for shanks()" +
+                                utils::helpers<K>::to_string(order) + ", " + utils::helpers<K>::to_string(n) + ")\n" +
                                 "the size of Sn and an must be at least " +
-                                utils::helpers<size_t>::to_string(required_size));
+                                utils::helpers<std::size_t>::to_string(required_size));
     }
 
     // create matrix for further determinant calculation
-    const size_t matrix_size = order + static_cast<K>(1);
+    const std::size_t matrix_size = order + static_cast<K>(1);
     ::Eigen::Matrix<T, ::Eigen::Dynamic, ::Eigen::Dynamic> matrix_template;
     matrix_template.resize(matrix_size, matrix_size);
 
@@ -85,16 +89,16 @@ T shanks_algorithm<T, K>::operator()(const K n, const K order, const series_resu
     upper_determinant = lower_determinant = utils::cast<T, int>()(0, precision);
 
     // Fill the common part of the matrices (rows 1 to order) with partial sum differences
-    for (size_t row = 1; row < matrix_size; ++row)
-        for (size_t col = 0; col < matrix_size; ++col)
+    for (std::size_t row = 1; row < matrix_size; ++row)
+        for (std::size_t col = 0; col < matrix_size; ++col)
             matrix_template(row, col) = data.Sn[n + col + row] - data.Sn[n + col];
 
     // Compute the upper determinant by filling the first row with partial sums
-    for (size_t col = 0; col < matrix_size; ++col) matrix_template(0, col) = data.Sn[n + col];
+    for (std::size_t col = 0; col < matrix_size; ++col) matrix_template(0, col) = data.Sn[n + col];
     upper_determinant += matrix_template.determinant();
 
     // Compute the lower determinant by filling the first row with ones
-    for (size_t col = 0; col < matrix_size; ++col) matrix_template(0, col) = utils::cast<T, int>()(1, precision);
+    for (std::size_t col = 0; col < matrix_size; ++col) matrix_template(0, col) = utils::cast<T, int>()(1, precision);
     lower_determinant += matrix_template.determinant();
 
     // Final ratio yields the accelerated value

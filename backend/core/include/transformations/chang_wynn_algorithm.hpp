@@ -74,18 +74,20 @@ public:
      * @throws std::overflow_error if division by zero or numerical instability occurs.
      */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
+
+    static inline std::size_t how_much(const std::size_t n) { return n + std::size_t{1}; }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
     // Ensure we have enough data points (Sn and an) to proceed
-    const K required_size = n + static_cast<K>(1);
-    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
+    const std::size_t required_size = chang_wynn_algorithm<T, K>::how_much(n);
+    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for chann_wynn_{" +
                                 utils::helpers<K>::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
-                                utils::helpers<size_t>::to_string(required_size));
+                                utils::helpers<std::size_t>::to_string(required_size));
     }
 
     // For theory, see: Ford & Sidi (1987), Section 1 - Input validation

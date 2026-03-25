@@ -27,6 +27,8 @@ struct utils::math<OpsWrapperMacro(T)> {
     static OpsWrapperMacro(T) k_x(const OpsWrapperMacro(T) & x);
     static OpsWrapperMacro(T) inc_gamma(const OpsWrapperMacro(T) & x, const OpsWrapperMacro(T) & alpha);
     static OpsWrapperMacro(T) lambertW0(const OpsWrapperMacro(T) & x);
+    static OpsWrapperMacro(T) airy_ai(const OpsWrapperMacro(T) & x);
+    static OpsWrapperMacro(T) clausen(const OpsWrapperMacro(T) & x);
     static OpsWrapperMacro(T) sin(const OpsWrapperMacro(T) & x);
     static OpsWrapperMacro(T) asin(const OpsWrapperMacro(T) & x);
     static OpsWrapperMacro(T) cos(const OpsWrapperMacro(T) & x);
@@ -50,6 +52,8 @@ struct utils::math<OpsWrapperMacro(T)> {
     using has_k_x = utils::math<T>::has_k_x;
     using has_inc_gamma = utils::math<T>::has_inc_gamma;
     using has_lambertW0 = utils::math<T>::has_lambertW0;
+    using has_airy_ai = utils::math<T>::has_airy_ai;
+    using has_clausen = utils::math<T>::has_clausen;
 };
 
 template <typename T>
@@ -142,6 +146,16 @@ template <typename T>
 OpsWrapperMacro(T) utils::math<OpsWrapperMacro(T)>::lambertW0(const OpsWrapperMacro(T) & x) {
     shanks::profiling::global_operation_counts.special++;
     return OpsWrapperMacro(T)(utils::math<T>::lambertW0(x.value));
+}
+template <typename T>
+OpsWrapperMacro(T) utils::math<OpsWrapperMacro(T)>::airy_ai(const OpsWrapperMacro(T) & x) {
+    shanks::profiling::global_operation_counts.special++;
+    return OpsWrapperMacro(T)(utils::math<T>::airy_ai(x.value));
+}
+template <typename T>
+OpsWrapperMacro(T) utils::math<OpsWrapperMacro(T)>::clausen(const OpsWrapperMacro(T) & x) {
+    shanks::profiling::global_operation_counts.special++;
+    return OpsWrapperMacro(T)(utils::math<T>::clausen(x.value));
 }
 template <typename T>
 OpsWrapperMacro(T) utils::math<OpsWrapperMacro(T)>::sin(const OpsWrapperMacro(T) & x) {

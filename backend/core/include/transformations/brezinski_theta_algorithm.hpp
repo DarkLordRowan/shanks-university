@@ -69,19 +69,23 @@ public:
      * @throws std::overflow_error if division by zero occurs during computation
      */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
+
+    static inline std::size_t how_much(const std::size_t n, const std::size_t order) {
+        return std::size_t{3} * order / std::size_t{2} + std::size_t{1} + n;
+    }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Calculate the number of terms required from the Sn vector
-    const K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
-    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
+    const std::size_t required_size = brezinski_theta_algorithm<T, K>::how_much(n, order);
+    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     // Check if enough data is available in the partial sums vector
     if (data.Sn.size() < required_size) {
         throw std::out_of_range("The Sn is smaller then required for theta_{" + utils::helpers<K>::to_string(order) +
                                 "}^{" + utils::helpers<K>::to_string(n) + "}\n" + "the size of Sn must be at least " +
-                                utils::helpers<size_t>::to_string(required_size));
+                                utils::helpers<std::size_t>::to_string(required_size));
     }
 
     // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1

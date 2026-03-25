@@ -53,19 +53,23 @@ public:
      * @throws std::overflow_error if division by zero or non-finite result occurs.
      */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
+
+    static inline std::size_t how_much(const std::size_t n, const std::size_t order) {
+        return n + order + std::size_t{1};
+    }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T shanks_transform_alternating<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Ensure we have enough terms in both Sn and an vectors
-    const K required_size = order + n + static_cast<K>(1);
-    const size_t precision =
+    const std::size_t required_size = shanks_transform_alternating<T, K>::how_much(n, order);
+    const std::size_t precision =
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for alt_shanks_{" +
-                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
+        throw std::out_of_range("The Sn or an smaller then required for alt_shanks(" +
+                                utils::helpers<K>::to_string(order) + ", " + utils::helpers<K>::to_string(n) + ")\n" +
                                 "the size of Sn and an must be at least " +
-                                utils::helpers<size_t>::to_string(required_size));
+                                utils::helpers<std::size_t>::to_string(required_size));
     }
 
     // Trivial case: order 0 returns the current partial sum
@@ -86,9 +90,7 @@ T shanks_transform_alternating<T, K>::operator()(const K n, const K order, const
         return result;
     }
     // n > order >= 1
-    if (n < order) {
-        throw std::invalid_argument("n is less than order");
-    }
+    if (n < order) throw std::invalid_argument("n is less than order");
 
     std::vector<T> T_n(n + order, utils::cast<T, int>()(0, precision));
 

@@ -75,8 +75,8 @@ def create_series_registry_def():
             if len(params)>0:
                 param_T = re.search(r"T ([\w\d]*)[,\)]?", params).group(1) if not re.search(r"T ([\w\d]*)[,\)]?", params) is None else "nullptr"
                 param_K = re.search(r"K ([\w\d]*)[,\)]?", params).group(1) if not re.search(r"K ([\w\d]*)[,\)]?", params) is None else "nullptr"
-                registery.append("\"" + param_T+"\"" )
-                registery.append("\""+param_K+"\"" )
+                registery.append("\"" + param_T + "\"" if param_T != "nullptr" else param_T)
+                registery.append("\"" + param_K + "\"" if param_K != "nullptr" else param_K)
 
             macro_body : str = ""
 

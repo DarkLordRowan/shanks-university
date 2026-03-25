@@ -100,6 +100,8 @@ private:
      * @return T The accelerated value calculated using the history of previous terms.
      */
     inline T main_case(const K n, const std::vector<T>& Sn) const;
+
+    static inline std::size_t how_much(const std::size_t n) { return n + 1; }
 };
 
 // ======================= OPERATOR IMPLEMENTATION ==========================
@@ -223,10 +225,10 @@ inline T anderson_acceleration_algorithm<T, K>::main_case(const K n, const std::
 template <AcceptedLike T, UnsignedIntLike K>
 T anderson_acceleration_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
     // Validate that we have enough data points to perform acceleration
-    if (data.Sn.size() < n + 1)
+    if (data.Sn.size() < anderson_acceleration_algorithm<T, K>::how_much(n))
         throw std::out_of_range(
             "Insufficient data in Sn vector: size=" + utils::helpers<size_t>::to_string(data.Sn.size()) +
-            ", required at least " + utils::helpers<K>::to_string(n + 1));
+            ", required at least " + utils::helpers<K>::to_string(anderson_acceleration_algorithm<T, K>::how_much(n)));
 
     // Not enough points for acceleration, return original partial sum
     if (n < 2) return data.Sn[n];

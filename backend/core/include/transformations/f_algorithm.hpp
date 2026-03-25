@@ -141,16 +141,20 @@ public:
 
         return series_acceleration<T, K>::acceleration_name;
     }
+
+    static inline std::size_t how_much(const std::size_t n, const std::size_t order,
+                                       const shanks::remainders::remainder_type type) {
+        return n + order + std::size_t(1) +
+               std::size_t(type == shanks::remainders::remainder_type::t_wave_type ||
+                           type == shanks::remainders::remainder_type::v_type) +
+               std::size_t(2) * std::size_t(type == shanks::remainders::remainder_type::v_wave_type);
+    }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T f_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Calculate minimum required size based on the chosen remainder variant
-    const K required_size =
-        n + order + static_cast<K>(1) +
-        static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
-                       remainder_type_in_use == shanks::remainders::remainder_type::v_type) +
-        static_cast<K>(2) * static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
+    const std::size_t required_size = f_algorithm<T, K>::how_much(n, order, remainder_type_in_use);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for D_{" + utils::helpers<K>::to_string(order) +
