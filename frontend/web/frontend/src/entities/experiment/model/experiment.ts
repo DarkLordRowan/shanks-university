@@ -44,6 +44,10 @@ export interface Accel {
     name: string;
     m: number | null;
     args: AccelArgs | null;
+
+    variant?: "raw" | "filtered";
+    baseAccelId?: string;
+    filteredMethodName?: string;
 }
 
 export interface SeriesAccelComputedPoint {
@@ -85,6 +89,12 @@ export interface SeriesAccel {
 
     noise?: string | null;
     filtered?: SeriesAccelFiltered | null;
+
+    variant?: "raw" | "filtered";
+    baseAccelId?: string;
+    filteredMethodName?: string;
+    filteredStartN?: number;
+    filteredSegmentLength?: number;
 }
 
 export interface Experiment {

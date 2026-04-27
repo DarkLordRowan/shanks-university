@@ -1,6 +1,6 @@
 // src/widgets/AlgorithmSeriesErrorMatrix.tsx
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import type {
     Accel,
     AccelArgs,
@@ -10,6 +10,10 @@ import type {
     SeriesAccel,
     SeriesArgs,
 } from "@/entities/experiment/model/experiment";
+import {
+    buildExperimentSessionStateKey,
+    useInMemorySessionState,
+} from "@/shared/lib/inMemorySessionState";
 import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
 import { ExperimentMatrixFilterScope } from "@/shared/ui/Matrix/filters/ExperimentMatrixFilterScope";
 import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
@@ -40,6 +44,10 @@ interface AlgorithmSeriesErrorMatrixProps {
     experiment: Experiment | null;
     /** размер страницы по столбцам; если не задан, показываем все */
     maxSeries?: number;
+}
+
+interface AlgorithmSeriesErrorMatrixViewState {
+    precisionFilter: string | null;
 }
 
 /* ---------------- utils ---------------- */
@@ -253,7 +261,16 @@ const AlgorithmSeriesErrorMatrixView: React.FC<AlgorithmSeriesErrorMatrixProps &
     externalResetKey,
 }) => {
     /** null = все precision, конкретная строка = фильтр по precision */
-    const [precisionFilter, setPrecisionFilter] = useState<string | null>(null);
+    const viewSessionKey = experiment
+        ? buildExperimentSessionStateKey(experiment.id, "view:series-error")
+        : undefined;
+    const [viewState, setViewState] = useInMemorySessionState<AlgorithmSeriesErrorMatrixViewState>({
+        key: viewSessionKey,
+        initialValue: {
+            precisionFilter: null,
+        },
+    });
+    const { precisionFilter } = viewState;
 
     const { precisionsOrder, seriesList, algoList, cellMap, totalCells } = useMemo(() => {
         if (!experiment) {
@@ -360,8 +377,13 @@ const AlgorithmSeriesErrorMatrixView: React.FC<AlgorithmSeriesErrorMatrixProps &
 
     // если фильтр указывает на precision, которого больше нет, сбрасываем его
     useEffect(() => {
-        if (precisionFilter && !precisionsOrder.includes(precisionFilter)) setPrecisionFilter(null);
-    }, [precisionFilter, precisionsOrder]);
+        if (!precisionFilter || precisionsOrder.includes(precisionFilter)) return;
+        setViewState((current) =>
+            current.precisionFilter === null
+                ? current
+                : { ...current, precisionFilter: null }
+        );
+    }, [precisionFilter, precisionsOrder, setViewState]);
 
     const rowsAxis: MatrixAxisItem<AlgoInfo>[] = useMemo(
         () => algoList.map((a) => ({ id: a.key, meta: a })),
@@ -659,7 +681,11 @@ const AlgorithmSeriesErrorMatrixView: React.FC<AlgorithmSeriesErrorMatrixProps &
                             className="rounded border border-border bg-surface px-1 py-[1px]"
                             value={precisionFilter ?? ""}
                             onChange={(e) =>
-                                setPrecisionFilter(e.target.value === "" ? null : e.target.value)
+                                setViewState((current) => ({
+                                    ...current,
+                                    precisionFilter:
+                                        e.target.value === "" ? null : e.target.value,
+                                }))
                             }
                         >
                             <option value="">все</option>

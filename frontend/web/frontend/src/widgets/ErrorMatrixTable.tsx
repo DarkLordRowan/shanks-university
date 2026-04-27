@@ -1,9 +1,13 @@
 // widgets/ErrorMatrixTable.tsx
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import * as XLSX from "xlsx-js-style";
 import type { Experiment } from "@/entities/experiment/model/experiment";
 import { buildErrorMatrixFromExperiment } from "@/shared/lib/error-matrix/buildErrorMatrix";
+import {
+    buildExperimentSessionStateKey,
+    useInMemorySessionState,
+} from "@/shared/lib/inMemorySessionState";
 import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
 import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
 import { ExperimentMatrixFilterScope } from "@/shared/ui/Matrix/filters/ExperimentMatrixFilterScope";
@@ -37,6 +41,11 @@ interface SortState {
     dir: SortDir;
 }
 
+interface ErrorMatrixTableViewState {
+    precision: string | null;
+    sort: SortState;
+}
+
 type RowMeta = {
     key: string;
     algorithmName: string;
@@ -64,12 +73,25 @@ const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?
         return Array.from(set).sort((a, b) => a.localeCompare(b));
     }, [experiment]);
 
-    const [precision, setPrecision] = useState<string | null>(null);
+    const viewSessionKey = experiment
+        ? buildExperimentSessionStateKey(experiment.id, "view:error-matrix")
+        : undefined;
+    const [viewState, setViewState] = useInMemorySessionState<ErrorMatrixTableViewState>({
+        key: viewSessionKey,
+        initialValue: {
+            precision: null,
+            sort: { key: "err", dir: "desc" },
+        },
+    });
+    const { precision, sort } = viewState;
 
     // сбрасываем precision, если такого значения больше нет
     useEffect(() => {
-        if (precision && !precisionOptions.includes(precision)) setPrecision(null);
-    }, [precision, precisionOptions]);
+        if (!precision || precisionOptions.includes(precision)) return;
+        setViewState((current) =>
+            current.precision === null ? current : { ...current, precision: null }
+        );
+    }, [precision, precisionOptions, setViewState]);
 
     const { nList, algoList, cellMap, cellMessagesMap, algoStats, totalErrorItems } = useMemo(
         () => buildErrorMatrixFromExperiment(experiment, precision),
@@ -80,8 +102,6 @@ const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?
         () => Object.values(algoStats).reduce((sum, st) => sum + st.total, 0),
         [algoStats]
     );
-
-    const [sort, setSort] = useState<SortState>({ key: "err", dir: "desc" });
 
     const sortedAlgoList = useMemo(() => {
         return [...algoList].sort((a, b) => {
@@ -159,9 +179,13 @@ const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?
     }
 
     const toggleSort = (key: SortKey) => {
-        setSort((s) =>
-            s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "desc" }
-        );
+        setViewState((current) => ({
+            ...current,
+            sort:
+                current.sort.key === key
+                    ? { key, dir: current.sort.dir === "asc" ? "desc" : "asc" }
+                    : { key, dir: "desc" },
+        }));
     };
 
     const renderRowHeader: MatrixProps<RowMeta, ColMeta>["renderRowHeader"] = (row) => {
@@ -407,7 +431,12 @@ const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?
                             <select
                                 className="rounded border border-border bg-surface px-1 py-[1px]"
                                 value={precision ?? ""}
-                                onChange={(e) => setPrecision(e.target.value || null)}
+                                onChange={(e) =>
+                                    setViewState((current) => ({
+                                        ...current,
+                                        precision: e.target.value || null,
+                                    }))
+                                }
                             >
                                 <option value="">Все</option>
                                 {precisionOptions.map((p) => (

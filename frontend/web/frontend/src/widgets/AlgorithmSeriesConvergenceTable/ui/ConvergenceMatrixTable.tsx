@@ -5,6 +5,7 @@ import {
     type Experiment,
     type SelectedCell,
 } from "../model/types";
+import { buildExperimentSessionStateKey } from "@/shared/lib/inMemorySessionState";
 import {
     formatMonotonicityWithMax,
     formatSideWithMax,
@@ -494,6 +495,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     selectedCell,
     onCellSelect,
 }) => {
+    const filterSessionKey = buildExperimentSessionStateKey(experiment.id, "matrix-filters");
     const algoByKey = useMemo(() => new Map(matrix.algoList.map((algo) => [algo.key, algo])), [matrix.algoList]);
     const seriesByKey = useMemo(() => new Map(matrix.seriesList.map((series) => [series.key, series])), [matrix.seriesList]);
     const seriesLimitByKey = useMemo(
@@ -733,6 +735,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
         <MatrixAlgorithmSeries
             accelList={experiment?.accelList ?? []}
             seriesList={experiment?.seriesList ?? []}
+            filterSessionKey={filterSessionKey}
             maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
             thClassName="px-0 py-0"
             tdClassName="px-0 py-0"

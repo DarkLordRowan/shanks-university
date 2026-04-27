@@ -8,7 +8,7 @@ import type { ParquetAccelRow, ParquetSeriesRow } from "@/shared/parquet/types";
 import { readParquetFile } from "@/shared/parquet/readParquetFile";
 import {
     buildSeriesEntityFromParquetRow,
-    buildAccelAndSeriesAccelEntitiesFromParquetRow,
+    buildAccelAndSeriesAccelEntityVariantsFromParquetRow,
 } from "@/shared/parquet/buildExperimentFromParquet";
 
 type Series = Experiment["seriesList"][number];
@@ -218,16 +218,17 @@ export function useLoadParquetExperiment() {
                             series_id: sid,
                         };
 
-                        const { accelId, accel, seriesAccel } =
-                            buildAccelAndSeriesAccelEntitiesFromParquetRow({
-                                row: patched,
-                                series,
-                            });
+                        const variants = buildAccelAndSeriesAccelEntityVariantsFromParquetRow({
+                            row: patched,
+                            series,
+                        });
 
-                        if (!accelById.has(accelId)) {
-                            accelById.set(accelId, accel);
+                        for (const { accelId, accel, seriesAccel } of variants) {
+                            if (!accelById.has(accelId)) {
+                                accelById.set(accelId, accel);
+                            }
+                            seriesAccelList.push(seriesAccel);
                         }
-                        seriesAccelList.push(seriesAccel);
                     }
 
                     filesDone += 1;

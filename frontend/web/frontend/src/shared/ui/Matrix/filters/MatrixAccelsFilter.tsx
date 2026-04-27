@@ -4,6 +4,7 @@ import type { Accel } from "@/entities/experiment/model/experiment";
 import { MatrixAxisFilter, type FilterMode, type Group } from "./MatrixAxisFilter";
 
 export type ArgsOp = "and" | "or";
+export type AccelVariantMode = "all" | "raw" | "filtered";
 
 export type ArgClause = {
     key: string;
@@ -30,6 +31,9 @@ export interface MatrixAccelsFilterProps {
     onMMinText: (v: string) => void;
     onMMaxText: (v: string) => void;
 
+    variantMode: AccelVariantMode;
+    onVariantMode: (mode: AccelVariantMode) => void;
+
     // args clauses
     argsOp: ArgsOp;
     onArgsOp: (op: ArgsOp) => void;
@@ -47,6 +51,8 @@ export function MatrixAccelsFilter(props: MatrixAccelsFilterProps) {
         mMaxText,
         onMMinText,
         onMMaxText,
+        variantMode,
+        onVariantMode,
         argsOp,
         onArgsOp,
         argClauses,
@@ -94,6 +100,31 @@ export function MatrixAccelsFilter(props: MatrixAccelsFilterProps) {
                                 className="w-full rounded border border-border bg-panel px-2 py-1 text-[11px] text-textDim outline-none"
                             />
                         </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-2 text-[10px] text-textDim">
+                        <span className="text-textDim/70">variant:</span>
+                        {(["all", "raw", "filtered"] as const).map((mode) => (
+                            <button
+                                key={mode}
+                                type="button"
+                                className={`rounded border border-border px-2 py-[2px] ${
+                                    variantMode === mode
+                                        ? "bg-panel"
+                                        : "bg-surface hover:bg-panel"
+                                }`}
+                                onClick={() => onVariantMode(mode)}
+                                title={
+                                    mode === "all"
+                                        ? "show raw and filtered algorithms"
+                                        : mode === "raw"
+                                          ? "show only original algorithms"
+                                          : "show only filtered algorithms"
+                                }
+                            >
+                                {mode}
+                            </button>
+                        ))}
                     </div>
 
                     {/* args: AND/OR + multiple clauses */}

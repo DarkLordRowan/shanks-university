@@ -1,6 +1,6 @@
 // src/widgets/AlgorithmSeriesDiffHeatmap.tsx
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import type {
     Accel,
     AccelArgs,
@@ -9,6 +9,10 @@ import type {
     SeriesAccel,
     SeriesArgs,
 } from "@/entities/experiment/model/experiment";
+import {
+    buildExperimentSessionStateKey,
+    useInMemorySessionState,
+} from "@/shared/lib/inMemorySessionState";
 import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
 import { ExperimentMatrixFilterScope } from "@/shared/ui/Matrix/filters/ExperimentMatrixFilterScope";
 import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
@@ -261,6 +265,11 @@ interface DiffRecord {
     next: ErrorSideInfo;
 }
 
+interface AlgorithmSeriesDiffHeatmapViewState {
+    prevPrecision: string | null;
+    nextPrecision: string | null;
+}
+
 type Side = "prev" | "next";
 
 function headerStyle(): XLSX.CellStyle {
@@ -352,25 +361,47 @@ function AlgorithmSeriesDiffHeatmapView({
         return { seriesRaw, accelRaw, seriesAccelRaw, precisionsOrder };
     }, [experiment]);
 
-    const [prevPrecision, setPrevPrecision] = useState<string | null>(null);
-    const [nextPrecision, setNextPrecision] = useState<string | null>(null);
+    const viewSessionKey = experiment
+        ? buildExperimentSessionStateKey(experiment.id, "view:series-diff")
+        : undefined;
+    const [viewState, setViewState] =
+        useInMemorySessionState<AlgorithmSeriesDiffHeatmapViewState>({
+            key: viewSessionKey,
+            initialValue: {
+                prevPrecision: null,
+                nextPrecision: null,
+            },
+        });
+    const { prevPrecision, nextPrecision } = viewState;
 
     useEffect(() => {
-        if (precisionsOrder.length === 0) {
-            setPrevPrecision(null);
-            setNextPrecision(null);
-            return;
-        }
+        setViewState((current) => {
+            const nextPrev =
+                precisionsOrder.length === 0
+                    ? null
+                    : current.prevPrecision && precisionsOrder.includes(current.prevPrecision)
+                      ? current.prevPrecision
+                      : (precisionsOrder[0] ?? null);
+            const nextNext =
+                precisionsOrder.length === 0
+                    ? null
+                    : current.nextPrecision && precisionsOrder.includes(current.nextPrecision)
+                      ? current.nextPrecision
+                      : (precisionsOrder[1] ?? precisionsOrder[0] ?? null);
 
-        setPrevPrecision((old) =>
-            old && precisionsOrder.includes(old) ? old : (precisionsOrder[0] ?? null)
-        );
-        setNextPrecision((old) =>
-            old && precisionsOrder.includes(old)
-                ? old
-                : (precisionsOrder[1] ?? precisionsOrder[0] ?? null)
-        );
-    }, [precisionsOrder]);
+            if (
+                current.prevPrecision === nextPrev &&
+                current.nextPrecision === nextNext
+            ) {
+                return current;
+            }
+
+            return {
+                prevPrecision: nextPrev,
+                nextPrecision: nextNext,
+            };
+        });
+    }, [precisionsOrder, setViewState]);
 
     const { seriesList, algoList, diffMap } = useMemo(() => {
         const empty = {
@@ -775,7 +806,12 @@ function AlgorithmSeriesDiffHeatmapView({
                             <select
                                 className="rounded border border-border bg-surface px-1 py-[1px]"
                                 value={prevPrecision ?? ""}
-                                onChange={(e) => setPrevPrecision(e.target.value || null)}
+                                onChange={(e) =>
+                                    setViewState((current) => ({
+                                        ...current,
+                                        prevPrecision: e.target.value || null,
+                                    }))
+                                }
                             >
                                 {precisionsOrder.length === 0 && <option value="">—</option>}
                                 {precisionsOrder.map((p) => (
@@ -791,7 +827,12 @@ function AlgorithmSeriesDiffHeatmapView({
                             <select
                                 className="rounded border border-border bg-surface px-1 py-[1px]"
                                 value={nextPrecision ?? ""}
-                                onChange={(e) => setNextPrecision(e.target.value || null)}
+                                onChange={(e) =>
+                                    setViewState((current) => ({
+                                        ...current,
+                                        nextPrecision: e.target.value || null,
+                                    }))
+                                }
                             >
                                 {precisionsOrder.length === 0 && <option value="">—</option>}
                                 {precisionsOrder.map((p) => (

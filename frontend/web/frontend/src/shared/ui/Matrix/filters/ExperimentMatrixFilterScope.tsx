@@ -1,5 +1,6 @@
-﻿import React from "react";
+import React from "react";
 import type { Accel, Experiment, Series } from "@/entities/experiment/model/experiment";
+import { buildExperimentSessionStateKey } from "@/shared/lib/inMemorySessionState";
 import {
     MatrixAlgoSeriesFilter,
     type MatrixAlgoSeriesFilterState,
@@ -8,6 +9,7 @@ import {
 function buildFilterStateKey(state: MatrixAlgoSeriesFilterState): string {
     return [
         state.accel.query,
+        state.accel.variantMode,
         state.accel.groupMode,
         Array.from(state.accel.selectedGroupKeys).sort().join(","),
         state.accel.mMinText,
@@ -35,11 +37,12 @@ export interface ExperimentMatrixFilterScopeRenderArgs {
 export interface ExperimentMatrixFilterScopeProps {
     experiment: Experiment | null;
     resetKey?: string | number;
+    sessionKey?: string;
     children: (args: ExperimentMatrixFilterScopeRenderArgs) => React.ReactNode;
 }
 
 export function ExperimentMatrixFilterScope(props: ExperimentMatrixFilterScopeProps) {
-    const { experiment, resetKey, children } = props;
+    const { experiment, resetKey, sessionKey, children } = props;
 
     if (!experiment) {
         return (
@@ -55,11 +58,15 @@ export function ExperimentMatrixFilterScope(props: ExperimentMatrixFilterScopePr
         );
     }
 
+    const filterSessionKey =
+        sessionKey ?? buildExperimentSessionStateKey(experiment.id, "matrix-filters");
+
     return (
         <MatrixAlgoSeriesFilter
             accelList={experiment.accelList ?? []}
             seriesList={experiment.seriesList ?? []}
             resetKey={resetKey ?? experiment.id}
+            sessionKey={filterSessionKey}
         >
             {({ filteredAccels, filteredSeries, state }) => {
                 const accelIds = new Set(filteredAccels.map((a) => a.id));

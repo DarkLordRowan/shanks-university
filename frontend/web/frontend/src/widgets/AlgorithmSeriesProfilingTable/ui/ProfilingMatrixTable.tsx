@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import * as XLSX from "xlsx-js-style";
 import type { Experiment, ProfilingMatrix, SelectedCell, OpsTrendType } from "../model/types";
+import { buildExperimentSessionStateKey } from "@/shared/lib/inMemorySessionState";
 import {
     formatOps,
     formatTrendShort,
@@ -61,6 +62,7 @@ export const ProfilingMatrixTable: React.FC<ProfilingMatrixTableProps> = ({
                                                                               selectedCell,
                                                                               onCellSelect,
                                                                           }) => {
+    const filterSessionKey = buildExperimentSessionStateKey(experiment.id, "matrix-filters");
     const algoByKey = useMemo(() => new Map(matrix.algoList.map((a) => [a.key, a])), [matrix.algoList]);
     const seriesByKey = useMemo(() => new Map(matrix.seriesList.map((s) => [s.key, s])), [matrix.seriesList]);
     const buildWorkbook = useMemo(
@@ -218,6 +220,7 @@ export const ProfilingMatrixTable: React.FC<ProfilingMatrixTableProps> = ({
         <MatrixAlgorithmSeries
             accelList={experiment?.accelList ?? []}
             seriesList={experiment?.seriesList ?? []}
+            filterSessionKey={filterSessionKey}
             maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
             thClassName="px-0 py-0"
             tdClassName="px-0 py-0"

@@ -9,6 +9,7 @@ export interface MatrixAlgorithmSeriesProps extends MatrixAlgorithmSeriesViewPro
     enableFilters?: boolean;
 
     filterResetKey?: string | number;
+    filterSessionKey?: string;
     groupAccelsBy?: (a: Accel) => { key: string; title?: string };
     groupSeriesBy?: (s: Series) => { key: string; title?: string };
 }
@@ -17,6 +18,7 @@ export function MatrixAlgorithmSeries(props: MatrixAlgorithmSeriesProps) {
     const {
         enableFilters = true,
         filterResetKey,
+        filterSessionKey,
         groupAccelsBy,
         groupSeriesBy,
         accelList,
@@ -39,6 +41,7 @@ export function MatrixAlgorithmSeries(props: MatrixAlgorithmSeriesProps) {
             accelList={accelList}
             seriesList={seriesList}
             resetKey={filterResetKey}
+            sessionKey={filterSessionKey}
             groupAccelsBy={groupAccelsBy}
             groupSeriesBy={groupSeriesBy}
         >

@@ -14,6 +14,7 @@ import { ErrorStatsCell, type HeatClass } from "./ui/ErrorStatsCell";
 import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries";
 import { buildMatrixCellDomId } from "@/shared/lib/dom/buildMatrixCellDomId";
 import { buildMatrixArgsSummary } from "@/shared/lib/matrixArgs";
+import { buildExperimentSessionStateKey } from "@/shared/lib/inMemorySessionState";
 
 interface AlgorithmSeriesErrorStatsTableProps {
     experiment: Experiment | null;
@@ -100,6 +101,9 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
         () => buildStatsIndex(experiment?.seriesAccelList),
         [experiment?.seriesAccelList]
     );
+    const filterSessionKey = experiment
+        ? buildExperimentSessionStateKey(experiment.id, "matrix-filters")
+        : undefined;
 
     const globalMax = useMemo(() => getGlobalMax(statsIndex), [statsIndex]);
 
@@ -258,6 +262,7 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
         <MatrixAlgorithmSeries
             accelList={experiment?.accelList ?? []}
             seriesList={experiment?.seriesList ?? []}
+            filterSessionKey={filterSessionKey}
             maxColsPerPage={maxSeries}
             colWidth={90}
             minCellHeightPx={64}

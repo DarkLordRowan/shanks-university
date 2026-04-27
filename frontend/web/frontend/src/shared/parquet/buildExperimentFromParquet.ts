@@ -160,6 +160,25 @@ function normalizeAccelArgs(
     return normalizeArgs(src);
 }
 
+function computeComplexDeviation(
+    value: { re: number | null; im: number | null } | null,
+    limit: Complex | null
+): number | null {
+    if (!value || !limit) return null;
+
+    const reV = value.re;
+    const imV = value.im ?? 0;
+    const reL = limit.re;
+    const imL = limit.im ?? 0;
+
+    if (reV == null || reL == null) return null;
+    if (!Number.isFinite(reV) || !Number.isFinite(reL)) return null;
+    if (!Number.isFinite(imV) || !Number.isFinite(imL)) return null;
+
+    const deviation = Math.hypot(reV - reL, imV - imL);
+    return Number.isFinite(deviation) ? deviation : null;
+}
+
 function mapAccelComputed(raw: unknown): SeriesAccelComputedPoint[] {
     const arr = listLikeToArray<ParquetAccelComputed | null>(raw);
     if (arr.length === 0) return [];
@@ -309,6 +328,83 @@ function buildAccelId(row: ParquetAccelRow): string {
     return parts.join("|");
 }
 
+function buildFilteredAccelId(baseAccelId: string, methodName: string): string {
+    return `${baseAccelId}|filtered=${methodName}`;
+}
+
+function buildFilteredAccelArgs(
+    baseArgs: Record<string, ScalarArg> | null,
+    methodName: string
+): Record<string, ScalarArg> {
+    return {
+        ...(baseArgs ?? {}),
+        filtered: true,
+        filter_method: methodName,
+    };
+}
+
+function buildFilteredComputed(
+    filtered: SeriesAccelFiltered,
+    method: SeriesAccelFilteredMethod,
+    series: Series
+): SeriesAccelComputedPoint[] {
+    const startN = Math.max(0, filtered.startN ?? 0);
+
+    return method.values.map((value, index) => ({
+        n: startN + index + 1,
+        value,
+        deviation: computeComplexDeviation(value, series.limit),
+        profiling: null,
+    }));
+}
+
+interface AccelSeriesAccelEntities {
+    accelId: string;
+    accel: Accel;
+    seriesAccel: SeriesAccel;
+}
+
+function buildFilteredAccelAndSeriesAccelEntities(params: {
+    baseAccel: Accel;
+    baseSeriesAccel: SeriesAccel;
+    series: Series;
+}): AccelSeriesAccelEntities[] {
+    const { baseAccel, baseSeriesAccel, series } = params;
+    const filtered = baseSeriesAccel.filtered;
+    if (!filtered) return [];
+
+    return Object.entries(filtered.methods)
+        .filter(([, method]) => method.values.length > 0)
+        .map(([methodName, method]) => {
+            const accelId = buildFilteredAccelId(baseAccel.id, methodName);
+            const accel: Accel = {
+                ...baseAccel,
+                id: accelId,
+                name: `${baseAccel.name} [filtered: ${methodName}]`,
+                args: buildFilteredAccelArgs(baseAccel.args, methodName),
+                variant: "filtered",
+                baseAccelId: baseAccel.id,
+                filteredMethodName: methodName,
+            };
+
+            const seriesAccel: SeriesAccel = {
+                ...baseSeriesAccel,
+                accel_id: accelId,
+                computed: buildFilteredComputed(filtered, method, series),
+                errors: [],
+                events: [],
+                filtered: null,
+                variant: "filtered",
+                baseAccelId: baseAccel.id,
+                filteredMethodName: methodName,
+                filteredStartN: filtered.startN,
+                filteredSegmentLength: filtered.segmentLength,
+            };
+
+            return { accelId, accel, seriesAccel };
+        });
+}
+
 function buildSeriesList(seriesRows: ParquetSeriesRow[]): Series[] {
     const map = new Map<number, Series>();
 
@@ -372,6 +468,7 @@ export async function buildExperimentFromParquet(
                 name: row.accel_name,
                 m: extractMValue(row),
                 args: normalizeAccelArgs(row.additional_args),
+                variant: "raw",
             };
             accelMap.set(accelId, accel);
         }
@@ -383,7 +480,7 @@ export async function buildExperimentFromParquet(
         const noise = typeof row.noise_str === "string" ? row.noise_str : null;
         const filtered = mapFiltered(row.filtered);
 
-        seriesAccelList.push({
+        const seriesAccel: SeriesAccel = {
             series_id: series.id,
             accel_id: accel.id,
             computed,
@@ -391,7 +488,21 @@ export async function buildExperimentFromParquet(
             events,
             noise,
             filtered,
-        });
+            variant: "raw",
+        };
+
+        seriesAccelList.push(seriesAccel);
+
+        for (const variant of buildFilteredAccelAndSeriesAccelEntities({
+            baseAccel: accel,
+            baseSeriesAccel: seriesAccel,
+            series,
+        })) {
+            if (!accelMap.has(variant.accelId)) {
+                accelMap.set(variant.accelId, variant.accel);
+            }
+            seriesAccelList.push(variant.seriesAccel);
+        }
 
         if (onProgress && (processed % PROGRESS_CHUNK === 0 || processed === total)) {
             onProgress(processed, total);
@@ -435,6 +546,7 @@ export function buildAccelAndSeriesAccelEntitiesFromParquetRow(params: {
         name: row.accel_name,
         m: extractMValue(row),
         args: normalizeAccelArgs(row.additional_args),
+        variant: "raw",
     };
 
     const seriesAccel: SeriesAccel = {
@@ -445,7 +557,23 @@ export function buildAccelAndSeriesAccelEntitiesFromParquetRow(params: {
         events: mapEvents(row.events),
         noise: typeof row.noise_str === "string" ? row.noise_str : null,
         filtered: mapFiltered(row.filtered),
+        variant: "raw",
     };
 
     return { accelId, accel, seriesAccel };
+}
+
+export function buildAccelAndSeriesAccelEntityVariantsFromParquetRow(params: {
+    row: ParquetAccelRow;
+    series: Series;
+}): AccelSeriesAccelEntities[] {
+    const raw = buildAccelAndSeriesAccelEntitiesFromParquetRow(params);
+    return [
+        raw,
+        ...buildFilteredAccelAndSeriesAccelEntities({
+            baseAccel: raw.accel,
+            baseSeriesAccel: raw.seriesAccel,
+            series: params.series,
+        }),
+    ];
 }

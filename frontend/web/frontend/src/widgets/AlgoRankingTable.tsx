@@ -1,6 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import * as XLSX from "xlsx-js-style";
 import type { Experiment } from "@/entities/experiment/model/experiment";
+import {
+    buildExperimentSessionStateKey,
+    useInMemorySessionState,
+} from "@/shared/lib/inMemorySessionState";
 import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
 import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
 import {
@@ -27,6 +31,13 @@ import {
 import { DocsAnchorButton } from "@/shared/ui/docs/DocsAnchorButton";
 
 type SortDir = "asc" | "desc";
+
+interface AlgoRankingTableViewState {
+    epsilonExp: number;
+    precisionFilter: string | null;
+    sortKey: SortKey;
+    sortDir: SortDir;
+}
 
 export interface AlgoRankingTableProps {
     experiment: Experiment | null;
@@ -302,6 +313,7 @@ function compareValues(aVal: unknown, bVal: unknown, dir: SortDir): number {
 function buildFilterStateKey(state: MatrixAlgoSeriesFilterState): string {
     return [
         state.accel.query,
+        state.accel.variantMode,
         state.accel.groupMode,
         Array.from(state.accel.selectedGroupKeys).sort().join(","),
         state.accel.mMinText,
@@ -504,12 +516,23 @@ function getExportColumnFormat(colId: ColId): string | null {
 }
 
 export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, className }) => {
-    const [epsilonExp, setEpsilonExp] = useState(-6);
+    const viewSessionKey = experiment
+        ? buildExperimentSessionStateKey(experiment.id, "view:algo-ranking")
+        : undefined;
+    const [viewState, setViewState] = useInMemorySessionState<AlgoRankingTableViewState>({
+        key: viewSessionKey,
+        initialValue: {
+            epsilonExp: -6,
+            precisionFilter: null,
+            sortKey: "totalRankScore",
+            sortDir: "asc",
+        },
+    });
+    const { epsilonExp, precisionFilter, sortKey, sortDir } = viewState;
     const epsilon = useMemo(() => Math.pow(10, epsilonExp), [epsilonExp]);
-
-    const [precisionFilter, setPrecisionFilter] = useState<string | null>(null);
-    const [sortKey, setSortKey] = useState<SortKey>("totalRankScore");
-    const [sortDir, setSortDir] = useState<SortDir>("asc");
+    const sharedFilterSessionKey = experiment
+        ? buildExperimentSessionStateKey(experiment.id, "matrix-filters")
+        : undefined;
 
     const precisionsOrder = useMemo(() => {
         if (!experiment || !experiment.seriesList) return [];
@@ -522,10 +545,13 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
     }, [experiment]);
 
     useEffect(() => {
-        if (precisionFilter && !precisionsOrder.includes(precisionFilter)) {
-            setPrecisionFilter(null);
-        }
-    }, [precisionFilter, precisionsOrder]);
+        if (!precisionFilter || precisionsOrder.includes(precisionFilter)) return;
+        setViewState((current) =>
+            current.precisionFilter === null
+                ? current
+                : { ...current, precisionFilter: null }
+        );
+    }, [precisionFilter, precisionsOrder, setViewState]);
 
     const totalStats = useMemo(
         () => buildAlgoStatsFromExperiment(experiment, epsilon, precisionFilter),
@@ -533,16 +559,17 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
     );
 
     const handleSort = useCallback((nextKey: SortKey, defaultDir: SortDir) => {
-        setSortKey((current) => {
-            if (current === nextKey) {
-                setSortDir((currentDir) => (currentDir === "asc" ? "desc" : "asc"));
-                return current;
-            }
-
-            setSortDir(defaultDir);
-            return nextKey;
-        });
-    }, []);
+        setViewState((current) => ({
+            ...current,
+            sortKey: nextKey,
+            sortDir:
+                current.sortKey === nextKey
+                    ? current.sortDir === "asc"
+                        ? "desc"
+                        : "asc"
+                    : defaultDir,
+        }));
+    }, [setViewState]);
 
     const renderColHeader: MatrixProps<RowMeta, ColMeta>["renderColHeader"] = (col) => {
         const meta = col.meta!;
@@ -706,7 +733,12 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                         max={-1}
                         step={1}
                         value={epsilonExp}
-                        onChange={(event) => setEpsilonExp(parseInt(event.target.value, 10))}
+                        onChange={(event) =>
+                            setViewState((current) => ({
+                                ...current,
+                                epsilonExp: parseInt(event.target.value, 10),
+                            }))
+                        }
                         className="w-full"
                     />
                     <div className="mt-1 flex justify-between text-[10px]">
@@ -722,7 +754,11 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                         className="rounded border border-border bg-surface px-1 py-[1px]"
                         value={precisionFilter ?? ""}
                         onChange={(event) =>
-                            setPrecisionFilter(event.target.value === "" ? null : event.target.value)
+                            setViewState((current) => ({
+                                ...current,
+                                precisionFilter:
+                                    event.target.value === "" ? null : event.target.value,
+                            }))
                         }
                     >
                         <option value="">all</option>
@@ -738,7 +774,8 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
             <MatrixAlgoSeriesFilter
                 accelList={experiment.accelList ?? []}
                 seriesList={experiment.seriesList ?? []}
-                resetKey={`${experiment.id}::${precisionFilter ?? "ALL"}`}
+                resetKey={experiment.id}
+                sessionKey={sharedFilterSessionKey}
             >
                 {({ filteredAccels, filteredSeries, state }) => {
                     const filteredSeriesIds = new Set(filteredSeries.map((series) => series.id));

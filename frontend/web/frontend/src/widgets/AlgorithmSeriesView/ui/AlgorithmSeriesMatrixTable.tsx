@@ -2,6 +2,7 @@
 
 import React, { useMemo } from "react";
 import type { Accel, Experiment, Series } from "@/entities/experiment/model/experiment.ts";
+import { buildExperimentSessionStateKey } from "@/shared/lib/inMemorySessionState";
 import type { MatrixAxisItem } from "@/shared/ui/Matrix/Matrix.tsx";
 import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries.tsx";
 import { getAlgorithmSeriesCellDomId } from "../model/getAlgorithmSeriesCellDomId";
@@ -37,10 +38,13 @@ export const AlgorithmSeriesMatrixTable: React.FC<AlgorithmSeriesMatrixTableProp
 
     if (!experiment || rows.length === 0 || cols.length === 0) return null;
 
+    const filterSessionKey = buildExperimentSessionStateKey(experiment.id, "matrix-filters");
+
     return (
         <MatrixAlgorithmSeries
             accelList={experiment.accelList ?? []}
             seriesList={experiment.seriesList ?? []}
+            filterSessionKey={filterSessionKey}
             maxColsPerPage={maxSeries}
             renderTitle={() => "Результаты: алгоритмы × ряды"}
             renderSubtitle={() => (

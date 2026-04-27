@@ -1,9 +1,11 @@
 ﻿// src/shared/ui/Matrix/filters/MatrixAlgoSeriesFilter.tsx
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import type { Accel, Series } from "@/entities/experiment/model/experiment.ts";
+import { useInMemorySessionState } from "@/shared/lib/inMemorySessionState";
 import {
     MatrixAccelsFilter,
+    type AccelVariantMode,
     type ArgsOp,
     type ArgClause,
 } from "@/shared/ui/Matrix/filters/MatrixAccelsFilter.tsx";
@@ -147,6 +149,11 @@ function applyAccelMFilter(list: Accel[], mMin: number | null, mMax: number | nu
     });
 }
 
+function applyAccelVariantFilter(list: Accel[], mode: AccelVariantMode): Accel[] {
+    if (mode === "all") return list;
+    return list.filter((accel) => (accel.variant ?? "raw") === mode);
+}
+
 function applySeriesPrecisionFilter(
     list: Series[],
     selectedPrecisions: Set<string>,
@@ -271,6 +278,7 @@ type AxisStateBase = {
 };
 
 type AccelAxisState = AxisStateBase & {
+    variantMode: AccelVariantMode;
     mMinText: string;
     mMaxText: string;
     argsOp: ArgsOp;
@@ -289,15 +297,76 @@ export type MatrixAlgoSeriesFilterState = {
     series: SeriesAxisState;
 };
 
+export type MatrixAlgoSeriesFilterInitialState = {
+    accel?: Partial<AccelAxisState>;
+    series?: Partial<SeriesAxisState>;
+};
+
+function cloneArgClauses(argClauses: ArgClause[] | undefined): ArgClause[] {
+    if (!argClauses || argClauses.length === 0) {
+        return [{ key: "", value: "" }];
+    }
+    return argClauses.map((clause) => ({ ...clause }));
+}
+
+function cloneStringSet(values: Iterable<string> | undefined): Set<string> {
+    return new Set(values ?? []);
+}
+
+function createAccelAxisState(initialState?: Partial<AccelAxisState>): AccelAxisState {
+    return {
+        query: initialState?.query ?? "",
+        groupMode: initialState?.groupMode ?? "whitelist",
+        selectedGroupKeys: cloneStringSet(initialState?.selectedGroupKeys),
+        idMode: initialState?.idMode ?? "whitelist",
+        selectedIds: cloneStringSet(initialState?.selectedIds),
+        variantMode: initialState?.variantMode ?? "all",
+        mMinText: initialState?.mMinText ?? "",
+        mMaxText: initialState?.mMaxText ?? "",
+        argsOp: initialState?.argsOp ?? "and",
+        argClauses: cloneArgClauses(initialState?.argClauses),
+    };
+}
+
+function createSeriesAxisState(initialState?: Partial<SeriesAxisState>): SeriesAxisState {
+    return {
+        query: initialState?.query ?? "",
+        groupMode: initialState?.groupMode ?? "whitelist",
+        selectedGroupKeys: cloneStringSet(initialState?.selectedGroupKeys),
+        idMode: initialState?.idMode ?? "whitelist",
+        selectedIds: cloneStringSet(initialState?.selectedIds),
+        precisionMode: initialState?.precisionMode ?? "whitelist",
+        selectedPrecisions: cloneStringSet(initialState?.selectedPrecisions),
+        argsOp: initialState?.argsOp ?? "and",
+        argClauses: cloneArgClauses(initialState?.argClauses),
+    };
+}
+
+export function createMatrixAlgoSeriesFilterState(
+    initialState?: MatrixAlgoSeriesFilterInitialState
+): MatrixAlgoSeriesFilterState {
+    return {
+        accel: createAccelAxisState(initialState?.accel),
+        series: createSeriesAxisState(initialState?.series),
+    };
+}
+
+export function cloneMatrixAlgoSeriesFilterState(
+    state: MatrixAlgoSeriesFilterState
+): MatrixAlgoSeriesFilterState {
+    return createMatrixAlgoSeriesFilterState(state);
+}
+
 export interface MatrixAlgoSeriesFilterProps {
     accelList: Accel[];
     seriesList: Series[];
     resetKey?: string | number;
+    sessionKey?: string;
 
     groupAccelsBy?: (a: Accel) => { key: string; title?: string };
     groupSeriesBy?: (s: Series) => { key: string; title?: string };
 
-    initialState?: Partial<MatrixAlgoSeriesFilterState>;
+    initialState?: MatrixAlgoSeriesFilterInitialState;
 
     children: (args: {
         filteredAccels: Accel[];
@@ -312,63 +381,26 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
         accelList,
         seriesList,
         resetKey,
+        sessionKey,
         groupAccelsBy,
         groupSeriesBy,
         initialState,
         children,
     } = props;
 
-    const [state, setState] = useState<MatrixAlgoSeriesFilterState>(() => ({
-        accel: {
-            query: "",
-            groupMode: "whitelist",
-            selectedGroupKeys: new Set<string>(),
-            idMode: "whitelist",
-            selectedIds: new Set<string>(),
-            mMinText: "",
-            mMaxText: "",
-            argsOp: "and",
-            argClauses: [{ key: "", value: "" }],
-            ...(initialState?.accel ?? null),
-        } as AccelAxisState,
-        series: {
-            query: "",
-            groupMode: "whitelist",
-            selectedGroupKeys: new Set<string>(),
-            idMode: "whitelist",
-            selectedIds: new Set<string>(),
-            precisionMode: "whitelist",
-            selectedPrecisions: new Set<string>(),
-            argsOp: "and",
-            argClauses: [{ key: "", value: "" }],
-            ...(initialState?.series ?? null),
-        } as SeriesAxisState,
-    }));
+    const [state, setState] = useInMemorySessionState<MatrixAlgoSeriesFilterState>({
+        key: sessionKey,
+        initialValue: () => createMatrixAlgoSeriesFilterState(initialState),
+        clone: cloneMatrixAlgoSeriesFilterState,
+    });
+    const prevResetKeyRef = useRef<string | number | undefined>(resetKey);
 
     useEffect(() => {
         if (resetKey == null) return;
-        setState((s) => ({
-            accel: {
-                ...s.accel,
-                query: "",
-                selectedGroupKeys: new Set(),
-                selectedIds: new Set(),
-                mMinText: "",
-                mMaxText: "",
-                argsOp: "and",
-                argClauses: [{ key: "", value: "" }],
-            },
-            series: {
-                ...s.series,
-                query: "",
-                selectedGroupKeys: new Set(),
-                selectedIds: new Set(),
-                selectedPrecisions: new Set(),
-                argsOp: "and",
-                argClauses: [{ key: "", value: "" }],
-            },
-        }));
-    }, [resetKey]);
+        if (prevResetKeyRef.current === resetKey) return;
+        prevResetKeyRef.current = resetKey;
+        setState(createMatrixAlgoSeriesFilterState(initialState));
+    }, [initialState, resetKey, setState]);
 
     const accelGroups = useMemo(() => {
         const get = groupAccelsBy ?? ((a: Accel) => ({ key: normalize(a.name), title: a.name }));
@@ -494,6 +526,9 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
         // args clauses
         out = applyArgsClauses(out, state.accel.argsOp, state.accel.argClauses);
 
+        // raw/filtered synthetic algorithms
+        out = applyAccelVariantFilter(out, state.accel.variantMode);
+
         // m
         const mMin = parseNullableNumber(state.accel.mMinText);
         const mMax = parseNullableNumber(state.accel.mMaxText);
@@ -592,6 +627,10 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                     onMMaxText={(v) =>
                         setState((s) => ({ ...s, accel: { ...s.accel, mMaxText: v } }))
                     }
+                    variantMode={state.accel.variantMode}
+                    onVariantMode={(mode) =>
+                        setState((s) => ({ ...s, accel: { ...s.accel, variantMode: mode } }))
+                    }
                     argsOp={state.accel.argsOp}
                     onArgsOp={(op) =>
                         setState((s) => ({ ...s, accel: { ...s.accel, argsOp: op } }))
@@ -631,6 +670,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                             ...s,
                             accel: {
                                 ...s.accel,
+                                variantMode: "all",
                                 mMinText: "",
                                 mMaxText: "",
                                 argsOp: "and",

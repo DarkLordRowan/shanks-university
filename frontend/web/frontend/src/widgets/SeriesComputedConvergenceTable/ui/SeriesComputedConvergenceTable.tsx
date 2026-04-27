@@ -31,6 +31,10 @@ import {
     createWorkbook,
 } from "@/shared/lib/xlsxExport";
 import {
+    buildExperimentSessionStateKey,
+    useInMemorySessionState,
+} from "@/shared/lib/inMemorySessionState";
+import {
     getSeriesComputedColumnAnchorId,
     SERIES_COMPUTED_TABLE_DOCS,
     type SeriesComputedDocsColumnKey,
@@ -44,6 +48,12 @@ export interface SeriesComputedConvergenceTableProps {
 
 type SortKey = SeriesComputedDocsColumnKey;
 type SortDir = "asc" | "desc";
+
+interface SeriesComputedConvergenceTableViewState {
+    maxSignChangesForOneSided: number;
+    maxViolationsForMonotone: number;
+    sort: { key: SortKey; dir: SortDir } | null;
+}
 
 interface RowData {
     series: Series;
@@ -309,17 +319,24 @@ const SeriesComputedConvergenceTableView: React.FC<
     const { seriesList, analysisBySeriesId, progress } = useSeriesComputedConvergence(experiment);
 
     const [selectedSeriesId, setSelectedSeriesId] = useState<string | null>(null);
-    const [maxSignChangesForOneSided, setMaxSignChangesForOneSided] = useState<number>(0);
-    const [maxViolationsForMonotone, setMaxViolationsForMonotone] = useState<number>(0);
-    const [sort, setSort] = useState<{ key: SortKey; dir: SortDir } | null>(null);
+    const viewSessionKey = experiment
+        ? buildExperimentSessionStateKey(experiment.id, "view:series-computed-convergence")
+        : undefined;
+    const [viewState, setViewState] =
+        useInMemorySessionState<SeriesComputedConvergenceTableViewState>({
+            key: viewSessionKey,
+            initialValue: {
+                maxSignChangesForOneSided: 0,
+                maxViolationsForMonotone: 0,
+                sort: null,
+            },
+        });
+    const { maxSignChangesForOneSided, maxViolationsForMonotone, sort } = viewState;
 
     const detailRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         setSelectedSeriesId(null);
-        setMaxSignChangesForOneSided(0);
-        setMaxViolationsForMonotone(0);
-        setSort(null);
     }, [experiment?.id]);
 
     useEffect(() => {
@@ -335,11 +352,17 @@ const SeriesComputedConvergenceTableView: React.FC<
     }, [selectedSeriesId]);
 
     const toggleSort = useCallback((key: SortKey) => {
-        setSort((previous) => {
-            if (!previous || previous.key !== key) return { key, dir: "asc" };
-            return { key, dir: previous.dir === "asc" ? "desc" : "asc" };
-        });
-    }, []);
+        setViewState((current) => ({
+            ...current,
+            sort:
+                !current.sort || current.sort.key !== key
+                    ? { key, dir: "asc" }
+                    : {
+                        key,
+                        dir: current.sort.dir === "asc" ? "desc" : "asc",
+                    },
+        }));
+    }, [setViewState]);
 
     const sortMark = useCallback(
         (key: SortKey) => {
@@ -659,7 +682,12 @@ const SeriesComputedConvergenceTableView: React.FC<
                                         max={50}
                                         value={maxSignChangesForOneSided}
                                         onChange={(event) =>
-                                            setMaxSignChangesForOneSided(Number(event.target.value))
+                                            setViewState((current) => ({
+                                                ...current,
+                                                maxSignChangesForOneSided: Number(
+                                                    event.target.value
+                                                ),
+                                            }))
                                         }
                                         className="h-[4px] w-40 cursor-pointer"
                                     />
@@ -681,7 +709,12 @@ const SeriesComputedConvergenceTableView: React.FC<
                                         max={50}
                                         value={maxViolationsForMonotone}
                                         onChange={(event) =>
-                                            setMaxViolationsForMonotone(Number(event.target.value))
+                                            setViewState((current) => ({
+                                                ...current,
+                                                maxViolationsForMonotone: Number(
+                                                    event.target.value
+                                                ),
+                                            }))
                                         }
                                         className="h-[4px] w-40 cursor-pointer"
                                     />

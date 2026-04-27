@@ -1,4 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+    buildExperimentSessionStateKey,
+    useInMemorySessionState,
+} from "@/shared/lib/inMemorySessionState";
+import { buildExperimentIndex, buildSeriesAccelPairKey } from "@/shared/lib/experimentIndex";
 import { useConvergenceMatrix } from "../model/useConvergenceMatrix";
 import { type SelectedCell, type SelectedDetail } from "../model/types";
 import {
@@ -13,7 +18,6 @@ import {
 } from "../model/convergenceSummary";
 import { ConvergenceDetailChart } from "./ConvergenceDetailChart";
 import { ConvergenceMatrixTable } from "./ConvergenceMatrixTable";
-import { buildExperimentIndex, buildSeriesAccelPairKey } from "@/shared/lib/experimentIndex";
 
 export interface AlgorithmSeriesConvergenceTableProps {
     experiment: import("../model/types").Experiment | null;
@@ -28,26 +32,30 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
 }) => {
     const { matrix, progress } = useConvergenceMatrix(experiment);
     const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
-    const [maxSignChangesForOneSided, setMaxSignChangesForOneSided] = useState<number>(0);
-    const [maxViolationsForMonotone, setMaxViolationsForMonotone] = useState<number>(0);
+    const viewSessionKey = experiment
+        ? buildExperimentSessionStateKey(experiment.id, "view:series-convergence")
+        : undefined;
+    const [viewState, setViewState] = useInMemorySessionState({
+        key: viewSessionKey,
+        initialValue: {
+            maxSignChangesForOneSided: 0,
+            maxViolationsForMonotone: 0,
+        },
+    });
     const chartRef = useRef<HTMLDivElement | null>(null);
     const experimentIndex = useMemo(() => buildExperimentIndex(experiment), [experiment]);
+    const { maxSignChangesForOneSided, maxViolationsForMonotone } = viewState;
 
-    // при смене эксперимента сбрасываем выбор
     useEffect(() => {
         setSelectedCell(null);
-        setMaxSignChangesForOneSided(0);
-        setMaxViolationsForMonotone(0);
     }, [experiment]);
 
-    // при выборе ячейки скроллим к графикам
     useEffect(() => {
         if (selectedCell && chartRef.current) {
             chartRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
         }
     }, [selectedCell]);
 
-    // кнопка "вернуться к выбранной ячейке"
     const scrollBackToSelectedCell = useCallback(() => {
         if (!selectedCell) return;
         const domId = getConvergenceCellDomId(selectedCell.accelId, selectedCell.seriesId);
@@ -61,7 +69,6 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
         if (!selectedCell || !matrix) return null;
 
         const { seriesId, accelId } = selectedCell;
-
         const series = experimentIndex.seriesById.get(seriesId) ?? null;
         const accel = experimentIndex.accelById.get(accelId) ?? null;
         const sa = experimentIndex.getSeriesAccel(seriesId, accelId);
@@ -98,9 +105,7 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
     if (!experiment) {
         return (
             <div className={className}>
-                <div className="text-textDim text-sm">
-                    Нет данных для анализа (experiment = null).
-                </div>
+                <div className="text-textDim text-sm">Нет данных для анализа (experiment = null).</div>
             </div>
         );
     }
@@ -150,8 +155,18 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
                 maxSeries={maxSeries}
                 maxSignChangesForOneSided={maxSignChangesForOneSided}
                 maxViolationsForMonotone={maxViolationsForMonotone}
-                onMaxSignChangesForOneSidedChange={setMaxSignChangesForOneSided}
-                onMaxViolationsForMonotoneChange={setMaxViolationsForMonotone}
+                onMaxSignChangesForOneSidedChange={(value) =>
+                    setViewState((current) => ({
+                        ...current,
+                        maxSignChangesForOneSided: value,
+                    }))
+                }
+                onMaxViolationsForMonotoneChange={(value) =>
+                    setViewState((current) => ({
+                        ...current,
+                        maxViolationsForMonotone: value,
+                    }))
+                }
                 selectedCell={selectedCell}
                 onCellSelect={setSelectedCell}
             />
