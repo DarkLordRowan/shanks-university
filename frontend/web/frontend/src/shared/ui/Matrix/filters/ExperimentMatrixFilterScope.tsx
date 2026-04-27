@@ -17,6 +17,7 @@ function buildFilterStateKey(state: MatrixAlgoSeriesFilterState): string {
         state.accel.argsOp,
         state.accel.argClauses.map((c) => `${c.key}=${c.value}`).join("|"),
         state.series.query,
+        state.series.noiseMode,
         state.series.groupMode,
         Array.from(state.series.selectedGroupKeys).sort().join(","),
         state.series.precisionMode,

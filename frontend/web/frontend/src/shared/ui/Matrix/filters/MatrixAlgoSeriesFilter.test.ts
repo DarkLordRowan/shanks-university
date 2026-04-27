@@ -34,6 +34,7 @@ describe("MatrixAlgoSeriesFilter state helpers", () => {
                 selectedIds: seriesIds,
                 precisionMode: "blacklist",
                 selectedPrecisions: precisions,
+                noiseMode: "noisy",
                 argsOp: "or",
                 argClauses: seriesClauses,
             },
@@ -52,6 +53,7 @@ describe("MatrixAlgoSeriesFilter state helpers", () => {
         expect(Array.from(state.series.selectedGroupKeys)).toEqual(["series-a"]);
         expect(Array.from(state.series.selectedIds)).toEqual(["series-1"]);
         expect(Array.from(state.series.selectedPrecisions)).toEqual(["f64"]);
+        expect(state.series.noiseMode).toBe("noisy");
         expect(state.accel.argClauses).toEqual([{ key: "k", value: "1" }]);
         expect(state.series.argClauses).toEqual([{ key: "x", value: "2" }]);
     });
@@ -67,6 +69,7 @@ describe("MatrixAlgoSeriesFilter state helpers", () => {
                 selectedGroupKeys: new Set(["series-a"]),
                 selectedIds: new Set(["series-1"]),
                 selectedPrecisions: new Set(["f64"]),
+                noiseMode: "noisy",
                 argClauses: [{ key: "x", value: "2" }],
             },
         });
@@ -76,12 +79,14 @@ describe("MatrixAlgoSeriesFilter state helpers", () => {
         cloned.accel.selectedGroupKeys.add("group-b");
         cloned.accel.selectedIds.add("accel-2");
         cloned.series.selectedPrecisions.add("f32");
+        cloned.series.noiseMode = "raw";
         cloned.accel.argClauses[0]!.value = "changed";
         cloned.series.argClauses.push({ key: "y", value: "3" });
 
         expect(Array.from(original.accel.selectedGroupKeys)).toEqual(["group-a"]);
         expect(Array.from(original.accel.selectedIds)).toEqual(["accel-1"]);
         expect(Array.from(original.series.selectedPrecisions)).toEqual(["f64"]);
+        expect(original.series.noiseMode).toBe("noisy");
         expect(original.accel.argClauses).toEqual([{ key: "k", value: "1" }]);
         expect(original.series.argClauses).toEqual([{ key: "x", value: "2" }]);
     });

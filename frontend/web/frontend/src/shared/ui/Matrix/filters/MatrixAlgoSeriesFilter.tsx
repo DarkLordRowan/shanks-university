@@ -9,7 +9,10 @@ import {
     type ArgsOp,
     type ArgClause,
 } from "@/shared/ui/Matrix/filters/MatrixAccelsFilter.tsx";
-import { MatrixSeriesFilter } from "@/shared/ui/Matrix/filters/MatrixSeriesFilter.tsx";
+import {
+    MatrixSeriesFilter,
+    type SeriesNoiseMode,
+} from "@/shared/ui/Matrix/filters/MatrixSeriesFilter.tsx";
 import type { FilterMode, Group } from "@/shared/ui/Matrix/filters/MatrixAxisFilter.tsx";
 
 function normalize(s: string): string {
@@ -154,6 +157,22 @@ function applyAccelVariantFilter(list: Accel[], mode: AccelVariantMode): Accel[]
     return list.filter((accel) => (accel.variant ?? "raw") === mode);
 }
 
+function hasSeriesNoise(series: Series): boolean {
+    const args = series.args;
+    if (!args) return false;
+    return Object.entries(args).some(([key, value]) => {
+        if (!key.startsWith("noise_")) return false;
+        if (value === null || value === undefined) return false;
+        return String(value).trim() !== "";
+    });
+}
+
+function applySeriesNoiseFilter(list: Series[], mode: SeriesNoiseMode): Series[] {
+    if (mode === "all") return list;
+    const shouldHaveNoise = mode === "noisy";
+    return list.filter((series) => hasSeriesNoise(series) === shouldHaveNoise);
+}
+
 function applySeriesPrecisionFilter(
     list: Series[],
     selectedPrecisions: Set<string>,
@@ -288,6 +307,7 @@ type AccelAxisState = AxisStateBase & {
 type SeriesAxisState = AxisStateBase & {
     precisionMode: FilterMode;
     selectedPrecisions: Set<string>;
+    noiseMode: SeriesNoiseMode;
     argsOp: ArgsOp;
     argClauses: ArgClause[];
 };
@@ -337,6 +357,7 @@ function createSeriesAxisState(initialState?: Partial<SeriesAxisState>): SeriesA
         selectedIds: cloneStringSet(initialState?.selectedIds),
         precisionMode: initialState?.precisionMode ?? "whitelist",
         selectedPrecisions: cloneStringSet(initialState?.selectedPrecisions),
+        noiseMode: initialState?.noiseMode ?? "all",
         argsOp: initialState?.argsOp ?? "and",
         argClauses: cloneArgClauses(initialState?.argClauses),
     };
@@ -563,6 +584,9 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
             state.series.precisionMode
         );
 
+        // clean/noisy series imported from noise_* parquet arguments
+        out = applySeriesNoiseFilter(out, state.series.noiseMode);
+
         // args clauses
         out = applyArgsClauses(out, state.series.argsOp, state.series.argClauses);
 
@@ -744,6 +768,10 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                             series: { ...s.series, selectedPrecisions: new Set() },
                         }))
                     }
+                    noiseMode={state.series.noiseMode}
+                    onNoiseMode={(mode) =>
+                        setState((s) => ({ ...s, series: { ...s.series, noiseMode: mode } }))
+                    }
                     argsOp={state.series.argsOp}
                     onArgsOp={(op) =>
                         setState((s) => ({ ...s, series: { ...s.series, argsOp: op } }))
@@ -784,6 +812,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                             series: {
                                 ...s.series,
                                 selectedPrecisions: new Set(precisionOptions),
+                                noiseMode: "all",
                                 argsOp: "and",
                                 argClauses: [{ key: "", value: "" }],
                             },

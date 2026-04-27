@@ -4,6 +4,8 @@ import type { Series } from "@/entities/experiment/model/experiment";
 import { MatrixAxisFilter, type FilterMode, type Group } from "./MatrixAxisFilter";
 import type { ArgsOp, ArgClause } from "./MatrixAccelsFilter"; // можно вынести типы в общий файл при желании
 
+export type SeriesNoiseMode = "all" | "raw" | "noisy";
+
 export interface MatrixSeriesFilterProps {
     query: string;
     onQuery: (v: string) => void;
@@ -28,6 +30,9 @@ export interface MatrixSeriesFilterProps {
     onSelectAllPrecisions: () => void;
     onClearPrecisions: () => void;
 
+    noiseMode: SeriesNoiseMode;
+    onNoiseMode: (mode: SeriesNoiseMode) => void;
+
     // args clauses
     argsOp: ArgsOp;
     onArgsOp: (op: ArgsOp) => void;
@@ -48,6 +53,8 @@ export function MatrixSeriesFilter(props: MatrixSeriesFilterProps) {
         onTogglePrecision,
         onSelectAllPrecisions,
         onClearPrecisions,
+        noiseMode,
+        onNoiseMode,
         argsOp,
         onArgsOp,
         argClauses,
@@ -145,6 +152,31 @@ export function MatrixSeriesFilter(props: MatrixSeriesFilterProps) {
                                 );
                             })
                         )}
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-2 text-[10px] text-textDim">
+                        <span className="text-textDim/70">noise:</span>
+                        {(["all", "raw", "noisy"] as const).map((mode) => (
+                            <button
+                                key={mode}
+                                type="button"
+                                className={`rounded border border-border px-2 py-[2px] ${
+                                    noiseMode === mode
+                                        ? "bg-panel"
+                                        : "bg-surface hover:bg-panel"
+                                }`}
+                                onClick={() => onNoiseMode(mode)}
+                                title={
+                                    mode === "all"
+                                        ? "show clean and noisy series"
+                                        : mode === "raw"
+                                          ? "show only clean series"
+                                          : "show only noisy series"
+                                }
+                            >
+                                {mode}
+                            </button>
+                        ))}
                     </div>
 
                     {/* args AND/OR */}
