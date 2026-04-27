@@ -192,27 +192,35 @@ impl HeadlessRunner {
                             }
                         });
 
-                        if row.filtered.is_none() {
-                            row.filtered = Some(AccelFilteredData {
-                                start_n: data.start_offset as i64,
-                                segment_length: crate::export::parquet::arr_len(&data.result.sn)
-                                    as i64,
-                                methods: HashMap::new(),
-                            });
+                    if row.filtered.is_none() {
+                        row.filtered = Some(AccelFilteredData {
+                            start_n: data.start_offset as i64,
+                            segment_length: crate::export::parquet::arr_len(&data.result.sn)
+                                as i64,
+                            filter_args: HashMap::new(),
+                            methods: HashMap::new(),
+                        });
+                    }
+
+                    if let Some(ref mut filt) = row.filtered {
+                        for (k, v) in &filter.args {
+                            let vs = match v {
+                                serde_json::Value::String(s) => s.clone(),
+                                _ => v.to_string(),
+                            };
+                            filt.filter_args.insert(k.clone(), vs);
                         }
 
-                        if let Some(ref mut filt) = row.filtered {
-                            // Convert Arr to Vec<Value> for export
-                            let n = crate::export::parquet::arr_len(&data.result.sn);
-                            let mut vals = Vec::with_capacity(n);
-                            for i in 0..n {
-                                vals.push(crate::export::parquet::arr_index_to_value(
-                                    &data.result.sn,
-                                    i,
-                                ));
-                            }
-                            filt.methods.insert(filter.filter_type.clone(), vals);
+                        let n = crate::export::parquet::arr_len(&data.result.sn);
+                        let mut vals = Vec::with_capacity(n);
+                        for i in 0..n {
+                            vals.push(crate::export::parquet::arr_index_to_value(
+                                &data.result.sn,
+                                i,
+                            ));
                         }
+                        filt.methods.insert(filter.filter_type.clone(), vals);
+                    }
                     } else {
                         // This is the main unfiltered result
                         let mut arguments = HashMap::new();
