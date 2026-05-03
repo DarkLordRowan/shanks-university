@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
     cloneMatrixAlgoSeriesFilterState,
     createMatrixAlgoSeriesFilterState,
+    getDefaultAccelGroupIdentity,
 } from "./MatrixAlgoSeriesFilter";
 
 describe("MatrixAlgoSeriesFilter state helpers", () => {
@@ -89,5 +90,41 @@ describe("MatrixAlgoSeriesFilter state helpers", () => {
         expect(original.series.noiseMode).toBe("noisy");
         expect(original.accel.argClauses).toEqual([{ key: "k", value: "1" }]);
         expect(original.series.argClauses).toEqual([{ key: "x", value: "2" }]);
+    });
+
+    it("groups raw and filtered variants under the base algorithm name", () => {
+        const raw = {
+            id: "a-raw",
+            name: "AndersonAccelerationAlgorithm",
+            m: 4,
+            args: null,
+            variant: "raw" as const,
+        };
+        const filtered = {
+            id: "a-filtered",
+            name: "AndersonAccelerationAlgorithm [filtered: Savitzky-Golay: window_length=7]",
+            m: 4,
+            args: {
+                filtered: true,
+                filter_method: "Savitzky-Golay",
+                filter_window_length: "7",
+            },
+            variant: "filtered" as const,
+            baseAccelId: raw.id,
+            filteredMethodName: "Savitzky-Golay: window_length=7",
+        };
+
+        const accels = new Map([
+            [raw.id, raw],
+            [filtered.id, filtered],
+        ]);
+
+        expect(getDefaultAccelGroupIdentity(raw, accels)).toEqual({
+            key: "andersonaccelerationalgorithm",
+            title: "AndersonAccelerationAlgorithm",
+        });
+        expect(getDefaultAccelGroupIdentity(filtered, accels)).toEqual(
+            getDefaultAccelGroupIdentity(raw, accels)
+        );
     });
 });

@@ -26,6 +26,23 @@ function formatArgs(args: Record<string, unknown> | null | undefined): string {
     return entries.map(([k, v]) => `${k}=${typeof v === "string" ? v : String(v)}`).join(", ");
 }
 
+function stripFilteredSuffix(name: string): string {
+    return name.replace(/\s+\[filtered:.*\]$/, "");
+}
+
+export function getDefaultAccelGroupIdentity(
+    accel: Accel,
+    accelById: Map<string, Accel>
+): { key: string; title: string } {
+    const baseAccel = accel.baseAccelId ? accelById.get(accel.baseAccelId) : null;
+    const title = stripFilteredSuffix(baseAccel?.name ?? accel.name);
+
+    return {
+        key: normalize(title),
+        title,
+    };
+}
+
 function groupByKey<T>(
     items: T[],
     getKey: (x: T) => string,
@@ -424,7 +441,9 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
     }, [initialState, resetKey, setState]);
 
     const accelGroups = useMemo(() => {
-        const get = groupAccelsBy ?? ((a: Accel) => ({ key: normalize(a.name), title: a.name }));
+        const accelById = new Map((accelList ?? []).map((accel) => [accel.id, accel]));
+        const get =
+            groupAccelsBy ?? ((a: Accel) => getDefaultAccelGroupIdentity(a, accelById));
         const groups = groupByKey(
             accelList ?? [],
             (a) => get(a).key,

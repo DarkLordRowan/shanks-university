@@ -51,6 +51,7 @@ describe("buildAccelAndSeriesAccelEntityVariantsFromParquetRow", () => {
 
         const filtered = variants[1];
         expect(filtered.accel.variant).toBe("filtered");
+        expect(filtered.accel.name).toBe("Aitken");
         expect(filtered.accel.baseAccelId).toBe(variants[0].accel.id);
         expect(filtered.accel.filteredMethodName).toBe(
             "Kolmogorov-Zurbenko: degree=2, window_length=3"

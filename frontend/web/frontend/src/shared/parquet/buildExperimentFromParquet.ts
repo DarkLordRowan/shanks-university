@@ -413,7 +413,7 @@ function buildFilteredAccelAndSeriesAccelEntities(params: {
             const accel: Accel = {
                 ...baseAccel,
                 id: accelId,
-                name: `${baseAccel.name} [filtered: ${methodLabel}]`,
+                name: baseAccel.name,
                 args: buildFilteredAccelArgs(baseAccel.args, methodName, filtered.filterArgs),
                 variant: "filtered",
                 baseAccelId: baseAccel.id,

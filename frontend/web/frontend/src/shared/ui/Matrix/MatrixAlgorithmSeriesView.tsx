@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import * as XLSX from "xlsx-js-style";
 import type { Accel, Series } from "@/entities/experiment/model/experiment";
+import { buildMatrixArgsSummary } from "@/shared/lib/matrixArgs";
 import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
 import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
 
@@ -16,15 +17,16 @@ export type PagerInfo = {
     totalCols: number;
 };
 
-function formatArgs(args: Record<string, unknown> | null | undefined): string {
-    if (!args) return "";
-    const entries = Object.entries(args).filter(([, v]) => v !== null && v !== undefined);
-    if (entries.length === 0) return "";
-    return entries.map(([k, v]) => `${k}=${typeof v === "string" ? v : String(v)}`).join(", ");
+function stripFilteredSuffix(name: string): string {
+    return name.replace(/\s+\[filtered:.*\]$/, "");
+}
+
+function getAccelDisplayName(accel: Accel): string {
+    return accel.filteredMethodName ? stripFilteredSuffix(accel.name) : accel.name;
 }
 
 function formatArgsMultiline(args: Record<string, unknown> | null | undefined): string {
-    const inline = formatArgs(args);
+    const inline = buildMatrixArgsSummary(args);
     if (!inline) return "";
     return inline.replace(/,\s*/g, ",\n");
 }
@@ -111,10 +113,19 @@ export function MatrixAlgorithmSeriesView(props: MatrixAlgorithmSeriesViewProps)
         const a = row.meta!.accel;
         if (renderAlgoHeader) return renderAlgoHeader(a, i);
 
-        const args = formatArgs(a.args);
+        const displayName = getAccelDisplayName(a);
+        const args = buildMatrixArgsSummary(a.args);
+        const title = [
+            displayName,
+            a.m !== null && a.m !== undefined ? `m=${a.m}` : "",
+            args ? `args: ${args}` : "",
+        ]
+            .filter(Boolean)
+            .join("\n");
+
         return (
-            <div className="flex flex-col leading-tight">
-                <span className="font-medium text-textDim">{a.name}</span>
+            <div className="flex flex-col leading-tight" title={title}>
+                <span className="font-medium text-textDim">{displayName}</span>
                 <span className="text-[10px] text-textDim/70">
                     {a.m !== null && a.m !== undefined ? `m=${a.m}` : ""}
                     {a.m !== null && a.m !== undefined && args ? " · " : ""}
