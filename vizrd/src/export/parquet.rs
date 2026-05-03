@@ -41,7 +41,7 @@ pub struct AccelExportRow {
 pub struct AccelFilteredData {
     pub start_n: i64,
     pub segment_length: i64,
-    /// Map of filter name -> list of complex items.
+    pub filter_args: HashMap<String, String>,
     pub methods: HashMap<String, Vec<Value>>,
 }
 
@@ -348,9 +348,31 @@ impl ParquetExporter {
             })
             .collect();
 
+        let mut all_filter_arg_keys = std::collections::BTreeSet::new();
+        for row in rows {
+            if let Some(ref filt) = row.filtered {
+                for k in filt.filter_args.keys() {
+                    all_filter_arg_keys.insert(k.clone());
+                }
+            }
+        }
+        if all_filter_arg_keys.is_empty() {
+            all_filter_arg_keys.insert("__dummy__".to_string());
+        }
+        let filter_arg_keys: Vec<String> = all_filter_arg_keys.into_iter().collect();
+        let filter_arg_fields: Vec<Field> = filter_arg_keys
+            .iter()
+            .map(|k| Field::new(k, DataType::Utf8, true))
+            .collect();
+
         let filtered_schema_fields = vec![
             Field::new("start_n", DataType::Int64, false),
             Field::new("segment_length", DataType::Int64, false),
+            Field::new(
+                "filter_args",
+                DataType::Struct(filter_arg_fields.clone().into()),
+                true,
+            ),
             Field::new(
                 "methods",
                 DataType::Struct(method_fields.clone().into()),
@@ -420,11 +442,14 @@ impl ParquetExporter {
         }
         let methods_struct_builder = StructBuilder::new(method_fields, methods_builders);
 
+        let filter_args_struct_builder = make_args_builder(&filter_arg_fields);
+
         let mut filtered_builder = StructBuilder::new(
             filtered_schema_fields,
             vec![
                 Box::new(Int64Builder::new()),
                 Box::new(Int64Builder::new()),
+                Box::new(filter_args_struct_builder),
                 Box::new(methods_struct_builder),
             ],
         );
@@ -513,7 +538,15 @@ impl ParquetExporter {
                     .unwrap()
                     .append_value(filt.segment_length);
 
-                let methods_sb = filtered_builder.field_builder::<StructBuilder>(2).unwrap();
+                append_args_struct(
+                    filtered_builder
+                        .field_builder::<StructBuilder>(2)
+                        .unwrap(),
+                    &filter_arg_keys,
+                    &filt.filter_args,
+                );
+
+                let methods_sb = filtered_builder.field_builder::<StructBuilder>(3).unwrap();
                 for (i, key) in method_keys.iter().enumerate() {
                     let m_entry_sb = methods_sb.field_builder::<StructBuilder>(i).unwrap();
                     if let Some(vals) = filt.methods.get(key) {
@@ -554,7 +587,6 @@ impl ParquetExporter {
                 methods_sb.append(true);
                 filtered_builder.append(true);
             } else {
-                // all components null
                 filtered_builder
                     .field_builder::<Int64Builder>(0)
                     .unwrap()
@@ -563,7 +595,17 @@ impl ParquetExporter {
                     .field_builder::<Int64Builder>(1)
                     .unwrap()
                     .append_null();
-                let methods_sb = filtered_builder.field_builder::<StructBuilder>(2).unwrap();
+                let fargs_sb = filtered_builder
+                    .field_builder::<StructBuilder>(2)
+                    .unwrap();
+                for i in 0..filter_arg_keys.len() {
+                    fargs_sb
+                        .field_builder::<StringBuilder>(i)
+                        .unwrap()
+                        .append_null();
+                }
+                fargs_sb.append(false);
+                let methods_sb = filtered_builder.field_builder::<StructBuilder>(3).unwrap();
                 for i in 0..method_keys.len() {
                     append_null_method_entry(methods_sb.field_builder::<StructBuilder>(i).unwrap());
                 }
