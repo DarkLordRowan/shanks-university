@@ -13,8 +13,8 @@ import {
 } from "@/shared/ui/Matrix/filters/MatrixAlgoSeriesFilter";
 import {
     buildAlgoStatsFromExperiment,
-    getVisibleArgColumnCount,
-    type AlgoRankingSortKey as SortKey,
+    getVisibleArgKeys,
+    type AlgoRankingSortKey as BaseSortKey,
     type AlgoStats,
 } from "./AlgoRankingTable.model";
 import {
@@ -35,7 +35,7 @@ type SortDir = "asc" | "desc";
 interface AlgoRankingTableViewState {
     epsilonExp: number;
     precisionFilter: string | null;
-    sortKey: SortKey;
+    sortKey: RankingSortKey;
     sortDir: SortDir;
 }
 
@@ -47,43 +47,20 @@ export interface AlgoRankingTableProps {
 
 type RowMeta = AlgoStats & { place: number; precisionLabel: string };
 
-type ColId = AlgoRankingDocsColumnKey;
+type DynamicArgColumnId = `arg:${string}`;
+type DynamicArgSortKey = `arg:${string}`;
+type RankingSortKey = BaseSortKey | DynamicArgSortKey;
+type ColId = AlgoRankingDocsColumnKey | DynamicArgColumnId;
 
 type ColMeta = {
     id: ColId;
     title: string;
     description: string;
-    sortKey: SortKey;
+    sortKey: RankingSortKey;
     defaultDir: SortDir;
+    docsColumnId?: AlgoRankingDocsColumnKey;
+    argKey?: string;
 };
-
-function buildArgDescription(slot: number): string {
-    return `${slot}-й слот args после сортировки параметров по имени: key=value. В таблице показываются только первые 3 непустых args.`;
-}
-
-const ARG_COLUMNS: ColMeta[] = [
-    {
-        id: "arg1",
-        title: "arg 1",
-        description: buildArgDescription(1),
-        sortKey: "arg1",
-        defaultDir: "asc",
-    },
-    {
-        id: "arg2",
-        title: "arg 2",
-        description: buildArgDescription(2),
-        sortKey: "arg2",
-        defaultDir: "asc",
-    },
-    {
-        id: "arg3",
-        title: "arg 3",
-        description: buildArgDescription(3),
-        sortKey: "arg3",
-        defaultDir: "asc",
-    },
-];
 
 const BASE_COLUMNS: ColMeta[] = [
     {
@@ -249,11 +226,23 @@ const BASE_COLUMNS: ColMeta[] = [
         defaultDir: "asc",
     },
 ];
-function buildColumns(argColumnCount: number): ColMeta[] {
+function buildArgColumn(argKey: string): ColMeta {
+    return {
+        id: `arg:${argKey}`,
+        title: argKey,
+        description: `Значение args.${argKey} для конкретного варианта алгоритма.`,
+        sortKey: `arg:${argKey}`,
+        defaultDir: "asc",
+        docsColumnId: "args",
+        argKey,
+    };
+}
+
+function buildColumns(argKeys: string[]): ColMeta[] {
     return [
         BASE_COLUMNS[0],
         BASE_COLUMNS[1],
-        ...ARG_COLUMNS.slice(0, argColumnCount),
+        ...argKeys.map(buildArgColumn),
         ...BASE_COLUMNS.slice(2),
     ];
 }
@@ -294,6 +283,33 @@ function buildColumnTooltip(meta: ColMeta, active: boolean, sortDir: SortDir): s
         `Клик: сортировать по ${formatSortDir(nextDir)}.`,
     ].join("\n");
 }
+
+function isDynamicArgColumnId(colId: ColId): colId is DynamicArgColumnId {
+    return colId.startsWith("arg:");
+}
+
+function isDynamicArgSortKey(sortKey: RankingSortKey): sortKey is DynamicArgSortKey {
+    return sortKey.startsWith("arg:");
+}
+
+function getArgCellText(row: Pick<AlgoStats, "args">, argKey: string): string {
+    const value = row.args?.[argKey];
+    if (value === null || value === undefined || value === "") return "-";
+    return String(value);
+}
+
+function getSortValue(row: AlgoStats, sortKey: RankingSortKey): unknown {
+    if (isDynamicArgSortKey(sortKey)) {
+        return getArgCellText(row, sortKey.slice(4));
+    }
+
+    return row[sortKey];
+}
+
+function formatSortKey(sortKey: RankingSortKey): string {
+    return isDynamicArgSortKey(sortKey) ? `arg.${sortKey.slice(4)}` : sortKey;
+}
+
 function compareValues(aVal: unknown, bVal: unknown, dir: SortDir): number {
     if (typeof aVal === "string" && typeof bVal === "string") {
         const cmp = aVal.localeCompare(bVal);
@@ -332,17 +348,17 @@ function buildFilterStateKey(state: MatrixAlgoSeriesFilterState): string {
 }
 
 function getCellText(row: RowMeta, colId: ColId): string {
+    if (isDynamicArgColumnId(colId)) {
+        return getArgCellText(row, colId.slice(4));
+    }
+
     switch (colId) {
         case "precision":
             return row.precisionLabel;
         case "m":
             return row.m != null ? String(row.m) : "-";
-        case "arg1":
-            return row.arg1 || "-";
-        case "arg2":
-            return row.arg2 || "-";
-        case "arg3":
-            return row.arg3 || "-";
+        case "args":
+            return row.argsSummary || "-";
         case "seriesCount":
             return String(row.seriesCount);
         case "avgBestDeviation":
@@ -385,17 +401,18 @@ function getCellText(row: RowMeta, colId: ColId): string {
 }
 
 function getExportValue(row: RowMeta, colId: ColId): string | number | null {
+    if (isDynamicArgColumnId(colId)) {
+        const text = getArgCellText(row, colId.slice(4));
+        return text === "-" ? null : text;
+    }
+
     switch (colId) {
         case "precision":
             return row.precisionLabel;
         case "m":
             return row.m != null ? Number(row.m) || String(row.m) : null;
-        case "arg1":
-            return row.arg1 || null;
-        case "arg2":
-            return row.arg2 || null;
-        case "arg3":
-            return row.arg3 || null;
+        case "args":
+            return row.argsSummary || null;
         case "seriesCount":
             return row.seriesCount;
         case "avgBestDeviation":
@@ -452,15 +469,17 @@ function getExportValue(row: RowMeta, colId: ColId): string | number | null {
 }
 
 function getExportColumnWidth(colId: ColId): number {
+    if (isDynamicArgColumnId(colId)) {
+        return 18;
+    }
+
     switch (colId) {
         case "precision":
             return 14;
         case "m":
             return 10;
-        case "arg1":
-        case "arg2":
-        case "arg3":
-            return 18;
+        case "args":
+            return 28;
         case "seriesCount":
             return 10;
         case "avgBestDeviation":
@@ -487,6 +506,10 @@ function getExportColumnWidth(colId: ColId): number {
 }
 
 function getExportColumnFormat(colId: ColId): string | null {
+    if (isDynamicArgColumnId(colId)) {
+        return null;
+    }
+
     switch (colId) {
         case "fracReachedTol":
         case "notBetterThanSeriesShare":
@@ -514,6 +537,14 @@ function getExportColumnFormat(colId: ColId): string | null {
         default:
             return null;
     }
+}
+
+function getExportColumnName(meta: ColMeta): string {
+    if (meta.argKey) {
+        return `args.${meta.argKey}`;
+    }
+
+    return meta.title;
 }
 
 export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, className }) => {
@@ -559,7 +590,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
         [experiment, epsilon, precisionFilter]
     );
 
-    const handleSort = useCallback((nextKey: SortKey, defaultDir: SortDir) => {
+    const handleSort = useCallback((nextKey: RankingSortKey, defaultDir: SortDir) => {
         setViewState((current) => ({
             ...current,
             sortKey: nextKey,
@@ -590,7 +621,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                 </button>
 
                 <DocsAnchorButton
-                    anchorId={getAlgoRankingColumnAnchorId(meta.id)}
+                    anchorId={getAlgoRankingColumnAnchorId(meta.docsColumnId ?? (meta.id as AlgoRankingDocsColumnKey))}
                     label={`${ALGO_RANKING_TABLE_DOCS.title}: ${meta.title}`}
                     className="absolute right-1 top-1"
                 />
@@ -600,19 +631,35 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
 
     const renderRowHeader: MatrixProps<RowMeta, ColMeta>["renderRowHeader"] = (row) => {
         const stats = row.meta!;
+        const title = [
+            stats.algorithmName,
+            stats.argsSummary ? `args: ${stats.argsSummary}` : "",
+        ]
+            .filter(Boolean)
+            .join("\n");
 
         return (
-            <div className="leading-tight">
+            <div className="leading-tight" title={title}>
                 <div className="flex items-baseline justify-between gap-2">
-                    <div className="max-w-[170px] truncate text-textDim">{stats.algorithmName}</div>
+                    <div className="max-w-[230px] truncate text-textDim">{stats.baseAlgorithmName}</div>
                     <div className="font-mono text-[10px] text-textDim/70">#{stats.place}</div>
                 </div>
-                <div className="text-[9px] text-textDim/60">
-                    {stats.m != null ? `m=${String(stats.m)}` : "m=-"} · prec={stats.precisionLabel}
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-[1px] text-[9px] text-textDim/60">
+                    <span>{stats.m != null ? `m=${String(stats.m)}` : "m=-"}</span>
+                    <span>prec={stats.precisionLabel}</span>
+                    <span
+                        className={
+                            stats.variant === "filtered"
+                                ? "rounded border border-border bg-panel px-1 text-[8px] text-accent"
+                                : "rounded border border-border bg-surface px-1 text-[8px]"
+                        }
+                    >
+                        {stats.variant}
+                    </span>
                 </div>
-                {stats.argsSummary ? (
-                    <div className="mt-[1px] max-w-[210px] truncate text-[8px] text-textDim/60">
-                        {stats.argsSummary}
+                {stats.filteredMethodName ? (
+                    <div className="mt-[1px] max-w-[290px] truncate text-[8px] text-textDim/70">
+                        {stats.filteredMethodName}
                     </div>
                 ) : null}
             </div>
@@ -621,12 +668,13 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
 
     const renderCell: MatrixProps<RowMeta, ColMeta>["renderCell"] = (row, col) => {
         const stats = row.meta!;
-        const colId = col.meta!.id;
+        const meta = col.meta!;
+        const colId = meta.id;
         const text = getCellText(stats, colId);
 
         return (
             <div
-                title={`${stats.algorithmName}\n${colId} = ${text}`}
+                title={`${stats.algorithmName}\n${meta.title} = ${text}`}
                 className="w-full h-full px-2 py-[2px] text-[10px] text-textDim font-mono tabular-nums"
             >
                 <span className="block truncate">{text}</span>
@@ -660,7 +708,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
             );
 
             const header: (string | number | boolean | null)[] = ["place", "algorithm"];
-            for (const col of cols) header.push(col.meta?.title ?? String(col.id));
+            for (const col of cols) header.push(col.meta ? getExportColumnName(col.meta) : String(col.id));
 
             const data: (string | number | boolean | null)[][] = [header];
 
@@ -798,14 +846,14 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                         );
                     }
 
-                    const argColumnCount = getVisibleArgColumnCount(baseStats);
-                    const colsAxis: MatrixAxisItem<ColMeta>[] = buildColumns(argColumnCount).map((col) => ({
+                    const argKeys = getVisibleArgKeys(baseStats);
+                    const colsAxis: MatrixAxisItem<ColMeta>[] = buildColumns(argKeys).map((col) => ({
                         id: col.id,
                         meta: col,
                     }));
 
                     const sortedStats = [...baseStats].sort((a, b) =>
-                        compareValues(a[sortKey], b[sortKey], sortDir)
+                        compareValues(getSortValue(a, sortKey), getSortValue(b, sortKey), sortDir)
                     );
 
                     const rowsAxis: MatrixAxisItem<RowMeta>[] = sortedStats.map((stats, index) => ({
@@ -828,15 +876,16 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                             </div>
 
                             <MatrixPaged<RowMeta, ColMeta>
-                                resetKey={`${experiment.id}::${epsilonExp}::${precisionFilter ?? "ALL"}::${sortKey}:${sortDir}::${stateKey}::args=${argColumnCount}`}
+                                resetKey={`${experiment.id}::${epsilonExp}::${precisionFilter ?? "ALL"}::${sortKey}:${sortDir}::${stateKey}::args=${argKeys.join(",")}`}
                                 rows={rowsAxis}
                                 cols={colsAxis}
                                 maxColsPerPage={0}
                                 enableInnerScroll
                                 maxBodyHeight="70vh"
                                 stickyHeaders
-                                rowWidth={260}
-                                colWidth={84}
+                                rowWidth={320}
+                                colWidth={96}
+                                minCellHeightPx={46}
                                 className="rounded-xl2 border border-border bg-panel shadow-panel"
                                 tableClassName="border-separate border-spacing-0"
                                 thClassName="bg-surface"
@@ -857,7 +906,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                                 }
                                 renderHeaderRight={() => (
                                     <div className="whitespace-nowrap text-[10px] text-textDim/70">
-                                        sort: {sortKey} ({sortDir})
+                                        sort: {formatSortKey(sortKey)} ({sortDir})
                                     </div>
                                 )}
                                 export={{

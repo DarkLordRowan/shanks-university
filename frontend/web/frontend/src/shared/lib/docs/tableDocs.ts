@@ -10,9 +10,7 @@ export type DocsColumnPreference = "lower" | "higher" | "neutral";
 export type AlgoRankingDocsColumnKey =
     | "precision"
     | "m"
-    | "arg1"
-    | "arg2"
-    | "arg3"
+    | "args"
     | "seriesCount"
     | "avgBestDeviation"
     | "avgRelativeError"
@@ -127,13 +125,13 @@ function buildColumnAnchorId(key: DocumentedTableKey, columnKey: string): string
     return `docs-${key}-col-${columnKey}`;
 }
 
-function buildArgMarkdown(slot: number): string {
+function buildArgMarkdown(): string {
     return [
-        `Показывает ${slot}-й слот списка аргументов после сортировки параметров по имени и сборки в строку вида \`key=value\`.`,
+        "Справка для arg-колонок рейтинга алгоритмов. Экранная таблица строит отдельные колонки по реальным ключам `args`: например `filter_method`, `filter_window_length`, `alpha`.",
         "",
-        "На экране выводятся только первые три непустых слота. Если аргумента для этого места нет, в таблице и xlsx будет пустое значение или `-`.",
+        "Значение в ячейке — это `args[key]` для конкретного варианта алгоритма. Если у алгоритма нет такого аргумента, в таблице будет `-`, а в xlsx — пустое значение.",
         "",
-        "**Интерпретация:** это идентификатор конфигурации алгоритма, а не метрика качества.",
+        "По таким колонкам удобно сортировать и сравнивать варианты одного алгоритма с разными параметрами фильтра или дополнительными аргументами. **Интерпретация:** это идентификатор конфигурации алгоритма, а не метрика качества.",
     ].join("\n");
 }
 
@@ -292,9 +290,7 @@ export const ALGO_RANKING_TABLE_DOCS: DocsTableSection<AlgoRankingDocsColumnKey>
                 "**XLSX:** числовое значение `m`, если оно задано.",
             ].join("\n")
         ),
-        createColumn("algo-ranking", "arg1", "arg 1", "neutral", buildArgMarkdown(1)),
-        createColumn("algo-ranking", "arg2", "arg 2", "neutral", buildArgMarkdown(2)),
-        createColumn("algo-ranking", "arg3", "arg 3", "neutral", buildArgMarkdown(3)),
+        createColumn("algo-ranking", "args", "args.<key>", "neutral", buildArgMarkdown()),
         createColumn(
             "algo-ranking",
             "seriesCount",
@@ -828,31 +824,11 @@ $$
                 createXlsxField(
                     "algo-ranking",
                     "algo-ranking",
-                    "arg1",
-                    "arg 1",
-                    "Первый непустой слот `args` после сортировки параметров по имени.",
+                    "args",
+                    "args.<key>",
+                    "Динамические колонки аргументов алгоритма. Вместо `<key>` в xlsx будет реальное имя аргумента, например `args.filter_method` или `args.alpha`.",
                     {
-                        refAnchorId: buildColumnAnchorId("algo-ranking", "arg1"),
-                    }
-                ),
-                createXlsxField(
-                    "algo-ranking",
-                    "algo-ranking",
-                    "arg2",
-                    "arg 2",
-                    "Второй непустой слот `args` после сортировки параметров по имени.",
-                    {
-                        refAnchorId: buildColumnAnchorId("algo-ranking", "arg2"),
-                    }
-                ),
-                createXlsxField(
-                    "algo-ranking",
-                    "algo-ranking",
-                    "arg3",
-                    "arg 3",
-                    "Третий непустой слот `args` после сортировки параметров по имени.",
-                    {
-                        refAnchorId: buildColumnAnchorId("algo-ranking", "arg3"),
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "args"),
                     }
                 ),
                 createXlsxField(

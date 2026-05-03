@@ -50,6 +50,7 @@ export interface ParquetFilteredMethod {
 export interface ParquetFiltered {
     start_n: ParquetScalar;
     segment_length: ParquetScalar;
+    filter_args?: Record<string, unknown> | null;
     methods: Record<string, ParquetFilteredMethod> | null;
 }
 

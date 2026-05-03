@@ -254,6 +254,7 @@ function mapFiltered(raw: unknown): SeriesAccelFiltered | null {
 
     const startN = toNumberOrNull(o.start_n) ?? 0;
     const segmentLength = toNumberOrNull(o.segment_length) ?? 0;
+    const filterArgs = normalizeArgs(o.filter_args);
 
     const methodsRaw = o.methods;
     const methods: Record<string, SeriesAccelFilteredMethod> = {};
@@ -280,6 +281,7 @@ function mapFiltered(raw: unknown): SeriesAccelFiltered | null {
     return {
         startN,
         segmentLength,
+        filterArgs,
         methods,
     };
 }
@@ -328,18 +330,48 @@ function buildAccelId(row: ParquetAccelRow): string {
     return parts.join("|");
 }
 
-function buildFilteredAccelId(baseAccelId: string, methodName: string): string {
-    return `${baseAccelId}|filtered=${methodName}`;
+function formatFilterArgs(args: Record<string, ScalarArg> | null | undefined): string {
+    if (!args) return "";
+    return Object.entries(args)
+        .filter(([, value]) => value !== null && value !== undefined)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, value]) => `${key}=${String(value)}`)
+        .join(", ");
+}
+
+function buildFilteredAccelId(
+    baseAccelId: string,
+    methodName: string,
+    filterArgs: Record<string, ScalarArg> | null | undefined
+): string {
+    const filterArgsKey = formatFilterArgs(filterArgs);
+    return filterArgsKey
+        ? `${baseAccelId}|filtered=${methodName}|filter_args=${filterArgsKey}`
+        : `${baseAccelId}|filtered=${methodName}`;
+}
+
+function buildFilteredMethodLabel(
+    methodName: string,
+    filterArgs: Record<string, ScalarArg> | null | undefined
+): string {
+    const filterArgsLabel = formatFilterArgs(filterArgs);
+    return filterArgsLabel ? `${methodName}: ${filterArgsLabel}` : methodName;
 }
 
 function buildFilteredAccelArgs(
     baseArgs: Record<string, ScalarArg> | null,
-    methodName: string
+    methodName: string,
+    filterArgs: Record<string, ScalarArg> | null | undefined
 ): Record<string, ScalarArg> {
+    const filterArgEntries = Object.entries(filterArgs ?? {})
+        .filter(([, value]) => value !== null && value !== undefined)
+        .map(([key, value]) => [`filter_${key}`, value]);
+
     return {
         ...(baseArgs ?? {}),
         filtered: true,
         filter_method: methodName,
+        ...Object.fromEntries(filterArgEntries),
     };
 }
 
@@ -376,15 +408,16 @@ function buildFilteredAccelAndSeriesAccelEntities(params: {
     return Object.entries(filtered.methods)
         .filter(([, method]) => method.values.length > 0)
         .map(([methodName, method]) => {
-            const accelId = buildFilteredAccelId(baseAccel.id, methodName);
+            const accelId = buildFilteredAccelId(baseAccel.id, methodName, filtered.filterArgs);
+            const methodLabel = buildFilteredMethodLabel(methodName, filtered.filterArgs);
             const accel: Accel = {
                 ...baseAccel,
                 id: accelId,
-                name: `${baseAccel.name} [filtered: ${methodName}]`,
-                args: buildFilteredAccelArgs(baseAccel.args, methodName),
+                name: `${baseAccel.name} [filtered: ${methodLabel}]`,
+                args: buildFilteredAccelArgs(baseAccel.args, methodName, filtered.filterArgs),
                 variant: "filtered",
                 baseAccelId: baseAccel.id,
-                filteredMethodName: methodName,
+                filteredMethodName: methodLabel,
             };
 
             const seriesAccel: SeriesAccel = {
@@ -396,7 +429,7 @@ function buildFilteredAccelAndSeriesAccelEntities(params: {
                 filtered: null,
                 variant: "filtered",
                 baseAccelId: baseAccel.id,
-                filteredMethodName: methodName,
+                filteredMethodName: methodLabel,
                 filteredStartN: filtered.startN,
                 filteredSegmentLength: filtered.segmentLength,
             };

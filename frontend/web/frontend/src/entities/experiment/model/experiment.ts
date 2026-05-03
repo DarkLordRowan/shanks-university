@@ -76,6 +76,7 @@ export interface SeriesAccelFilteredMethod {
 export interface SeriesAccelFiltered {
     startN: number;
     segmentLength: number;
+    filterArgs?: Record<string, ScalarArg> | null;
     methods: Record<string, SeriesAccelFilteredMethod>;
 }
 

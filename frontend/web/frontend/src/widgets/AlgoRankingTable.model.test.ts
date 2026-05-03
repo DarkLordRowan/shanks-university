@@ -3,6 +3,7 @@ import type { Experiment } from "@/entities/experiment/model/experiment";
 import {
     buildAlgoStatsFromExperiment,
     getVisibleArgColumnCount,
+    getVisibleArgKeys,
 } from "./AlgoRankingTable.model";
 
 function buildExperiment(): Experiment {
@@ -99,6 +100,8 @@ describe("AlgoRankingTable.model", () => {
 
         expect(fast?.arg1).toBe("alpha=1");
         expect(fast?.arg2).toBe("beta=2");
+        expect(fast?.baseAlgorithmName).toBe("Fast");
+        expect(fast?.variant).toBe("raw");
         expect(fast?.avgBestDeviation).toBeCloseTo(5e-6);
         expect(fast?.avgRelativeError).toBeCloseTo(0.1);
         expect(fast?.avgOrdersGain).toBeCloseTo(0.5);
@@ -180,6 +183,74 @@ describe("AlgoRankingTable.model", () => {
         expect(stats[1].bestMinShare).toBe(1);
         expect(stats[0].worstMinShare).toBe(1);
         expect(stats[1].worstMinShare).toBe(1);
+    });
+
+    it("exposes real argument keys for ranking table comparison", () => {
+        const experiment: Experiment = {
+            id: "exp-arg-keys",
+            seriesList: [
+                {
+                    id: "s-1",
+                    name: "S1",
+                    precision: "double",
+                    args: { x: 1 },
+                    limit: { re: 1, im: 0 },
+                    computed: [{ n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 }],
+                },
+            ],
+            accelList: [
+                {
+                    id: "a-1",
+                    name: "Base",
+                    m: 2,
+                    args: { alpha: 1 },
+                    variant: "raw",
+                },
+                {
+                    id: "a-1-filtered",
+                    name: "Base [filtered: Savitzky-Golay: window_length=7]",
+                    m: 2,
+                    args: {
+                        alpha: 1,
+                        filtered: true,
+                        filter_method: "Savitzky-Golay",
+                        filter_window_length: "7",
+                        filter_polyorder: "2",
+                    },
+                    variant: "filtered",
+                    baseAccelId: "a-1",
+                    filteredMethodName: "Savitzky-Golay: window_length=7",
+                },
+            ],
+            seriesAccelList: [
+                {
+                    series_id: "s-1",
+                    accel_id: "a-1",
+                    computed: [{ n: 1, value: { re: 0, im: 0 }, deviation: 1e-3 }],
+                    errors: [],
+                    events: [],
+                },
+                {
+                    series_id: "s-1",
+                    accel_id: "a-1-filtered",
+                    computed: [{ n: 1, value: { re: 0, im: 0 }, deviation: 1e-4 }],
+                    errors: [],
+                    events: [],
+                },
+            ],
+        };
+
+        const stats = buildAlgoStatsFromExperiment(experiment, 1e-4, null);
+        const filtered = stats.find((item) => item.variant === "filtered");
+
+        expect(getVisibleArgKeys(stats)).toEqual([
+            "filter_method",
+            "filter_window_length",
+            "filter_polyorder",
+            "alpha",
+        ]);
+        expect(filtered?.baseAlgorithmName).toBe("Base");
+        expect(filtered?.filteredMethodName).toBe("Savitzky-Golay: window_length=7");
     });
 
     it("computes one-sided share for each algorithm", () => {

@@ -13,6 +13,9 @@ export type AlgoKey = string;
 export interface AlgoStats {
     algoKey: AlgoKey;
     algorithmName: string;
+    baseAlgorithmName: string;
+    variant: "raw" | "filtered";
+    filteredMethodName: string | null;
     m: number | null;
     argsSummary: string;
     args: AccelArgs | null;
@@ -90,6 +93,17 @@ export type AlgoRankingSortKey =
 
 export const MAX_ARG_COLUMNS = 3;
 
+const ARG_KEY_PRIORITY = [
+    "filter_method",
+    "filter_window_length",
+    "filter_degree",
+    "filter_polyorder",
+    "filter_delta",
+    "filter_derive",
+];
+
+const HIDDEN_DYNAMIC_ARG_KEYS = new Set(["filtered"]);
+
 interface DeviationMetrics {
     minDeviation: number;
     minDeviationN: number;
@@ -139,6 +153,37 @@ function buildArgSlots(args: AccelArgs | null | undefined): {
         summary: entries.map(([key, value]) => `${key}=${String(value)}`).join(", "),
         slots: [values[0] ?? "", values[1] ?? "", values[2] ?? ""],
     };
+}
+
+function isDisplayableArgValue(value: unknown): boolean {
+    return value !== undefined && value !== null && value !== "";
+}
+
+function compareArgKeys(a: string, b: string): number {
+    const aPriority = ARG_KEY_PRIORITY.indexOf(a);
+    const bPriority = ARG_KEY_PRIORITY.indexOf(b);
+
+    if (aPriority !== -1 || bPriority !== -1) {
+        if (aPriority === -1) return 1;
+        if (bPriority === -1) return -1;
+        return aPriority - bPriority;
+    }
+
+    return a.localeCompare(b);
+}
+
+export function getVisibleArgKeys(stats: AlgoStats[]): string[] {
+    const keys = new Set<string>();
+
+    for (const stat of stats) {
+        for (const [key, value] of Object.entries(stat.args ?? {})) {
+            if (HIDDEN_DYNAMIC_ARG_KEYS.has(key)) continue;
+            if (!isDisplayableArgValue(value)) continue;
+            keys.add(key);
+        }
+    }
+
+    return Array.from(keys).sort(compareArgKeys);
 }
 
 export function makeAlgoKey(
@@ -413,6 +458,10 @@ export function buildAlgoStatsFromExperiment(
 
         const accel = accelById.get(seriesAccel.accel_id);
         const algorithmName = accel?.name ?? seriesAccel.accel_id;
+        const baseAccel = accel?.baseAccelId ? accelById.get(accel.baseAccelId) : null;
+        const baseAlgorithmName = baseAccel?.name ?? algorithmName;
+        const variant = accel?.variant ?? "raw";
+        const filteredMethodName = accel?.filteredMethodName ?? null;
         const m = accel?.m ?? null;
         const args = accel?.args ?? null;
         const { summary: argsSummary, slots } = buildArgSlots(args);
@@ -424,6 +473,9 @@ export function buildAlgoStatsFromExperiment(
             stats = {
                 algoKey,
                 algorithmName,
+                baseAlgorithmName,
+                variant,
+                filteredMethodName,
                 m,
                 argsSummary,
                 args,

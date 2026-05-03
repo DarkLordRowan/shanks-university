@@ -24,6 +24,10 @@ describe("buildAccelAndSeriesAccelEntityVariantsFromParquetRow", () => {
             filtered: {
                 start_n: 0,
                 segment_length: 2,
+                filter_args: {
+                    degree: "2",
+                    window_length: "3",
+                },
                 methods: {
                     "Kolmogorov-Zurbenko": {
                         values: [
@@ -48,16 +52,22 @@ describe("buildAccelAndSeriesAccelEntityVariantsFromParquetRow", () => {
         const filtered = variants[1];
         expect(filtered.accel.variant).toBe("filtered");
         expect(filtered.accel.baseAccelId).toBe(variants[0].accel.id);
-        expect(filtered.accel.filteredMethodName).toBe("Kolmogorov-Zurbenko");
+        expect(filtered.accel.filteredMethodName).toBe(
+            "Kolmogorov-Zurbenko: degree=2, window_length=3"
+        );
         expect(filtered.accel.args).toMatchObject({
             beta: "0.5",
             filtered: true,
             filter_method: "Kolmogorov-Zurbenko",
+            filter_degree: "2",
+            filter_window_length: "3",
         });
 
         expect(filtered.seriesAccel.variant).toBe("filtered");
         expect(filtered.seriesAccel.baseAccelId).toBe(variants[0].accel.id);
-        expect(filtered.seriesAccel.filteredMethodName).toBe("Kolmogorov-Zurbenko");
+        expect(filtered.seriesAccel.filteredMethodName).toBe(
+            "Kolmogorov-Zurbenko: degree=2, window_length=3"
+        );
         expect(filtered.seriesAccel.filteredStartN).toBe(0);
         expect(filtered.seriesAccel.filteredSegmentLength).toBe(2);
         expect(filtered.seriesAccel.filtered).toBeNull();
