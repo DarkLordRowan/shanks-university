@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx-js-style";
 import type { Experiment } from "@/entities/experiment/model/experiment";
 import {
@@ -12,11 +12,11 @@ import {
     type MatrixAlgoSeriesFilterState,
 } from "@/shared/ui/Matrix/filters/MatrixAlgoSeriesFilter";
 import {
-    buildAlgoStatsFromExperiment,
     getVisibleArgKeys,
     type AlgoRankingSortKey as BaseSortKey,
     type AlgoStats,
 } from "./AlgoRankingTable.model";
+import { useAlgoRankingStats } from "./AlgoRankingTable.useAlgoRankingStats";
 import {
     appendSheet,
     buildKeyValueSheet,
@@ -31,6 +31,8 @@ import {
 import { DocsAnchorButton } from "@/shared/ui/docs/DocsAnchorButton";
 
 type SortDir = "asc" | "desc";
+const EPSILON_EXP_MIN = -1000;
+const EPSILON_EXP_MAX = -1;
 
 interface AlgoRankingTableViewState {
     epsilonExp: number;
@@ -547,6 +549,189 @@ function getExportColumnName(meta: ColMeta): string {
     return meta.title;
 }
 
+function clampEpsilonExp(value: number): number {
+    return Math.min(EPSILON_EXP_MAX, Math.max(EPSILON_EXP_MIN, value));
+}
+
+function parseEpsilonExpInput(value: string): number | null {
+    const trimmed = value.trim();
+    if (!/^-?\d+$/.test(trimmed)) return null;
+
+    const parsed = Number.parseInt(trimmed, 10);
+    if (!Number.isFinite(parsed)) return null;
+    return clampEpsilonExp(parsed);
+}
+
+function RankingProgressCard({
+    current,
+    total,
+}: {
+    current: number;
+    total: number;
+}) {
+    const pct = total > 0 ? Math.max(0, Math.min(100, Math.round((current / total) * 100))) : 0;
+
+    return (
+        <div className="rounded-xl border border-border bg-panel p-4 shadow-panel">
+            <div className="mb-2 flex items-center justify-between text-sm text-textDim">
+                <span>Computing algorithm ranking...</span>
+                <span>
+                    {current} / {total} ({pct}%)
+                </span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded bg-surface/60">
+                <div className="h-2 bg-primary transition-[width]" style={{ width: `${pct}%` }} />
+            </div>
+        </div>
+    );
+}
+
+interface AlgoRankingTableBodyProps {
+    experiment: Experiment;
+    epsilon: number;
+    epsilonExp: number;
+    precisionFilter: string | null;
+    sortKey: RankingSortKey;
+    sortDir: SortDir;
+    filteredAccels: Experiment["accelList"];
+    filteredSeries: Experiment["seriesList"];
+    state: MatrixAlgoSeriesFilterState;
+    renderRowHeader: MatrixProps<RowMeta, ColMeta>["renderRowHeader"];
+    renderColHeader: MatrixProps<RowMeta, ColMeta>["renderColHeader"];
+    renderCell: MatrixProps<RowMeta, ColMeta>["renderCell"];
+    buildWorkbook: (args: {
+        rows: MatrixAxisItem<RowMeta>[];
+        cols: MatrixAxisItem<ColMeta>[];
+        pager: { startIndex: number; endIndex: number };
+    }) => XLSX.WorkBook;
+}
+
+function AlgoRankingTableBody({
+    experiment,
+    epsilon,
+    epsilonExp,
+    precisionFilter,
+    sortKey,
+    sortDir,
+    filteredAccels,
+    filteredSeries,
+    state,
+    renderRowHeader,
+    renderColHeader,
+    renderCell,
+    buildWorkbook,
+}: AlgoRankingTableBodyProps) {
+    const filteredSeriesIds = useMemo(
+        () => new Set(filteredSeries.map((series) => series.id)),
+        [filteredSeries]
+    );
+    const filteredAccelIds = useMemo(
+        () => new Set(filteredAccels.map((accel) => accel.id)),
+        [filteredAccels]
+    );
+    const { stats, progress } = useAlgoRankingStats({
+        experiment,
+        epsilon,
+        precisionFilter,
+        allowedSeriesIds: filteredSeriesIds,
+        allowedAccelIds: filteredAccelIds,
+    });
+
+    if (!stats || progress.running) {
+        return <RankingProgressCard current={progress.current} total={progress.total} />;
+    }
+
+    if (!stats.length) {
+        return (
+            <div className="rounded-xl2 border border-border bg-panel p-3 text-[11px] text-textDim/70">
+                No rows for current filters.
+            </div>
+        );
+    }
+
+    const argKeys = getVisibleArgKeys(stats);
+    const colsAxis: MatrixAxisItem<ColMeta>[] = buildColumns(argKeys).map((col) => ({
+        id: col.id,
+        meta: col,
+    }));
+
+    const sortedStats = [...stats].sort((a, b) =>
+        compareValues(getSortValue(a, sortKey), getSortValue(b, sortKey), sortDir)
+    );
+
+    const rowsAxis: MatrixAxisItem<RowMeta>[] = sortedStats.map((stat, index) => ({
+        id: stat.algoKey,
+        meta: {
+            ...stat,
+            place: index + 1,
+            precisionLabel: stat.precision ?? (precisionFilter ? precisionFilter : "-"),
+        },
+    }));
+
+    const stateKey = buildFilterStateKey(state);
+
+    return (
+        <>
+            <div className="mb-2 text-[10px] text-textDim/70">
+                rows: {rowsAxis.length} · accels: {filteredAccels.length} /{" "}
+                {(experiment.accelList ?? []).length} · series: {filteredSeries.length} /{" "}
+                {(experiment.seriesList ?? []).length}
+            </div>
+
+            <MatrixPaged<RowMeta, ColMeta>
+                resetKey={`${experiment.id}::${epsilonExp}::${precisionFilter ?? "ALL"}::${sortKey}:${sortDir}::${stateKey}::args=${argKeys.join(",")}`}
+                rows={rowsAxis}
+                cols={colsAxis}
+                maxColsPerPage={0}
+                enableInnerScroll
+                maxBodyHeight="70vh"
+                stickyHeaders
+                rowWidth={320}
+                colWidth={96}
+                minCellHeightPx={46}
+                className="rounded-xl2 border border-border bg-panel shadow-panel"
+                tableClassName="border-separate border-spacing-0"
+                thClassName="bg-surface"
+                tdClassName="p-0"
+                renderTitle={() => (
+                    <span className="group inline-flex items-center gap-2">
+                        <span>Algorithm ranking</span>
+                        <DocsAnchorButton
+                            anchorId={ALGO_RANKING_TABLE_DOCS.id}
+                            label={ALGO_RANKING_TABLE_DOCS.title}
+                        />
+                    </span>
+                )}
+                renderSubtitle={() =>
+                    precisionFilter
+                        ? `epsilon=${epsilon.toExponential(2)} · precision=${precisionFilter} · N=${rowsAxis.length}`
+                        : `epsilon=${epsilon.toExponential(2)} · precision=all · N=${rowsAxis.length}`
+                }
+                renderHeaderRight={() => (
+                    <div className="whitespace-nowrap text-[10px] text-textDim/70">
+                        sort: {formatSortKey(sortKey)} ({sortDir})
+                    </div>
+                )}
+                export={{
+                    fileBaseName: "algo-ranking",
+                    enablePng: true,
+                    enableXlsx: true,
+                    buildWorkbook,
+                }}
+                renderCorner={() => <span className="text-left">Algorithm</span>}
+                renderRowHeader={renderRowHeader}
+                renderColHeader={renderColHeader}
+                renderCell={renderCell}
+                emptyFallback={
+                    <div className="rounded-xl2 border border-border bg-panel p-3 text-[11px] text-textDim/70">
+                        No data
+                    </div>
+                }
+            />
+        </>
+    );
+}
+
 export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, className }) => {
     const viewSessionKey = experiment
         ? buildExperimentSessionStateKey(experiment.id, "view:algo-ranking")
@@ -585,10 +770,35 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
         );
     }, [precisionFilter, precisionsOrder, setViewState]);
 
-    const totalStats = useMemo(
-        () => buildAlgoStatsFromExperiment(experiment, epsilon, precisionFilter),
-        [experiment, epsilon, precisionFilter]
+    const [epsilonExpDraft, setEpsilonExpDraft] = useState(String(epsilonExp));
+
+    useEffect(() => {
+        const clamped = clampEpsilonExp(epsilonExp);
+        if (clamped === epsilonExp) return;
+        setViewState((current) => ({ ...current, epsilonExp: clamped }));
+    }, [epsilonExp, setViewState]);
+
+    useEffect(() => {
+        setEpsilonExpDraft(String(epsilonExp));
+    }, [epsilonExp]);
+
+    const setEpsilonExp = useCallback(
+        (nextExp: number) => {
+            const clamped = clampEpsilonExp(nextExp);
+            setEpsilonExpDraft(String(clamped));
+            setViewState((current) => ({ ...current, epsilonExp: clamped }));
+        },
+        [setViewState]
     );
+
+    const commitEpsilonExpDraft = useCallback(() => {
+        const nextExp = parseEpsilonExpInput(epsilonExpDraft);
+        if (nextExp === null) {
+            setEpsilonExpDraft(String(epsilonExp));
+            return;
+        }
+        setEpsilonExp(nextExp);
+    }, [epsilonExp, epsilonExpDraft, setEpsilonExp]);
 
     const handleSort = useCallback((nextKey: RankingSortKey, defaultDir: SortDir) => {
         setViewState((current) => ({
@@ -778,15 +988,12 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                 <div className="flex-1">
                     <input
                         type="range"
-                        min={-1000}
-                        max={-1}
+                        min={EPSILON_EXP_MIN}
+                        max={EPSILON_EXP_MAX}
                         step={1}
                         value={epsilonExp}
                         onChange={(event) =>
-                            setViewState((current) => ({
-                                ...current,
-                                epsilonExp: parseInt(event.target.value, 10),
-                            }))
+                            setEpsilonExp(Number.parseInt(event.target.value, 10))
                         }
                         className="w-full"
                     />
@@ -795,6 +1002,29 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                         <span>10^-500</span>
                         <span>10^-1</span>
                     </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-[10px]">
+                    <label htmlFor="algo-ranking-epsilon-exp">exp:</label>
+                    <input
+                        id="algo-ranking-epsilon-exp"
+                        type="number"
+                        min={EPSILON_EXP_MIN}
+                        max={EPSILON_EXP_MAX}
+                        step={1}
+                        value={epsilonExpDraft}
+                        onChange={(event) => setEpsilonExpDraft(event.target.value)}
+                        onBlur={commitEpsilonExpDraft}
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                                event.currentTarget.blur();
+                            } else if (event.key === "Escape") {
+                                setEpsilonExpDraft(String(epsilonExp));
+                                event.currentTarget.blur();
+                            }
+                        }}
+                        className="w-20 rounded border border-border bg-surface px-1 py-[1px] font-mono outline-none"
+                    />
                 </div>
 
                 <div className="flex items-center gap-2 text-[10px]">
@@ -827,105 +1057,22 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                 sessionKey={sharedFilterSessionKey}
             >
                 {({ filteredAccels, filteredSeries, state }) => {
-                    const filteredSeriesIds = new Set(filteredSeries.map((series) => series.id));
-                    const filteredAccelIds = new Set(filteredAccels.map((accel) => accel.id));
-
-                    const baseStats = buildAlgoStatsFromExperiment(
-                        experiment,
-                        epsilon,
-                        precisionFilter,
-                        filteredSeriesIds,
-                        filteredAccelIds
-                    );
-
-                    if (!baseStats.length) {
-                        return (
-                            <div className="rounded-xl2 border border-border bg-panel p-3 text-[11px] text-textDim/70">
-                                No rows for current filters.
-                            </div>
-                        );
-                    }
-
-                    const argKeys = getVisibleArgKeys(baseStats);
-                    const colsAxis: MatrixAxisItem<ColMeta>[] = buildColumns(argKeys).map((col) => ({
-                        id: col.id,
-                        meta: col,
-                    }));
-
-                    const sortedStats = [...baseStats].sort((a, b) =>
-                        compareValues(getSortValue(a, sortKey), getSortValue(b, sortKey), sortDir)
-                    );
-
-                    const rowsAxis: MatrixAxisItem<RowMeta>[] = sortedStats.map((stats, index) => ({
-                        id: stats.algoKey,
-                        meta: {
-                            ...stats,
-                            place: index + 1,
-                            precisionLabel: stats.precision ?? (precisionFilter ? precisionFilter : "-"),
-                        },
-                    }));
-
-                    const stateKey = buildFilterStateKey(state);
-
                     return (
-                        <>
-                            <div className="mb-2 text-[10px] text-textDim/70">
-                                rows: {rowsAxis.length} / {totalStats.length} · accels:{" "}
-                                {filteredAccels.length} / {(experiment.accelList ?? []).length} ·
-                                series: {filteredSeries.length} / {(experiment.seriesList ?? []).length}
-                            </div>
-
-                            <MatrixPaged<RowMeta, ColMeta>
-                                resetKey={`${experiment.id}::${epsilonExp}::${precisionFilter ?? "ALL"}::${sortKey}:${sortDir}::${stateKey}::args=${argKeys.join(",")}`}
-                                rows={rowsAxis}
-                                cols={colsAxis}
-                                maxColsPerPage={0}
-                                enableInnerScroll
-                                maxBodyHeight="70vh"
-                                stickyHeaders
-                                rowWidth={320}
-                                colWidth={96}
-                                minCellHeightPx={46}
-                                className="rounded-xl2 border border-border bg-panel shadow-panel"
-                                tableClassName="border-separate border-spacing-0"
-                                thClassName="bg-surface"
-                                tdClassName="p-0"
-                                renderTitle={() => (
-                                    <span className="group inline-flex items-center gap-2">
-                                        <span>Algorithm ranking</span>
-                                        <DocsAnchorButton
-                                            anchorId={ALGO_RANKING_TABLE_DOCS.id}
-                                            label={ALGO_RANKING_TABLE_DOCS.title}
-                                        />
-                                    </span>
-                                )}
-                                renderSubtitle={() =>
-                                    precisionFilter
-                                        ? `epsilon=${epsilon.toExponential(2)} · precision=${precisionFilter} · N=${rowsAxis.length}`
-                                        : `epsilon=${epsilon.toExponential(2)} · precision=all · N=${rowsAxis.length}`
-                                }
-                                renderHeaderRight={() => (
-                                    <div className="whitespace-nowrap text-[10px] text-textDim/70">
-                                        sort: {formatSortKey(sortKey)} ({sortDir})
-                                    </div>
-                                )}
-                                export={{
-                                    fileBaseName: "algo-ranking",
-                                    enablePng: true,
-                                    enableXlsx: true,
-                                    buildWorkbook,
-                                }}
-                                renderCorner={() => <span className="text-left">Algorithm</span>}
-                                renderRowHeader={renderRowHeader}
-                                renderColHeader={renderColHeader}
-                                renderCell={renderCell}
-                                emptyFallback={
-                                    <div className="rounded-xl2 border border-border bg-panel p-3 text-[11px] text-textDim/70">
-                                        No data
-                                    </div>
-                                }
-                            />
-                        </>
+                        <AlgoRankingTableBody
+                            experiment={experiment}
+                            epsilon={epsilon}
+                            epsilonExp={epsilonExp}
+                            precisionFilter={precisionFilter}
+                            sortKey={sortKey}
+                            sortDir={sortDir}
+                            filteredAccels={filteredAccels}
+                            filteredSeries={filteredSeries}
+                            state={state}
+                            renderRowHeader={renderRowHeader}
+                            renderColHeader={renderColHeader}
+                            renderCell={renderCell}
+                            buildWorkbook={buildWorkbook}
+                        />
                     );
                 }}
             </MatrixAlgoSeriesFilter>

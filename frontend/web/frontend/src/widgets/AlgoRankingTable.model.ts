@@ -419,15 +419,100 @@ export function getVisibleArgColumnCount(stats: AlgoStats[]): number {
     return count;
 }
 
-export function buildAlgoStatsFromExperiment(
-    experiment: Experiment | null,
-    epsilon: number,
-    precisionFilter: string | null,
-    allowedSeriesIds?: Set<string> | null,
-    allowedAccelIds?: Set<string> | null
-): AlgoStats[] {
+export interface AlgoRankingStatsAccumulatorOptions {
+    experiment: Experiment | null;
+    epsilon: number;
+    precisionFilter: string | null;
+    allowedSeriesIds?: Set<string> | null;
+    allowedAccelIds?: Set<string> | null;
+}
+
+export interface AlgoRankingStatsAccumulator {
+    processSeriesAccel: (seriesAccel: SeriesAccel) => void;
+    finalize: () => AlgoStats[];
+}
+
+function createEmptyAccumulator(): AlgoRankingStatsAccumulator {
+    return {
+        processSeriesAccel: () => {},
+        finalize: () => [],
+    };
+}
+
+function createInitialAlgoStats(params: {
+    algoKey: AlgoKey;
+    algorithmName: string;
+    baseAlgorithmName: string;
+    variant: "raw" | "filtered";
+    filteredMethodName: string | null;
+    m: number | null;
+    argsSummary: string;
+    args: AccelArgs | null;
+    slots: [string, string, string];
+    precision: string | null;
+}): AlgoStats {
+    return {
+        algoKey: params.algoKey,
+        algorithmName: params.algorithmName,
+        baseAlgorithmName: params.baseAlgorithmName,
+        variant: params.variant,
+        filteredMethodName: params.filteredMethodName,
+        m: params.m,
+        argsSummary: params.argsSummary,
+        args: params.args,
+        arg1: params.slots[0],
+        arg2: params.slots[1],
+        arg3: params.slots[2],
+
+        precision: params.precision,
+
+        seriesCount: 0,
+        bestDeviations: [],
+        stepsToTol: [],
+        reachedTolCount: 0,
+        minDeviationNs: [],
+        relativeErrors: [],
+        ordersGains: [],
+        ampAtMinNGains: [],
+        lastMinusMinGaps: [],
+        comparableSeriesMinCount: 0,
+        notBetterThanSeriesCount: 0,
+        oneSidedCount: 0,
+
+        bestMinCount: 0,
+        worstMinCount: 0,
+        bestLastCount: 0,
+        worstLastCount: 0,
+
+        avgBestDeviation: Number.POSITIVE_INFINITY,
+        fracReachedTol: 0,
+        avgStepsToTol: Number.POSITIVE_INFINITY,
+        avgMinDeviationN: Number.POSITIVE_INFINITY,
+        avgRelativeError: Number.POSITIVE_INFINITY,
+        avgOrdersGain: Number.NEGATIVE_INFINITY,
+        avgAmpAtMinN: Number.NEGATIVE_INFINITY,
+        avgLastMinusMin: Number.POSITIVE_INFINITY,
+        notBetterThanSeriesShare: 0,
+        oneSidedShare: 0,
+        bestMinShare: 0,
+        worstMinShare: 0,
+        bestLastShare: 0,
+        worstLastShare: 0,
+
+        rankPrecision: 0,
+        rankSpeed: 0,
+        rankStability: 0,
+        totalRankScore: 0,
+    };
+}
+
+export function createAlgoRankingStatsAccumulator(
+    options: AlgoRankingStatsAccumulatorOptions
+): AlgoRankingStatsAccumulator {
+    const { experiment, epsilon, precisionFilter, allowedSeriesIds, allowedAccelIds } = options;
+
     if (!experiment || !experiment.seriesAccelList || experiment.seriesAccelList.length === 0) {
-        return [];
+        return createEmptyAccumulator();
     }
 
     const seriesById = new Map((experiment.seriesList ?? []).map((series) => [series.id, series]));
@@ -445,144 +530,123 @@ export function buildAlgoStatsFromExperiment(
 
     const byAlgo = new Map<AlgoKey, AlgoStats>();
     const seriesMetrics = new Map<string, SeriesAlgoMetrics[]>();
+    let finalizedStats: AlgoStats[] | null = null;
 
-    for (const seriesAccel of experiment.seriesAccelList) {
-        if (allowedSeriesIds && !allowedSeriesIds.has(seriesAccel.series_id)) continue;
-        if (allowedAccelIds && !allowedAccelIds.has(seriesAccel.accel_id)) continue;
+    return {
+        processSeriesAccel: (seriesAccel: SeriesAccel) => {
+            if (finalizedStats) return;
+            if (allowedSeriesIds && !allowedSeriesIds.has(seriesAccel.series_id)) return;
+            if (allowedAccelIds && !allowedAccelIds.has(seriesAccel.accel_id)) return;
 
-        const series = seriesById.get(seriesAccel.series_id);
-        if (!series) continue;
+            const series = seriesById.get(seriesAccel.series_id);
+            if (!series) return;
 
-        const seriesPrecision = series.precision ?? null;
-        if (precisionFilter && seriesPrecision !== precisionFilter) continue;
+            const seriesPrecision = series.precision ?? null;
+            if (precisionFilter && seriesPrecision !== precisionFilter) return;
 
-        const accel = accelById.get(seriesAccel.accel_id);
-        const algorithmName = accel?.name ?? seriesAccel.accel_id;
-        const baseAccel = accel?.baseAccelId ? accelById.get(accel.baseAccelId) : null;
-        const baseAlgorithmName = baseAccel?.name ?? algorithmName;
-        const variant = accel?.variant ?? "raw";
-        const filteredMethodName = accel?.filteredMethodName ?? null;
-        const m = accel?.m ?? null;
-        const args = accel?.args ?? null;
-        const { summary: argsSummary, slots } = buildArgSlots(args);
+            const accel = accelById.get(seriesAccel.accel_id);
+            const algorithmName = accel?.name ?? seriesAccel.accel_id;
+            const baseAccel = accel?.baseAccelId ? accelById.get(accel.baseAccelId) : null;
+            const baseAlgorithmName = baseAccel?.name ?? algorithmName;
+            const variant = accel?.variant ?? "raw";
+            const filteredMethodName = accel?.filteredMethodName ?? null;
+            const m = accel?.m ?? null;
+            const args = accel?.args ?? null;
+            const { summary: argsSummary, slots } = buildArgSlots(args);
 
-        const algoKey = makeAlgoKey(algorithmName, m, args);
+            const algoKey = makeAlgoKey(algorithmName, m, args);
 
-        let stats = byAlgo.get(algoKey);
-        if (!stats) {
-            stats = {
-                algoKey,
-                algorithmName,
-                baseAlgorithmName,
-                variant,
-                filteredMethodName,
-                m,
-                argsSummary,
-                args,
-                arg1: slots[0],
-                arg2: slots[1],
-                arg3: slots[2],
-
-                precision: seriesPrecision,
-
-                seriesCount: 0,
-                bestDeviations: [],
-                stepsToTol: [],
-                reachedTolCount: 0,
-                minDeviationNs: [],
-                relativeErrors: [],
-                ordersGains: [],
-                ampAtMinNGains: [],
-                lastMinusMinGaps: [],
-                comparableSeriesMinCount: 0,
-                notBetterThanSeriesCount: 0,
-                oneSidedCount: 0,
-
-                bestMinCount: 0,
-                worstMinCount: 0,
-                bestLastCount: 0,
-                worstLastCount: 0,
-
-                avgBestDeviation: Number.POSITIVE_INFINITY,
-                fracReachedTol: 0,
-                avgStepsToTol: Number.POSITIVE_INFINITY,
-                avgMinDeviationN: Number.POSITIVE_INFINITY,
-                avgRelativeError: Number.POSITIVE_INFINITY,
-                avgOrdersGain: Number.NEGATIVE_INFINITY,
-                avgAmpAtMinN: Number.NEGATIVE_INFINITY,
-                avgLastMinusMin: Number.POSITIVE_INFINITY,
-                notBetterThanSeriesShare: 0,
-                oneSidedShare: 0,
-                bestMinShare: 0,
-                worstMinShare: 0,
-                bestLastShare: 0,
-                worstLastShare: 0,
-
-                rankPrecision: 0,
-                rankSpeed: 0,
-                rankStability: 0,
-                totalRankScore: 0,
-            };
-            byAlgo.set(algoKey, stats);
-        } else if (stats.precision !== seriesPrecision) {
-            stats.precision = null;
-        }
-
-        const metrics = collectDeviationMetrics(seriesAccel.computed ?? [], epsilon);
-        if (!Number.isFinite(metrics.minDeviation)) continue;
-        const convergenceAnalysis = analyzeSeriesAccelConvergence(series, accel ?? null, seriesAccel);
-
-        stats.seriesCount += 1;
-        stats.bestDeviations.push(metrics.minDeviation);
-        stats.minDeviationNs.push(metrics.minDeviationN);
-        if (convergenceAnalysis.side === "one_sided") {
-            stats.oneSidedCount += 1;
-        }
-
-        if (Number.isFinite(metrics.stepsToTol)) {
-            stats.stepsToTol.push(metrics.stepsToTol);
-            stats.reachedTolCount += 1;
-        } else {
-            stats.stepsToTol.push(Number.POSITIVE_INFINITY);
-        }
-
-        const seriesMinDeviation = seriesMinDeviationById.get(series.id) ?? Number.POSITIVE_INFINITY;
-        if (Number.isFinite(seriesMinDeviation)) {
-            stats.comparableSeriesMinCount += 1;
-            if (
-                metrics.minDeviation > seriesMinDeviation ||
-                almostEqual(metrics.minDeviation, seriesMinDeviation)
-            ) {
-                stats.notBetterThanSeriesCount += 1;
+            let stats = byAlgo.get(algoKey);
+            if (!stats) {
+                stats = createInitialAlgoStats({
+                    algoKey,
+                    algorithmName,
+                    baseAlgorithmName,
+                    variant,
+                    filteredMethodName,
+                    m,
+                    argsSummary,
+                    args,
+                    slots,
+                    precision: seriesPrecision,
+                });
+                byAlgo.set(algoKey, stats);
+            } else if (stats.precision !== seriesPrecision) {
+                stats.precision = null;
             }
-            if (seriesMinDeviation > 0) {
-                stats.relativeErrors.push(
-                    computeRelativeError(metrics.minDeviation, seriesMinDeviation)
+
+            const metrics = collectDeviationMetrics(seriesAccel.computed ?? [], epsilon);
+            if (!Number.isFinite(metrics.minDeviation)) return;
+            const convergenceAnalysis = analyzeSeriesAccelConvergence(
+                series,
+                accel ?? null,
+                seriesAccel
+            );
+
+            stats.seriesCount += 1;
+            stats.bestDeviations.push(metrics.minDeviation);
+            stats.minDeviationNs.push(metrics.minDeviationN);
+            if (convergenceAnalysis.side === "one_sided") {
+                stats.oneSidedCount += 1;
+            }
+
+            if (Number.isFinite(metrics.stepsToTol)) {
+                stats.stepsToTol.push(metrics.stepsToTol);
+                stats.reachedTolCount += 1;
+            } else {
+                stats.stepsToTol.push(Number.POSITIVE_INFINITY);
+            }
+
+            const seriesMinDeviation =
+                seriesMinDeviationById.get(series.id) ?? Number.POSITIVE_INFINITY;
+            if (Number.isFinite(seriesMinDeviation)) {
+                stats.comparableSeriesMinCount += 1;
+                if (
+                    metrics.minDeviation > seriesMinDeviation ||
+                    almostEqual(metrics.minDeviation, seriesMinDeviation)
+                ) {
+                    stats.notBetterThanSeriesCount += 1;
+                }
+                if (seriesMinDeviation > 0) {
+                    stats.relativeErrors.push(
+                        computeRelativeError(metrics.minDeviation, seriesMinDeviation)
+                    );
+                }
+                stats.ordersGains.push(computeOrdersGain(metrics.minDeviation, seriesMinDeviation));
+            }
+            const seriesDeviationAtAlgoMinN =
+                seriesDeviationByNById.get(series.id)?.get(metrics.minDeviationN) ??
+                Number.POSITIVE_INFINITY;
+            if (Number.isFinite(seriesDeviationAtAlgoMinN)) {
+                stats.ampAtMinNGains.push(
+                    computeOrdersGain(metrics.minDeviation, seriesDeviationAtAlgoMinN)
                 );
             }
-            stats.ordersGains.push(computeOrdersGain(metrics.minDeviation, seriesMinDeviation));
-        }
-        const seriesDeviationAtAlgoMinN =
-            seriesDeviationByNById.get(series.id)?.get(metrics.minDeviationN) ??
-            Number.POSITIVE_INFINITY;
-        if (Number.isFinite(seriesDeviationAtAlgoMinN)) {
-            stats.ampAtMinNGains.push(
-                computeOrdersGain(metrics.minDeviation, seriesDeviationAtAlgoMinN)
+            stats.lastMinusMinGaps.push(
+                computeLastMinusMinGap(metrics.lastDeviation, metrics.minDeviation)
             );
-        }
-        stats.lastMinusMinGaps.push(
-            computeLastMinusMinGap(metrics.lastDeviation, metrics.minDeviation)
-        );
 
-        const items = seriesMetrics.get(series.id) ?? [];
-        items.push({
-            algoKey,
-            minDeviation: metrics.minDeviation,
-            lastDeviation: metrics.lastDeviation,
-        });
-        seriesMetrics.set(series.id, items);
-    }
+            const items = seriesMetrics.get(series.id) ?? [];
+            items.push({
+                algoKey,
+                minDeviation: metrics.minDeviation,
+                lastDeviation: metrics.lastDeviation,
+            });
+            seriesMetrics.set(series.id, items);
+        },
+        finalize: () => {
+            if (!finalizedStats) {
+                finalizedStats = finalizeAlgoStats(byAlgo, seriesMetrics);
+            }
+            return finalizedStats;
+        },
+    };
+}
 
+function finalizeAlgoStats(
+    byAlgo: Map<AlgoKey, AlgoStats>,
+    seriesMetrics: Map<string, SeriesAlgoMetrics[]>
+): AlgoStats[] {
     const statsList: AlgoStats[] = [];
     for (const stats of byAlgo.values()) {
         if (stats.seriesCount === 0) continue;
@@ -764,4 +828,26 @@ export function buildAlgoStatsFromExperiment(
     });
 
     return statsList;
+}
+
+export function buildAlgoStatsFromExperiment(
+    experiment: Experiment | null,
+    epsilon: number,
+    precisionFilter: string | null,
+    allowedSeriesIds?: Set<string> | null,
+    allowedAccelIds?: Set<string> | null
+): AlgoStats[] {
+    const accumulator = createAlgoRankingStatsAccumulator({
+        experiment,
+        epsilon,
+        precisionFilter,
+        allowedSeriesIds,
+        allowedAccelIds,
+    });
+
+    for (const seriesAccel of experiment?.seriesAccelList ?? []) {
+        accumulator.processSeriesAccel(seriesAccel);
+    }
+
+    return accumulator.finalize();
 }

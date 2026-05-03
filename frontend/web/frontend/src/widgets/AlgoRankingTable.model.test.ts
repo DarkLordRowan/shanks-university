@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Experiment } from "@/entities/experiment/model/experiment";
 import {
     buildAlgoStatsFromExperiment,
+    createAlgoRankingStatsAccumulator,
     getVisibleArgColumnCount,
     getVisibleArgKeys,
 } from "./AlgoRankingTable.model";
@@ -131,6 +132,36 @@ describe("AlgoRankingTable.model", () => {
         expect(slow?.avgRelativeError).toBe(1);
 
         expect((fast?.totalRankScore ?? Infinity) < (slow?.totalRankScore ?? 0)).toBe(true);
+    });
+
+    it("produces the same filtered stats through the progressive accumulator", () => {
+        const experiment = buildExperiment();
+        const allowedSeriesIds = new Set(["s-1"]);
+        const allowedAccelIds = new Set(["a-fast"]);
+        const expected = buildAlgoStatsFromExperiment(
+            experiment,
+            1e-4,
+            "double",
+            allowedSeriesIds,
+            allowedAccelIds
+        );
+        const accumulator = createAlgoRankingStatsAccumulator({
+            experiment,
+            epsilon: 1e-4,
+            precisionFilter: "double",
+            allowedSeriesIds,
+            allowedAccelIds,
+        });
+
+        for (const seriesAccel of experiment.seriesAccelList.slice(0, 2)) {
+            accumulator.processSeriesAccel(seriesAccel);
+        }
+        for (const seriesAccel of experiment.seriesAccelList.slice(2)) {
+            accumulator.processSeriesAccel(seriesAccel);
+        }
+
+        expect(accumulator.finalize()).toEqual(expected);
+        expect(accumulator.finalize()).toEqual(expected);
     });
 
     it("treats equal metrics as ties when assigning ranks", () => {
