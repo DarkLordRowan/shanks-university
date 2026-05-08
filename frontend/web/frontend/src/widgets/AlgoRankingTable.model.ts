@@ -358,13 +358,23 @@ function getRemainderDeltaFromValue(value: unknown): number {
         rawValue.endsWith("v~") ||
         rawValue.endsWith("ṽ")
     ) return 2;
-    if (["vwavetype", "vwave", "tildev", "vtilde"].includes(token)) return 2;
+    if (
+        ["vwavetype", "vwave", "tildev", "vtilde"].includes(token) ||
+        token.endsWith("vwavetype") ||
+        token.endsWith("vwave") ||
+        token.endsWith("tildev") ||
+        token.endsWith("vtilde")
+    ) return 2;
     if (
         ["t~", "t̃", "t_tilde", "t-tilde"].includes(rawValue) ||
         rawValue.endsWith("t~") ||
         rawValue.endsWith("t̃")
     ) return 1;
-    if (["twave", "t", "vtype", "v"].includes(token)) return 1;
+    if (
+        ["twave", "t", "vtype", "v"].includes(token) ||
+        token.endsWith("twave") ||
+        token.endsWith("vtype")
+    ) return 1;
     if (rawValue.endsWith("t") || rawValue.endsWith("v")) return 1;
     return 0;
 }
@@ -379,6 +389,11 @@ function isRhoType(args: AccelArgs | null | undefined): boolean {
     const value = getArgValue(args, ["type", "numerator", "numerator_type", "rho", "rho_type"]);
     if (value === true) return true;
     if (value === false || value == null) return false;
+    if (typeof value === "number") return value !== 0;
+
+    const rawValue = String(value).trim().toLowerCase();
+    const numericValue = Number(rawValue);
+    if (Number.isFinite(numericValue)) return numericValue !== 0;
 
     const token = normalizeToken(value);
     return token === "rhotype" || token === "rho" || token === "1" || token === "true";

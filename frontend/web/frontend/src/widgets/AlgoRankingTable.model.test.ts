@@ -118,6 +118,12 @@ describe("AlgoRankingTable.model", () => {
             computeHowMuch({ name: "Wynn Rho Algorithm", m: 3, args: { rho_type: true } }, 10)
         ).toBe(17);
         expect(
+            computeHowMuch({ name: "Wynn Rho Algorithm", m: 3, args: { rho: "1.0" } }, 10)
+        ).toBe(17);
+        expect(
+            computeHowMuch({ name: "Wynn Rho Algorithm", m: 3, args: { rho: 0 } }, 10)
+        ).toBe(14);
+        expect(
             computeHowMuch(
                 { name: "Wynn Rho Algorithm", m: 3, args: { numerator_type: "gamma_rho_type" } },
                 10
@@ -134,7 +140,10 @@ describe("AlgoRankingTable.model", () => {
         ).toBe(16);
         expect(computeHowMuch({ name: "Levin-Sidi S Algorithm", m: 3, args: { type: "t~" } }, 10)).toBe(15);
         expect(computeHowMuch({ name: "Levin-Sidi S Algorithm", m: 3, args: { type: "v~" } }, 10)).toBe(16);
+        expect(computeHowMuch({ name: "recLevinSidiSAlgorithmT~", m: 3, args: null }, 10)).toBe(15);
         expect(computeHowMuch({ name: "recLevinSidiSAlgorithmV~", m: 3, args: null }, 10)).toBe(16);
+        expect(computeHowMuch({ name: "recLevinSidiSAlgorithmVType", m: 3, args: null }, 10)).toBe(15);
+        expect(computeHowMuch({ name: "recLevinSidiSAlgorithmVWaveType", m: 3, args: null }, 10)).toBe(16);
         expect(
             computeHowMuchFormula({ name: "Wynn Rho Algorithm", m: 3, args: { rho_type: true } })
         ).toBe("n + 2*order + 1 (rho_type)");
@@ -145,6 +154,9 @@ describe("AlgoRankingTable.model", () => {
             "n + order + 1 + delta, delta=2"
         );
         expect(computeHowMuchFormula({ name: "recLevinSidiSAlgorithmV~", m: 3, args: null })).toBe(
+            "n + order + 1 + delta, delta=2"
+        );
+        expect(computeHowMuchFormula({ name: "recLevinSidiSAlgorithmVWaveType", m: 3, args: null })).toBe(
             "n + order + 1 + delta, delta=2"
         );
     });
