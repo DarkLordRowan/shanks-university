@@ -312,6 +312,59 @@ std::unique_ptr<CSeries> mk_series_f64(size_t idx, PrecisionType pt, const std::
 std::unique_ptr<CSeries> mk_series_flong(size_t idx, PrecisionType pt, const std::string& params_json, size_t n, const std::string& x);
 std::unique_ptr<CSeries> mk_series_arb(size_t idx, PrecisionType pt, const std::string& params_json, size_t n, const std::string& x);
 
+// Convert a raw double to type T, handling interval/complex wrappers.
+template <typename T> struct make_value_impl { static T convert(double v); };
+
+#define SHANKS_MAKE_VALUE_SPEC(TYPE, EXPR) \
+    template <> struct make_value_impl<TYPE> { static TYPE convert(double v) { return EXPR; } };
+
+SHANKS_MAKE_VALUE_SPEC(float, static_cast<float>(v))
+SHANKS_MAKE_VALUE_SPEC(double, v)
+SHANKS_MAKE_VALUE_SPEC(long double, static_cast<long double>(v))
+SHANKS_MAKE_VALUE_SPEC(mpfr::mpreal, mpfr::mpreal(v))
+
+#undef SHANKS_MAKE_VALUE_SPEC
+
+template <typename T> struct make_value_impl<std::complex<T>> {
+    static std::complex<T> convert(double v) { return std::complex<T>(make_value_impl<T>::convert(v)); }
+};
+
+template <typename T> struct make_value_impl<intprec::interval<T>> {
+    static intprec::interval<T> convert(double v) { return intprec::interval<T>(make_value_impl<T>::convert(v)); }
+};
+
+template <typename T> struct make_value_impl<std::complex<intprec::interval<T>>> {
+    static std::complex<intprec::interval<T>> convert(double v) {
+        return std::complex<intprec::interval<T>>(make_value_impl<intprec::interval<T>>::convert(v));
+    }
+};
+
+template <typename T> inline T make_value(double v) { return make_value_impl<T>::convert(v); }
+
+template <typename T, PrecisionType P>
+std::unique_ptr<CSeries> mk_series_from_sn_typed(const std::vector<double>& raw_sn) {
+    std::vector<T> sn;
+    sn.reserve(raw_sn.size());
+    for (double v : raw_sn) sn.push_back(make_value<T>(v));
+
+    // Compute an: an[0] = sn[0], an[i] = sn[i] - sn[i-1]
+    std::vector<T> an(sn.size());
+    if (!sn.empty()) {
+        an[0] = sn[0];
+        for (size_t i = 1; i < sn.size(); ++i) {
+            an[i] = sn[i] - sn[i - 1];
+        }
+    }
+
+    T limit = sn.empty() ? make_value<T>(0) : sn.back(); // Last Sn value as limit estimate
+
+    series_result<T> result;
+    result.Sn = std::move(sn);
+    result.an = std::move(an);
+
+    return std::make_unique<CSeriesImpl<T, P>>(std::move(result), limit);
+}
+
 } // namespace shanks::ffi::bridge
 
 #endif

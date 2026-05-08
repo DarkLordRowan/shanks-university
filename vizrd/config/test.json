@@ -11,6 +11,7 @@
     "second_diff": {}
   },
   "series": [
+    "./brent-daily.txt",
     {
       "name": "ExpSeries",
       "x": [0.1],

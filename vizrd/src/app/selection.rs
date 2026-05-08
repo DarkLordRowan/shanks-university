@@ -2,9 +2,10 @@ use egui::WidgetText;
 
 use crate::experiment::{
     Accel, AccelDef, AccelInstance, ExperimentConfig, Filter, FilterDef, FilterInstance, Noise,
-    NoiseDef, NoiseInstance, Series, SeriesDef, SeriesInstance,
+    NoiseDef, NoiseInstance, Series, SeriesDef, SeriesEntry, SeriesInstance,
 };
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 // ─── Selection state ────────────────────────────────────────────────────────
 
@@ -612,6 +613,57 @@ impl<T: Blockable> Selectable for Block<T> {
     }
 }
 
+// ─── SeriesEntrySelect ──────────────────────────────────────────────────────
+
+/// UI selection node for a single series entry.
+/// - Registry: collapsible block with x/args (from `SeriesDef`)
+/// - File: plain checkbox — no parameters to configure
+enum SeriesEntrySelect {
+    Registry { block: Block<SeriesSelect> },
+    File { name: String, sn: Arc<Vec<String>>, checked: bool },
+}
+
+impl SeriesEntrySelect {
+    fn selected_instances(&self) -> Vec<(SeriesInstance, Option<Arc<Vec<String>>>)> {
+        match self {
+            SeriesEntrySelect::Registry { block } => block
+                .selected_instances()
+                .into_iter()
+                .map(|inst| (inst, None))
+                .collect(),
+            SeriesEntrySelect::File { name, sn, checked } => {
+                if *checked {
+                    vec![(SeriesInstance {
+                        name: name.clone(),
+                        x: serde_json::Value::Null,
+                        args: BTreeMap::new(),
+                    }, Some(sn.clone()))]
+                } else {
+                    vec![]
+                }
+            }
+        }
+    }
+}
+
+impl Selectable for SeriesEntrySelect {
+    fn force(&mut self, val: bool) {
+        match self {
+            SeriesEntrySelect::Registry { block } => block.force(val),
+            SeriesEntrySelect::File { checked, .. } => *checked = val,
+        }
+    }
+
+    fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult {
+        match self {
+            SeriesEntrySelect::Registry { block } => Selectable::draw(block, ui),
+            SeriesEntrySelect::File { name, checked, .. } => {
+                draw_button(ui, checked, name.as_str())
+            }
+        }
+    }
+}
+
 // ─── AppSelection (coordinator-facing) ──────────────────────────────────────
 
 /// The set of instances the coordinator should compute.
@@ -619,7 +671,7 @@ impl<T: Blockable> Selectable for Block<T> {
 #[derive(Debug, Clone, Default)]
 pub struct AppSelection {
     pub precisions: Vec<String>,
-    pub series: Vec<SeriesInstance>,
+    pub series: Vec<(SeriesInstance, Option<Arc<Vec<String>>>)>,
     pub noises: Vec<Option<NoiseInstance>>,
     pub accels: Vec<AccelInstance>,
     pub filters: Vec<FilterInstance>,
@@ -628,7 +680,7 @@ pub struct AppSelection {
 // ─── AppSelect (UI owning tree) ──────────────────────────────────────────────
 
 pub struct AppSelect {
-    series: Block<Vec<Block<SeriesSelect>>>,
+    series: Block<Vec<SeriesEntrySelect>>,
     noise: Block<NoiseVecSelect>,
     filter: Block<Vec<Block<FilterSelect>>>,
     accel: Block<Vec<Block<AccelSelect>>>,
@@ -637,11 +689,20 @@ pub struct AppSelect {
 
 impl AppSelect {
     /// Build from an `ExperimentConfig`. All values start deselected.
-    pub fn from_config(exp: &ExperimentConfig) -> Self {
+    pub fn from_config(exp: &ExperimentConfig<SeriesEntry>) -> Self {
         let series = Block::new(
             exp.series
                 .iter()
-                .map(|def| Block::new(series_def_to_select(def)))
+                .map(|entry| match entry {
+                    SeriesEntry::Registry(d) => SeriesEntrySelect::Registry {
+                        block: Block::new(series_def_to_select(d)),
+                    },
+                    SeriesEntry::File { name, sn } => SeriesEntrySelect::File {
+                        name: name.clone(),
+                        sn: sn.clone(),
+                        checked: false,
+                    },
+                })
                 .collect(),
         );
         let noises: Vec<Block<NoiseSelect>> = exp
@@ -709,11 +770,11 @@ impl AppSelect {
 
     /// Extract the current checked state as typed instances for the coordinator.
     pub fn extract(&self) -> AppSelection {
-        let series: Vec<SeriesInstance> = self
+        let series: Vec<(SeriesInstance, Option<Arc<Vec<String>>>)> = self
             .series
             .val
             .iter()
-            .flat_map(|b| b.selected_instances())
+            .flat_map(|e| e.selected_instances())
             .collect();
 
         let mut noises: Vec<Option<NoiseInstance>> = self

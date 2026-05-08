@@ -5,14 +5,16 @@
 //! - Noise configurations
 //! - Filter configurations
 //! - Acceleration methods with events
+//! - File-based series (numbers loaded from .txt/.csv files)
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     fmt::Debug,
     ops::{Add, Mul},
     path::Path,
+    sync::Arc,
 };
 
 use crate::compute::SeriesEventKind;
@@ -182,44 +184,224 @@ pub type NoiseInstance = Noise<String, serde_json::Value, i64>;
 pub type FilterInstance = Filter<serde_json::Value>;
 pub type AccelInstance = Accel<i64, serde_json::Value>;
 
-/// Main experiment configuration - matches JSON format from backend/runner/config/
+// ---------------------------------------------------------------------------
+// Series entry (raw from JSON + resolved with file data)
+// ---------------------------------------------------------------------------
+
+/// Raw series entry as it appears in JSON: either a proper `SeriesDef` object
+/// or a bare string treated as a path to a data file.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExperimentConfig {
+#[serde(untagged)]
+pub enum RawSeriesEntry {
+    Def(SeriesDef),
+    Path(String),
+}
+
+/// Resolved series entry. File paths have been read and their numeric content
+/// is carried inline inside the `File` variant as `Arc<Vec<String>>`.
+///
+/// Strings (not f64) are kept so that C++ can parse them with the full
+/// precision required by types like `mpfr::mpreal`.
+#[derive(Debug, Clone)]
+pub enum SeriesEntry {
+    Registry(SeriesDef),
+    File {
+        name: String,
+        sn: Arc<Vec<String>>,
+    },
+}
+
+impl SeriesEntry {
+    pub fn name(&self) -> &str {
+        match self {
+            SeriesEntry::Registry(d) => &d.name,
+            SeriesEntry::File { name, .. } => name,
+        }
+    }
+
+    /// File data, if this is a file-based entry.
+    pub fn file_sn(&self) -> Option<&Arc<Vec<String>>> {
+        match self {
+            SeriesEntry::Registry(_) => None,
+            SeriesEntry::File { sn, .. } => Some(sn),
+        }
+    }
+
+    /// Expand this entry into concrete instances.
+    /// Returns `(SeriesInstance, file_sn)` — `file_sn` is `Some` only for
+    /// file-based entries.
+    pub fn expand(&self) -> Vec<(SeriesInstance, Option<Arc<Vec<String>>>)> {
+        match self {
+            SeriesEntry::Registry(def) => def
+                .expand()
+                .map(|inst| (inst, None))
+                .collect(),
+            SeriesEntry::File { name, sn } => {
+                let inst = SeriesInstance {
+                    name: name.clone(),
+                    x: serde_json::Value::Null,
+                    args: BTreeMap::new(),
+                };
+                vec![(inst, Some(sn.clone()))]
+            }
+        }
+    }
+}
+
+impl RawSeriesEntry {
+    /// Resolve a raw entry: file paths are read and converted into
+    /// `SeriesEntry::File`; object definitions become `SeriesEntry::Registry`.
+    pub fn resolve(self, config_dir: &Path) -> Result<SeriesEntry> {
+        match self {
+            RawSeriesEntry::Def(def) => Ok(SeriesEntry::Registry(def)),
+            RawSeriesEntry::Path(rel_path) => {
+                let full_path = config_dir.join(&rel_path);
+                let name = Path::new(&rel_path)
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or(&rel_path)
+                    .to_string();
+
+                let sn = load_text_series_as_strings(&full_path)
+                    .with_context(|| format!("Failed to load series file: {}", rel_path))?;
+
+                Ok(SeriesEntry::File {
+                    name,
+                    sn: Arc::new(sn),
+                })
+            }
+        }
+    }
+}
+
+/// Main experiment configuration - matches JSON format from backend/runner/config/
+#[derive(Debug, Clone)]
+pub struct ExperimentConfig<T = SeriesEntry> {
     /// Series definitions
-    #[serde(default)]
-    pub series: Vec<SeriesDef>,
+    pub series: Vec<T>,
 
     /// Noise configurations
-    #[serde(default)]
     pub noises: Vec<NoiseDef>,
 
     /// Filter configurations
-    #[serde(default)]
     pub filters: Vec<FilterDef>,
 
     /// Acceleration methods
-    #[serde(default)]
     pub accels: Vec<AccelDef>,
 
     /// Precision types to use (optional override)
-    #[serde(default)]
     pub precisions: Option<Vec<String>>,
 
     /// Event configurations (stop limits)
-    #[serde(default)]
     pub events: BTreeMap<SeriesEventKind, EventConfig>,
 
     /// Number of terms for computation (high-level parameter)
     pub n_points: Option<u64>,
 }
 
-impl ExperimentConfig {
-    /// Load configuration from a JSON file.
-    pub fn load(path: &Path) -> Result<Self> {
-        let content = std::fs::read_to_string(path)?;
-        let config: ExperimentConfig = serde_json::from_str(&content)?;
-        Ok(config)
+// --- Deserialization: ExperimentConfig<RawSeriesEntry> ---
+
+impl ExperimentConfig<RawSeriesEntry> {
+    /// Load a raw (unresolved) experiment config from a JSON file.
+    ///
+    /// The `series` array may contain `RawSeriesEntry::Path` entries (bare
+    /// strings like `"./brent-daily.txt"`). Call `.resolve(dir)` on the result
+    /// to convert those into `SeriesEntry::File` with loaded data.
+    pub fn load_raw(path: &Path) -> Result<Self> {
+        let content = std::fs::read_to_string(path)
+            .with_context(|| format!("Failed to read config file: {}", path.display()))?;
+
+        // Deserialize via a helper that has the right serde attributes.
+        let raw: RawExperimentConfig = serde_json::from_str(&content)
+            .with_context(|| "Failed to parse config JSON")?;
+
+        Ok(raw.into())
     }
+
+    /// Resolve all `Path` entries by reading their files, returning a fully
+    /// resolved `ExperimentConfig<SeriesEntry>`.
+    pub fn resolve(self, config_dir: &Path) -> Result<ExperimentConfig<SeriesEntry>> {
+        let series = self
+            .series
+            .into_iter()
+            .map(|e| e.resolve(config_dir))
+            .collect::<Result<Vec<_>>>()?;
+
+        Ok(ExperimentConfig {
+            series,
+            noises: self.noises,
+            filters: self.filters,
+            accels: self.accels,
+            precisions: self.precisions,
+            events: self.events,
+            n_points: self.n_points,
+        })
+    }
+}
+
+// --- Public API ---
+
+impl ExperimentConfig<SeriesEntry> {
+    /// Load and resolve an experiment configuration from a JSON file.
+    pub fn load(path: &Path) -> Result<Self> {
+        let config_dir = path.parent().unwrap_or(Path::new("."));
+        ExperimentConfig::<RawSeriesEntry>::load_raw(path)?.resolve(config_dir)
+    }
+}
+
+// --- Internal helper for serde (mirrors ExperimentConfig fields with serde attrs) ---
+
+#[derive(Deserialize)]
+struct RawExperimentConfig {
+    #[serde(default)]
+    series: Vec<RawSeriesEntry>,
+    #[serde(default)]
+    noises: Vec<NoiseDef>,
+    #[serde(default)]
+    filters: Vec<FilterDef>,
+    #[serde(default)]
+    accels: Vec<AccelDef>,
+    #[serde(default)]
+    precisions: Option<Vec<String>>,
+    #[serde(default)]
+    events: BTreeMap<SeriesEventKind, EventConfig>,
+    n_points: Option<u64>,
+}
+
+impl From<RawExperimentConfig> for ExperimentConfig<RawSeriesEntry> {
+    fn from(raw: RawExperimentConfig) -> Self {
+        ExperimentConfig {
+            series: raw.series,
+            noises: raw.noises,
+            filters: raw.filters,
+            accels: raw.accels,
+            precisions: raw.precisions,
+            events: raw.events,
+            n_points: raw.n_points,
+        }
+    }
+}
+
+/// Load a text file where each line contains one number.
+///
+/// Blank lines and lines starting with `#` are skipped.
+/// Returns number-as-string values (not f64) to preserve full precision for C++.
+fn load_text_series_as_strings(path: &Path) -> Result<Vec<String>> {
+    let content = std::fs::read_to_string(path)
+        .with_context(|| format!("Cannot read file: {}", path.display()))?;
+    let mut values = Vec::new();
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        // Validate that the string is a valid number, but keep the original text.
+        let _val: f64 = trimmed
+            .parse()
+            .with_context(|| format!("Failed to parse '{}' as number in {}", trimmed, path.display()))?;
+        values.push(trimmed.to_string());
+    }
+    Ok(values)
 }
 
 /// Full series definition with parameters.

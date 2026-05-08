@@ -162,12 +162,13 @@ impl Coordinator {
         let filters = &selection.filters;
 
         for prec in &selection.precisions {
-            for series in &selection.series {
+            for (series, file_sn) in &selection.series {
                 for noise in &selection.noises {
                     let s_desc = compute::SeriesDesc {
                         precision: prec.clone(),
                         series: series.clone(),
                         noise: noise.clone(),
+                        file_sn: file_sn.clone(),
                     };
                     requested_series.insert(s_desc.clone());
 

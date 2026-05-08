@@ -79,11 +79,29 @@ pub struct ComputeTask<T> {
 }
 
 /// Identifies a computed series (what was computed).
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct SeriesDesc {
     pub precision: String,
     pub series: SeriesInstance,
     pub noise: Option<NoiseInstance>,
+    /// File-based series data (number-as-string values). `None` for registry series.
+    pub file_sn: Option<Arc<Vec<String>>>,
+}
+
+impl PartialEq for SeriesDesc {
+    fn eq(&self, other: &Self) -> bool {
+        self.precision == other.precision
+            && self.series == other.series
+            && self.noise == other.noise
+    }
+}
+impl Eq for SeriesDesc {}
+impl std::hash::Hash for SeriesDesc {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.precision.hash(state);
+        self.series.hash(state);
+        self.noise.hash(state);
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -460,6 +478,13 @@ where
     let s_noise_json_raw = noise_json.clone();
     let s_n_needed = task.n_points;
 
+    // Cap n_needed for file-based series (can't exceed the data length)
+    let s_n_effective = if let Some(ref sn) = task.series.file_sn {
+        s_n_needed.min(sn.len() as u64)
+    } else {
+        s_n_needed
+    };
+
     // Ensure series exists in DB for ID mapping
     let series_db_id = cache
         .upsert_series(
@@ -468,7 +493,7 @@ where
             s_x_raw.clone(),
             s_args_raw.clone(),
             s_noise_json_raw.clone(),
-            s_n_needed,
+            s_n_effective,
             None,
         )
         .await
@@ -487,11 +512,23 @@ where
         // Ensure series is computed if needed for anything in this block
         if series_short || !todo.is_empty() {
             debug!("Computing {s_name}");
-            let mut ptr =
-                match bridge::mk_series(&s_name, &s_prec, &s_args, s_n_needed as usize, &s_x) {
+
+            // Check if this is a file-based series
+            let file_sn = task.series.file_sn.clone();
+
+            let mut ptr = if let Some(ref sn_strings) = file_sn {
+                // File-based series: create from loaded values
+                match bridge::mk_series_from_sn(&s_prec, (**sn_strings).to_vec(), s_n_effective as usize) {
+                    Ok(p) => p,
+                    Err(e) => return Err(anyhow::anyhow!("mk_series_from_sn failed: {}", e)),
+                }
+            } else {
+                // Registry series: look up by name
+                match bridge::mk_series(&s_name, &s_prec, &s_args, s_n_effective as usize, &s_x) {
                     Ok(p) => p,
                     Err(e) => return Err(anyhow::anyhow!("mk_series failed: {}", e)),
-                };
+                }
+            };
             if let Some(ref ni) = s_noise {
                 let njson = match serde_json::to_string(ni) {
                     Ok(j) => j,
@@ -552,7 +589,7 @@ where
                     &a_inst.name,
                     &aargs_json,
                     a_inst.m as usize,
-                    s_n_needed as usize,
+                    s_n_effective as usize,
                 ) {
                     Ok(p) => p,
                     Err(e) => {
@@ -714,7 +751,7 @@ where
                     let x = s_x_raw.clone();
                     let args = s_args_raw.clone();
                     let noise = s_noise_json_raw.clone();
-                    let npts = s_n_needed;
+                    let npts = s_n_effective;
                     let sum_opt = data.sum.clone();
 
                     tokio::spawn(async move {
@@ -731,7 +768,7 @@ where
                 ComputeEvent::AccelDone { desc, data, .. } => {
                     let c = cache.clone();
                     let sid = series_db_id;
-                    let npts = n_needed;
+                    let npts = s_n_effective;
                     let aname = desc.accel.name.clone();
                     let m = desc.accel.m;
                     let aargs = sorted_args_json(&desc.accel.args).unwrap_or_default();

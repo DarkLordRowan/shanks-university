@@ -104,6 +104,15 @@ pub mod ffi {
             x: &str,
         ) -> Result<UniquePtr<CSeries>>;
 
+        /// Create a series from raw Sn values passed as number-strings.
+        /// Used for file-based series where values are loaded externally.
+        /// C++ parses each string with the appropriate precision type.
+        fn mk_series_from_sn(
+            precision: &str,
+            sn: Vec<String>,
+            n: usize,
+        ) -> Result<UniquePtr<CSeries>>;
+
         fn apply_noise(
             series: &CSeries,
             name: &str,

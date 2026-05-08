@@ -187,7 +187,7 @@ async fn run_headless(
     }
 
     // Create headless runner
-    let mut runner = vizrd::headless::HeadlessRunner::new(config, cache, export_path)?;
+    let mut runner = vizrd::headless::HeadlessRunner::new(config, cache, export_path)?;;
 
     // Set up progress callback
     let last_print =
