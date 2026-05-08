@@ -132,12 +132,21 @@ describe("AlgoRankingTable.model", () => {
         expect(
             computeHowMuch({ name: "Drummond D Algorithm", m: 3, args: { remainder: "v_wave_type" } }, 10)
         ).toBe(16);
+        expect(computeHowMuch({ name: "Levin-Sidi S Algorithm", m: 3, args: { type: "t~" } }, 10)).toBe(15);
+        expect(computeHowMuch({ name: "Levin-Sidi S Algorithm", m: 3, args: { type: "v~" } }, 10)).toBe(16);
+        expect(computeHowMuch({ name: "recLevinSidiSAlgorithmV~", m: 3, args: null }, 10)).toBe(16);
         expect(
             computeHowMuchFormula({ name: "Wynn Rho Algorithm", m: 3, args: { rho_type: true } })
         ).toBe("n + 2*order + 1 (rho_type)");
         expect(
             computeHowMuchFormula({ name: "Drummond D Algorithm", m: 3, args: { remainder: "v_wave_type" } })
         ).toBe("n + order + 1 + delta, delta=2");
+        expect(computeHowMuchFormula({ name: "Levin-Sidi S Algorithm", m: 3, args: { type: "v~" } })).toBe(
+            "n + order + 1 + delta, delta=2"
+        );
+        expect(computeHowMuchFormula({ name: "recLevinSidiSAlgorithmV~", m: 3, args: null })).toBe(
+            "n + order + 1 + delta, delta=2"
+        );
     });
 
     it("computes requested ranking metrics from min and last deviations", () => {

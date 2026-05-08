@@ -349,13 +349,30 @@ function getOrder(accel: Pick<Accel, "m"> | null | undefined): number {
     return Math.max(0, Math.trunc(order));
 }
 
-function getRemainderDelta(args: AccelArgs | null | undefined): number {
-    const value = getArgValue(args, ["type", "remainder", "remainder_type"]);
+function getRemainderDeltaFromValue(value: unknown): number {
+    const rawValue = String(value ?? "").trim().toLowerCase();
     const token = normalizeToken(value);
 
+    if (
+        ["v~", "ṽ", "v_tilde", "v-tilde"].includes(rawValue) ||
+        rawValue.endsWith("v~") ||
+        rawValue.endsWith("ṽ")
+    ) return 2;
     if (["vwavetype", "vwave", "tildev", "vtilde"].includes(token)) return 2;
+    if (
+        ["t~", "t̃", "t_tilde", "t-tilde"].includes(rawValue) ||
+        rawValue.endsWith("t~") ||
+        rawValue.endsWith("t̃")
+    ) return 1;
     if (["twave", "t", "vtype", "v"].includes(token)) return 1;
+    if (rawValue.endsWith("t") || rawValue.endsWith("v")) return 1;
     return 0;
+}
+
+function getRemainderDelta(args: AccelArgs | null | undefined, sourceName?: string | null): number {
+    const value = getArgValue(args, ["type", "remainder", "remainder_type"]);
+    const argDelta = getRemainderDeltaFromValue(value);
+    return argDelta > 0 ? argDelta : getRemainderDeltaFromValue(sourceName);
 }
 
 function isRhoType(args: AccelArgs | null | undefined): boolean {
@@ -445,7 +462,7 @@ export function computeHowMuch(accel: Pick<Accel, "name" | "m" | "args"> | null 
         name.includes("falgorithm") ||
         name.includes("halgorithm")
     ) {
-        return normalizedN + order + 1 + getRemainderDelta(args);
+        return normalizedN + order + 1 + getRemainderDelta(args, accel?.name);
     }
 
     return normalizedN;
@@ -526,7 +543,7 @@ export function computeHowMuchFormula(
         name.includes("falgorithm") ||
         name.includes("halgorithm")
     ) {
-        const delta = getRemainderDelta(args);
+        const delta = getRemainderDelta(args, accel?.name);
         return delta > 0
             ? `n + order + 1 + delta, delta=${delta}`
             : "n + order + 1";
