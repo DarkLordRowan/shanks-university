@@ -1,4 +1,5 @@
 import type {
+    Accel,
     AccelArgs,
     Experiment,
     Series,
@@ -17,6 +18,7 @@ export interface AlgoStats {
     variant: "raw" | "filtered";
     filteredMethodName: string | null;
     m: number | null;
+    howMuchFormula: string;
     argsSummary: string;
     args: AccelArgs | null;
     arg1: string;
@@ -28,6 +30,7 @@ export interface AlgoStats {
     seriesCount: number;
     bestDeviations: number[];
     stepsToTol: number[];
+    epsSavedSteps: number[];
     reachedTolCount: number;
     minDeviationNs: number[];
     relativeErrors: number[];
@@ -44,13 +47,30 @@ export interface AlgoStats {
     worstLastCount: number;
 
     avgBestDeviation: number;
+    medianBestDeviation: number;
+    worstBestDeviation: number;
     fracReachedTol: number;
     avgStepsToTol: number;
+    medianStepsToTol: number;
+    worstStepsToTol: number;
     avgMinDeviationN: number;
+    medianMinDeviationN: number;
+    worstMinDeviationN: number;
     avgRelativeError: number;
+    medianRelativeError: number;
+    worstRelativeError: number;
     avgOrdersGain: number;
+    medianOrdersGain: number;
+    worstOrdersGain: number;
     avgAmpAtMinN: number;
+    medianAmpAtMinN: number;
+    worstAmpAtMinN: number;
     avgLastMinusMin: number;
+    medianLastMinusMin: number;
+    worstLastMinusMin: number;
+    avgEpsSavedSteps: number;
+    medianEpsSavedSteps: number;
+    worstEpsSavedSteps: number;
     notBetterThanSeriesShare: number;
     oneSidedShare: number;
     bestMinShare: number;
@@ -67,21 +87,39 @@ export interface AlgoStats {
 export type AlgoRankingSortKey =
     | "algorithmName"
     | "m"
+    | "howMuchFormula"
     | "arg1"
     | "arg2"
     | "arg3"
     | "precision"
     | "seriesCount"
     | "avgBestDeviation"
+    | "medianBestDeviation"
+    | "worstBestDeviation"
     | "avgRelativeError"
+    | "medianRelativeError"
+    | "worstRelativeError"
     | "avgOrdersGain"
+    | "medianOrdersGain"
+    | "worstOrdersGain"
     | "avgAmpAtMinN"
+    | "medianAmpAtMinN"
+    | "worstAmpAtMinN"
     | "notBetterThanSeriesShare"
     | "avgMinDeviationN"
+    | "medianMinDeviationN"
+    | "worstMinDeviationN"
     | "avgLastMinusMin"
+    | "medianLastMinusMin"
+    | "worstLastMinusMin"
     | "fracReachedTol"
     | "oneSidedShare"
     | "avgStepsToTol"
+    | "medianStepsToTol"
+    | "worstStepsToTol"
+    | "avgEpsSavedSteps"
+    | "medianEpsSavedSteps"
+    | "worstEpsSavedSteps"
     | "bestMinShare"
     | "worstMinShare"
     | "bestLastShare"
@@ -228,6 +266,25 @@ function meanOrValue(values: number[], fallback: number): number {
     return sum / values.length;
 }
 
+function medianOrValue(values: number[], fallback: number): number {
+    if (values.length === 0) return fallback;
+
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 1
+        ? sorted[mid]
+        : 0.5 * (sorted[mid - 1] + sorted[mid]);
+}
+
+function worstOrValue(
+    values: number[],
+    direction: "lower-is-better" | "higher-is-better",
+    fallback: number
+): number {
+    if (values.length === 0) return fallback;
+    return direction === "lower-is-better" ? Math.max(...values) : Math.min(...values);
+}
+
 function computeRelativeError(algoMinDeviation: number, seriesMinDeviation: number): number {
     if (!Number.isFinite(algoMinDeviation) || !Number.isFinite(seriesMinDeviation)) {
         return Number.POSITIVE_INFINITY;
@@ -267,6 +324,215 @@ function computeLastMinusMinGap(lastDeviation: number, minDeviation: number): nu
     }
 
     return lastDeviation - minDeviation;
+}
+
+function normalizeToken(value: unknown): string {
+    return String(value ?? "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "");
+}
+
+function getArgValue(args: AccelArgs | null | undefined, aliases: string[]): unknown {
+    if (!args) return null;
+
+    const normalizedAliases = new Set(aliases.map(normalizeToken));
+    for (const [key, value] of Object.entries(args)) {
+        if (normalizedAliases.has(normalizeToken(key))) return value;
+    }
+
+    return null;
+}
+
+function getOrder(accel: Pick<Accel, "m"> | null | undefined): number {
+    const order = accel?.m;
+    if (!isFiniteNumber(order)) return 0;
+    return Math.max(0, Math.trunc(order));
+}
+
+function getRemainderDelta(args: AccelArgs | null | undefined): number {
+    const value = getArgValue(args, ["type", "remainder", "remainder_type"]);
+    const token = normalizeToken(value);
+
+    if (["vwavetype", "vwave", "tildev", "vtilde"].includes(token)) return 2;
+    if (["twave", "t", "vtype", "v"].includes(token)) return 1;
+    return 0;
+}
+
+function isRhoType(args: AccelArgs | null | undefined): boolean {
+    const value = getArgValue(args, ["type", "numerator", "numerator_type", "rho", "rho_type"]);
+    if (value === true) return true;
+    if (value === false || value == null) return false;
+
+    const token = normalizeToken(value);
+    return token === "rhotype" || token === "rho" || token === "1" || token === "true";
+}
+
+function normalizeHowMuch(value: number, fallbackN: number): number {
+    if (!Number.isFinite(value)) return fallbackN;
+    return Math.max(0, Math.trunc(value));
+}
+
+export function computeHowMuch(accel: Pick<Accel, "name" | "m" | "args"> | null | undefined, n: number): number {
+    const normalizedN = normalizeHowMuch(n, n);
+    const order = getOrder(accel);
+    const name = normalizeToken(accel?.name);
+    const args = accel?.args ?? null;
+
+    if (
+        name.includes("anderson") ||
+        name.includes("changwynn") ||
+        name.includes("richardson")
+    ) {
+        return normalizedN + 1;
+    }
+
+    if (
+        name.includes("fordsidi2") ||
+        name.includes("fordsidialgorithm2") ||
+        name.includes("fordsidisecond")
+    ) {
+        return normalizedN + 2;
+    }
+
+    if (
+        name.includes("fordsidi3") ||
+        name.includes("fordsidialgorithm3") ||
+        name.includes("fordsidithird")
+    ) {
+        return normalizedN;
+    }
+
+    if (name.includes("brezinski")) {
+        return normalizedN + Math.floor((3 * order) / 2) + 1;
+    }
+
+    if (
+        name.includes("wynnrho") ||
+        name.includes("whynnrho")
+    ) {
+        return normalizedN + order + 1 + (isRhoType(args) ? order : 0);
+    }
+
+    if (
+        name.includes("wynnepsilon") ||
+        (name.includes("shanks") && !name.includes("alternating")) ||
+        name.includes("overholt")
+    ) {
+        return normalizedN + 2 * order + 1;
+    }
+
+    if (name.includes("lubkin")) {
+        return normalizedN + 3 * order + 1;
+    }
+
+    if (
+        name.includes("weniger") ||
+        name.includes("alternatingshanks") ||
+        name.includes("shanksalternating") ||
+        name.includes("jtransformation")
+    ) {
+        return normalizedN + order + 1;
+    }
+
+    if (
+        name === "pj" ||
+        name.includes("pjalgorithm") ||
+        name.includes("pjtransformation") ||
+        name.includes("levin") ||
+        name.includes("drummond") ||
+        name === "falgorithm" ||
+        name === "halgorithm" ||
+        name.includes("falgorithm") ||
+        name.includes("halgorithm")
+    ) {
+        return normalizedN + order + 1 + getRemainderDelta(args);
+    }
+
+    return normalizedN;
+}
+
+export function computeHowMuchFormula(
+    accel: Pick<Accel, "name" | "m" | "args"> | null | undefined
+): string {
+    const name = normalizeToken(accel?.name);
+    const args = accel?.args ?? null;
+
+    if (
+        name.includes("anderson") ||
+        name.includes("changwynn") ||
+        name.includes("richardson")
+    ) {
+        return "n + 1";
+    }
+
+    if (
+        name.includes("fordsidi2") ||
+        name.includes("fordsidialgorithm2") ||
+        name.includes("fordsidisecond")
+    ) {
+        return "n + 2";
+    }
+
+    if (
+        name.includes("fordsidi3") ||
+        name.includes("fordsidialgorithm3") ||
+        name.includes("fordsidithird")
+    ) {
+        return "n";
+    }
+
+    if (name.includes("brezinski")) {
+        return "n + floor(3*order/2) + 1";
+    }
+
+    if (
+        name.includes("wynnrho") ||
+        name.includes("whynnrho")
+    ) {
+        return isRhoType(args)
+            ? "n + 2*order + 1 (rho_type)"
+            : "n + order + 1 (non-rho)";
+    }
+
+    if (
+        name.includes("wynnepsilon") ||
+        (name.includes("shanks") && !name.includes("alternating")) ||
+        name.includes("overholt")
+    ) {
+        return "n + 2*order + 1";
+    }
+
+    if (name.includes("lubkin")) {
+        return "n + 3*order + 1";
+    }
+
+    if (
+        name.includes("weniger") ||
+        name.includes("alternatingshanks") ||
+        name.includes("shanksalternating") ||
+        name.includes("jtransformation")
+    ) {
+        return "n + order + 1";
+    }
+
+    if (
+        name === "pj" ||
+        name.includes("pjalgorithm") ||
+        name.includes("pjtransformation") ||
+        name.includes("levin") ||
+        name.includes("drummond") ||
+        name === "falgorithm" ||
+        name === "halgorithm" ||
+        name.includes("falgorithm") ||
+        name.includes("halgorithm")
+    ) {
+        const delta = getRemainderDelta(args);
+        return delta > 0
+            ? `n + order + 1 + delta, delta=${delta}`
+            : "n + order + 1";
+    }
+
+    return "n";
 }
 
 function collectDeviationMetrics(
@@ -458,6 +724,11 @@ function createInitialAlgoStats(params: {
         variant: params.variant,
         filteredMethodName: params.filteredMethodName,
         m: params.m,
+        howMuchFormula: computeHowMuchFormula({
+            name: params.algorithmName,
+            m: params.m,
+            args: params.args,
+        }),
         argsSummary: params.argsSummary,
         args: params.args,
         arg1: params.slots[0],
@@ -469,6 +740,7 @@ function createInitialAlgoStats(params: {
         seriesCount: 0,
         bestDeviations: [],
         stepsToTol: [],
+        epsSavedSteps: [],
         reachedTolCount: 0,
         minDeviationNs: [],
         relativeErrors: [],
@@ -485,13 +757,30 @@ function createInitialAlgoStats(params: {
         worstLastCount: 0,
 
         avgBestDeviation: Number.POSITIVE_INFINITY,
+        medianBestDeviation: Number.POSITIVE_INFINITY,
+        worstBestDeviation: Number.POSITIVE_INFINITY,
         fracReachedTol: 0,
         avgStepsToTol: Number.POSITIVE_INFINITY,
+        medianStepsToTol: Number.POSITIVE_INFINITY,
+        worstStepsToTol: Number.POSITIVE_INFINITY,
         avgMinDeviationN: Number.POSITIVE_INFINITY,
+        medianMinDeviationN: Number.POSITIVE_INFINITY,
+        worstMinDeviationN: Number.POSITIVE_INFINITY,
         avgRelativeError: Number.POSITIVE_INFINITY,
+        medianRelativeError: Number.POSITIVE_INFINITY,
+        worstRelativeError: Number.POSITIVE_INFINITY,
         avgOrdersGain: Number.NEGATIVE_INFINITY,
+        medianOrdersGain: Number.NEGATIVE_INFINITY,
+        worstOrdersGain: Number.NEGATIVE_INFINITY,
         avgAmpAtMinN: Number.NEGATIVE_INFINITY,
+        medianAmpAtMinN: Number.NEGATIVE_INFINITY,
+        worstAmpAtMinN: Number.NEGATIVE_INFINITY,
         avgLastMinusMin: Number.POSITIVE_INFINITY,
+        medianLastMinusMin: Number.POSITIVE_INFINITY,
+        worstLastMinusMin: Number.POSITIVE_INFINITY,
+        avgEpsSavedSteps: Number.NEGATIVE_INFINITY,
+        medianEpsSavedSteps: Number.NEGATIVE_INFINITY,
+        worstEpsSavedSteps: Number.NEGATIVE_INFINITY,
         notBetterThanSeriesShare: 0,
         oneSidedShare: 0,
         bestMinShare: 0,
@@ -597,6 +886,17 @@ export function createAlgoRankingStatsAccumulator(
                 stats.stepsToTol.push(Number.POSITIVE_INFINITY);
             }
 
+            const seriesDeviationMetrics = collectDeviationMetrics(series.computed ?? [], epsilon);
+            const effectiveStepsToTol = computeHowMuch(accel ?? null, metrics.stepsToTol);
+            if (
+                Number.isFinite(seriesDeviationMetrics.stepsToTol) &&
+                Number.isFinite(effectiveStepsToTol)
+            ) {
+                stats.epsSavedSteps.push(
+                    seriesDeviationMetrics.stepsToTol - effectiveStepsToTol
+                );
+            }
+
             const seriesMinDeviation =
                 seriesMinDeviationById.get(series.id) ?? Number.POSITIVE_INFINITY;
             if (Number.isFinite(seriesMinDeviation)) {
@@ -614,8 +914,9 @@ export function createAlgoRankingStatsAccumulator(
                 }
                 stats.ordersGains.push(computeOrdersGain(metrics.minDeviation, seriesMinDeviation));
             }
+            const effectiveMinDeviationN = computeHowMuch(accel ?? null, metrics.minDeviationN);
             const seriesDeviationAtAlgoMinN =
-                seriesDeviationByNById.get(series.id)?.get(metrics.minDeviationN) ??
+                seriesDeviationByNById.get(series.id)?.get(effectiveMinDeviationN) ??
                 Number.POSITIVE_INFINITY;
             if (Number.isFinite(seriesDeviationAtAlgoMinN)) {
                 stats.ampAtMinNGains.push(
@@ -652,16 +953,83 @@ function finalizeAlgoStats(
         if (stats.seriesCount === 0) continue;
 
         const finiteSteps = stats.stepsToTol.filter((value) => Number.isFinite(value));
+        const finiteEpsSavedSteps = stats.epsSavedSteps.filter((value) =>
+            Number.isFinite(value)
+        );
 
         stats.avgBestDeviation = meanOrInfinity(stats.bestDeviations);
+        stats.medianBestDeviation = medianOrValue(
+            stats.bestDeviations,
+            Number.POSITIVE_INFINITY
+        );
+        stats.worstBestDeviation = worstOrValue(
+            stats.bestDeviations,
+            "lower-is-better",
+            Number.POSITIVE_INFINITY
+        );
         stats.avgMinDeviationN = meanOrInfinity(stats.minDeviationNs);
+        stats.medianMinDeviationN = medianOrValue(
+            stats.minDeviationNs,
+            Number.POSITIVE_INFINITY
+        );
+        stats.worstMinDeviationN = worstOrValue(
+            stats.minDeviationNs,
+            "lower-is-better",
+            Number.POSITIVE_INFINITY
+        );
         stats.fracReachedTol =
             stats.seriesCount > 0 ? stats.reachedTolCount / stats.seriesCount : 0;
         stats.avgStepsToTol = meanOrInfinity(finiteSteps);
+        stats.medianStepsToTol = medianOrValue(finiteSteps, Number.POSITIVE_INFINITY);
+        stats.worstStepsToTol = worstOrValue(
+            finiteSteps,
+            "lower-is-better",
+            Number.POSITIVE_INFINITY
+        );
         stats.avgRelativeError = meanOrValue(stats.relativeErrors, 1);
+        stats.medianRelativeError = medianOrValue(stats.relativeErrors, 1);
+        stats.worstRelativeError = worstOrValue(
+            stats.relativeErrors,
+            "lower-is-better",
+            1
+        );
         stats.avgOrdersGain = meanOrNegativeInfinity(stats.ordersGains);
+        stats.medianOrdersGain = medianOrValue(stats.ordersGains, Number.NEGATIVE_INFINITY);
+        stats.worstOrdersGain = worstOrValue(
+            stats.ordersGains,
+            "higher-is-better",
+            Number.NEGATIVE_INFINITY
+        );
         stats.avgAmpAtMinN = meanOrNegativeInfinity(stats.ampAtMinNGains);
+        stats.medianAmpAtMinN = medianOrValue(
+            stats.ampAtMinNGains,
+            Number.NEGATIVE_INFINITY
+        );
+        stats.worstAmpAtMinN = worstOrValue(
+            stats.ampAtMinNGains,
+            "higher-is-better",
+            Number.NEGATIVE_INFINITY
+        );
         stats.avgLastMinusMin = meanOrInfinity(stats.lastMinusMinGaps);
+        stats.medianLastMinusMin = medianOrValue(
+            stats.lastMinusMinGaps,
+            Number.POSITIVE_INFINITY
+        );
+        stats.worstLastMinusMin = worstOrValue(
+            stats.lastMinusMinGaps,
+            "lower-is-better",
+            Number.POSITIVE_INFINITY
+        );
+        stats.avgEpsSavedSteps = meanOrNegativeInfinity(finiteEpsSavedSteps);
+        stats.medianEpsSavedSteps = medianOrValue(
+            finiteEpsSavedSteps,
+            Number.NEGATIVE_INFINITY
+        );
+        stats.worstEpsSavedSteps = worstOrValue(
+            finiteEpsSavedSteps,
+            "higher-is-better",
+            Number.NEGATIVE_INFINITY
+        );
         stats.notBetterThanSeriesShare =
             stats.comparableSeriesMinCount > 0
                 ? stats.notBetterThanSeriesCount / stats.comparableSeriesMinCount
@@ -743,6 +1111,11 @@ function finalizeAlgoStats(
     const worstMinShareRanks = buildRankMap(statsList, (stats) => stats.worstMinShare, "asc");
     const avgStepsToTolRanks = buildRankMap(statsList, (stats) => stats.avgStepsToTol, "asc");
     const avgMinDeviationNRanks = buildRankMap(statsList, (stats) => stats.avgMinDeviationN, "asc");
+    const avgEpsSavedStepsRanks = buildRankMap(
+        statsList,
+        (stats) => stats.avgEpsSavedSteps,
+        "desc"
+    );
     const avgLastMinusMinRanks = buildRankMap(statsList, (stats) => stats.avgLastMinusMin, "asc");
     const reachedTolRanks = buildRankMap(statsList, (stats) => stats.fracReachedTol, "desc");
     const oneSidedShareRanks = buildRankMap(statsList, (stats) => stats.oneSidedShare, "desc");
@@ -767,7 +1140,8 @@ function finalizeAlgoStats(
         speedScores.set(
             stats.algoKey,
             (avgStepsToTolRanks.get(stats.algoKey) ?? 0) +
-                (avgMinDeviationNRanks.get(stats.algoKey) ?? 0)
+                (avgMinDeviationNRanks.get(stats.algoKey) ?? 0) +
+                (avgEpsSavedStepsRanks.get(stats.algoKey) ?? 0)
         );
 
         stabilityScores.set(

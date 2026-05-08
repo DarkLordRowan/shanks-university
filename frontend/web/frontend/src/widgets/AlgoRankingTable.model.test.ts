@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { Experiment } from "@/entities/experiment/model/experiment";
 import {
     buildAlgoStatsFromExperiment,
+    computeHowMuch,
+    computeHowMuchFormula,
     createAlgoRankingStatsAccumulator,
     getVisibleArgColumnCount,
     getVisibleArgKeys,
@@ -87,6 +89,57 @@ function buildExperiment(): Experiment {
 }
 
 describe("AlgoRankingTable.model", () => {
+    it("computes how_much for known algorithm families", () => {
+        expect(computeHowMuch({ name: "Anderson Acceleration", m: 4, args: null }, 10)).toBe(11);
+        expect(computeHowMuch({ name: "Chang-Wynn Algorithm", m: 4, args: null }, 10)).toBe(11);
+        expect(computeHowMuch({ name: "Richardson Algorithm", m: 4, args: null }, 10)).toBe(11);
+        expect(computeHowMuch({ name: "Ford-Sidi 2 Algorithm", m: 4, args: null }, 10)).toBe(12);
+        expect(computeHowMuch({ name: "Ford-Sidi 3 Algorithm", m: 4, args: null }, 10)).toBe(10);
+        expect(computeHowMuch({ name: "Brezinski Theta Algorithm", m: 4, args: null }, 10)).toBe(17);
+        expect(computeHowMuch({ name: "Weniger Algorithm", m: 4, args: null }, 10)).toBe(15);
+        expect(computeHowMuch({ name: "Shanks Alternating", m: 4, args: null }, 10)).toBe(15);
+        expect(computeHowMuch({ name: "Shanks Algorithm", m: 4, args: null }, 10)).toBe(19);
+        expect(computeHowMuch({ name: "Overholt Algorithm", m: 4, args: null }, 10)).toBe(19);
+        expect(computeHowMuch({ name: "Wynn Epsilon 3 Algorithm", m: 4, args: null }, 10)).toBe(19);
+        expect(computeHowMuch({ name: "Lubkin W Algorithm", m: 4, args: null }, 10)).toBe(23);
+        expect(computeHowMuch({ name: "J-Transformation", m: 4, args: null }, 10)).toBe(15);
+        expect(computeHowMuch({ name: "Unknown", m: 4, args: null }, 10)).toBe(10);
+        expect(computeHowMuchFormula({ name: "Wynn Epsilon 3 Algorithm", m: 4, args: null })).toBe(
+            "n + 2*order + 1"
+        );
+        expect(computeHowMuchFormula({ name: "Unknown", m: 4, args: null })).toBe("n");
+    });
+
+    it("computes conditional how_much for rho and remainder variants", () => {
+        expect(
+            computeHowMuch({ name: "Wynn Rho Algorithm", m: 3, args: { numerator_type: "rho_type" } }, 10)
+        ).toBe(17);
+        expect(
+            computeHowMuch({ name: "Wynn Rho Algorithm", m: 3, args: { rho_type: true } }, 10)
+        ).toBe(17);
+        expect(
+            computeHowMuch(
+                { name: "Wynn Rho Algorithm", m: 3, args: { numerator_type: "gamma_rho_type" } },
+                10
+            )
+        ).toBe(14);
+        expect(
+            computeHowMuch({ name: "pJ Algorithm", m: 3, args: { remainder_type: "t_wave" } }, 10)
+        ).toBe(15);
+        expect(
+            computeHowMuch({ name: "Levin-Sidi S Algorithm", m: 3, args: { type: "v_type" } }, 10)
+        ).toBe(15);
+        expect(
+            computeHowMuch({ name: "Drummond D Algorithm", m: 3, args: { remainder: "v_wave_type" } }, 10)
+        ).toBe(16);
+        expect(
+            computeHowMuchFormula({ name: "Wynn Rho Algorithm", m: 3, args: { rho_type: true } })
+        ).toBe("n + 2*order + 1 (rho_type)");
+        expect(
+            computeHowMuchFormula({ name: "Drummond D Algorithm", m: 3, args: { remainder: "v_wave_type" } })
+        ).toBe("n + order + 1 + delta, delta=2");
+    });
+
     it("computes requested ranking metrics from min and last deviations", () => {
         const stats = buildAlgoStatsFromExperiment(buildExperiment(), 1e-4, null);
 
@@ -103,14 +156,22 @@ describe("AlgoRankingTable.model", () => {
         expect(fast?.arg2).toBe("beta=2");
         expect(fast?.baseAlgorithmName).toBe("Fast");
         expect(fast?.variant).toBe("raw");
+        expect(fast?.howMuchFormula).toBe("n");
         expect(fast?.avgBestDeviation).toBeCloseTo(5e-6);
+        expect(fast?.medianBestDeviation).toBeCloseTo(5e-6);
+        expect(fast?.worstBestDeviation).toBeCloseTo(1e-5);
         expect(fast?.avgRelativeError).toBeCloseTo(0.1);
         expect(fast?.avgOrdersGain).toBeCloseTo(0.5);
         expect(fast?.avgAmpAtMinN).toBeCloseTo(0.5);
         expect(fast?.notBetterThanSeriesShare).toBeCloseTo(0.5);
         expect(fast?.avgMinDeviationN).toBe(2);
+        expect(fast?.medianMinDeviationN).toBe(2);
+        expect(fast?.worstMinDeviationN).toBe(2);
         expect(fast?.avgLastMinusMin).toBe(0);
         expect(fast?.avgStepsToTol).toBe(2);
+        expect(fast?.avgEpsSavedSteps).toBe(0);
+        expect(fast?.medianEpsSavedSteps).toBe(0);
+        expect(fast?.worstEpsSavedSteps).toBe(0);
         expect(fast?.bestMinShare).toBe(1);
         expect(fast?.worstMinShare).toBe(0);
         expect(fast?.bestLastShare).toBe(1);
@@ -120,11 +181,15 @@ describe("AlgoRankingTable.model", () => {
         expect(fast?.rankStability).toBe(1);
 
         expect(slow?.avgBestDeviation).toBeCloseTo(5.5e-4);
+        expect(slow?.medianBestDeviation).toBeCloseTo(5.5e-4);
+        expect(slow?.worstBestDeviation).toBeCloseTo(1e-3);
         expect(slow?.avgOrdersGain).toBeCloseTo(-1.5);
         expect(slow?.avgAmpAtMinN).toBeCloseTo(-1.5);
         expect(slow?.notBetterThanSeriesShare).toBe(1);
         expect(slow?.avgMinDeviationN).toBe(2);
         expect(slow?.avgLastMinusMin).toBeCloseTo(4.5e-4);
+        expect(slow?.medianLastMinusMin).toBeCloseTo(4.5e-4);
+        expect(slow?.worstLastMinusMin).toBeCloseTo(9e-4);
         expect(slow?.bestMinShare).toBe(0);
         expect(slow?.worstMinShare).toBe(1);
         expect(slow?.bestLastShare).toBe(0);
@@ -373,5 +438,136 @@ describe("AlgoRankingTable.model", () => {
         expect(amp?.avgOrdersGain).toBeCloseTo(-2);
         expect(amp?.avgAmpAtMinN).toBeCloseTo(2);
         expect(amp?.avgMinDeviationN).toBe(2);
+    });
+
+    it("uses how_much(n_min) when comparing series deviation at algorithm minimum", () => {
+        const experiment: Experiment = {
+            id: "exp-how-much-at-min-n",
+            seriesList: [
+                {
+                    id: "s-1",
+                    name: "S1",
+                    precision: "double",
+                    args: { x: 1 },
+                    limit: { re: 1, im: 0 },
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-1 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 3, value: { re: 0, im: 0 }, deviation: 1e-3 },
+                        { n: 4, value: { re: 0, im: 0 }, deviation: 1e-4 },
+                    ],
+                },
+            ],
+            accelList: [{ id: "a-1", name: "Shanks Algorithm", m: 1, args: null }],
+            seriesAccelList: [
+                {
+                    series_id: "s-1",
+                    accel_id: "a-1",
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-3 },
+                    ],
+                    errors: [],
+                    events: [],
+                },
+            ],
+        };
+
+        const stats = buildAlgoStatsFromExperiment(experiment, 1e-7, null);
+        const shanks = stats[0];
+
+        expect(computeHowMuch({ name: "Shanks Algorithm", m: 1, args: null }, 1)).toBe(4);
+        expect(shanks?.avgAmpAtMinN).toBeCloseTo(2);
+    });
+
+    it("computes epsilon saved steps with how_much and ignores unreached epsilon cases", () => {
+        const experiment: Experiment = {
+            id: "exp-eps-saved-steps",
+            seriesList: [
+                {
+                    id: "s-1",
+                    name: "S1",
+                    precision: "double",
+                    args: { x: 1 },
+                    limit: { re: 1, im: 0 },
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-1 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 3, value: { re: 0, im: 0 }, deviation: 1e-3 },
+                        { n: 4, value: { re: 0, im: 0 }, deviation: 1e-4 },
+                        { n: 5, value: { re: 0, im: 0 }, deviation: 2e-5 },
+                        { n: 6, value: { re: 0, im: 0 }, deviation: 1e-5 },
+                    ],
+                },
+                {
+                    id: "s-2",
+                    name: "S2",
+                    precision: "double",
+                    args: { x: 2 },
+                    limit: { re: 1, im: 0 },
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-1 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 3, value: { re: 0, im: 0 }, deviation: 1e-3 },
+                        { n: 4, value: { re: 0, im: 0 }, deviation: 2e-5 },
+                        { n: 5, value: { re: 0, im: 0 }, deviation: 1e-5 },
+                    ],
+                },
+            ],
+            accelList: [
+                { id: "a-shanks", name: "Shanks Algorithm", m: 1, args: null },
+                { id: "a-noreach", name: "NoReach", m: null, args: null },
+            ],
+            seriesAccelList: [
+                {
+                    series_id: "s-1",
+                    accel_id: "a-shanks",
+                    computed: [{ n: 1, value: { re: 0, im: 0 }, deviation: 1e-5 }],
+                    errors: [],
+                    events: [],
+                },
+                {
+                    series_id: "s-2",
+                    accel_id: "a-shanks",
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-4 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-5 },
+                    ],
+                    errors: [],
+                    events: [],
+                },
+                {
+                    series_id: "s-1",
+                    accel_id: "a-noreach",
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-4 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 2e-5 },
+                    ],
+                    errors: [],
+                    events: [],
+                },
+                {
+                    series_id: "s-2",
+                    accel_id: "a-noreach",
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-4 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 2e-5 },
+                    ],
+                    errors: [],
+                    events: [],
+                },
+            ],
+        };
+
+        const stats = buildAlgoStatsFromExperiment(experiment, 1e-5, null);
+        const shanks = stats.find((item) => item.algorithmName === "Shanks Algorithm");
+        const noReach = stats.find((item) => item.algorithmName === "NoReach");
+
+        expect(shanks?.avgEpsSavedSteps).toBe(1);
+        expect(shanks?.medianEpsSavedSteps).toBe(1);
+        expect(shanks?.worstEpsSavedSteps).toBe(0);
+        expect(noReach?.avgEpsSavedSteps).toBe(Number.NEGATIVE_INFINITY);
+        expect(noReach?.medianEpsSavedSteps).toBe(Number.NEGATIVE_INFINITY);
+        expect(noReach?.worstEpsSavedSteps).toBe(Number.NEGATIVE_INFINITY);
     });
 });

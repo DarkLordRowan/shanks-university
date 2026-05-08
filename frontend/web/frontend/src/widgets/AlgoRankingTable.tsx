@@ -81,6 +81,14 @@ const BASE_COLUMNS: ColMeta[] = [
         defaultDir: "asc",
     },
     {
+        id: "howMuchFormula",
+        title: "how_much formula",
+        description:
+            "Formula used to map algorithm step n to the source sequence index S(how_much(n, order, args)).",
+        sortKey: "howMuchFormula",
+        defaultDir: "asc",
+    },
+    {
         id: "seriesCount",
         title: "series",
         description: "Число уникальных рядов, по которым этот алгоритм удалось сравнить.",
@@ -95,11 +103,39 @@ const BASE_COLUMNS: ColMeta[] = [
         defaultDir: "asc",
     },
     {
+        id: "medianBestDeviation",
+        title: "med min |dev|",
+        description: "Median over series of min |A_n - lim| for the algorithm. Lower is better.",
+        sortKey: "medianBestDeviation",
+        defaultDir: "asc",
+    },
+    {
+        id: "worstBestDeviation",
+        title: "worst min |dev|",
+        description: "Worst over series of min |A_n - lim| for the algorithm. Lower is better.",
+        sortKey: "worstBestDeviation",
+        defaultDir: "asc",
+    },
+    {
         id: "avgRelativeError",
         title: "avg rel error",
         description:
             "Среднее отношение min |A_n - lim| алгоритма к min |S_n - lim| ряда. 1 = на уровне ряда, <1 = лучше ряда, >1 = хуже. В среднее входят только ряды с min |S_n - lim| > 0; случаи с нулевым минимумом ряда оцениваются через avg series/algo amp.",
         sortKey: "avgRelativeError",
+        defaultDir: "asc",
+    },
+    {
+        id: "medianRelativeError",
+        title: "med rel error",
+        description: "Median relative error min |A_n-lim| / min |S_n-lim|. Lower is better.",
+        sortKey: "medianRelativeError",
+        defaultDir: "asc",
+    },
+    {
+        id: "worstRelativeError",
+        title: "worst rel error",
+        description: "Worst relative error min |A_n-lim| / min |S_n-lim|. Lower is better.",
+        sortKey: "worstRelativeError",
         defaultDir: "asc",
     },
     {
@@ -111,11 +147,39 @@ const BASE_COLUMNS: ColMeta[] = [
         defaultDir: "desc",
     },
     {
+        id: "medianOrdersGain",
+        title: "med series/algo amp",
+        description: "Median order gain log10(min series) - log10(min algorithm). Higher is better.",
+        sortKey: "medianOrdersGain",
+        defaultDir: "desc",
+    },
+    {
+        id: "worstOrdersGain",
+        title: "worst series/algo amp",
+        description: "Worst order gain log10(min series) - log10(min algorithm). Higher is better.",
+        sortKey: "worstOrdersGain",
+        defaultDir: "desc",
+    },
+    {
         id: "avgAmpAtMinN",
         title: "avg series@min n/algo amp",
         description:
-            "Средний выигрыш по порядкам на первом n, где алгоритм достиг своего min |A_n - lim|: lg10(|S_n - lim| на этом n) - lg10(min |A_n - lim|). Больше лучше.",
+            "Средний выигрыш по порядкам на первом n, где алгоритм достиг своего min |A_n - lim|, с рядом в точке S(how_much(n)). Больше лучше.",
         sortKey: "avgAmpAtMinN",
+        defaultDir: "desc",
+    },
+    {
+        id: "medianAmpAtMinN",
+        title: "med series@min n/algo amp",
+        description: "Median order gain against S(how_much(n_min)). Higher is better.",
+        sortKey: "medianAmpAtMinN",
+        defaultDir: "desc",
+    },
+    {
+        id: "worstAmpAtMinN",
+        title: "worst series@min n/algo amp",
+        description: "Worst order gain against S(how_much(n_min)). Higher is better.",
+        sortKey: "worstAmpAtMinN",
         defaultDir: "desc",
     },
     {
@@ -134,11 +198,39 @@ const BASE_COLUMNS: ColMeta[] = [
         defaultDir: "asc",
     },
     {
+        id: "medianMinDeviationN",
+        title: "med min dev n",
+        description: "Median n where the algorithm reaches min |A_n-lim|. Lower is better.",
+        sortKey: "medianMinDeviationN",
+        defaultDir: "asc",
+    },
+    {
+        id: "worstMinDeviationN",
+        title: "worst min dev n",
+        description: "Worst n where the algorithm reaches min |A_n-lim|. Lower is better.",
+        sortKey: "worstMinDeviationN",
+        defaultDir: "asc",
+    },
+    {
         id: "avgLastMinusMin",
         title: "avg last-min",
         description:
             "Средний уход от лучшей точки к последней: |A_last - lim| - min_n |A_n - lim|. Меньше лучше.",
         sortKey: "avgLastMinusMin",
+        defaultDir: "asc",
+    },
+    {
+        id: "medianLastMinusMin",
+        title: "med last-min",
+        description: "Median last-min gap. Lower is better.",
+        sortKey: "medianLastMinusMin",
+        defaultDir: "asc",
+    },
+    {
+        id: "worstLastMinusMin",
+        title: "worst last-min",
+        description: "Worst last-min gap. Lower is better.",
+        sortKey: "worstLastMinusMin",
         defaultDir: "asc",
     },
     {
@@ -148,6 +240,52 @@ const BASE_COLUMNS: ColMeta[] = [
             "Средний первый n, на котором |A_n - lim| <= epsilon. Если epsilon не достигнут, такой ряд в среднее не входит.",
         sortKey: "avgStepsToTol",
         defaultDir: "asc",
+    },
+    {
+        id: "medianStepsToTol",
+        title: "med steps to eps",
+        description: "Median first n where |A_n-lim| <= epsilon. Lower is better.",
+        sortKey: "medianStepsToTol",
+        defaultDir: "asc",
+    },
+    {
+        id: "worstStepsToTol",
+        title: "worst steps to eps",
+        description: "Worst first n where |A_n-lim| <= epsilon. Lower is better.",
+        sortKey: "worstStepsToTol",
+        defaultDir: "asc",
+    },
+    {
+        id: "avgEpsSavedSteps",
+        title: "avg eps saved steps",
+        description:
+            "Average n_series_eps - how_much(n_algo_eps, order, args). Higher means the algorithm saves more source sequence terms.",
+        sortKey: "avgEpsSavedSteps",
+        defaultDir: "desc",
+    },
+    {
+        id: "avgDiffInStepsToEps",
+        title: "AvgDiffInStepsToEps",
+        description:
+            "Compatibility alias for avg eps saved steps: average n_series_eps - how_much(n_algo_eps, order, args). Higher is better.",
+        sortKey: "avgEpsSavedSteps",
+        defaultDir: "desc",
+    },
+    {
+        id: "medianEpsSavedSteps",
+        title: "med eps saved steps",
+        description:
+            "Median n_series_eps - how_much(n_algo_eps, order, args). Higher is better.",
+        sortKey: "medianEpsSavedSteps",
+        defaultDir: "desc",
+    },
+    {
+        id: "worstEpsSavedSteps",
+        title: "worst eps saved steps",
+        description:
+            "Worst n_series_eps - how_much(n_algo_eps, order, args). Higher is better.",
+        sortKey: "worstEpsSavedSteps",
+        defaultDir: "desc",
     },
     {
         id: "fracReachedTol",
@@ -359,26 +497,64 @@ function getCellText(row: RowMeta, colId: ColId): string {
             return row.precisionLabel;
         case "m":
             return row.m != null ? String(row.m) : "-";
+        case "howMuchFormula":
+            return row.howMuchFormula;
         case "args":
             return row.argsSummary || "-";
         case "seriesCount":
             return String(row.seriesCount);
         case "avgBestDeviation":
             return formatNumber(row.avgBestDeviation);
+        case "medianBestDeviation":
+            return formatNumber(row.medianBestDeviation);
+        case "worstBestDeviation":
+            return formatNumber(row.worstBestDeviation);
         case "avgRelativeError":
             return formatNumber(row.avgRelativeError);
+        case "medianRelativeError":
+            return formatNumber(row.medianRelativeError);
+        case "worstRelativeError":
+            return formatNumber(row.worstRelativeError);
         case "avgOrdersGain":
             return formatNumber(row.avgOrdersGain);
+        case "medianOrdersGain":
+            return formatNumber(row.medianOrdersGain);
+        case "worstOrdersGain":
+            return formatNumber(row.worstOrdersGain);
         case "avgAmpAtMinN":
             return formatNumber(row.avgAmpAtMinN);
+        case "medianAmpAtMinN":
+            return formatNumber(row.medianAmpAtMinN);
+        case "worstAmpAtMinN":
+            return formatNumber(row.worstAmpAtMinN);
         case "notBetterThanSeriesShare":
             return row.seriesCount > 0 ? formatPercent(row.notBetterThanSeriesShare) : "-";
         case "avgMinDeviationN":
             return formatSteps(row.avgMinDeviationN);
+        case "medianMinDeviationN":
+            return formatSteps(row.medianMinDeviationN);
+        case "worstMinDeviationN":
+            return formatSteps(row.worstMinDeviationN);
         case "avgLastMinusMin":
             return formatNumber(row.avgLastMinusMin);
+        case "medianLastMinusMin":
+            return formatNumber(row.medianLastMinusMin);
+        case "worstLastMinusMin":
+            return formatNumber(row.worstLastMinusMin);
         case "avgStepsToTol":
             return formatSteps(row.avgStepsToTol);
+        case "medianStepsToTol":
+            return formatSteps(row.medianStepsToTol);
+        case "worstStepsToTol":
+            return formatSteps(row.worstStepsToTol);
+        case "avgEpsSavedSteps":
+            return formatSteps(row.avgEpsSavedSteps);
+        case "avgDiffInStepsToEps":
+            return formatSteps(row.avgEpsSavedSteps);
+        case "medianEpsSavedSteps":
+            return formatSteps(row.medianEpsSavedSteps);
+        case "worstEpsSavedSteps":
+            return formatSteps(row.worstEpsSavedSteps);
         case "fracReachedTol":
             return row.seriesCount > 0 ? formatPercent(row.fracReachedTol) : "-";
         case "oneSidedShare":
@@ -413,16 +589,34 @@ function getExportValue(row: RowMeta, colId: ColId): string | number | null {
             return row.precisionLabel;
         case "m":
             return row.m != null ? Number(row.m) || String(row.m) : null;
+        case "howMuchFormula":
+            return row.howMuchFormula;
         case "args":
             return row.argsSummary || null;
         case "seriesCount":
             return row.seriesCount;
         case "avgBestDeviation":
             return Number.isFinite(row.avgBestDeviation) ? row.avgBestDeviation : null;
+        case "medianBestDeviation":
+            return Number.isFinite(row.medianBestDeviation) ? row.medianBestDeviation : null;
+        case "worstBestDeviation":
+            return Number.isFinite(row.worstBestDeviation) ? row.worstBestDeviation : null;
         case "avgRelativeError":
             return Number.isFinite(row.avgRelativeError)
                 ? row.avgRelativeError
                 : row.avgRelativeError === Number.POSITIVE_INFINITY
+                  ? "∞"
+                  : null;
+        case "medianRelativeError":
+            return Number.isFinite(row.medianRelativeError)
+                ? row.medianRelativeError
+                : row.medianRelativeError === Number.POSITIVE_INFINITY
+                  ? "∞"
+                  : null;
+        case "worstRelativeError":
+            return Number.isFinite(row.worstRelativeError)
+                ? row.worstRelativeError
+                : row.worstRelativeError === Number.POSITIVE_INFINITY
                   ? "∞"
                   : null;
         case "avgOrdersGain":
@@ -431,10 +625,34 @@ function getExportValue(row: RowMeta, colId: ColId): string | number | null {
                 : row.avgOrdersGain === Number.NEGATIVE_INFINITY
                   ? "-∞"
                   : null;
+        case "medianOrdersGain":
+            return Number.isFinite(row.medianOrdersGain)
+                ? row.medianOrdersGain
+                : row.medianOrdersGain === Number.NEGATIVE_INFINITY
+                  ? "-∞"
+                  : null;
+        case "worstOrdersGain":
+            return Number.isFinite(row.worstOrdersGain)
+                ? row.worstOrdersGain
+                : row.worstOrdersGain === Number.NEGATIVE_INFINITY
+                  ? "-∞"
+                  : null;
         case "avgAmpAtMinN":
             return Number.isFinite(row.avgAmpAtMinN)
                 ? row.avgAmpAtMinN
                 : row.avgAmpAtMinN === Number.NEGATIVE_INFINITY
+                  ? "-∞"
+                  : null;
+        case "medianAmpAtMinN":
+            return Number.isFinite(row.medianAmpAtMinN)
+                ? row.medianAmpAtMinN
+                : row.medianAmpAtMinN === Number.NEGATIVE_INFINITY
+                  ? "-∞"
+                  : null;
+        case "worstAmpAtMinN":
+            return Number.isFinite(row.worstAmpAtMinN)
+                ? row.worstAmpAtMinN
+                : row.worstAmpAtMinN === Number.NEGATIVE_INFINITY
                   ? "-∞"
                   : null;
         case "notBetterThanSeriesShare":
@@ -443,10 +661,46 @@ function getExportValue(row: RowMeta, colId: ColId): string | number | null {
                 : null;
         case "avgMinDeviationN":
             return Number.isFinite(row.avgMinDeviationN) ? row.avgMinDeviationN : null;
+        case "medianMinDeviationN":
+            return Number.isFinite(row.medianMinDeviationN) ? row.medianMinDeviationN : null;
+        case "worstMinDeviationN":
+            return Number.isFinite(row.worstMinDeviationN) ? row.worstMinDeviationN : null;
         case "avgLastMinusMin":
             return Number.isFinite(row.avgLastMinusMin) ? row.avgLastMinusMin : null;
+        case "medianLastMinusMin":
+            return Number.isFinite(row.medianLastMinusMin) ? row.medianLastMinusMin : null;
+        case "worstLastMinusMin":
+            return Number.isFinite(row.worstLastMinusMin) ? row.worstLastMinusMin : null;
         case "avgStepsToTol":
             return Number.isFinite(row.avgStepsToTol) ? row.avgStepsToTol : null;
+        case "medianStepsToTol":
+            return Number.isFinite(row.medianStepsToTol) ? row.medianStepsToTol : null;
+        case "worstStepsToTol":
+            return Number.isFinite(row.worstStepsToTol) ? row.worstStepsToTol : null;
+        case "avgEpsSavedSteps":
+            return Number.isFinite(row.avgEpsSavedSteps)
+                ? row.avgEpsSavedSteps
+                : row.avgEpsSavedSteps === Number.NEGATIVE_INFINITY
+                  ? "-∞"
+                  : null;
+        case "avgDiffInStepsToEps":
+            return Number.isFinite(row.avgEpsSavedSteps)
+                ? row.avgEpsSavedSteps
+                : row.avgEpsSavedSteps === Number.NEGATIVE_INFINITY
+                  ? "-∞"
+                  : null;
+        case "medianEpsSavedSteps":
+            return Number.isFinite(row.medianEpsSavedSteps)
+                ? row.medianEpsSavedSteps
+                : row.medianEpsSavedSteps === Number.NEGATIVE_INFINITY
+                  ? "-∞"
+                  : null;
+        case "worstEpsSavedSteps":
+            return Number.isFinite(row.worstEpsSavedSteps)
+                ? row.worstEpsSavedSteps
+                : row.worstEpsSavedSteps === Number.NEGATIVE_INFINITY
+                  ? "-∞"
+                  : null;
         case "fracReachedTol":
             return Number.isFinite(row.fracReachedTol) ? row.fracReachedTol : null;
         case "oneSidedShare":
@@ -480,18 +734,38 @@ function getExportColumnWidth(colId: ColId): number {
             return 14;
         case "m":
             return 10;
+        case "howMuchFormula":
+            return 34;
         case "args":
             return 28;
         case "seriesCount":
             return 10;
         case "avgBestDeviation":
+        case "medianBestDeviation":
+        case "worstBestDeviation":
         case "avgRelativeError":
+        case "medianRelativeError":
+        case "worstRelativeError":
         case "avgOrdersGain":
+        case "medianOrdersGain":
+        case "worstOrdersGain":
         case "avgAmpAtMinN":
+        case "medianAmpAtMinN":
+        case "worstAmpAtMinN":
         case "notBetterThanSeriesShare":
         case "avgMinDeviationN":
+        case "medianMinDeviationN":
+        case "worstMinDeviationN":
         case "avgLastMinusMin":
+        case "medianLastMinusMin":
+        case "worstLastMinusMin":
         case "avgStepsToTol":
+        case "medianStepsToTol":
+        case "worstStepsToTol":
+        case "avgEpsSavedSteps":
+        case "avgDiffInStepsToEps":
+        case "medianEpsSavedSteps":
+        case "worstEpsSavedSteps":
         case "fracReachedTol":
         case "oneSidedShare":
         case "bestMinShare":
@@ -522,14 +796,32 @@ function getExportColumnFormat(colId: ColId): string | null {
         case "worstLastShare":
             return "0.0%";
         case "avgBestDeviation":
+        case "medianBestDeviation":
+        case "worstBestDeviation":
         case "avgRelativeError":
+        case "medianRelativeError":
+        case "worstRelativeError":
         case "avgLastMinusMin":
+        case "medianLastMinusMin":
+        case "worstLastMinusMin":
             return "0.000E+00";
         case "avgOrdersGain":
+        case "medianOrdersGain":
+        case "worstOrdersGain":
         case "avgAmpAtMinN":
+        case "medianAmpAtMinN":
+        case "worstAmpAtMinN":
             return "0.00";
         case "avgMinDeviationN":
+        case "medianMinDeviationN":
+        case "worstMinDeviationN":
         case "avgStepsToTol":
+        case "medianStepsToTol":
+        case "worstStepsToTol":
+        case "avgEpsSavedSteps":
+        case "avgDiffInStepsToEps":
+        case "medianEpsSavedSteps":
+        case "worstEpsSavedSteps":
         case "seriesCount":
         case "rankPrecision":
         case "rankSpeed":
