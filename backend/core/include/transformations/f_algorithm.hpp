@@ -15,7 +15,7 @@ namespace algos {
 
 template <AcceptedLike T, UnsignedIntLike K>
 class f_algorithm final : public series_acceleration<T, K> {
-protected:
+public:
     /// Unique pointer to the remainder estimator strategy being used.
     std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
     /// The specific type of remainder variant currently active.
@@ -23,7 +23,6 @@ protected:
     /// lambda function for auxilary series an to use, {an} must be such that 1/an->0, x_{n+l}>x_{n}, x_{0}>1
     std::function<T(K)> auxilary_series = [](K n) { return utils::cast<T, K>()(n + 4); };
 
-public:
     /**
      * @brief Parameterized constructor to initialize F-algorithm.
      * @param variant Type of remainder estimator to use
@@ -142,19 +141,18 @@ public:
         return series_acceleration<T, K>::acceleration_name;
     }
 
-    static inline std::size_t how_much(const std::size_t n, const std::size_t order,
-                                       const shanks::remainders::remainder_type type) {
+    inline std::size_t how_much(const std::size_t n, const std::size_t order) const {
         return n + order + std::size_t(1) +
-               std::size_t(type == shanks::remainders::remainder_type::t_wave_type ||
-                           type == shanks::remainders::remainder_type::v_type) +
-               std::size_t(2) * std::size_t(type == shanks::remainders::remainder_type::v_wave_type);
+               std::size_t(remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
+                           remainder_type_in_use == shanks::remainders::remainder_type::v_type) +
+               std::size_t(2) * std::size_t(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
     }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T f_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Calculate minimum required size based on the chosen remainder variant
-    const std::size_t required_size = f_algorithm<T, K>::how_much(n, order, remainder_type_in_use);
+    const std::size_t required_size = f_algorithm<T, K>::how_much(n, order);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for D_{" + utils::helpers<K>::to_string(order) +

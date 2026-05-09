@@ -39,7 +39,7 @@ namespace algos {
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class levin_sidi_m_algorithm final : public series_acceleration<T, K> {
-protected:
+public:
     using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /// Positive real parameter gamma. For theoretical stability, it often satisfies gamma >= order - 1.
@@ -50,7 +50,6 @@ protected:
     /// The specific Levin variant variant (u, t, v, etc.) used for remainder estimation.
     shanks::remainders::remainder_type remainder_type_in_use;
 
-public:
     /**
      * @brief Parameterized constructor to initialize the Levin-Sidi M-transformation.
      *
@@ -149,12 +148,11 @@ public:
         return series_acceleration<T, K>::acceleration_name;
     }
 
-    static inline std::size_t how_much(const std::size_t n, const std::size_t order,
-                                       const shanks::remainders::remainder_type type) {
+    inline std::size_t how_much(const std::size_t n, const std::size_t order) const {
         return n + order + std::size_t(1) +
-               std::size_t(type == shanks::remainders::remainder_type::t_wave_type ||
-                           type == shanks::remainders::remainder_type::v_type) +
-               std::size_t(2) * std::size_t(type == shanks::remainders::remainder_type::v_wave_type);
+               std::size_t(remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
+                           remainder_type_in_use == shanks::remainders::remainder_type::v_type) +
+               std::size_t(2) * std::size_t(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
     }
 };
 
@@ -194,7 +192,7 @@ void levin_sidi_m_algorithm<T, K>::update_type(const shanks::remainders::remaind
 template <AcceptedLike T, UnsignedIntLike K>
 T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Determine the total number of terms required for both Sn and an vectors
-    const std::size_t required_size = levin_sidi_m_algorithm<T, K>::how_much(n, order, remainder_type_in_use);
+    const std::size_t required_size = levin_sidi_m_algorithm<T, K>::how_much(n, order);
     const size_t precision =
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 

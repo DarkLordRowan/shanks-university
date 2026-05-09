@@ -39,7 +39,7 @@ namespace algos {
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class wynn_rho_algorithm final : public series_acceleration<T, K> {
-protected:
+public:
     using float_type = real_of<T>::value;  // type in case of complex or interval, represents type for real numbers
 
     /// Strategy object for numerator computation.
@@ -54,7 +54,6 @@ protected:
     /// The current numerator type variant in use.
     shanks::numerators::numerator_type numerator_type_in_use{shanks::numerators::numerator_type::rho_type};
 
-public:
     /**
      * @brief Parameterized constructor to initialize the Rho Wynn Algorithm.
      *
@@ -177,16 +176,15 @@ public:
         return series_acceleration<T, K>::acceleration_name;
     }
 
-    static inline std::size_t how_much(const std::size_t n, const std::size_t order,
-                                       const shanks::numerators::numerator_type type) {
-        return n + order + std::size_t{1} + order * std::size_t(type == shanks::numerators::numerator_type::rho_type);
+    inline std::size_t how_much(const std::size_t n, const std::size_t order) const {
+        return n + order + std::size_t{1} + order * std::size_t(numerator_type_in_use == shanks::numerators::numerator_type::rho_type);
     }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T wynn_rho_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Ensure we have enough data points to compute the transformation
-    const std::size_t required_size = wynn_rho_algorithm<T, K>::how_much(n, order, numerator_type_in_use);
+    const std::size_t required_size = wynn_rho_algorithm<T, K>::how_much(n, order);
     const std::size_t precision =
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 

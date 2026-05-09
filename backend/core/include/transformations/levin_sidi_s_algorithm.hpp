@@ -36,7 +36,7 @@ namespace algos {
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class levin_sidi_s_algorithm final : public series_acceleration<T, K> {
-protected:
+public:
     using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /// Positive real parameter (β > 0). Default to 1.0.
@@ -80,7 +80,6 @@ protected:
      */
     inline T calc_result_rec(const K n, const K order, const series_result<T>& data) const;
 
-public:
     /**
      * @brief Parameterized constructor to initialize the Levin-Sidi S-transformation.
      *
@@ -213,12 +212,11 @@ public:
         return series_acceleration<T, K>::acceleration_name;
     }
 
-    static inline std::size_t how_much(const std::size_t n, const std::size_t order,
-                                       const shanks::remainders::remainder_type type) {
+    inline std::size_t how_much(const std::size_t n, const std::size_t order) const {
         return n + order + std::size_t(1) +
-               std::size_t(type == shanks::remainders::remainder_type::t_wave_type ||
-                           type == shanks::remainders::remainder_type::v_type) +
-               std::size_t(2) * std::size_t(type == shanks::remainders::remainder_type::v_wave_type);
+               std::size_t(remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
+                           remainder_type_in_use == shanks::remainders::remainder_type::v_type) +
+               std::size_t(2) * std::size_t(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
     }
 };
 
@@ -340,7 +338,7 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(const K n, const K order,
 template <AcceptedLike T, UnsignedIntLike K>
 T levin_sidi_s_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Calculate total required terms in Sn and an vectors
-    const std::size_t required_size = levin_sidi_s_algorithm<T, K>::how_much(n, order, remainder_type_in_use);
+    const std::size_t required_size = levin_sidi_s_algorithm<T, K>::how_much(n, order);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for S_{" + utils::helpers<K>::to_string(order) +

@@ -67,6 +67,8 @@ public:
      */
     virtual std::string get_name() { return this->acceleration_name; }
 
+    virtual std::size_t how_much(const std::size_t, const std::size_t) const = 0;
+
 protected:
     std::string acceleration_name = "series acceleration base class"; /**< Name of a transformation */
 };

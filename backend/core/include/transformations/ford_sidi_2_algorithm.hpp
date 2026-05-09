@@ -71,13 +71,13 @@ public:
      */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
 
-    static inline std::size_t how_much(const std::size_t n) { return n + std::size_t{2}; }
+    inline std::size_t how_much(const std::size_t n, const std::size_t /*order*/) const { return n + std::size_t{2}; }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_2_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
     // Check if we have enough partial sums (at least n+2)
-    const std::size_t required_size = ford_sidi_2_algorithm<T, K>::how_much(n);
+    const std::size_t required_size = ford_sidi_2_algorithm<T, K>::how_much(n, 0);
     const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {

@@ -151,6 +151,47 @@ void bind_types(py::module_& m) {
             });
     bind_complex_props(cArb);
 
+    py::class_<OP<arb::float_precision>>(m, "FPrec")
+        .def(py::init<double, mp_prec_t>(), py::arg("d"), py::arg("prec"))
+        .def(py::init<std::string, mp_prec_t>(), py::arg("s"), py::arg("prec"))
+        .def(py::self + py::self)
+        .def(py::self - py::self)
+        .def(py::self * py::self)
+        .def(py::self / py::self)
+        .def(-py::self)
+        .def(py::self < py::self)
+        .def(py::self > py::self)
+        .def(py::self <= py::self)
+        .def(py::self >= py::self)
+        .def(py::self == py::self)
+        .def(py::self != py::self)
+        .def("__abs__", [](const OP<arb::float_precision>& self) { return abs(self); })
+        .def("__pow__", [](const OP<arb::float_precision>& self, const OP<arb::float_precision>& exp) { return pow(self, exp); })
+        .def("sqrt", [](const OP<arb::float_precision>& self) { return sqrt(self); })
+        .def("__hash__",
+             [](const OP<arb::float_precision>& self) {
+                 return py::hash(py::str(utils::helpers<OP<arb::float_precision>>::to_string(self)));
+             })
+        .def("__repr__", [](const OP<arb::float_precision>& self) { return utils::helpers<OP<arb::float_precision>>::to_string(self); })
+        .def(py::pickle([](const OP<arb::float_precision>& num) { return utils::helpers<OP<arb::float_precision>>::to_string(num); },
+                        [](std::string s) { return OP<arb::float_precision>(s); }));
+
+    auto CFPrec =
+        py::class_<std::complex<OP<arb::float_precision>>>(m, "CFPrec")
+            .def(py::init<OP<arb::float_precision>>())
+            .def(py::init<OP<arb::float_precision>, OP<arb::float_precision>>())
+            .def(py::pickle([](const std::complex<OP<arb::float_precision>>& c) { return py::make_tuple(c.real(), c.imag()); },
+                            [](py::tuple t) {
+                                return std::complex<OP<arb::float_precision>>(t[0].cast<OP<arb::float_precision>>(),
+                                                                      t[1].cast<OP<arb::float_precision>>());
+                            }))
+            .def("__repr__", [](const std::complex<OP<arb::float_precision>>& c) {
+                std::ostringstream oss;
+                oss << "CArb" + utils::helpers<std::complex<OP<arb::float_precision>>>::to_string(c);
+                return oss.str();
+            });
+    bind_complex_props(CFPrec);
+
     py::implicitly_convertible<double, OP<mpfr::mpreal>>();
     py::implicitly_convertible<long, OP<mpfr::mpreal>>();
     py::implicitly_convertible<std::string, OP<mpfr::mpreal>>();
@@ -158,6 +199,7 @@ void bind_types(py::module_& m) {
     py::implicitly_convertible<double, std::complex<OP<double>>>();
     py::implicitly_convertible<long double, std::complex<OP<long double>>>();
     py::implicitly_convertible<mpfr::mpreal, std::complex<OP<mpfr::mpreal>>>();
+    py::implicitly_convertible<arb::float_precision, std::complex<OP<arb::float_precision>>>();
 #ifdef __MPREAL_H__
     m.def("set_default_precision", [](size_t bits) { mpfr::mpreal::set_default_prec(static_cast<mp_prec_t>(bits)); });
     m.def("get_default_precision", []() { return static_cast<size_t>(mpfr::mpreal::get_default_prec()); });

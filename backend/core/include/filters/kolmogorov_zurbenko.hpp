@@ -45,8 +45,10 @@ std::vector<Scalar> kolmogorov_zurbenko_filter(const std::vector<Scalar>& data, 
     std::vector<Scalar> padded_vector(data.size() + N_pad * 2, utils::cast<Scalar, int>()(0, precision));
     std::vector<Scalar> result(data.size(), utils::cast<Scalar, int>()(0, precision));
 
-    // Convolution with padding: adding 0 at the start, rest 0 on the end
+    // Convolution with padding: padding with the first and the second element
     std::copy(data.begin(), data.end(), padded_vector.begin() + N_pad);
+    for (size_t i{0}; i < N_pad; ++i) padded_vector[i] = data.front();
+    for (size_t i{0}; i < N_pad; ++i) padded_vector[padded_vector.size() - N_pad - 1 + i] = data.back();
 
     // Normalizing coefficients for the filter
     for (size_t i{0}; i < coeffs.size(); ++i) {

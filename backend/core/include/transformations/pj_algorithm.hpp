@@ -16,7 +16,7 @@ namespace algos {
 
 template <AcceptedLike T, UnsignedIntLike K>
 class pj_algorithm final : public series_acceleration<T, K> {
-protected:
+public:
     using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /// Unique pointer to the remainder estimator strategy being used.
@@ -28,7 +28,6 @@ protected:
     /// real parameter
     const float_type beta;
 
-public:
     /**
      * @brief Parameterized constructor to initialize pJ-transformation
      * @param variant Type of remainder estimator to use
@@ -148,19 +147,18 @@ public:
         return series_acceleration<T, K>::acceleration_name;
     }
 
-    static inline std::size_t how_much(const std::size_t n, const std::size_t order,
-                                       const shanks::remainders::remainder_type type) {
+    inline std::size_t how_much(const std::size_t n, const std::size_t order) const {
         return n + order + std::size_t(1) +
-               std::size_t(type == shanks::remainders::remainder_type::t_wave_type ||
-                           type == shanks::remainders::remainder_type::v_type) +
-               std::size_t(2) * std::size_t(type == shanks::remainders::remainder_type::v_wave_type);
+               std::size_t(remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
+                           remainder_type_in_use == shanks::remainders::remainder_type::v_type) +
+               std::size_t(2) * std::size_t(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
     }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T pj_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Calculate minimum required size based on the chosen remainder variant
-    const std::size_t required_size = pj_algorithm<T, K>::how_much(n, order, remainder_type_in_use);
+    const std::size_t required_size = pj_algorithm<T, K>::how_much(n, order);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for D_{" + utils::helpers<K>::to_string(order) +

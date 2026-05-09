@@ -75,13 +75,13 @@ public:
      */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
 
-    static inline std::size_t how_much(const std::size_t n) { return n + std::size_t{1}; }
+    inline std::size_t how_much(const std::size_t n, const std::size_t /*order*/) const { return n + std::size_t{1}; }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
     // Ensure we have enough data points (Sn and an) to proceed
-    const std::size_t required_size = chang_wynn_algorithm<T, K>::how_much(n);
+    const std::size_t required_size = chang_wynn_algorithm<T, K>::how_much(n,0);
     const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
