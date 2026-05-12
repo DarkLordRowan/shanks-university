@@ -215,6 +215,9 @@ impl DataCache {
                                 let fargs = format_args(&f.args);
                                 filter_part.push_str(&fargs);
                                 filter_part.push_str(")");
+                                if let Some(sn) = a.stop_n {
+                                    filter_part.push_str(&format!(" from n={}", sn));
+                                }
                                 format!("{} on {}", filter_part, accel_name)
                             } else {
                                 format!("Accel: {}", accel_name)

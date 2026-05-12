@@ -6,7 +6,7 @@
     "sign_changed": {},
     "monotone": {},
     "divergent_accel": {
-      "filter_after": 3
+      "filter_after": [2, 5]
     },
     "second_diff": {}
   },
