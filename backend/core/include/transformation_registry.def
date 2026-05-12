@@ -118,7 +118,7 @@ TRANSFORMATION_ENTRY(levin_sidi_m_t_wave_transformation_id, "Levin Sidi-M T Wave
 TRANSFORMATION_ENTRY(levin_sidi_m_v_transformation_id, "Levin Sidi-M V Transformation", "LevinSidiMAlgorithmV", levin_sidi_m_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(shanks::remainders::remainder_type::v_type); })
 TRANSFORMATION_ENTRY(levin_sidi_m_v_wave_transformation_id, "Levin Sidi-M V Wave Transformation", "LevinSidiMAlgorithmV~", levin_sidi_m_algorithm, BIND_NONE, { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(shanks::remainders::remainder_type::v_wave_type); })
 
-TRANSFORMATION_ENTRY(levin_sidi_s_u_transformation_id, "Levin Sidi-S U Transformation", "LevinSidiSAlgorithmU", levin_sidi_s_algorithm, BIND_REM_BOOL, { 
+TRANSFORMATION_ENTRY(levin_sidi_s_u_transformation_id, "Levin Sidi-S U Transformation", "LevinSidiSAlgorithmU", levin_sidi_s_algorithm, BIND_LEVIN_BASE, { 
     return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::u_type, false); 
 })
 TRANSFORMATION_ENTRY(levin_sidi_s_t_transformation_id, "Levin Sidi-S T Transformation", "LevinSidiSAlgorithmT", levin_sidi_s_algorithm, BIND_NONE, { 
