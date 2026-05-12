@@ -535,8 +535,27 @@ impl AccelDef {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct EventConfig {
-    /// Number of events before filtering (None = never filter)
-    pub filter_after: Option<i64>,
+    /// Thresholds after which filtering kicks in. Empty = never filter.
+    /// Multiple values produce separate filtered results for comparison.
+    /// Accepts both a single integer or an array in JSON.
+    #[serde(default, deserialize_with = "deserialize_filter_after")]
+    pub filter_after: Vec<i64>,
+}
+
+fn deserialize_filter_after<'de, D>(de: D) -> Result<Vec<i64>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum Helper {
+        Single(i64),
+        Multi(Vec<i64>),
+    }
+    Ok(match Helper::deserialize(de)? {
+        Helper::Single(v) => vec![v],
+        Helper::Multi(v) => v,
+    })
 }
 
 // #[cfg(test)]

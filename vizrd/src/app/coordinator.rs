@@ -149,7 +149,7 @@ impl Coordinator {
         let selection = &self.last_selection;
 
         let mut requested_series: HashSet<compute::SeriesDesc> = HashSet::new();
-        let mut requested_accels: HashSet<ResultKey> = HashSet::new();
+        let mut unfiltered_keys: HashSet<ResultKey> = HashSet::new();
 
         // series_tasks maps each SeriesDesc → (set of AccelInstances, set of FilterInstances)
         type TaskInfo = (
@@ -176,16 +176,6 @@ impl Coordinator {
 
                     for accel in accels {
                         for filter in filters {
-                            let a_desc = compute::AccelDesc {
-                                accel: accel.clone(),
-                                filter: Some(filter.clone()),
-                                events: self.events.clone(),
-                            };
-                            let rk = ResultKey {
-                                series: s_desc.clone(),
-                                accel: Some(a_desc.clone()),
-                            };
-                            requested_accels.insert(rk);
                             task_info.0.insert(accel.clone());
                             task_info.1.insert(filter.clone());
                         }
@@ -193,12 +183,13 @@ impl Coordinator {
                             accel: accel.clone(),
                             filter: None,
                             events: self.events.clone(),
+                            stop_n: None,
                         };
                         let rk = ResultKey {
                             series: s_desc.clone(),
                             accel: Some(a_desc),
                         };
-                        requested_accels.insert(rk);
+                        unfiltered_keys.insert(rk);
                         task_info.0.insert(accel.clone());
                     }
                 }
@@ -225,7 +216,7 @@ impl Coordinator {
 
         let old_accel_count = self.accel_results.len();
         self.accel_results
-            .retain(|rk, _| requested_accels.contains(rk));
+            .retain(|rk, _| requested_series.contains(&rk.series));
 
         if self.series_results.len() != old_series_count
             || self.accel_results.len() != old_accel_count
@@ -239,9 +230,8 @@ impl Coordinator {
                 continue;
             }
 
-            // Check if all results for this desc are already present
             let series_done = self.series_results.contains_key(&s_desc);
-            let accels_done = requested_accels
+            let accels_done = unfiltered_keys
                 .iter()
                 .filter(|rk| rk.series == s_desc)
                 .all(|rk| self.accel_results.contains_key(rk));

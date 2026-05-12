@@ -131,8 +131,9 @@ impl Cache {
                     events_json      TEXT    NOT NULL DEFAULT '{}',
                     filter_type      TEXT    NOT NULL DEFAULT '',
                     filter_args_json TEXT    NOT NULL DEFAULT '',
+                    start_n          INTEGER NOT NULL DEFAULT 0,
                     n_points         INTEGER NOT NULL DEFAULT 0,
-                    UNIQUE(series_id, accel_name, m_value, args_json, events_json, filter_type, filter_args_json)
+                    UNIQUE(series_id, accel_name, m_value, args_json, events_json, filter_type, filter_args_json, start_n)
                 );
 
                 -- Accel numerical data (val=accelerated sn, an, dev)
@@ -376,6 +377,7 @@ impl Cache {
         events_json: String,
         filter_type: Option<String>,
         filter_args_json: Option<String>,
+        start_n: Option<u64>,
     ) -> Result<Option<(i64, u64)>> {
         let Some(conn) = &self.conn else {
             return Ok(None);
@@ -386,7 +388,8 @@ impl Cache {
                  WHERE series_id=?1 AND accel_name=?2 \
                    AND m_value=?3 AND args_json=?4 AND events_json=?5 \
                    AND filter_type=?6 \
-                   AND filter_args_json=?7",
+                   AND filter_args_json=?7 \
+                   AND start_n=?8",
                 params![
                     series_id,
                     accel_name,
@@ -394,7 +397,8 @@ impl Cache {
                     args_json,
                     events_json,
                     filter_type.unwrap_or_default(),
-                    filter_args_json.unwrap_or_default()
+                    filter_args_json.unwrap_or_default(),
+                    start_n.unwrap_or(0) as i64
                 ],
                 |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)? as u64)),
             );
@@ -418,6 +422,7 @@ impl Cache {
         events_json: String,
         filter_type: Option<String>,
         filter_args_json: Option<String>,
+        start_n: u64,
         n_points: u64,
     ) -> Result<i64> {
         let Some(conn) = &self.conn else {
@@ -427,9 +432,9 @@ impl Cache {
             let tx = c.transaction()?;
             tx.execute(
                 "INSERT INTO accelerations
-                 (series_id,accel_name,m_value,args_json,events_json,filter_type,filter_args_json,n_points)
-                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8)
-                 ON CONFLICT(series_id,accel_name,m_value,args_json,events_json,filter_type,filter_args_json)
+                 (series_id,accel_name,m_value,args_json,events_json,filter_type,filter_args_json,start_n,n_points)
+                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9)
+                 ON CONFLICT(series_id,accel_name,m_value,args_json,events_json,filter_type,filter_args_json,start_n)
                  DO UPDATE SET n_points = MAX(excluded.n_points, accelerations.n_points)",
                 params![
                     series_id,
@@ -439,6 +444,7 @@ impl Cache {
                     events_json.clone(),
                     filter_type.clone().unwrap_or_default(),
                     filter_args_json.clone().unwrap_or_default(),
+                    start_n as i64,
                     n_points
                 ],
             )?;
@@ -447,7 +453,8 @@ impl Cache {
                  WHERE series_id=?1 AND accel_name=?2 \
                    AND m_value=?3 AND args_json=?4 AND events_json=?5 \
                    AND filter_type=?6 \
-                   AND filter_args_json=?7",
+                   AND filter_args_json=?7 \
+                   AND start_n=?8",
                 params![
                     series_id,
                     accel_name,
@@ -455,7 +462,8 @@ impl Cache {
                     args_json,
                     events_json,
                     filter_type.unwrap_or_default(),
-                    filter_args_json.unwrap_or_default()
+                    filter_args_json.unwrap_or_default(),
+                    start_n as i64
                 ],
                 |r| r.get(0),
             )?;
