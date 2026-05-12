@@ -126,9 +126,6 @@ pub struct AccelDesc {
     pub filter: Option<FilterInstance>,
     /// The event configuration used for this computation.
     pub events: BTreeMap<SeriesEventKind, crate::experiment::EventConfig>,
-    /// For filtered results: the n at which filtering started.
-    /// `None` for unfiltered results.
-    pub stop_n: Option<u64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Hash)]
@@ -316,7 +313,6 @@ where
                     serde_json::to_string(&task.events).unwrap_or_default(),
                     None,
                     None,
-                    None,
                 )
                 .await
                 .unwrap_or(None)
@@ -376,7 +372,6 @@ where
                             accel: accel.clone(),
                             filter: None,
                             events: task.events.clone(),
-                            stop_n: None,
                         },
                         data: adata,
                     })
@@ -384,9 +379,85 @@ where
             }
         }
 
-        // Filters are always recomputed in PASS 2 since stop_n values
-        // are only known after event calculation on the unfiltered data.
-        let filters_to_do = task.filters.clone();
+        let mut filters_to_do = vec![];
+        for filter in &task.filters {
+            let fargs = sorted_args_json(&filter.args)?;
+            let cached_filt = if let Some(sid) = cached_id {
+                cache
+                    .accel_exists(
+                        sid,
+                        accel.name.clone(),
+                        Some(accel.m),
+                        aargs.clone(),
+                        serde_json::to_string(&task.events).unwrap_or_default(),
+                        Some(filter.filter_type.clone()),
+                        Some(fargs),
+                    )
+                    .await
+                    .unwrap_or(None)
+            } else {
+                None
+            };
+
+            if cached_filt.map(|(_, n)| n < n_needed).unwrap_or(true) {
+                filters_to_do.push(filter.clone());
+            } else if let Some((aid, _)) = cached_filt {
+                // Emit cached filtered if available
+                if let Ok(Some(ad)) = cache.get_accel_data(aid).await {
+                    // Deserialize cached C++ events from blob
+                    let cached_cpp_events: CachedCppEvents = if ad.events_blob.is_empty() {
+                        CachedCppEvents { events: vec![] }
+                    } else {
+                        match postcard::from_bytes(&ad.events_blob) {
+                            Ok(events) => events,
+                            Err(e) => {
+                                log::warn!(
+                                    "Failed to deserialize cached events for filtered accel {}: {}",
+                                    aid,
+                                    e
+                                );
+                                CachedCppEvents { events: vec![] }
+                            }
+                        }
+                    };
+
+                    // Calculate all events using SeriesEvents
+                    let series_events = if let Some(ref sdata) = sdata_opt {
+                        SeriesEvents::from_cached(
+                            &sdata.result.deviations,
+                            &arr_from_blobs(&ad.result.values),
+                            &arr_from_blobs(&ad.result.an),
+                            &arr_from_blobs(&ad.result.deviations),
+                            cached_cpp_events,
+                            &task.events,
+                        )
+                    } else {
+                        SeriesEvents::from_cached(
+                            &Arr::Real(Vec::new()),
+                            &arr_from_blobs(&ad.result.values),
+                            &arr_from_blobs(&ad.result.an),
+                            &arr_from_blobs(&ad.result.deviations),
+                            cached_cpp_events,
+                            &task.events,
+                        )
+                    };
+
+                    let adata = accel_data_from_cache(&ad, series_events.into_vec());
+
+                    let _ = tx
+                        .send(ComputeEvent::AccelDone {
+                            id: id.clone(),
+                            desc: AccelDesc {
+                                accel: accel.clone(),
+                                filter: Some(filter.clone()),
+                                events: task.events.clone(),
+                            },
+                            data: adata,
+                        })
+                        .await;
+                }
+            }
+        }
 
         if accel_short || !filters_to_do.is_empty() {
             todo.push((a_idx, accel.clone(), accel_short, filters_to_do));
@@ -490,7 +561,7 @@ where
             usize,
             (
                 cxx::UniquePtr<bridge::CSeries>,
-                Vec<u64>,
+                Option<u64>,
                 Vec<SeriesEvent>,
             ),
         > = BTreeMap::new();
@@ -542,7 +613,6 @@ where
                                 accel: a_inst.clone(),
                                 filter: None,
                                 events: task.events.clone(),
-                                stop_n: None,
                             },
                             data: adata,
                         });
@@ -565,12 +635,12 @@ where
                 let series_events =
                     SeriesEvents::new(&s_dev, &sn, &an, &dev, cpp_errors, &task.events);
 
-                let stop_ns = series_events.stop_ns().to_vec();
+                let stop_n = series_events.stop_n();
                 let processed_events = series_events.into_vec();
 
-                lazy_accels.insert(a_idx, (ptr, stop_ns, processed_events));
+                lazy_accels.insert(a_idx, (ptr, stop_n, processed_events));
             }
-            let (ref a_ptr, ref stop_ns, ref events) = lazy_accels[&a_idx];
+            let (ref a_ptr, stop_n, ref events) = lazy_accels[&a_idx];
 
             if need_unfiltered {
                 let adata = AccelData {
@@ -588,81 +658,70 @@ where
                         accel: a_inst.clone(),
                         filter: None,
                         events: task.events.clone(),
-                        stop_n: None,
                     },
                     data: adata,
                 });
             }
 
-            let filter_starts: Vec<u64> = if stop_ns.is_empty() {
-                vec![0]
-            } else {
-                stop_ns.clone()
-            };
+            for f_inst in filters {
+                debug!("Filtering with {}", f_inst.filter_type);
+                let fargs = sorted_args_json(&f_inst.args)?;
+                let filt = match bridge::filter(
+                    &**a_ptr,
+                    &f_inst.filter_type,
+                    &fargs,
+                    stop_n.unwrap_or(0),
+                ) {
+                    Ok(arr) => arr,
+                    Err(e) => {
+                        let adata = AccelData {
+                            start_offset: stop_n.unwrap_or(0),
+                            result: ResultData {
+                                sn: Arr::Real(Vec::new()),
+                                an: Arr::Real(Vec::new()),
+                                deviations: Arr::Real(Vec::new()),
+                            },
+                            events: vec![SeriesEvent {
+                                n: 0,
+                                kind: SeriesEventKind::Error,
+                                description: format!("filter failed: {}", e),
+                            }],
+                        };
+                        let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
+                            id: s_id.clone(),
+                            desc: AccelDesc {
+                                accel: a_inst.clone(),
+                                filter: Some(f_inst.clone()),
+                                events: task.events.clone(),
+                            },
+                            data: adata,
+                        });
+                        let _ = internal_tx.blocking_send(ComputeEvent::Error {
+                            id: s_id.clone(),
+                            error: format!("Filter {} failed: {}", f_inst.filter_type, e),
+                        });
+                        continue;
+                    }
+                };
 
-            for &start in &filter_starts {
-                for f_inst in &filters {
-                    debug!("Filtering with {} at n={}", f_inst.filter_type, start);
-                    let fargs = sorted_args_json(&f_inst.args)?;
-                    let filt = match bridge::filter(
-                        &**a_ptr,
-                        &f_inst.filter_type,
-                        &fargs,
-                        start,
-                    ) {
-                        Ok(arr) => arr,
-                        Err(e) => {
-                            let adata = AccelData {
-                                start_offset: start,
-                                result: ResultData {
-                                    sn: Arr::Real(Vec::new()),
-                                    an: Arr::Real(Vec::new()),
-                                    deviations: Arr::Real(Vec::new()),
-                                },
-                                events: vec![SeriesEvent {
-                                    n: 0,
-                                    kind: SeriesEventKind::Error,
-                                    description: format!("filter failed: {}", e),
-                                }],
-                            };
-                            let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
-                                id: s_id.clone(),
-                                desc: AccelDesc {
-                                    accel: a_inst.clone(),
-                                    filter: Some(f_inst.clone()),
-                                    events: task.events.clone(),
-                                    stop_n: if start > 0 { Some(start) } else { None },
-                                },
-                                data: adata,
-                            });
-                            let _ = internal_tx.blocking_send(ComputeEvent::Error {
-                                id: s_id.clone(),
-                                error: format!("Filter {} failed: {}", f_inst.filter_type, e),
-                            });
-                            continue;
-                        }
-                    };
-
-                    let adata = AccelData {
-                        start_offset: start,
-                        result: ResultData {
-                            sn: arr_from_raw(filt.sn),
-                            an: Arr::Real(Vec::new()),
-                            deviations: arr_from_raw(filt.deviation),
-                        },
-                        events: vec![], // events already emitted with unfiltered or not applicable
-                    };
-                    let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
-                        id: s_id.clone(),
-                        desc: AccelDesc {
-                            accel: a_inst.clone(),
-                            filter: Some(f_inst.clone()),
-                            events: task.events.clone(),
-                            stop_n: if start > 0 { Some(start) } else { None },
-                        },
-                        data: adata,
-                    });
-                }
+                let adata = AccelData {
+                    start_offset: stop_n.unwrap_or(0),
+                    result: ResultData {
+                        sn: arr_from_raw(filt.sn),
+                        an: Arr::Real(Vec::new()),
+                        deviations: arr_from_raw(filt.deviation),
+                    },
+                    events: vec![], // events already emitted with unfiltered or not applicable
+                };
+                let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
+                    id: s_id.clone(),
+                    desc: AccelDesc {
+                        accel: a_inst.clone(),
+                        filter: Some(f_inst.clone()),
+                        events: task.events.clone(),
+                    },
+                    data: adata,
+                });
             }
         }
         Ok(())
@@ -718,7 +777,6 @@ where
                         .filter
                         .as_ref()
                         .map(|f| sorted_args_json(&f.args).unwrap_or_default());
-                    let cache_start_n = data.start_offset;
 
                     // Serialize C++ events only (derived events are recalculated on load)
                     let cached_cpp = SeriesEvents::from_events(data.events.clone()).cached_events();
@@ -743,7 +801,6 @@ where
                                 serde_json::to_string(&desc.events).unwrap_or_default(),
                                 ftype,
                                 fargs,
-                                cache_start_n,
                                 npts,
                             )
                             .await

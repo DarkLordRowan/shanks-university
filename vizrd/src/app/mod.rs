@@ -1452,7 +1452,6 @@ struct LineInfo {
     accel_m: Option<i64>,
     accel_args: BTreeMap<String, String>,
     filter: Option<(String, BTreeMap<String, String>)>,
-    stop_n: Option<u64>,
     line_type: String,         // "Sn", "Accel", "Sn Dev", "Accel Dev"
     component: Option<String>, // "Mag", "Re", "Im", "Inf", "Sup"
 }
@@ -1478,7 +1477,6 @@ impl LineInfo {
                 n.seed,
             )
         });
-        let stop_n = key.accel.as_ref().and_then(|a| a.stop_n);
         let accel_name = key.accel.as_ref().map(|a| a.accel.name.clone());
         let accel_m = key.accel.as_ref().map(|a| a.accel.m);
         let accel_args = key
@@ -1514,7 +1512,6 @@ impl LineInfo {
             accel_m,
             accel_args,
             filter,
-            stop_n,
             line_type: line_type.to_string(),
             component: component.map(|s| s.to_string()),
         }
@@ -1571,7 +1568,6 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
     let show_accel_name = varies(infos, |i| i.accel_name.clone());
     let show_accel_m = varies(infos, |i| i.accel_m);
     let show_filter_type = varies(infos, |i| i.filter.as_ref().map(|(t, _)| t.clone()));
-    let show_stop_n = varies(infos, |i| i.stop_n);
     let mut show_line_type = varies(infos, |i| i.line_type.clone());
     let mut show_component = varies(infos, |i| i.component.clone());
 
@@ -1593,7 +1589,6 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
         && diff_accel_args.is_empty()
         && !show_filter_type
         && diff_filter_args.is_empty()
-        && !show_stop_n
         && !show_line_type
         && !show_component
     {
@@ -1677,16 +1672,13 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
             // Filter
             if let Some((ft, fa)) = &info.filter {
                 let a = fmt_args(fa, &diff_filter_args);
-                if show_filter_type || a.is_some() || show_stop_n {
+                if show_filter_type || a.is_some() {
                     let mut s = "Filter".to_string();
                     if show_filter_type {
                         s += &format!(": {}", ft);
                     }
                     if let Some(a) = a {
                         s += &format!(" {}", a);
-                    }
-                    if let Some(sn) = info.stop_n {
-                        s += &format!(" from n={}", sn);
                     }
                     parts.push(s);
                 }

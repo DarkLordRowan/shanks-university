@@ -37,7 +37,7 @@ fn kind_from_message(msg: &str) -> SeriesEventKind {
 #[derive(Debug, Clone)]
 pub struct SeriesEvents {
     events: Vec<SeriesEvent>,
-    stop_ns: Vec<u64>,
+    stop_n: Option<u64>,
 }
 
 impl SeriesEvents {
@@ -62,7 +62,7 @@ impl SeriesEvents {
         }
 
         // Calculate derived events
-        let (derived_events, stop_ns) = calculate_derived_events(
+        let (derived_events, stop_n) = calculate_derived_events(
             series_dev,
             accel_sn,
             accel_an,
@@ -73,7 +73,7 @@ impl SeriesEvents {
         events.extend(derived_events);
         events.sort_by_key(|e| e.n);
 
-        Self { events, stop_ns }
+        Self { events, stop_n }
     }
 
     /// Create from cached C++ errors (for cache hits).
@@ -99,7 +99,7 @@ impl SeriesEvents {
 
     /// Create from existing events (for serialization use case).
     pub fn from_events(events: Vec<SeriesEvent>) -> Self {
-        Self { events, stop_ns: Vec::new() }
+        Self { events, stop_n: None }
     }
 
     /// Get all events (C++ + derived).
@@ -107,10 +107,9 @@ impl SeriesEvents {
         &self.events
     }
 
-    /// Get all stop_n values for filtering (from Trigger events).
-    /// Each value corresponds to a different `filter_after` threshold being reached.
-    pub fn stop_ns(&self) -> &[u64] {
-        &self.stop_ns
+    /// Get stop_n for filtering (from Trigger event).
+    pub fn stop_n(&self) -> Option<u64> {
+        self.stop_n
     }
 
     /// Convert to Vec for AccelData.
@@ -150,18 +149,17 @@ fn calculate_derived_events(
     _accel_an: &Arr,
     accel_dev: &Arr,
     config: &BTreeMap<SeriesEventKind, crate::experiment::EventConfig>,
-) -> (Vec<SeriesEvent>, Vec<u64>) {
+) -> (Vec<SeriesEvent>, Option<u64>) {
     let mut events = Vec::new();
-    let mut stop_ns: Vec<u64> = Vec::new();
-    let mut triggered_limits: BTreeMap<SeriesEventKind, Vec<i64>> = BTreeMap::new();
+    let mut stop_n: Option<u64> = None;
 
     let s_dev_r = match series_dev {
         Arr::Real(v) => v,
-        _ => return (events, Vec::new()),
+        _ => return (events, None),
     };
     let dev_r = match accel_dev {
         Arr::Real(v) => v,
-        _ => return (events, Vec::new()),
+        _ => return (events, None),
     };
 
     let mut counters: BTreeMap<SeriesEventKind, i64> = BTreeMap::new();
@@ -244,11 +242,9 @@ fn calculate_derived_events(
             });
 
             if let Some(cfg) = config.get(&kind) {
-                let triggered = triggered_limits.entry(kind).or_default();
-                for limit in &cfg.filter_after {
-                    if *count >= *limit && !triggered.contains(limit) {
-                        triggered.push(*limit);
-                        stop_ns.push(k as u64);
+                if let Some(limit) = cfg.filter_after {
+                    if *count >= limit && stop_n.is_none() {
+                        stop_n = Some(k as u64);
                         events.push(SeriesEvent {
                             n: k as u64,
                             kind: SeriesEventKind::Trigger,
@@ -264,9 +260,7 @@ fn calculate_derived_events(
         }
     }
 
-    stop_ns.sort();
-    stop_ns.dedup();
-    (events, stop_ns)
+    (events, stop_n)
 }
 
 fn rv_abs_cmp(a: &RealValue, b: &RealValue) -> std::cmp::Ordering {
