@@ -166,25 +166,33 @@ void bind_types(py::module_& m) {
         .def(py::self == py::self)
         .def(py::self != py::self)
         .def("__abs__", [](const OP<arb::float_precision>& self) { return abs(self); })
-        .def("__pow__", [](const OP<arb::float_precision>& self, const OP<arb::float_precision>& exp) { return pow(self, exp); })
+        .def("__pow__",
+             [](const OP<arb::float_precision>& self, const OP<arb::float_precision>& exp) { return pow(self, exp); })
         .def("sqrt", [](const OP<arb::float_precision>& self) { return sqrt(self); })
         .def("__hash__",
              [](const OP<arb::float_precision>& self) {
                  return py::hash(py::str(utils::helpers<OP<arb::float_precision>>::to_string(self)));
              })
-        .def("__repr__", [](const OP<arb::float_precision>& self) { return utils::helpers<OP<arb::float_precision>>::to_string(self); })
-        .def(py::pickle([](const OP<arb::float_precision>& num) { return utils::helpers<OP<arb::float_precision>>::to_string(num); },
-                        [](std::string s) { return OP<arb::float_precision>(s); }));
+        .def("__repr__",
+             [](const OP<arb::float_precision>& self) {
+                 return utils::helpers<OP<arb::float_precision>>::to_string(self);
+             })
+        .def(py::pickle(
+            [](const OP<arb::float_precision>& num) {
+                return utils::helpers<OP<arb::float_precision>>::to_string(num);
+            },
+            [](std::string s) { return OP<arb::float_precision>(s); }));
 
     auto CFPrec =
         py::class_<std::complex<OP<arb::float_precision>>>(m, "CFPrec")
             .def(py::init<OP<arb::float_precision>>())
             .def(py::init<OP<arb::float_precision>, OP<arb::float_precision>>())
-            .def(py::pickle([](const std::complex<OP<arb::float_precision>>& c) { return py::make_tuple(c.real(), c.imag()); },
-                            [](py::tuple t) {
-                                return std::complex<OP<arb::float_precision>>(t[0].cast<OP<arb::float_precision>>(),
-                                                                      t[1].cast<OP<arb::float_precision>>());
-                            }))
+            .def(py::pickle(
+                [](const std::complex<OP<arb::float_precision>>& c) { return py::make_tuple(c.real(), c.imag()); },
+                [](py::tuple t) {
+                    return std::complex<OP<arb::float_precision>>(t[0].cast<OP<arb::float_precision>>(),
+                                                                  t[1].cast<OP<arb::float_precision>>());
+                }))
             .def("__repr__", [](const std::complex<OP<arb::float_precision>>& c) {
                 std::ostringstream oss;
                 oss << "CArb" + utils::helpers<std::complex<OP<arb::float_precision>>>::to_string(c);

@@ -177,7 +177,8 @@ public:
     }
 
     inline std::size_t how_much(const std::size_t n, const std::size_t order) const {
-        return n + order + std::size_t{1} + order * std::size_t(numerator_type_in_use == shanks::numerators::numerator_type::rho_type);
+        return n + order + std::size_t{1} +
+               order * std::size_t(numerator_type_in_use == shanks::numerators::numerator_type::rho_type);
     }
 };
 

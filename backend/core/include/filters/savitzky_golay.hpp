@@ -55,7 +55,6 @@ std::vector<Scalar> savitzky_golay_filter(const std::vector<Scalar>& data, size_
         utils::cast<Scalar, size_t>()(utils::math<size_t>::fact(derive), precision) * coeff_mat.row(derive) /
         utils::math<Scalar>::pow(delta, utils::cast<Scalar, size_t>()(derive, precision));
 
-
     const size_t N_pad = window_length / 2;
     std::vector<Scalar> padded_vector(data.size() + N_pad * 2, utils::cast<Scalar, int>()(0, precision));
     std::vector<Scalar> result(data.size(), utils::cast<Scalar, int>()(0, precision));

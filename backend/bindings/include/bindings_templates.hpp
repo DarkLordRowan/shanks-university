@@ -96,14 +96,34 @@ void bind_algos(pybind11::module_& m, const char* suffix) {
         py::arg("remainder") = shanks::remainders::remainder_type::u_type, py::arg("useRecurrentFormula") = false, \
         py::arg("beta") = RealT(1.0))
 
-#define BIND_F_BASE(cls, name)                                                                         \
-    m.def(                                                                                             \
-        create_name(name, suffix).c_str(),                                                             \
-        [](K n, K order, const series_result<T>& data, shanks::remainders::remainder_type remainder) { \
-            return shanks::algos::cls<T, K>(remainder)(n, order, data);                                \
-        },                                                                                             \
-        py::arg("n"), py::arg("order"), py::arg("data"),                                               \
-        py::arg("remainder") = shanks::remainders::remainder_type::u_type)
+#define BIND_F_BASE(cls, name)                                                                       \
+    m.def(                                                                                           \
+        create_name(name, suffix).c_str(),                                                           \
+        [](K n, K order, const series_result<T>& data, shanks::remainders::remainder_type remainder, \
+           std::function<T(K)> auxilary_series) {                                                    \
+            return shanks::algos::cls<T, K>(remainder, auxilary_series)(n, order, data);             \
+        },                                                                                           \
+        py::arg("n"), py::arg("order"), py::arg("data"),                                             \
+        py::arg("remainder") = shanks::remainders::remainder_type::u_type,                           \
+        py::arg("auxilary_series") = std::function<T(K)>([](K n) { return utils::cast<T, K>()(n + 4); }))
+
+#define BIND_H_BASE(cls, name)                                                                                   \
+    m.def(                                                                                                       \
+        create_name(name, suffix).c_str(),                                                                       \
+        [](K n, K order, const series_result<T>& data, shanks::remainders::remainder_type remainder, RealT beta, \
+           T alpha) { return shanks::algos::cls<T, K>(remainder, beta, alpha)(n, order, data); },                \
+        py::arg("n"), py::arg("order"), py::arg("data"),                                                         \
+        py::arg("remainder") = shanks::remainders::remainder_type::u_type, py::arg("beta") = RealT(1.0),         \
+        py::arg("alpha") = T(std::numbers::pi * 0.25))
+
+#define BIND_LEVIN_M_BASE(cls, name)                                                                                \
+    m.def(                                                                                                          \
+        create_name(name, suffix).c_str(),                                                                          \
+        [](K n, K order, const series_result<T>& data, shanks::remainders::remainder_type remainder, RealT gamma) { \
+            return shanks::algos::cls<T, K>(remainder, gamma)(n, order, data);                                      \
+        },                                                                                                          \
+        py::arg("n"), py::arg("order"), py::arg("data"),                                                            \
+        py::arg("remainder") = shanks::remainders::remainder_type::u_type, py::arg("gamma") = RealT(100.5))
 
 #define BIND_PJ_BASE(cls, name)                                                                             \
     m.def(                                                                                                  \

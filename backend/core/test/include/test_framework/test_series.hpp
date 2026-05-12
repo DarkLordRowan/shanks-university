@@ -283,7 +283,7 @@ void test_series() {
                 shanks::numerators::numerator_type::rho_type);
         }};
 
-    //fout << "limit,an,s";
+    // fout << "limit,an,s";
     fout << "blank";
     for (const auto& x : methods) {
         std::string s = x()->get_name();
@@ -324,16 +324,15 @@ void test_series() {
         fout << "blank";
         for (const auto& x : methods) {
             std::string value;
-            std::cout << x()->get_name() << " " << x()->how_much(i,order) << "\n";
+            std::cout << x()->get_name() << " " << x()->how_much(i, order) << "\n";
             try {
                 value = utils::helpers<T>::to_string(x()->operator()(i, order, result));
                 fout << ",\"" << value << "\",\""
                      << utils::helpers<T>::to_string(
                             utils::math<T>::abs(x()->operator()(i, order, result) - series->get_sum()))
-                     << "\",\""
-                     << utils::helpers<T>::to_string(result.Sn[x()->how_much(i, order)])
-                     << "\",\""
-                     << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[x()->how_much(i, order)] - series->get_sum()))
+                     << "\",\"" << utils::helpers<T>::to_string(result.Sn[x()->how_much(i, order)]) << "\",\""
+                     << utils::helpers<T>::to_string(
+                            utils::math<T>::abs(result.Sn[x()->how_much(i, order)] - series->get_sum()))
                      << "\"";
             } catch (const std::exception& e) {
                 std::string s = std::string(e.what());
@@ -348,13 +347,12 @@ void test_series() {
                 try {
                     value = utils::helpers<T>::to_string(x(beta)->operator()(i, order, result));
                     fout << ",\"" << value << "\",\""
-                     << utils::helpers<T>::to_string(
-                            utils::math<T>::abs(x(beta)->operator()(i, order, result) - series->get_sum()))
-                     << "\",\""
-                     << utils::helpers<T>::to_string(result.Sn[x(beta)->how_much(i, order)])
-                     << "\",\""
-                     << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[x(beta)->how_much(i, order)] - series->get_sum()))
-                     << "\"";
+                         << utils::helpers<T>::to_string(
+                                utils::math<T>::abs(x(beta)->operator()(i, order, result) - series->get_sum()))
+                         << "\",\"" << utils::helpers<T>::to_string(result.Sn[x(beta)->how_much(i, order)]) << "\",\""
+                         << utils::helpers<T>::to_string(
+                                utils::math<T>::abs(result.Sn[x(beta)->how_much(i, order)] - series->get_sum()))
+                         << "\"";
                 } catch (const std::exception& e) {
                     std::string s = std::string(e.what());
                     std::replace(std::begin(s), std::end(s), ' ', '_');
@@ -369,13 +367,12 @@ void test_series() {
                 try {
                     value = utils::helpers<T>::to_string(x(a, b)->operator()(i, order, result));
                     fout << ",\"" << value << "\",\""
-                     << utils::helpers<T>::to_string(
-                            utils::math<T>::abs(x(a,b)->operator()(i, order, result) - series->get_sum()))
-                     << "\",\""
-                     << utils::helpers<T>::to_string(result.Sn[x(a,b)->how_much(i, order)])
-                     << "\",\""
-                     << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[x(a,b)->how_much(i, order)] - series->get_sum()))
-                     << "\"";
+                         << utils::helpers<T>::to_string(
+                                utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum()))
+                         << "\",\"" << utils::helpers<T>::to_string(result.Sn[x(a, b)->how_much(i, order)]) << "\",\""
+                         << utils::helpers<T>::to_string(
+                                utils::math<T>::abs(result.Sn[x(a, b)->how_much(i, order)] - series->get_sum()))
+                         << "\"";
                 } catch (const std::exception& e) {
                     std::string s = std::string(e.what());
                     std::replace(std::begin(s), std::end(s), ' ', '_');
@@ -391,13 +388,13 @@ void test_series() {
                     try {
                         value = utils::helpers<T>::to_string(x(a, b)->operator()(i, order, result));
                         fout << ",\"" << value << "\",\""
-                        << utils::helpers<T>::to_string(
-                               utils::math<T>::abs(x(a,b)->operator()(i, order, result) - series->get_sum()))
-                        << "\",\""
-                        << utils::helpers<T>::to_string(result.Sn[x(a,b)->how_much(i, order)])
-                        << "\",\""
-                        << utils::helpers<T>::to_string(utils::math<T>::abs(result.Sn[x(a,b)->how_much(i, order)] - series->get_sum()))
-                        << "\"";
+                             << utils::helpers<T>::to_string(
+                                    utils::math<T>::abs(x(a, b)->operator()(i, order, result) - series->get_sum()))
+                             << "\",\"" << utils::helpers<T>::to_string(result.Sn[x(a, b)->how_much(i, order)])
+                             << "\",\""
+                             << utils::helpers<T>::to_string(
+                                    utils::math<T>::abs(result.Sn[x(a, b)->how_much(i, order)] - series->get_sum()))
+                             << "\"";
                     } catch (const std::exception& e) {
                         std::string s = std::string(e.what());
                         std::replace(std::begin(s), std::end(s), ' ', '_');
