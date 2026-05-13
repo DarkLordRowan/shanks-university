@@ -1,12 +1,29 @@
 {
   "n_points": 100,
-  "precisions": ["F32", "Arb16", "CArb16", "CArbInterval16"],
+  "precisions": [
+    "F32",
+    "Arb16",
+    "CArb16",
+    "CArbInterval16"
+  ],
   "events": {
     "slow_accel": {},
     "sign_changed": {},
-    "monotone": {},
+    "monotone": {
+      "filter_after": [
+        2,
+        3,
+        4,
+        5
+      ]
+    },
     "divergent_accel": {
-      "filter_after": 3
+      "filter_after": [
+        2,
+        3,
+        4,
+        5
+      ]
     },
     "second_diff": {}
   },
@@ -14,17 +31,23 @@
     "./brent-daily.txt",
     {
       "name": "ExpSeries",
-      "x": [0.1],
+      "x": [
+        0.1
+      ],
       "args": {}
     },
     {
       "name": "CosSeries",
-      "x": [0.1],
+      "x": [
+        0.1
+      ],
       "args": {}
     },
     {
       "name": "SinSeries",
-      "x": [0.1],
+      "x": [
+        0.1
+      ],
       "args": {}
     }
   ],
@@ -64,6 +87,20 @@
         "polyorder": 2,
         "derive": 0,
         "delta": 1.0
+      },
+      "trigger_after": {
+        "divergent_accel": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "monotone": [
+          2,
+          3,
+          4,
+          5
+        ]
       }
     },
     {
@@ -71,13 +108,29 @@
       "args": {
         "window_length": 10,
         "degree": 3
+      },
+      "trigger_after": {
+        "divergent_accel": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "monotone": [
+          2,
+          3,
+          4,
+          5
+        ]
       }
     }
   ],
   "accels": [
     {
       "name": "AndersonAccelerationAlgorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -101,7 +154,9 @@
     },
     {
       "name": "BrezinskiThetaAlgorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -125,7 +180,9 @@
     },
     {
       "name": "ChangWynnAlgorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -149,7 +206,9 @@
     },
     {
       "name": "DrummondDAlgorithmU",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -173,7 +232,9 @@
     },
     {
       "name": "DrummondDAlgorithmT",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -197,7 +258,9 @@
     },
     {
       "name": "DrummondDAlgorithmT~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -221,7 +284,9 @@
     },
     {
       "name": "DrummondDAlgorithmV",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -245,7 +310,9 @@
     },
     {
       "name": "DrummondDAlgorithmV~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -269,7 +336,9 @@
     },
     {
       "name": "recDrummondDAlgorithmU",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -293,7 +362,9 @@
     },
     {
       "name": "recDrummondDAlgorithmT",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -317,7 +388,9 @@
     },
     {
       "name": "recDrummondDAlgorithmV",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -341,7 +414,9 @@
     },
     {
       "name": "recDrummondDAlgorithmT~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -365,7 +440,9 @@
     },
     {
       "name": "recDrummondDAlgorithmV~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -389,7 +466,9 @@
     },
     {
       "name": "FAlgorithmU",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -413,7 +492,9 @@
     },
     {
       "name": "FAlgorithmT",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -437,7 +518,9 @@
     },
     {
       "name": "FAlgorithmT~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -461,7 +544,9 @@
     },
     {
       "name": "FAlgorithmV",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -485,7 +570,9 @@
     },
     {
       "name": "FAlgorithmV~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -509,7 +596,9 @@
     },
     {
       "name": "HAlgorithmU",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -533,7 +622,9 @@
     },
     {
       "name": "HAlgorithmT",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -557,7 +648,9 @@
     },
     {
       "name": "HAlgorithmT~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -581,7 +674,9 @@
     },
     {
       "name": "HAlgorithmV",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -605,7 +700,9 @@
     },
     {
       "name": "HAlgorithmV~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -629,7 +726,9 @@
     },
     {
       "name": "JTransformationAlgorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -653,10 +752,16 @@
     },
     {
       "name": "pJAlgorithmU",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "p": [1],
-        "beta": [1.0]
+        "p": [
+          1
+        ],
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -680,10 +785,16 @@
     },
     {
       "name": "pJAlgorithmT",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "p": [1],
-        "beta": [1.0]
+        "p": [
+          1
+        ],
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -707,10 +818,16 @@
     },
     {
       "name": "pJAlgorithmT~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "p": [1],
-        "beta": [1.0]
+        "p": [
+          1
+        ],
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -734,10 +851,16 @@
     },
     {
       "name": "pJAlgorithmV",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "p": [1],
-        "beta": [1.0]
+        "p": [
+          1
+        ],
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -761,10 +884,16 @@
     },
     {
       "name": "pJAlgorithmV~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "p": [1],
-        "beta": [1.0]
+        "p": [
+          1
+        ],
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -788,7 +917,9 @@
     },
     {
       "name": "FordSidi2Algorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -812,7 +943,9 @@
     },
     {
       "name": "FordSidi3Algorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -836,9 +969,13 @@
     },
     {
       "name": "LevinAlgorithmU",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "beta": [1.0]
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -862,9 +999,13 @@
     },
     {
       "name": "LevinAlgorithmT",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "beta": [1.0]
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -888,9 +1029,13 @@
     },
     {
       "name": "LevinAlgorithmT~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "beta": [1.0]
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -914,9 +1059,13 @@
     },
     {
       "name": "LevinAlgorithmV",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "beta": [1.0]
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -940,9 +1089,13 @@
     },
     {
       "name": "LevinAlgorithmV~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "beta": [1.0]
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -966,9 +1119,13 @@
     },
     {
       "name": "recLevinAlgorithmU",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "beta": [1.0]
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -992,9 +1149,13 @@
     },
     {
       "name": "recLevinAlgorithmT",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "beta": [1.0]
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -1018,9 +1179,13 @@
     },
     {
       "name": "recLevinAlgorithmT~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "beta": [1.0]
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -1044,9 +1209,13 @@
     },
     {
       "name": "recLevinAlgorithmV",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "beta": [1.0]
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -1070,9 +1239,13 @@
     },
     {
       "name": "recLevinAlgorithmV~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "beta": [1.0]
+        "beta": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -1096,7 +1269,9 @@
     },
     {
       "name": "LevinSidiMAlgorithmU",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1120,7 +1295,9 @@
     },
     {
       "name": "LevinSidiMAlgorithmT",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1144,7 +1321,9 @@
     },
     {
       "name": "LevinSidiMAlgorithmT~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1168,7 +1347,9 @@
     },
     {
       "name": "LevinSidiMAlgorithmV",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1192,7 +1373,9 @@
     },
     {
       "name": "LevinSidiMAlgorithmV~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1216,7 +1399,9 @@
     },
     {
       "name": "LevinSidiSAlgorithmU",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1240,7 +1425,9 @@
     },
     {
       "name": "LevinSidiSAlgorithmT",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1264,7 +1451,9 @@
     },
     {
       "name": "LevinSidiSAlgorithmT~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1288,7 +1477,9 @@
     },
     {
       "name": "LevinSidiSAlgorithmV",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1312,7 +1503,9 @@
     },
     {
       "name": "LevinSidiSAlgorithmV~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1336,7 +1529,9 @@
     },
     {
       "name": "recLevinSidiSAlgorithmU",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1360,7 +1555,9 @@
     },
     {
       "name": "recLevinSidiSAlgorithmT",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1384,7 +1581,9 @@
     },
     {
       "name": "recLevinSidiSAlgorithmT~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1408,7 +1607,9 @@
     },
     {
       "name": "recLevinSidiSAlgorithmV",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1432,7 +1633,9 @@
     },
     {
       "name": "recLevinSidiSAlgorithmV~",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1456,7 +1659,9 @@
     },
     {
       "name": "LubkinWAlgorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1480,7 +1685,9 @@
     },
     {
       "name": "OverholtAlgorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1504,7 +1711,9 @@
     },
     {
       "name": "RichardsonAlgorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1528,7 +1737,9 @@
     },
     {
       "name": "ShanksAlgorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1552,7 +1763,9 @@
     },
     {
       "name": "ShanksTransformAlternating",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1576,7 +1789,9 @@
     },
     {
       "name": "WenigerAlgorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1600,7 +1815,9 @@
     },
     {
       "name": "WynnEpsilon1Algorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1624,7 +1841,9 @@
     },
     {
       "name": "WynnEpsilon2Algorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1648,7 +1867,9 @@
     },
     {
       "name": "WynnEpsilon3Algorithm",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {},
       "events": [
         {
@@ -1672,10 +1893,16 @@
     },
     {
       "name": "WynnRhoAlgorithmRho",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "gamma": [1.0],
-        "RHO": [1.0]
+        "gamma": [
+          1.0
+        ],
+        "RHO": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -1699,10 +1926,16 @@
     },
     {
       "name": "WynnRhoAlgorithmRhoGen",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "gamma": [1.0],
-        "RHO": [1.0]
+        "gamma": [
+          1.0
+        ],
+        "RHO": [
+          1.0
+        ]
       },
       "events": [
         {
@@ -1726,10 +1959,16 @@
     },
     {
       "name": "WynnRhoAlgorithmRhoGamma",
-      "m": [4],
+      "m": [
+        4
+      ],
       "args": {
-        "gamma": [1.0],
-        "RHO": [1.0]
+        "gamma": [
+          1.0
+        ],
+        "RHO": [
+          1.0
+        ]
       },
       "events": [
         {

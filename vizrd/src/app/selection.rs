@@ -1,7 +1,7 @@
 use egui::WidgetText;
 
 use crate::experiment::{
-    Accel, AccelDef, AccelInstance, ExperimentConfig, Filter, FilterDef, FilterInstance, Noise,
+    Accel, AccelDef, AccelInstance, ExperimentConfig, FilterDef, FilterInstance, Noise,
     NoiseDef, NoiseInstance, Series, SeriesDef, SeriesEntry, SeriesInstance,
 };
 use std::collections::BTreeMap;
@@ -415,12 +415,21 @@ fn noise_def_to_select(def: &NoiseDef) -> NoiseSelect {
 
 // ─── FilterSelect ───────────────────────────────────────────────────────────
 
-pub type FilterSelect = Filter<ArgSelect>;
+/// Selectable filter with per-threshold checkboxes for trigger_after.
+pub struct FilterSelect {
+    pub filter_type: String,
+    pub args: BTreeMap<String, ArgSelect>,
+    /// Per event-kind, a block of selectable threshold values.
+    pub trigger_after: BTreeMap<crate::compute::SeriesEventKind, Block<Vec<Button<i64>>>>,
+}
 
 impl Selectable for FilterSelect {
     fn force(&mut self, val: bool) {
         for arg in &mut self.args {
             arg.1.force(val);
+        }
+        for (_, block) in &mut self.trigger_after {
+            block.force(val);
         }
     }
 
@@ -429,12 +438,17 @@ impl Selectable for FilterSelect {
         for (k, v) in &mut self.args {
             result |= v.draw(k.as_str(), ui);
         }
+        for (kind, block) in &mut self.trigger_after {
+            result |= block.draw(kind.to_string(), ui);
+        }
         result
     }
 }
 
 impl Block<FilterSelect> {
-    /// Cartesian product of args → `FilterInstance`s.
+    /// Cartesian product of args × checked trigger_after → `FilterInstance`s.
+    /// Each checked (kind, threshold) produces a separate instance.
+    /// No checked trigger_after → one instance with `trigger_after: None`.
     pub fn selected_instances(&self) -> Vec<FilterInstance> {
         let f = &self.val;
         let arg_sets: Vec<_> = f
@@ -448,11 +462,32 @@ impl Block<FilterSelect> {
             })
             .collect();
 
+        // Collect checked (kind, threshold) pairs from trigger_after UI
+        let trigger_pairs: Vec<(crate::compute::SeriesEventKind, i64)> = f
+            .trigger_after
+            .iter()
+            .flat_map(|(kind, block)| block.val.iter().filter(|b| b.0).map(|b| (*kind, b.1)))
+            .collect();
+
         cartesian_combos(&arg_sets)
             .into_iter()
-            .map(|args| FilterInstance {
-                filter_type: f.filter_type.clone(),
-                args,
+            .flat_map(|args| {
+                if trigger_pairs.is_empty() {
+                    vec![FilterInstance {
+                        filter_type: f.filter_type.clone(),
+                        args,
+                        trigger_after: None,
+                    }]
+                } else {
+                    trigger_pairs
+                        .iter()
+                        .map(|&(kind, limit)| FilterInstance {
+                            filter_type: f.filter_type.clone(),
+                            args: args.clone(),
+                            trigger_after: Some((kind, limit)),
+                        })
+                        .collect()
+                }
             })
             .collect()
     }
@@ -472,9 +507,23 @@ fn filter_def_to_select(def: &FilterDef) -> FilterSelect {
             (k.clone(), block)
         })
         .collect();
+    let trigger_after = def
+        .trigger_after
+        .iter()
+        .map(|(kind, val)| {
+            let block = Block::new(
+                val.iter_values()
+                    .into_iter()
+                    .map(|v| Button(false, v, v.to_string()))
+                    .collect(),
+            );
+            (*kind, block)
+        })
+        .collect();
     FilterSelect {
         filter_type: def.filter_type.clone(),
         args,
+        trigger_after,
     }
 }
 
@@ -619,8 +668,14 @@ impl<T: Blockable> Selectable for Block<T> {
 /// - Registry: collapsible block with x/args (from `SeriesDef`)
 /// - File: plain checkbox — no parameters to configure
 enum SeriesEntrySelect {
-    Registry { block: Block<SeriesSelect> },
-    File { name: String, sn: Arc<Vec<String>>, checked: bool },
+    Registry {
+        block: Block<SeriesSelect>,
+    },
+    File {
+        name: String,
+        sn: Arc<Vec<String>>,
+        checked: bool,
+    },
 }
 
 impl SeriesEntrySelect {
@@ -633,11 +688,14 @@ impl SeriesEntrySelect {
                 .collect(),
             SeriesEntrySelect::File { name, sn, checked } => {
                 if *checked {
-                    vec![(SeriesInstance {
-                        name: name.clone(),
-                        x: serde_json::Value::Null,
-                        args: BTreeMap::new(),
-                    }, Some(sn.clone()))]
+                    vec![(
+                        SeriesInstance {
+                            name: name.clone(),
+                            x: serde_json::Value::Null,
+                            args: BTreeMap::new(),
+                        },
+                        Some(sn.clone()),
+                    )]
                 } else {
                     vec![]
                 }

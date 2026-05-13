@@ -356,7 +356,6 @@ impl HeadlessRunner {
                     id: (task_id, desc.clone()),
                     series: desc,
                     n_points,
-                    events: self.config.events.clone(),
                     algorithms: accel_instances.clone(),
                     filters: filter_instances.clone(),
                 });
@@ -374,7 +373,6 @@ impl HeadlessRunner {
                         id: (task_id, desc.clone()),
                         series: desc,
                         n_points,
-                        events: self.config.events.clone(),
                         algorithms: accel_instances.clone(),
                         filters: filter_instances.clone(),
                     });

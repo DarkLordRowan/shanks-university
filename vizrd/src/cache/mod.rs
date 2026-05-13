@@ -128,11 +128,11 @@ impl Cache {
                     accel_name       TEXT    NOT NULL,
                     m_value          INTEGER NOT NULL DEFAULT -1,
                     args_json        TEXT    NOT NULL DEFAULT '{}',
-                    events_json      TEXT    NOT NULL DEFAULT '{}',
                     filter_type      TEXT    NOT NULL DEFAULT '',
                     filter_args_json TEXT    NOT NULL DEFAULT '',
+                    trigger_after_json TEXT NOT NULL DEFAULT '{}',
                     n_points         INTEGER NOT NULL DEFAULT 0,
-                    UNIQUE(series_id, accel_name, m_value, args_json, events_json, filter_type, filter_args_json)
+                    UNIQUE(series_id, accel_name, m_value, args_json, filter_type, filter_args_json, trigger_after_json)
                 );
 
                 -- Accel numerical data (val=accelerated sn, an, dev)
@@ -366,16 +366,16 @@ impl Cache {
     // Accelerations
     // -----------------------------------------------------------------------
 
-    /// Returns `(id, n_points)` if a matching `(accel, filter)` row exists.
+    /// Returns `(id, n_points)` if a matching `(accel, filter, trigger_after)` row exists.
     pub async fn accel_exists(
         &self,
         series_id: i64,
         accel_name: String,
         m_value: Option<i64>,
         args_json: String,
-        events_json: String,
         filter_type: Option<String>,
         filter_args_json: Option<String>,
+        trigger_after_json: Option<String>,
     ) -> Result<Option<(i64, u64)>> {
         let Some(conn) = &self.conn else {
             return Ok(None);
@@ -384,17 +384,18 @@ impl Cache {
             let res = c.query_row(
                 "SELECT id, n_points FROM accelerations \
                  WHERE series_id=?1 AND accel_name=?2 \
-                   AND m_value=?3 AND args_json=?4 AND events_json=?5 \
-                   AND filter_type=?6 \
-                   AND filter_args_json=?7",
+                   AND m_value=?3 AND args_json=?4 \
+                   AND filter_type=?5 \
+                   AND filter_args_json=?6 \
+                   AND trigger_after_json=?7",
                 params![
                     series_id,
                     accel_name,
                     m_value.unwrap_or(-1),
                     args_json,
-                    events_json,
                     filter_type.unwrap_or_default(),
-                    filter_args_json.unwrap_or_default()
+                    filter_args_json.unwrap_or_default(),
+                    trigger_after_json.unwrap_or_default()
                 ],
                 |r| Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)? as u64)),
             );
@@ -408,16 +409,16 @@ impl Cache {
         .map_err(Into::into)
     }
 
-    /// Insert (or update n_points) an `(accel, filter)` row.  Returns the row id.
+    /// Insert (or update n_points) an `(accel, filter, trigger_after)` row.  Returns the row id.
     pub async fn upsert_accel(
         &self,
         series_id: i64,
         accel_name: String,
         m_value: Option<i64>,
         args_json: String,
-        events_json: String,
         filter_type: Option<String>,
         filter_args_json: Option<String>,
+        trigger_after_json: Option<String>,
         n_points: u64,
     ) -> Result<i64> {
         let Some(conn) = &self.conn else {
@@ -427,35 +428,36 @@ impl Cache {
             let tx = c.transaction()?;
             tx.execute(
                 "INSERT INTO accelerations
-                 (series_id,accel_name,m_value,args_json,events_json,filter_type,filter_args_json,n_points)
+                 (series_id,accel_name,m_value,args_json,filter_type,filter_args_json,trigger_after_json,n_points)
                  VALUES (?1,?2,?3,?4,?5,?6,?7,?8)
-                 ON CONFLICT(series_id,accel_name,m_value,args_json,events_json,filter_type,filter_args_json)
+                 ON CONFLICT(series_id,accel_name,m_value,args_json,filter_type,filter_args_json,trigger_after_json)
                  DO UPDATE SET n_points = MAX(excluded.n_points, accelerations.n_points)",
                 params![
                     series_id,
                     accel_name,
                     m_value.unwrap_or(-1),
                     args_json,
-                    events_json.clone(),
                     filter_type.clone().unwrap_or_default(),
                     filter_args_json.clone().unwrap_or_default(),
+                    trigger_after_json.clone().unwrap_or_default(),
                     n_points
                 ],
             )?;
             let id: i64 = tx.query_row(
                 "SELECT id FROM accelerations \
                  WHERE series_id=?1 AND accel_name=?2 \
-                   AND m_value=?3 AND args_json=?4 AND events_json=?5 \
-                   AND filter_type=?6 \
-                   AND filter_args_json=?7",
+                   AND m_value=?3 AND args_json=?4 \
+                   AND filter_type=?5 \
+                   AND filter_args_json=?6 \
+                   AND trigger_after_json=?7",
                 params![
                     series_id,
                     accel_name,
                     m_value.unwrap_or(-1),
                     args_json,
-                    events_json,
                     filter_type.unwrap_or_default(),
-                    filter_args_json.unwrap_or_default()
+                    filter_args_json.unwrap_or_default(),
+                    trigger_after_json.unwrap_or_default()
                 ],
                 |r| r.get(0),
             )?;

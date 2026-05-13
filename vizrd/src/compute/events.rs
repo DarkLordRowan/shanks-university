@@ -37,7 +37,6 @@ fn kind_from_message(msg: &str) -> SeriesEventKind {
 #[derive(Debug, Clone)]
 pub struct SeriesEvents {
     events: Vec<SeriesEvent>,
-    stop_n: Option<u64>,
 }
 
 impl SeriesEvents {
@@ -48,7 +47,6 @@ impl SeriesEvents {
         accel_an: &Arr,
         accel_dev: &Arr,
         cpp_errors: Vec<ErrorEvent>,
-        config: &BTreeMap<SeriesEventKind, crate::experiment::EventConfig>,
     ) -> Self {
         let mut events = Vec::new();
 
@@ -62,18 +60,17 @@ impl SeriesEvents {
         }
 
         // Calculate derived events
-        let (derived_events, stop_n) = calculate_derived_events(
+        let derived_events = calculate_derived_events(
             series_dev,
             accel_sn,
             accel_an,
             accel_dev,
-            config,
         );
 
         events.extend(derived_events);
         events.sort_by_key(|e| e.n);
 
-        Self { events, stop_n }
+        Self { events }
     }
 
     /// Create from cached C++ errors (for cache hits).
@@ -83,7 +80,6 @@ impl SeriesEvents {
         accel_an: &Arr,
         accel_dev: &Arr,
         cached: CachedCppEvents,
-        config: &BTreeMap<SeriesEventKind, crate::experiment::EventConfig>,
     ) -> Self {
         let cpp_errors: Vec<ErrorEvent> = cached
             .events
@@ -94,12 +90,12 @@ impl SeriesEvents {
             })
             .collect();
 
-        Self::new(series_dev, accel_sn, accel_an, accel_dev, cpp_errors, config)
+        Self::new(series_dev, accel_sn, accel_an, accel_dev, cpp_errors)
     }
 
     /// Create from existing events (for serialization use case).
     pub fn from_events(events: Vec<SeriesEvent>) -> Self {
-        Self { events, stop_n: None }
+        Self { events }
     }
 
     /// Get all events (C++ + derived).
@@ -107,9 +103,25 @@ impl SeriesEvents {
         &self.events
     }
 
-    /// Get stop_n for filtering (from Trigger event).
-    pub fn stop_n(&self) -> Option<u64> {
-        self.stop_n
+    /// Compute the n at which a filter's trigger condition is met.
+    /// Returns `Some(n)` where n is the first index where the specified
+    /// event kind reaches its threshold.
+    /// Returns `Some(0)` when trigger_after is None (= filter from n=0).
+    /// Returns `None` when the trigger threshold is not reached (= skip filter).
+    pub fn stop_n_for(&self, trigger_after: Option<(SeriesEventKind, i64)>) -> Option<u64> {
+        let Some((kind, limit)) = trigger_after else {
+            return Some(0); // No trigger condition → filter from start
+        };
+        let mut count: i64 = 0;
+        for event in &self.events {
+            if event.kind == kind {
+                count += 1;
+                if count >= limit {
+                    return Some(event.n);
+                }
+            }
+        }
+        None // Threshold not reached → don't apply filter
     }
 
     /// Convert to Vec for AccelData.
@@ -148,18 +160,16 @@ fn calculate_derived_events(
     _accel_sn: &Arr,
     _accel_an: &Arr,
     accel_dev: &Arr,
-    config: &BTreeMap<SeriesEventKind, crate::experiment::EventConfig>,
-) -> (Vec<SeriesEvent>, Option<u64>) {
+) -> Vec<SeriesEvent> {
     let mut events = Vec::new();
-    let mut stop_n: Option<u64> = None;
 
     let s_dev_r = match series_dev {
         Arr::Real(v) => v,
-        _ => return (events, None),
+        _ => return events,
     };
     let dev_r = match accel_dev {
         Arr::Real(v) => v,
-        _ => return (events, None),
+        _ => return events,
     };
 
     let mut counters: BTreeMap<SeriesEventKind, i64> = BTreeMap::new();
@@ -241,26 +251,12 @@ fn calculate_derived_events(
                 description: desc,
             });
 
-            if let Some(cfg) = config.get(&kind) {
-                if let Some(limit) = cfg.filter_after {
-                    if *count >= limit && stop_n.is_none() {
-                        stop_n = Some(k as u64);
-                        events.push(SeriesEvent {
-                            n: k as u64,
-                            kind: SeriesEventKind::Trigger,
-                            description: format!(
-                                "Filters triggered due to {} limit ({})",
-                                kind.to_string(),
-                                limit
-                            ),
-                        });
-                    }
-                }
-            }
+            // No global trigger check here — trigger_after is per-filter,
+            // evaluated via SeriesEvents::stop_n_for().
         }
     }
 
-    (events, stop_n)
+    events
 }
 
 fn rv_abs_cmp(a: &RealValue, b: &RealValue) -> std::cmp::Ordering {

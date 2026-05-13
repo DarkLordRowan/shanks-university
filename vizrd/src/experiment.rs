@@ -181,7 +181,33 @@ pub type AccelDef = Accel<ArgI, Arg>;
 
 pub type SeriesInstance = Series<serde_json::Value>;
 pub type NoiseInstance = Noise<String, serde_json::Value, i64>;
-pub type FilterInstance = Filter<serde_json::Value>;
+/// A single expanded filter instance with one (or no) trigger condition.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub struct FilterInstance {
+    pub filter_type: String,
+    #[serde(default)]
+    pub args: BTreeMap<String, serde_json::Value>,
+    /// The single trigger condition for this filter instance.
+    /// `None` = filter from n=0 (no trigger condition).
+    pub trigger_after: Option<(SeriesEventKind, i64)>,
+}
+
+/// A trigger threshold value — accepts a single integer or an array in JSON.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[serde(untagged)]
+pub enum TriggerAfterValue {
+    Single(i64),
+    Multi(Vec<i64>),
+}
+
+impl TriggerAfterValue {
+    pub fn iter_values(&self) -> Vec<i64> {
+        match self {
+            TriggerAfterValue::Single(v) => vec![*v],
+            TriggerAfterValue::Multi(vs) => vs.clone(),
+        }
+    }
+}
 pub type AccelInstance = Accel<i64, serde_json::Value>;
 
 // ---------------------------------------------------------------------------
@@ -345,7 +371,21 @@ impl ExperimentConfig<SeriesEntry> {
     /// Load and resolve an experiment configuration from a JSON file.
     pub fn load(path: &Path) -> Result<Self> {
         let config_dir = path.parent().unwrap_or(Path::new("."));
-        ExperimentConfig::<RawSeriesEntry>::load_raw(path)?.resolve(config_dir)
+        let mut config = ExperimentConfig::<RawSeriesEntry>::load_raw(path)?.resolve(config_dir)?;
+        config.merge_filter_after();
+        Ok(config)
+    }
+
+    /// Backward compatibility: merge `EventConfig.filter_after` into each
+    /// filter's `trigger_after` (only for event kinds not already specified).
+    fn merge_filter_after(&mut self) {
+        for (kind, ecfg) in &self.events {
+            if let Some(ref fav) = ecfg.filter_after {
+                for filter in &mut self.filters {
+                    filter.trigger_after.entry(kind.clone()).or_insert_with(|| fav.clone());
+                }
+            }
+        }
     }
 }
 
@@ -489,16 +529,58 @@ pub struct Filter<T> {
     /// Filter arguments
     #[serde(default)]
     pub args: BTreeMap<String, T>,
+    /// Trigger condition: which event kinds trigger this filter,
+    /// and after how many occurrences. Empty = filter from n=0.
+    /// Each value can be a single integer or an array; each entry expands
+    /// into a separate `FilterInstance`.
+    /// Example: `{"divergent_accel": [2, 5, 7], "monotone": [3, 6]}`
+    /// expands into 5 filter instances.
+    #[serde(default)]
+    pub trigger_after: BTreeMap<SeriesEventKind, TriggerAfterValue>,
 }
 
 impl FilterDef {
     /// Expand this definition into concrete instances.
+    /// Each threshold in `trigger_after` produces a separate `FilterInstance`.
+    /// `trigger_after: {"divergent_accel": [2, 5], "monotone": [3]}`
+    /// with one arg combo → 3 FilterInstances.
+    /// Empty `trigger_after` produces one instance with `trigger_after: None`.
     pub fn expand(&self) -> impl Iterator<Item = FilterInstance> {
-        Arg::expand(&self.args)
+        let filter_type = self.filter_type.clone();
+
+        // Collect all (kind, threshold) pairs from trigger_after
+        let trigger_pairs: Vec<(SeriesEventKind, i64)> = self
+            .trigger_after
+            .iter()
+            .flat_map(|(kind, val)| {
+                val.iter_values()
+                    .into_iter()
+                    .map(move |limit| (*kind, limit))
+            })
+            .collect();
+
+        let arg_combos = Arg::expand(&self.args);
+
+        arg_combos
             .into_iter()
-            .map(|args| FilterInstance {
-                filter_type: self.filter_type.clone(),
-                args,
+            .flat_map(move |args| {
+                let filter_type = filter_type.clone();
+                if trigger_pairs.is_empty() {
+                    vec![FilterInstance {
+                        filter_type,
+                        args,
+                        trigger_after: None,
+                    }]
+                } else {
+                    trigger_pairs
+                        .iter()
+                        .map(|&(kind, limit)| FilterInstance {
+                            filter_type: filter_type.clone(),
+                            args: args.clone(),
+                            trigger_after: Some((kind, limit)),
+                        })
+                        .collect()
+                }
             })
     }
 }
@@ -535,8 +617,11 @@ impl AccelDef {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct EventConfig {
-    /// Number of events before filtering (None = never filter)
-    pub filter_after: Option<i64>,
+    /// Deprecated: use `trigger_after` on `FilterDef` instead.
+    /// Kept for backward compatibility in config files.
+    /// Accepts a single integer or an array.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub filter_after: Option<TriggerAfterValue>,
 }
 
 // #[cfg(test)]
