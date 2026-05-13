@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Series } from "@/entities/experiment/model/experiment";
+import { buildErrorMatrixFromExperiment } from "@/shared/lib/error-matrix/buildErrorMatrix";
 import type { ParquetAccelRow } from "./types";
 import { buildAccelAndSeriesAccelEntityVariantsFromParquetRow } from "./buildExperimentFromParquet";
 
@@ -86,5 +87,61 @@ describe("buildAccelAndSeriesAccelEntityVariantsFromParquetRow", () => {
                 profiling: null,
             },
         ]);
+    });
+
+    it("normalizes error messages and steps from alternate parquet fields", () => {
+        const series: Series = {
+            id: "7",
+            name: "S",
+            precision: "f64",
+            args: null,
+            limit: { re: 10, im: 0 },
+            computed: [],
+        };
+        const row: ParquetAccelRow = {
+            series_id: 7,
+            accel_name: "Aitken",
+            m_value: 2,
+            additional_args: null,
+            computed: [
+                { n: 0, value: null, deviation: null },
+                { n: 2, value: null, deviation: null },
+                { n: 3, value: null, deviation: null },
+            ],
+            errors: [
+                { n: 0, message: "not enough sum" },
+                { computed_index: 2, description: "division by zero" },
+                { data: { computed_index: 3, description: "nested division by zero" } },
+                { description: "unknown step" },
+            ],
+            events: [],
+        };
+
+        const [variant] = buildAccelAndSeriesAccelEntityVariantsFromParquetRow({
+            row,
+            series,
+        });
+
+        expect(variant.seriesAccel.computed.map((point) => point.n)).toEqual([0, 2, 3]);
+        expect(variant.seriesAccel.errors).toEqual([
+            { n: 0, message: "not enough sum" },
+            { n: 2, message: "division by zero" },
+            { n: 3, message: "nested division by zero" },
+            { n: null, message: "unknown step" },
+        ]);
+
+        const matrix = buildErrorMatrixFromExperiment(
+            {
+                id: "exp",
+                seriesList: [series],
+                accelList: [variant.accel],
+                seriesAccelList: [variant.seriesAccel],
+            },
+            null
+        );
+
+        expect(matrix.nList).toEqual([0, 2, 3, null]);
+        expect(matrix.totalErrorItems).toBe(4);
+        expect(matrix.cellMap.get(`${variant.accel.id}||unknown`)).toBe(1);
     });
 });

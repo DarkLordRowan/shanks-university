@@ -105,6 +105,7 @@ interface CellSummary {
     firstErrorN: number | null;
     lastErrorN: number | null;
     errorCount: number;
+    unknownErrorCount: number;
     divergentCount: number;
     uniqueErrorMessages: string[];
 }
@@ -118,10 +119,12 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
     const totalN = computed.length;
 
     const errorNs = new Set<number>();
+    let unknownErrorCount = 0;
     const errorMessages: string[] = [];
 
     for (const e of errors) {
-        if (typeof e.n === "number") errorNs.add(e.n);
+        if (typeof e.n === "number" && Number.isFinite(e.n)) errorNs.add(e.n);
+        else unknownErrorCount += 1;
         const msg =
             typeof e.message === "string" ? e.message.trim() : String(e.message ?? "").trim();
         if (msg.length > 0) errorMessages.push(msg);
@@ -151,9 +154,9 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
     const divergentCount = events.filter((ev) => ev.name === "divergent_accel_method").length;
 
     let state: CellSummary["state"];
-    if (totalN === 0 && errorList.length === 0) state = "no-data";
-    else if (okNs.length === 0 && errorList.length > 0) state = "only-errors";
-    else if (okNs.length > 0 && errorList.length === 0) state = "all-ok";
+    if (totalN === 0 && errors.length === 0) state = "no-data";
+    else if (okNs.length === 0 && errors.length > 0) state = "only-errors";
+    else if (okNs.length > 0 && errors.length === 0) state = "all-ok";
     else state = "ok-with-errors";
 
     return {
@@ -164,7 +167,8 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
         lastOkN,
         firstErrorN,
         lastErrorN,
-        errorCount: errorList.length,
+        errorCount: errors.length,
+        unknownErrorCount,
         divergentCount,
         uniqueErrorMessages,
     };
@@ -534,6 +538,9 @@ const AlgorithmSeriesErrorMatrixView: React.FC<AlgorithmSeriesErrorMatrixProps &
                     : ""
             }`
         );
+        if (summary.unknownErrorCount > 0) {
+            tooltipLines.push(`unknown-step errors: ${summary.unknownErrorCount}`);
+        }
         if (summary.divergentCount > 0) {
             tooltipLines.push(`divergent_accel_method: ${summary.divergentCount}`);
         }

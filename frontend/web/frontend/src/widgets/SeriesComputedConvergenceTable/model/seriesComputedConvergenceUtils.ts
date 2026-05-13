@@ -48,10 +48,39 @@ export function realDiffSign(value: Complex | null, limit: Complex | null): -1 |
     return d > 0 ? 1 : -1;
 }
 
+export interface SeriesComputedPointForError {
+    n: number;
+    value: Complex | null;
+    deviation?: number | null;
+}
+
+export function errorNormFromPoint(
+    point: SeriesComputedPointForError,
+    limit: Complex | null
+): number | null {
+    if (hasFiniteNumber(point.deviation)) return Math.abs(point.deviation);
+    return errorNorm(point.value, limit);
+}
+
+export function realDiffSignFromPoint(
+    point: SeriesComputedPointForError,
+    limit: Complex | null
+): -1 | 0 | 1 | null {
+    if (hasFiniteNumber(point.deviation)) {
+        if (point.deviation === 0) return 0;
+        return point.deviation > 0 ? 1 : -1;
+    }
+    return realDiffSign(point.value, limit);
+}
+
 export function getSeriesComputedSorted(
     series: Series
-): Array<{ n: number; value: Complex | null }> {
-    const raw = (series.computed ?? []).map((p) => ({ n: p.n, value: p.value ?? null }));
+): SeriesComputedPointForError[] {
+    const raw = (series.computed ?? []).map((p) => ({
+        n: p.n,
+        value: p.value ?? null,
+        deviation: p.deviation ?? null,
+    }));
 
     const len = raw.length;
     if (len <= 1) return raw;
@@ -89,8 +118,8 @@ export function analyzeSeriesComputedConvergence(
     let anyFiniteSign = false;
 
     for (const p of pts) {
-        const err = errorNorm(p.value, limit);
-        const sgn = realDiffSign(p.value, limit);
+        const err = errorNormFromPoint(p, limit);
+        const sgn = realDiffSignFromPoint(p, limit);
 
         // sign changes of Re(S_n - S)
         if (sgn != null && sgn !== 0) {
@@ -211,8 +240,8 @@ export function buildDetailPoints(series: Series): DetailPoint[] {
         const valueRe = v?.re ?? null;
         const valueImRaw = v?.im ?? null;
 
-        const err = errorNorm(v, limit);
-        const sign = realDiffSign(v, limit);
+        const err = errorNormFromPoint(p, limit);
+        const sign = realDiffSignFromPoint(p, limit);
 
         let diffRe: number | null = null;
         let diffIm: number | null = null;

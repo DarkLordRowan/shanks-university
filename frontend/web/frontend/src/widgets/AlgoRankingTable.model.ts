@@ -36,6 +36,8 @@ export interface AlgoStats {
     relativeErrors: number[];
     ordersGains: number[];
     ampAtMinNGains: number[];
+    filterTriggerNs: number[];
+    filterTriggerDeltaFromMinNs: number[];
     lastMinusMinGaps: number[];
     comparableSeriesMinCount: number;
     notBetterThanSeriesCount: number;
@@ -65,6 +67,12 @@ export interface AlgoStats {
     avgAmpAtMinN: number;
     medianAmpAtMinN: number;
     worstAmpAtMinN: number;
+    avgFilterTriggerN: number;
+    medianFilterTriggerN: number;
+    worstFilterTriggerN: number;
+    avgFilterTriggerDeltaFromMinN: number;
+    medianFilterTriggerDeltaFromMinN: number;
+    worstFilterTriggerDeltaFromMinN: number;
     avgLastMinusMin: number;
     medianLastMinusMin: number;
     worstLastMinusMin: number;
@@ -105,6 +113,12 @@ export type AlgoRankingSortKey =
     | "avgAmpAtMinN"
     | "medianAmpAtMinN"
     | "worstAmpAtMinN"
+    | "avgFilterTriggerN"
+    | "medianFilterTriggerN"
+    | "worstFilterTriggerN"
+    | "avgFilterTriggerDeltaFromMinN"
+    | "medianFilterTriggerDeltaFromMinN"
+    | "worstFilterTriggerDeltaFromMinN"
     | "notBetterThanSeriesShare"
     | "avgMinDeviationN"
     | "medianMinDeviationN"
@@ -324,6 +338,21 @@ function computeLastMinusMinGap(lastDeviation: number, minDeviation: number): nu
     }
 
     return lastDeviation - minDeviation;
+}
+
+const FILTER_TRIGGER_NEEDLE = "filters triggered due to";
+
+function getFirstFilterTriggerN(seriesAccel: SeriesAccel): number | null {
+    let firstN: number | null = null;
+
+    for (const event of seriesAccel.events ?? []) {
+        const text = `${event.name ?? ""} ${event.description ?? ""}`.toLowerCase();
+        if (!text.includes(FILTER_TRIGGER_NEEDLE)) continue;
+        if (!isFiniteNumber(event.n)) continue;
+        if (firstN === null || event.n < firstN) firstN = event.n;
+    }
+
+    return firstN;
 }
 
 function normalizeToken(value: unknown): string {
@@ -778,6 +807,8 @@ function createInitialAlgoStats(params: {
         relativeErrors: [],
         ordersGains: [],
         ampAtMinNGains: [],
+        filterTriggerNs: [],
+        filterTriggerDeltaFromMinNs: [],
         lastMinusMinGaps: [],
         comparableSeriesMinCount: 0,
         notBetterThanSeriesCount: 0,
@@ -807,6 +838,12 @@ function createInitialAlgoStats(params: {
         avgAmpAtMinN: Number.NEGATIVE_INFINITY,
         medianAmpAtMinN: Number.NEGATIVE_INFINITY,
         worstAmpAtMinN: Number.NEGATIVE_INFINITY,
+        avgFilterTriggerN: Number.POSITIVE_INFINITY,
+        medianFilterTriggerN: Number.POSITIVE_INFINITY,
+        worstFilterTriggerN: Number.POSITIVE_INFINITY,
+        avgFilterTriggerDeltaFromMinN: Number.POSITIVE_INFINITY,
+        medianFilterTriggerDeltaFromMinN: Number.POSITIVE_INFINITY,
+        worstFilterTriggerDeltaFromMinN: Number.POSITIVE_INFINITY,
         avgLastMinusMin: Number.POSITIVE_INFINITY,
         medianLastMinusMin: Number.POSITIVE_INFINITY,
         worstLastMinusMin: Number.POSITIVE_INFINITY,
@@ -907,6 +944,11 @@ export function createAlgoRankingStatsAccumulator(
             stats.seriesCount += 1;
             stats.bestDeviations.push(metrics.minDeviation);
             stats.minDeviationNs.push(metrics.minDeviationN);
+            const filterTriggerN = getFirstFilterTriggerN(seriesAccel);
+            if (isFiniteNumber(filterTriggerN)) {
+                stats.filterTriggerNs.push(filterTriggerN);
+                stats.filterTriggerDeltaFromMinNs.push(filterTriggerN - metrics.minDeviationN);
+            }
             if (convergenceAnalysis.side === "one_sided") {
                 stats.oneSidedCount += 1;
             }
@@ -1042,6 +1084,28 @@ function finalizeAlgoStats(
             "higher-is-better",
             Number.NEGATIVE_INFINITY
         );
+        stats.avgFilterTriggerN = meanOrInfinity(stats.filterTriggerNs);
+        stats.medianFilterTriggerN = medianOrValue(
+            stats.filterTriggerNs,
+            Number.POSITIVE_INFINITY
+        );
+        stats.worstFilterTriggerN = worstOrValue(
+            stats.filterTriggerNs,
+            "lower-is-better",
+            Number.POSITIVE_INFINITY
+        );
+        stats.avgFilterTriggerDeltaFromMinN = meanOrInfinity(
+            stats.filterTriggerDeltaFromMinNs
+        );
+        stats.medianFilterTriggerDeltaFromMinN = medianOrValue(
+            stats.filterTriggerDeltaFromMinNs,
+            Number.POSITIVE_INFINITY
+        );
+        stats.worstFilterTriggerDeltaFromMinN = worstOrValue(
+            stats.filterTriggerDeltaFromMinNs,
+            "lower-is-better",
+            Number.POSITIVE_INFINITY
+        );
         stats.avgLastMinusMin = meanOrInfinity(stats.lastMinusMinGaps);
         stats.medianLastMinusMin = medianOrValue(
             stats.lastMinusMinGaps,
@@ -1131,9 +1195,36 @@ function finalizeAlgoStats(
             comparableSeriesForLast > 0 ? stats.worstLastCount / comparableSeriesForLast : 0;
     }
 
-    const avgBestDeviationRanks = buildRankMap(statsList, (stats) => stats.avgBestDeviation, "asc");
-    const avgRelativeErrorRanks = buildRankMap(statsList, (stats) => stats.avgRelativeError, "asc");
-    const avgOrdersGainRanks = buildRankMap(statsList, (stats) => stats.avgOrdersGain, "desc");
+    const medianBestDeviationRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianBestDeviation,
+        "asc"
+    );
+    const worstBestDeviationRanks = buildRankMap(
+        statsList,
+        (stats) => stats.worstBestDeviation,
+        "asc"
+    );
+    const medianRelativeErrorRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianRelativeError,
+        "asc"
+    );
+    const worstRelativeErrorRanks = buildRankMap(
+        statsList,
+        (stats) => stats.worstRelativeError,
+        "asc"
+    );
+    const medianOrdersGainRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianOrdersGain,
+        "desc"
+    );
+    const worstOrdersGainRanks = buildRankMap(
+        statsList,
+        (stats) => stats.worstOrdersGain,
+        "desc"
+    );
     const notBetterThanSeriesRanks = buildRankMap(
         statsList,
         (stats) => stats.notBetterThanSeriesShare,
@@ -1141,14 +1232,76 @@ function finalizeAlgoStats(
     );
     const bestMinShareRanks = buildRankMap(statsList, (stats) => stats.bestMinShare, "desc");
     const worstMinShareRanks = buildRankMap(statsList, (stats) => stats.worstMinShare, "asc");
-    const avgStepsToTolRanks = buildRankMap(statsList, (stats) => stats.avgStepsToTol, "asc");
-    const avgMinDeviationNRanks = buildRankMap(statsList, (stats) => stats.avgMinDeviationN, "asc");
-    const avgEpsSavedStepsRanks = buildRankMap(
+    const medianStepsToTolRanks = buildRankMap(
         statsList,
-        (stats) => stats.avgEpsSavedSteps,
+        (stats) => stats.medianStepsToTol,
+        "asc"
+    );
+    const worstStepsToTolRanks = buildRankMap(
+        statsList,
+        (stats) => stats.worstStepsToTol,
+        "asc"
+    );
+    const medianMinDeviationNRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianMinDeviationN,
+        "asc"
+    );
+    const worstMinDeviationNRanks = buildRankMap(
+        statsList,
+        (stats) => stats.worstMinDeviationN,
+        "asc"
+    );
+    const medianEpsSavedStepsRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianEpsSavedSteps,
         "desc"
     );
-    const avgLastMinusMinRanks = buildRankMap(statsList, (stats) => stats.avgLastMinusMin, "asc");
+    const worstEpsSavedStepsRanks = buildRankMap(
+        statsList,
+        (stats) => stats.worstEpsSavedSteps,
+        "desc"
+    );
+    const medianAmpAtMinNRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianAmpAtMinN,
+        "desc"
+    );
+    const worstAmpAtMinNRanks = buildRankMap(
+        statsList,
+        (stats) => stats.worstAmpAtMinN,
+        "desc"
+    );
+    const medianFilterTriggerNRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianFilterTriggerN,
+        "asc"
+    );
+    const worstFilterTriggerNRanks = buildRankMap(
+        statsList,
+        (stats) => stats.worstFilterTriggerN,
+        "asc"
+    );
+    const medianFilterTriggerDeltaFromMinNRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianFilterTriggerDeltaFromMinN,
+        "asc"
+    );
+    const worstFilterTriggerDeltaFromMinNRanks = buildRankMap(
+        statsList,
+        (stats) => stats.worstFilterTriggerDeltaFromMinN,
+        "asc"
+    );
+    const medianLastMinusMinRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianLastMinusMin,
+        "asc"
+    );
+    const worstLastMinusMinRanks = buildRankMap(
+        statsList,
+        (stats) => stats.worstLastMinusMin,
+        "asc"
+    );
     const reachedTolRanks = buildRankMap(statsList, (stats) => stats.fracReachedTol, "desc");
     const oneSidedShareRanks = buildRankMap(statsList, (stats) => stats.oneSidedShare, "desc");
     const bestLastShareRanks = buildRankMap(statsList, (stats) => stats.bestLastShare, "desc");
@@ -1161,9 +1314,12 @@ function finalizeAlgoStats(
     for (const stats of statsList) {
         precisionScores.set(
             stats.algoKey,
-            (avgBestDeviationRanks.get(stats.algoKey) ?? 0) +
-                (avgRelativeErrorRanks.get(stats.algoKey) ?? 0) +
-                (avgOrdersGainRanks.get(stats.algoKey) ?? 0) +
+            (medianBestDeviationRanks.get(stats.algoKey) ?? 0) +
+                (worstBestDeviationRanks.get(stats.algoKey) ?? 0) +
+                (medianRelativeErrorRanks.get(stats.algoKey) ?? 0) +
+                (worstRelativeErrorRanks.get(stats.algoKey) ?? 0) +
+                (medianOrdersGainRanks.get(stats.algoKey) ?? 0) +
+                (worstOrdersGainRanks.get(stats.algoKey) ?? 0) +
                 (notBetterThanSeriesRanks.get(stats.algoKey) ?? 0) +
                 (bestMinShareRanks.get(stats.algoKey) ?? 0) +
                 (worstMinShareRanks.get(stats.algoKey) ?? 0)
@@ -1171,16 +1327,26 @@ function finalizeAlgoStats(
 
         speedScores.set(
             stats.algoKey,
-            (avgStepsToTolRanks.get(stats.algoKey) ?? 0) +
-                (avgMinDeviationNRanks.get(stats.algoKey) ?? 0) +
-                (avgEpsSavedStepsRanks.get(stats.algoKey) ?? 0)
+            (medianStepsToTolRanks.get(stats.algoKey) ?? 0) +
+                (worstStepsToTolRanks.get(stats.algoKey) ?? 0) +
+                (medianMinDeviationNRanks.get(stats.algoKey) ?? 0) +
+                (worstMinDeviationNRanks.get(stats.algoKey) ?? 0) +
+                (medianEpsSavedStepsRanks.get(stats.algoKey) ?? 0) +
+                (worstEpsSavedStepsRanks.get(stats.algoKey) ?? 0) +
+                (medianAmpAtMinNRanks.get(stats.algoKey) ?? 0) +
+                (worstAmpAtMinNRanks.get(stats.algoKey) ?? 0) +
+                (medianFilterTriggerNRanks.get(stats.algoKey) ?? 0) +
+                (worstFilterTriggerNRanks.get(stats.algoKey) ?? 0) +
+                (medianFilterTriggerDeltaFromMinNRanks.get(stats.algoKey) ?? 0) +
+                (worstFilterTriggerDeltaFromMinNRanks.get(stats.algoKey) ?? 0)
         );
 
         stabilityScores.set(
             stats.algoKey,
             (reachedTolRanks.get(stats.algoKey) ?? 0) +
                 (oneSidedShareRanks.get(stats.algoKey) ?? 0) +
-                (avgLastMinusMinRanks.get(stats.algoKey) ?? 0) +
+                (medianLastMinusMinRanks.get(stats.algoKey) ?? 0) +
+                (worstLastMinusMinRanks.get(stats.algoKey) ?? 0) +
                 (bestLastShareRanks.get(stats.algoKey) ?? 0) +
                 (worstLastShareRanks.get(stats.algoKey) ?? 0)
         );
@@ -1221,16 +1387,28 @@ function finalizeAlgoStats(
         const rankDiff = compareNumbers(a.totalRankScore, b.totalRankScore, "asc");
         if (rankDiff !== 0) return rankDiff;
 
-        const devDiff = compareNumbers(a.avgBestDeviation, b.avgBestDeviation, "asc");
+        const devDiff = compareNumbers(a.medianBestDeviation, b.medianBestDeviation, "asc");
         if (devDiff !== 0) return devDiff;
 
-        const gainDiff = compareNumbers(a.avgOrdersGain, b.avgOrdersGain, "desc");
+        const worstDevDiff = compareNumbers(a.worstBestDeviation, b.worstBestDeviation, "asc");
+        if (worstDevDiff !== 0) return worstDevDiff;
+
+        const gainDiff = compareNumbers(a.medianOrdersGain, b.medianOrdersGain, "desc");
         if (gainDiff !== 0) return gainDiff;
 
-        const gainAtMinNDiff = compareNumbers(a.avgAmpAtMinN, b.avgAmpAtMinN, "desc");
+        const worstGainDiff = compareNumbers(a.worstOrdersGain, b.worstOrdersGain, "desc");
+        if (worstGainDiff !== 0) return worstGainDiff;
+
+        const gainAtMinNDiff = compareNumbers(a.medianAmpAtMinN, b.medianAmpAtMinN, "desc");
         if (gainAtMinNDiff !== 0) return gainAtMinNDiff;
 
-        return compareNumbers(a.avgRelativeError, b.avgRelativeError, "asc");
+        const worstGainAtMinNDiff = compareNumbers(a.worstAmpAtMinN, b.worstAmpAtMinN, "desc");
+        if (worstGainAtMinNDiff !== 0) return worstGainAtMinNDiff;
+
+        const relativeDiff = compareNumbers(a.medianRelativeError, b.medianRelativeError, "asc");
+        if (relativeDiff !== 0) return relativeDiff;
+
+        return compareNumbers(a.worstRelativeError, b.worstRelativeError, "asc");
     });
 
     return statsList;

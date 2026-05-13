@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Series } from "@/entities/experiment/model/experiment";
 import {
+    buildDetailPoints,
+} from "./seriesComputedConvergenceUtils";
+import {
     buildSeriesComputedClassLegendTitle,
     computeSeriesComputedDevStats,
     getSeriesComputedClassInfo,
@@ -51,6 +54,20 @@ describe("seriesComputedSummary", () => {
         expect(stats.min).toBe(0);
         expect(stats.amplitudeOrders).toBeCloseTo(0);
         expect(stats.maxAmplitudeOrders).toBeCloseTo(-1);
+    });
+
+    it("uses stored deviations when JS-rounded values equal the limit", () => {
+        const series = buildSeries([
+            { n: 1, value: { re: 1, im: 0 }, deviation: -3.5810259903450162e-34 },
+        ]);
+
+        const stats = computeSeriesComputedDevStats(series);
+        const points = buildDetailPoints(series);
+
+        expect(stats.min).toBeCloseTo(3.5810259903450162e-34);
+        expect(stats.min).not.toBe(0);
+        expect(points[0]?.err).toBeCloseTo(3.5810259903450162e-34);
+        expect(points[0]?.sign).toBe(-1);
     });
 
     it("assigns requested class order and legend text", () => {

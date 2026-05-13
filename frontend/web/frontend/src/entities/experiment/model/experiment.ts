@@ -58,7 +58,7 @@ export interface SeriesAccelComputedPoint {
 }
 
 export interface SeriesAccelError {
-    n: number;
+    n: number | null;
     message: string;
 }
 

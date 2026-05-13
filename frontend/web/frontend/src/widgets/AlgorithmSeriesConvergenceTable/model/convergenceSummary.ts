@@ -1,6 +1,10 @@
 import type { Complex, SeriesAccel } from "@/entities/experiment/model/experiment";
 import type { DetailPoint, MonotonicityType, SideType } from "./types";
-import { errorNorm, getPointsSortedByN, realDiffSign } from "./convergenceUtils";
+import {
+    errorNormFromPoint,
+    getPointsSortedByN,
+    realDiffSignFromPoint,
+} from "./convergenceUtils";
 
 const EPS = 1e-15;
 
@@ -347,8 +351,8 @@ export function buildConvergenceDetailPoints(
         const valueRe = point.value?.re ?? null;
         const valueImRaw = point.value?.im ?? null;
         const valueIm = valueImRaw ?? 0;
-        const err = errorNorm(point.value, limit);
-        const sign = realDiffSign(point.value, limit);
+        const err = errorNormFromPoint(point, limit);
+        const sign = realDiffSignFromPoint(point, limit);
 
         let diffRe: number | null = null;
         let diffIm: number | null = null;
@@ -397,7 +401,7 @@ export function computeConvergenceDevStatsFromSeriesAccel(
 
     const finiteErrors: ErrorPoint[] = [];
     for (const point of getPointsSortedByN(sa)) {
-        const err = errorNorm(point.value, limit);
+        const err = errorNormFromPoint(point, limit);
         if (!isFiniteNumber(err)) continue;
         finiteErrors.push({ n: point.n, err });
     }

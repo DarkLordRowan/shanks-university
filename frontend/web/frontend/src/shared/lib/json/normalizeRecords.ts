@@ -17,6 +17,22 @@ function toNumber(v: NumLike): number {
     return Number.isNaN(n) ? NaN : n;
 }
 
+function toNumberOrNull(v: unknown): number | null {
+    if (v === null || v === undefined) return null;
+    if (typeof v !== "number" && typeof v !== "string") return null;
+    const n = toNumber(v);
+    return Number.isNaN(n) ? null : n;
+}
+
+function firstNonEmptyString(...values: unknown[]): string {
+    for (const value of values) {
+        if (typeof value !== "string") continue;
+        const text = value.trim();
+        if (text) return text;
+    }
+    return "Unknown error";
+}
+
 function toItemComputed(raw: {
     n: NumLike;
     series_value: NumLike;
@@ -40,15 +56,21 @@ function toItemComputed(raw: {
 function toItemError(raw: ResponseRecord["error"]): ResponseError | null {
     if (!raw) return null;
 
-    const nRaw = (raw.data?.["n"] ?? null) as NumLike;
-    const nNum = toNumber(nRaw);
+    const record = raw as Record<string, unknown>;
+    const data = (raw.data ?? {}) as Record<string, unknown>;
     const n =
-        nRaw === null || nRaw === undefined || Number.isNaN(nNum)
-            ? null
-            : nNum;
+        toNumberOrNull(record.n) ??
+        toNumberOrNull(data.n) ??
+        toNumberOrNull(record.computed_index) ??
+        toNumberOrNull(data.computed_index);
 
     return {
-        description: raw.description,
+        description: firstNonEmptyString(
+            record.message,
+            record.description,
+            data.message,
+            data.description
+        ),
         data: {
             n,
         },

@@ -1,6 +1,6 @@
 import type { Complex, Series } from "@/entities/experiment/model/experiment";
 import type { MonotonicityType, SideType } from "./types";
-import { errorNorm, getSeriesComputedSorted } from "./seriesComputedConvergenceUtils";
+import { errorNormFromPoint, getSeriesComputedSorted } from "./seriesComputedConvergenceUtils";
 
 const EPS = 1e-15;
 
@@ -247,7 +247,7 @@ export function computeSeriesComputedDevStats(series: Series): SeriesComputedDev
     const finiteErrors: ErrorPoint[] = [];
 
     for (const point of points) {
-        const err = errorNorm(point.value, limit);
+        const err = errorNormFromPoint(point, limit);
         if (!isFiniteNumber(err)) continue;
         finiteErrors.push({ n: point.n, err });
     }

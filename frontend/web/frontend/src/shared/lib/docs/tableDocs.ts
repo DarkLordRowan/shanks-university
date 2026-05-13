@@ -25,6 +25,12 @@ export type AlgoRankingDocsColumnKey =
     | "avgAmpAtMinN"
     | "medianAmpAtMinN"
     | "worstAmpAtMinN"
+    | "avgFilterTriggerN"
+    | "medianFilterTriggerN"
+    | "worstFilterTriggerN"
+    | "avgFilterTriggerDeltaFromMinN"
+    | "medianFilterTriggerDeltaFromMinN"
+    | "worstFilterTriggerDeltaFromMinN"
     | "notBetterThanSeriesShare"
     | "avgMinDeviationN"
     | "medianMinDeviationN"
@@ -491,6 +497,48 @@ $$
             "worst series@min n/algo amp",
             "higher",
             "Худший выигрыш по порядкам против `S(how_much(n_min))`. Больше лучше."
+        ),
+        createColumn(
+            "algo-ranking",
+            "avgFilterTriggerN",
+            "avg filter n",
+            "lower",
+            "Average first event n whose name or description contains `Filters triggered due to`. Missing samples are displayed as `-`."
+        ),
+        createColumn(
+            "algo-ranking",
+            "medianFilterTriggerN",
+            "med filter n",
+            "lower",
+            "Median first filter-trigger event n. Lower is better; missing samples rank as worst for trigger metrics."
+        ),
+        createColumn(
+            "algo-ranking",
+            "worstFilterTriggerN",
+            "worst filter n",
+            "lower",
+            "Worst first filter-trigger event n across series. Lower is better."
+        ),
+        createColumn(
+            "algo-ranking",
+            "avgFilterTriggerDeltaFromMinN",
+            "avg filter-min n",
+            "lower",
+            "Average difference `filterTriggerN - minDeviationN`. Lower means filters are triggered closer to the algorithm minimum."
+        ),
+        createColumn(
+            "algo-ranking",
+            "medianFilterTriggerDeltaFromMinN",
+            "med filter-min n",
+            "lower",
+            "Median difference `filterTriggerN - minDeviationN`. Lower is better; missing samples rank as worst."
+        ),
+        createColumn(
+            "algo-ranking",
+            "worstFilterTriggerDeltaFromMinN",
+            "worst filter-min n",
+            "lower",
+            "Worst difference `filterTriggerN - minDeviationN` across series. Lower is better."
         ),
         createColumn(
             "algo-ranking",
@@ -1150,6 +1198,81 @@ $$
                     {
                         preference: "higher",
                         refAnchorId: buildColumnAnchorId("algo-ranking", "worstAmpAtMinN"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "avgFilterTriggerN",
+                    "avg filter n",
+                    "Average first event n whose name or description contains `Filters triggered due to`.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "avgFilterTriggerN"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "medianFilterTriggerN",
+                    "med filter n",
+                    "Median first filter-trigger event n.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "medianFilterTriggerN"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "worstFilterTriggerN",
+                    "worst filter n",
+                    "Worst first filter-trigger event n across series.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "worstFilterTriggerN"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "avgFilterTriggerDeltaFromMinN",
+                    "avg filter-min n",
+                    "Average difference `filterTriggerN - minDeviationN`.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "avgFilterTriggerDeltaFromMinN"
+                        ),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "medianFilterTriggerDeltaFromMinN",
+                    "med filter-min n",
+                    "Median difference `filterTriggerN - minDeviationN`.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "medianFilterTriggerDeltaFromMinN"
+                        ),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "worstFilterTriggerDeltaFromMinN",
+                    "worst filter-min n",
+                    "Worst difference `filterTriggerN - minDeviationN` across series.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "worstFilterTriggerDeltaFromMinN"
+                        ),
                     }
                 ),
                 createXlsxField(

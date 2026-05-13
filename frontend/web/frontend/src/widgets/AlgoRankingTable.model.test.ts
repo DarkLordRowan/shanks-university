@@ -395,8 +395,8 @@ describe("AlgoRankingTable.model", () => {
                     series_id: "s-1",
                     accel_id: "a-1",
                     computed: [
-                        { n: 1, value: { re: 0.7, im: 0 }, deviation: 3e-1 },
-                        { n: 2, value: { re: 0.9, im: 0 }, deviation: 1e-1 },
+                        { n: 1, value: { re: 0.7, im: 0 }, deviation: -3e-1 },
+                        { n: 2, value: { re: 0.9, im: 0 }, deviation: -1e-1 },
                     ],
                     errors: [],
                     events: [],
@@ -405,7 +405,7 @@ describe("AlgoRankingTable.model", () => {
                     series_id: "s-1",
                     accel_id: "a-2",
                     computed: [
-                        { n: 1, value: { re: 0.7, im: 0 }, deviation: 3e-1 },
+                        { n: 1, value: { re: 0.7, im: 0 }, deviation: -3e-1 },
                         { n: 2, value: { re: 1.1, im: 0 }, deviation: 1e-1 },
                     ],
                     errors: [],
@@ -459,6 +459,123 @@ describe("AlgoRankingTable.model", () => {
         expect(amp?.avgOrdersGain).toBeCloseTo(-2);
         expect(amp?.avgAmpAtMinN).toBeCloseTo(2);
         expect(amp?.avgMinDeviationN).toBe(2);
+    });
+
+    it("uses series@min n/algo amp in rank speed", () => {
+        const experiment: Experiment = {
+            id: "exp-speed-amp",
+            seriesList: [
+                {
+                    id: "s-1",
+                    name: "S1",
+                    precision: "double",
+                    args: { x: 1 },
+                    limit: { re: 1, im: 0 },
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-3 },
+                    ],
+                },
+            ],
+            accelList: [
+                { id: "a-better-amp", name: "BetterAmp", m: 0, args: null },
+                { id: "a-worse-amp", name: "WorseAmp", m: 0, args: null },
+            ],
+            seriesAccelList: [
+                {
+                    series_id: "s-1",
+                    accel_id: "a-better-amp",
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                    ],
+                    errors: [],
+                    events: [],
+                },
+                {
+                    series_id: "s-1",
+                    accel_id: "a-worse-amp",
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-4 },
+                    ],
+                    errors: [],
+                    events: [],
+                },
+            ],
+        };
+
+        const stats = buildAlgoStatsFromExperiment(experiment, 1e-7, null);
+        const better = stats.find((item) => item.algorithmName === "BetterAmp");
+        const worse = stats.find((item) => item.algorithmName === "WorseAmp");
+
+        expect(better?.medianAmpAtMinN).toBeCloseTo(3);
+        expect(worse?.medianAmpAtMinN).toBeCloseTo(1);
+        expect(better?.rankSpeed).toBeLessThan(worse?.rankSpeed ?? Infinity);
+    });
+
+    it("uses filter-trigger n and delta in rank speed", () => {
+        const experiment: Experiment = {
+            id: "exp-filter-trigger-speed",
+            seriesList: [
+                {
+                    id: "s-1",
+                    name: "S1",
+                    precision: "double",
+                    args: { x: 1 },
+                    limit: { re: 1, im: 0 },
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-3 },
+                        { n: 4, value: { re: 0, im: 0 }, deviation: 1e-4 },
+                    ],
+                },
+            ],
+            accelList: [
+                { id: "a-triggered", name: "Triggered", m: 0, args: null },
+                { id: "a-missing", name: "MissingTrigger", m: 0, args: null },
+            ],
+            seriesAccelList: [
+                {
+                    series_id: "s-1",
+                    accel_id: "a-triggered",
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                        { n: 4, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                    ],
+                    errors: [],
+                    events: [
+                        {
+                            n: 4,
+                            name: "info",
+                            description: "Filters triggered due to unstable window",
+                        },
+                    ],
+                },
+                {
+                    series_id: "s-1",
+                    accel_id: "a-missing",
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                        { n: 4, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                    ],
+                    errors: [],
+                    events: [],
+                },
+            ],
+        };
+
+        const stats = buildAlgoStatsFromExperiment(experiment, 1e-7, null);
+        const triggered = stats.find((item) => item.algorithmName === "Triggered");
+        const missing = stats.find((item) => item.algorithmName === "MissingTrigger");
+
+        expect(triggered?.medianFilterTriggerN).toBe(4);
+        expect(triggered?.medianFilterTriggerDeltaFromMinN).toBe(2);
+        expect(missing?.medianFilterTriggerN).toBe(Number.POSITIVE_INFINITY);
+        expect(missing?.medianFilterTriggerDeltaFromMinN).toBe(Number.POSITIVE_INFINITY);
+        expect(triggered?.rankSpeed).toBeLessThan(missing?.rankSpeed ?? Infinity);
     });
 
     it("uses how_much(n_min) when comparing series deviation at algorithm minimum", () => {

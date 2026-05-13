@@ -183,6 +183,48 @@ const BASE_COLUMNS: ColMeta[] = [
         defaultDir: "desc",
     },
     {
+        id: "avgFilterTriggerN",
+        title: "avg filter n",
+        description: "Average first event n where filters were triggered. Lower is better.",
+        sortKey: "avgFilterTriggerN",
+        defaultDir: "asc",
+    },
+    {
+        id: "medianFilterTriggerN",
+        title: "med filter n",
+        description: "Median first event n where filters were triggered. Lower is better.",
+        sortKey: "medianFilterTriggerN",
+        defaultDir: "asc",
+    },
+    {
+        id: "worstFilterTriggerN",
+        title: "worst filter n",
+        description: "Worst first event n where filters were triggered. Lower is better.",
+        sortKey: "worstFilterTriggerN",
+        defaultDir: "asc",
+    },
+    {
+        id: "avgFilterTriggerDeltaFromMinN",
+        title: "avg filter-min n",
+        description: "Average filter trigger n minus min deviation n. Lower is better.",
+        sortKey: "avgFilterTriggerDeltaFromMinN",
+        defaultDir: "asc",
+    },
+    {
+        id: "medianFilterTriggerDeltaFromMinN",
+        title: "med filter-min n",
+        description: "Median filter trigger n minus min deviation n. Lower is better.",
+        sortKey: "medianFilterTriggerDeltaFromMinN",
+        defaultDir: "asc",
+    },
+    {
+        id: "worstFilterTriggerDeltaFromMinN",
+        title: "worst filter-min n",
+        description: "Worst filter trigger n minus min deviation n. Lower is better.",
+        sortKey: "worstFilterTriggerDeltaFromMinN",
+        defaultDir: "asc",
+    },
+    {
         id: "notBetterThanSeriesShare",
         title: "min algo >= min series, %",
         description:
@@ -527,6 +569,18 @@ function getCellText(row: RowMeta, colId: ColId): string {
             return formatNumber(row.medianAmpAtMinN);
         case "worstAmpAtMinN":
             return formatNumber(row.worstAmpAtMinN);
+        case "avgFilterTriggerN":
+            return formatSteps(row.avgFilterTriggerN);
+        case "medianFilterTriggerN":
+            return formatSteps(row.medianFilterTriggerN);
+        case "worstFilterTriggerN":
+            return formatSteps(row.worstFilterTriggerN);
+        case "avgFilterTriggerDeltaFromMinN":
+            return formatSteps(row.avgFilterTriggerDeltaFromMinN);
+        case "medianFilterTriggerDeltaFromMinN":
+            return formatSteps(row.medianFilterTriggerDeltaFromMinN);
+        case "worstFilterTriggerDeltaFromMinN":
+            return formatSteps(row.worstFilterTriggerDeltaFromMinN);
         case "notBetterThanSeriesShare":
             return row.seriesCount > 0 ? formatPercent(row.notBetterThanSeriesShare) : "-";
         case "avgMinDeviationN":
@@ -655,6 +709,24 @@ function getExportValue(row: RowMeta, colId: ColId): string | number | null {
                 : row.worstAmpAtMinN === Number.NEGATIVE_INFINITY
                   ? "-∞"
                   : null;
+        case "avgFilterTriggerN":
+            return Number.isFinite(row.avgFilterTriggerN) ? row.avgFilterTriggerN : null;
+        case "medianFilterTriggerN":
+            return Number.isFinite(row.medianFilterTriggerN) ? row.medianFilterTriggerN : null;
+        case "worstFilterTriggerN":
+            return Number.isFinite(row.worstFilterTriggerN) ? row.worstFilterTriggerN : null;
+        case "avgFilterTriggerDeltaFromMinN":
+            return Number.isFinite(row.avgFilterTriggerDeltaFromMinN)
+                ? row.avgFilterTriggerDeltaFromMinN
+                : null;
+        case "medianFilterTriggerDeltaFromMinN":
+            return Number.isFinite(row.medianFilterTriggerDeltaFromMinN)
+                ? row.medianFilterTriggerDeltaFromMinN
+                : null;
+        case "worstFilterTriggerDeltaFromMinN":
+            return Number.isFinite(row.worstFilterTriggerDeltaFromMinN)
+                ? row.worstFilterTriggerDeltaFromMinN
+                : null;
         case "notBetterThanSeriesShare":
             return Number.isFinite(row.notBetterThanSeriesShare)
                 ? row.notBetterThanSeriesShare
@@ -752,6 +824,12 @@ function getExportColumnWidth(colId: ColId): number {
         case "avgAmpAtMinN":
         case "medianAmpAtMinN":
         case "worstAmpAtMinN":
+        case "avgFilterTriggerN":
+        case "medianFilterTriggerN":
+        case "worstFilterTriggerN":
+        case "avgFilterTriggerDeltaFromMinN":
+        case "medianFilterTriggerDeltaFromMinN":
+        case "worstFilterTriggerDeltaFromMinN":
         case "notBetterThanSeriesShare":
         case "avgMinDeviationN":
         case "medianMinDeviationN":
@@ -822,6 +900,12 @@ function getExportColumnFormat(colId: ColId): string | null {
         case "avgDiffInStepsToEps":
         case "medianEpsSavedSteps":
         case "worstEpsSavedSteps":
+        case "avgFilterTriggerN":
+        case "medianFilterTriggerN":
+        case "worstFilterTriggerN":
+        case "avgFilterTriggerDeltaFromMinN":
+        case "medianFilterTriggerDeltaFromMinN":
+        case "worstFilterTriggerDeltaFromMinN":
         case "seriesCount":
         case "rankPrecision":
         case "rankSpeed":

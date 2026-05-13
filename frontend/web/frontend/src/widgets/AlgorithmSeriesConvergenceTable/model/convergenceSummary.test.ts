@@ -54,6 +54,20 @@ describe("convergenceSummary", () => {
         expect(stats.maxAmplitudeOrders).toBeCloseTo(-1);
     });
 
+    it("uses stored deviations when JS-rounded values equal the limit", () => {
+        const accel = buildSeriesAccel([
+            { n: 1, value: { re: 1, im: 0 }, deviation: -3.5810259903450162e-34 },
+        ]);
+
+        const points = buildConvergenceDetailPoints(accel, LIMIT);
+        const stats = computeConvergenceDevStatsFromSeriesAccel(accel, LIMIT);
+
+        expect(stats.min).toBeCloseTo(3.5810259903450162e-34);
+        expect(stats.min).not.toBe(0);
+        expect(points[0]?.err).toBeCloseTo(3.5810259903450162e-34);
+        expect(points[0]?.sign).toBe(-1);
+    });
+
     it("matches stats built from detail points", () => {
         const accel = buildSeriesAccel([
             { n: 1, value: { re: 1.2, im: 0 } },

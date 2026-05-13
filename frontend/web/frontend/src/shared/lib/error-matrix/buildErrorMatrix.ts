@@ -1,6 +1,15 @@
 import type { AccelArgs, Experiment } from "@/entities/experiment/model/experiment";
 
 export type AlgoKey = string;
+export type ErrorStep = number | null;
+
+export function errorMatrixStepKey(n: ErrorStep): string {
+    return n == null ? "unknown" : String(n);
+}
+
+export function formatErrorMatrixStep(n: ErrorStep): string {
+    return n == null ? "?" : String(n);
+}
 
 export interface AlgoInfo {
     key: AlgoKey;
@@ -18,7 +27,7 @@ export interface AlgoStats {
 
 export interface ErrorMatrix {
     /** Ось X: шаги n, на которых были ошибки */
-    nList: number[];
+    nList: ErrorStep[];
     /** Ось Y: алгоритмы (уникальность по algorithmId / accel_id) */
     algoList: AlgoInfo[];
     /**
@@ -68,7 +77,7 @@ export function buildErrorMatrixFromExperiment(
     experiment: Experiment | null,
     precision: string | null
 ): ErrorMatrix {
-    const nSet = new Set<number>();
+    const nSet = new Set<ErrorStep>();
     const algoMap = new Map<AlgoKey, AlgoInfo>();
     const cellMap = new Map<string, number>();
     const cellMessagesMap = new Map<string, string[]>();
@@ -121,10 +130,9 @@ export function buildErrorMatrixFromExperiment(
         };
 
         // агрегируем ошибки по n: считаем и тексты
-        const errorInfoByN = new Map<number, { count: number; messages: string[] }>();
+        const errorInfoByN = new Map<ErrorStep, { count: number; messages: string[] }>();
         for (const e of sa.errors ?? []) {
-            const n = e?.n;
-            if (!Number.isFinite(n)) continue;
+            const n = typeof e?.n === "number" && Number.isFinite(e.n) ? e.n : null;
 
             const rawMsg = e.message;
             const msg = typeof rawMsg === "string" ? rawMsg.trim() : String(rawMsg ?? "").trim();
@@ -158,7 +166,7 @@ export function buildErrorMatrixFromExperiment(
                 st.error += 1;
 
                 nSet.add(n);
-                const cellKey = `${algoKey}||${n}`;
+                const cellKey = `${algoKey}||${errorMatrixStepKey(n)}`;
                 const prev = cellMap.get(cellKey) ?? 0;
                 cellMap.set(cellKey, prev + errCount);
                 totalErrWithN += errCount;
@@ -177,14 +185,14 @@ export function buildErrorMatrixFromExperiment(
 
         // ошибки по n, для которых нет computed[n]
         for (const [n, info] of errorInfoByN.entries()) {
-            if (seenNs.has(n)) continue;
+            if (n != null && seenNs.has(n)) continue;
 
             const st = ensureStats();
             st.total += 1;
             st.error += 1;
 
             nSet.add(n);
-            const cellKey = `${algoKey}||${n}`;
+            const cellKey = `${algoKey}||${errorMatrixStepKey(n)}`;
             const prev = cellMap.get(cellKey) ?? 0;
             cellMap.set(cellKey, prev + info.count);
             totalErrWithN += info.count;
@@ -199,7 +207,12 @@ export function buildErrorMatrixFromExperiment(
         }
     }
 
-    const nList = Array.from(nSet).sort((a, b) => a - b);
+    const nList = Array.from(nSet).sort((a, b) => {
+        if (a == null && b == null) return 0;
+        if (a == null) return 1;
+        if (b == null) return -1;
+        return a - b;
+    });
 
     const algoList = Array.from(algoMap.values()).sort(
         (a, b) => a.algorithmName.localeCompare(b.algorithmName) || (a.m ?? 0) - (b.m ?? 0)

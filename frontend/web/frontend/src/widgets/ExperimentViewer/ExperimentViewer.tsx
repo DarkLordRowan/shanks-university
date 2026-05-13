@@ -44,7 +44,7 @@ function printSeriesAccel(sa: SeriesAccel): string {
     const errors = sa.errors
         .map(
             (e) =>
-                `    n=${e.n}, message="${e.message}"`
+                `    n=${e.n ?? "?"}, message="${e.message}"`
         )
         .join("\n");
 

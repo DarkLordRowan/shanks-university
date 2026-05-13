@@ -264,6 +264,7 @@ function ComputedTableSeriesAccel({ points }: { points: SeriesAccelComputedPoint
 
 function ErrorsTable({ errors }: { errors: SeriesAccelError[] }) {
     const { head, tail, hasGap } = previewSlices(errors, 20, 20);
+    const formatErrorN = (n: number | null) => (n == null ? "?" : n);
     return (
         <div className="overflow-auto rounded border border-border/60">
             <table className="w-full text-[11px]">
@@ -275,8 +276,8 @@ function ErrorsTable({ errors }: { errors: SeriesAccelError[] }) {
                 </thead>
                 <tbody>
                     {head.map((e, idx) => (
-                        <tr key={`h-${idx}-${e.n}`} className="border-t border-border/60">
-                            <td className="px-2 py-1 font-mono">{e.n}</td>
+                        <tr key={`h-${idx}-${e.n ?? "unknown"}`} className="border-t border-border/60">
+                            <td className="px-2 py-1 font-mono">{formatErrorN(e.n)}</td>
                             <td className="px-2 py-1 font-mono break-words">{e.message}</td>
                         </tr>
                     ))}
@@ -288,8 +289,8 @@ function ErrorsTable({ errors }: { errors: SeriesAccelError[] }) {
                         </tr>
                     )}
                     {tail.map((e, idx) => (
-                        <tr key={`t-${idx}-${e.n}`} className="border-t border-border/60">
-                            <td className="px-2 py-1 font-mono">{e.n}</td>
+                        <tr key={`t-${idx}-${e.n ?? "unknown"}`} className="border-t border-border/60">
+                            <td className="px-2 py-1 font-mono">{formatErrorN(e.n)}</td>
                             <td className="px-2 py-1 font-mono break-words">{e.message}</td>
                         </tr>
                     ))}

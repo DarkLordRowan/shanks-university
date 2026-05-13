@@ -184,7 +184,7 @@ function mapAccelComputed(raw: unknown): SeriesAccelComputedPoint[] {
     if (arr.length === 0) return [];
 
     return arr.map<SeriesAccelComputedPoint>((c, idx) => {
-        const n = idx + 1;
+        const n = toNumberOrNull(c?.n) ?? idx + 1;
 
         if (c == null) {
             return { n, value: null, deviation: null, profiling: null };
@@ -226,14 +226,45 @@ function mapSeriesComputed(raw: unknown): SeriesComputedPoint[] {
     });
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+    return value != null && typeof value === "object"
+        ? (value as Record<string, unknown>)
+        : null;
+}
+
+function firstNonEmptyString(...values: unknown[]): string | null {
+    for (const value of values) {
+        if (typeof value === "string") {
+            const trimmed = value.trim();
+            if (trimmed) return trimmed;
+            continue;
+        }
+        if (value != null && typeof value !== "object") {
+            const text = String(value).trim();
+            if (text) return text;
+        }
+    }
+    return null;
+}
+
 function mapErrors(raw: unknown): SeriesAccelError[] {
-    const arr = listLikeToArray<ParquetErrorRow>(raw);
+    const arr = listLikeToArray<ParquetErrorRow | unknown>(raw);
     if (arr.length === 0) return [];
 
-    return arr.map<SeriesAccelError>((e) => ({
-        n: toNumberOrNull(e.n) ?? 0,
-        message: typeof e.message === "string" ? e.message : String(e.message),
-    }));
+    return arr.map<SeriesAccelError>((rawError) => {
+        const e = asRecord(rawError) ?? { message: rawError };
+        const data = asRecord(e.data);
+        const n =
+            toNumberOrNull(e.n) ??
+            toNumberOrNull(data?.n) ??
+            toNumberOrNull(e.computed_index) ??
+            toNumberOrNull(data?.computed_index);
+        const message =
+            firstNonEmptyString(e.message, e.description, data?.message, data?.description) ??
+            "Unknown error";
+
+        return { n, message };
+    });
 }
 
 function mapEvents(raw: unknown): SeriesAccelEvent[] {

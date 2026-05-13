@@ -3,7 +3,12 @@
 import React, { useEffect, useMemo } from "react";
 import * as XLSX from "xlsx-js-style";
 import type { Experiment } from "@/entities/experiment/model/experiment";
-import { buildErrorMatrixFromExperiment } from "@/shared/lib/error-matrix/buildErrorMatrix";
+import {
+    buildErrorMatrixFromExperiment,
+    errorMatrixStepKey,
+    formatErrorMatrixStep,
+    type ErrorStep,
+} from "@/shared/lib/error-matrix/buildErrorMatrix";
 import {
     buildExperimentSessionStateKey,
     useInMemorySessionState,
@@ -55,7 +60,7 @@ type RowMeta = {
 };
 
 type ColMeta = {
-    n: number;
+    n: ErrorStep;
 };
 
 const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?: string }> = ({
@@ -162,7 +167,7 @@ const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?
     );
 
     const colsAxis: MatrixAxisItem<ColMeta>[] = useMemo(
-        () => nList.map((n) => ({ id: String(n), meta: { n } })),
+        () => nList.map((n) => ({ id: errorMatrixStepKey(n), meta: { n } })),
         [nList]
     );
 
@@ -271,9 +276,10 @@ const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?
 
     const renderColHeader: MatrixProps<RowMeta, ColMeta>["renderColHeader"] = (col) => {
         const n = col.meta!.n;
+        const nLabel = formatErrorMatrixStep(n);
         return (
             <div className="w-[40px] text-center text-[10px]" title={`Шаг n = ${n}`}>
-                n={n}
+                n={nLabel}
             </div>
         );
     };
@@ -281,7 +287,7 @@ const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?
     const renderCell: MatrixProps<RowMeta, ColMeta>["renderCell"] = (row, col) => {
         const algo = row.meta!;
         const n = col.meta!.n;
-        const cellKey = `${algo.key}||${n}`;
+        const cellKey = `${algo.key}||${errorMatrixStepKey(n)}`;
         const count = cellMap.get(cellKey) ?? 0;
         const msgs = cellMessagesMap.get(cellKey) ?? [];
 
@@ -337,7 +343,7 @@ const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?
                 "%ok",
                 "%err",
             ];
-            for (const c of colsAxis) header.push(`n=${c.meta?.n}`);
+            for (const c of colsAxis) header.push(`n=${formatErrorMatrixStep(c.meta?.n ?? null)}`);
 
             const data: (string | number | boolean | null)[][] = [header];
 
@@ -361,7 +367,7 @@ const ErrorMatrixTableView: React.FC<ErrorMatrixTableProps & { externalResetKey?
 
                 for (const c of colsAxis) {
                     const n = c.meta!.n;
-                    const cellKey = `${algo.key}||${n}`;
+                    const cellKey = `${algo.key}||${errorMatrixStepKey(n)}`;
                     const count = cellMap.get(cellKey) ?? 0;
                     line.push(count > 0 ? count : null);
                 }

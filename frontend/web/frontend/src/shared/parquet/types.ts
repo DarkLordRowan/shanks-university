@@ -26,14 +26,18 @@ export interface ParquetSeriesComputedPoint {
 }
 
 export interface ParquetAccelComputed {
+    n?: ParquetScalar;
     value: ParquetComplex | null;
     deviation: ParquetScalar;
     profiling?: ParquetProfiling | null;
 }
 
 export interface ParquetErrorRow {
-    n: ParquetScalar;
-    message: unknown;
+    n?: ParquetScalar;
+    computed_index?: ParquetScalar;
+    message?: unknown;
+    description?: unknown;
+    data?: Record<string, unknown> | null;
 }
 
 export interface ParquetEventRow {

@@ -252,7 +252,9 @@ function extractErrorInfo(sa: SeriesAccel | null | undefined): ErrorSideInfo {
     const errors = sa.errors ?? [];
     if (errors.length === 0) return { hasCell: true, hasErr: false, n: null };
 
-    const ns = errors.map((e) => e.n).filter((n) => typeof n === "number" && Number.isFinite(n));
+    const ns = errors
+        .map((e) => e.n)
+        .filter((n): n is number => typeof n === "number" && Number.isFinite(n));
     if (ns.length === 0) return { hasCell: true, hasErr: true, n: null };
 
     return { hasCell: true, hasErr: true, n: Math.min(...ns) };

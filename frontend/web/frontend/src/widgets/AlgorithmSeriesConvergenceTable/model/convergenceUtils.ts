@@ -60,9 +60,34 @@ export function realDiffSign(
     return 0;
 }
 
+export interface SeriesAccelPointForError {
+    n: number;
+    value: { re: number | null; im: number | null } | null;
+    deviation?: number | null;
+}
+
+export function errorNormFromPoint(
+    point: SeriesAccelPointForError,
+    limit: Complex | null
+): number | null {
+    if (hasFiniteNumber(point.deviation)) return Math.abs(point.deviation);
+    return errorNorm(point.value, limit);
+}
+
+export function realDiffSignFromPoint(
+    point: SeriesAccelPointForError,
+    limit: Complex | null
+): -1 | 0 | 1 | null {
+    if (hasFiniteNumber(point.deviation)) {
+        if (point.deviation === 0) return 0;
+        return point.deviation > 0 ? 1 : -1;
+    }
+    return realDiffSign(point.value, limit);
+}
+
 export function getPointsSortedByN(
     sa: SeriesAccel
-): { n: number; value: { re: number | null; im: number | null } | null }[] {
+): SeriesAccelPointForError[] {
     const raw = sa.computed ?? [];
     const len = raw.length;
 
@@ -124,9 +149,8 @@ export function analyzeSeriesAccelConvergence(
     const violationsNs: number[] = [];
 
     for (const p of points) {
-        const value = p.value;
-        const err = errorNorm(value, limit);
-        const sgn = realDiffSign(value, limit);
+        const err = errorNormFromPoint(p, limit);
+        const sgn = realDiffSignFromPoint(p, limit);
 
         // анализ знака
         if (sgn !== null && sgn !== 0) {
