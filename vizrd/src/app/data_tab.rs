@@ -215,6 +215,9 @@ impl DataCache {
                                 let fargs = format_args(&f.args);
                                 filter_part.push_str(&fargs);
                                 filter_part.push_str(")");
+                                if let Some((kind, limit)) = &f.trigger_after {
+                                    filter_part.push_str(&format!(" after {}\u{2265}{}", kind, limit));
+                                }
                                 format!("{} on {}", filter_part, accel_name)
                             } else {
                                 format!("Accel: {}", accel_name)

@@ -72,7 +72,7 @@ public:
      */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
 
-    static inline std::size_t how_much(const std::size_t n, const std::size_t order) {
+    inline std::size_t how_much(const std::size_t n, const std::size_t order) const {
         return n + std::size_t(2) * order + std::size_t(1);
     }
 };

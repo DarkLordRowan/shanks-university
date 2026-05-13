@@ -1,10 +1,11 @@
 use egui::WidgetText;
 
 use crate::experiment::{
-    Accel, AccelDef, AccelInstance, ExperimentConfig, Filter, FilterDef, FilterInstance, Noise,
-    NoiseDef, NoiseInstance, Series, SeriesDef, SeriesInstance,
+    Accel, AccelDef, AccelInstance, ExperimentConfig, FilterDef, FilterInstance, Noise,
+    NoiseDef, NoiseInstance, Series, SeriesDef, SeriesEntry, SeriesInstance,
 };
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 // ─── Selection state ────────────────────────────────────────────────────────
 
@@ -414,12 +415,21 @@ fn noise_def_to_select(def: &NoiseDef) -> NoiseSelect {
 
 // ─── FilterSelect ───────────────────────────────────────────────────────────
 
-pub type FilterSelect = Filter<ArgSelect>;
+/// Selectable filter with per-threshold checkboxes for trigger_after.
+pub struct FilterSelect {
+    pub filter_type: String,
+    pub args: BTreeMap<String, ArgSelect>,
+    /// Per event-kind, a block of selectable threshold values.
+    pub trigger_after: BTreeMap<crate::compute::SeriesEventKind, Block<Vec<Button<i64>>>>,
+}
 
 impl Selectable for FilterSelect {
     fn force(&mut self, val: bool) {
         for arg in &mut self.args {
             arg.1.force(val);
+        }
+        for (_, block) in &mut self.trigger_after {
+            block.force(val);
         }
     }
 
@@ -428,12 +438,17 @@ impl Selectable for FilterSelect {
         for (k, v) in &mut self.args {
             result |= v.draw(k.as_str(), ui);
         }
+        for (kind, block) in &mut self.trigger_after {
+            result |= block.draw(kind.to_string(), ui);
+        }
         result
     }
 }
 
 impl Block<FilterSelect> {
-    /// Cartesian product of args → `FilterInstance`s.
+    /// Cartesian product of args × checked trigger_after → `FilterInstance`s.
+    /// Each checked (kind, threshold) produces a separate instance.
+    /// No checked trigger_after → one instance with `trigger_after: None`.
     pub fn selected_instances(&self) -> Vec<FilterInstance> {
         let f = &self.val;
         let arg_sets: Vec<_> = f
@@ -447,11 +462,32 @@ impl Block<FilterSelect> {
             })
             .collect();
 
+        // Collect checked (kind, threshold) pairs from trigger_after UI
+        let trigger_pairs: Vec<(crate::compute::SeriesEventKind, i64)> = f
+            .trigger_after
+            .iter()
+            .flat_map(|(kind, block)| block.val.iter().filter(|b| b.0).map(|b| (*kind, b.1)))
+            .collect();
+
         cartesian_combos(&arg_sets)
             .into_iter()
-            .map(|args| FilterInstance {
-                filter_type: f.filter_type.clone(),
-                args,
+            .flat_map(|args| {
+                if trigger_pairs.is_empty() {
+                    vec![FilterInstance {
+                        filter_type: f.filter_type.clone(),
+                        args,
+                        trigger_after: None,
+                    }]
+                } else {
+                    trigger_pairs
+                        .iter()
+                        .map(|&(kind, limit)| FilterInstance {
+                            filter_type: f.filter_type.clone(),
+                            args: args.clone(),
+                            trigger_after: Some((kind, limit)),
+                        })
+                        .collect()
+                }
             })
             .collect()
     }
@@ -471,9 +507,23 @@ fn filter_def_to_select(def: &FilterDef) -> FilterSelect {
             (k.clone(), block)
         })
         .collect();
+    let trigger_after = def
+        .trigger_after
+        .iter()
+        .map(|(kind, val)| {
+            let block = Block::new(
+                val.iter_values()
+                    .into_iter()
+                    .map(|v| Button(false, v, v.to_string()))
+                    .collect(),
+            );
+            (*kind, block)
+        })
+        .collect();
     FilterSelect {
         filter_type: def.filter_type.clone(),
         args,
+        trigger_after,
     }
 }
 
@@ -612,6 +662,66 @@ impl<T: Blockable> Selectable for Block<T> {
     }
 }
 
+// ─── SeriesEntrySelect ──────────────────────────────────────────────────────
+
+/// UI selection node for a single series entry.
+/// - Registry: collapsible block with x/args (from `SeriesDef`)
+/// - File: plain checkbox — no parameters to configure
+enum SeriesEntrySelect {
+    Registry {
+        block: Block<SeriesSelect>,
+    },
+    File {
+        name: String,
+        sn: Arc<Vec<String>>,
+        checked: bool,
+    },
+}
+
+impl SeriesEntrySelect {
+    fn selected_instances(&self) -> Vec<(SeriesInstance, Option<Arc<Vec<String>>>)> {
+        match self {
+            SeriesEntrySelect::Registry { block } => block
+                .selected_instances()
+                .into_iter()
+                .map(|inst| (inst, None))
+                .collect(),
+            SeriesEntrySelect::File { name, sn, checked } => {
+                if *checked {
+                    vec![(
+                        SeriesInstance {
+                            name: name.clone(),
+                            x: serde_json::Value::Null,
+                            args: BTreeMap::new(),
+                        },
+                        Some(sn.clone()),
+                    )]
+                } else {
+                    vec![]
+                }
+            }
+        }
+    }
+}
+
+impl Selectable for SeriesEntrySelect {
+    fn force(&mut self, val: bool) {
+        match self {
+            SeriesEntrySelect::Registry { block } => block.force(val),
+            SeriesEntrySelect::File { checked, .. } => *checked = val,
+        }
+    }
+
+    fn draw(&mut self, ui: &mut egui::Ui) -> DrawResult {
+        match self {
+            SeriesEntrySelect::Registry { block } => Selectable::draw(block, ui),
+            SeriesEntrySelect::File { name, checked, .. } => {
+                draw_button(ui, checked, name.as_str())
+            }
+        }
+    }
+}
+
 // ─── AppSelection (coordinator-facing) ──────────────────────────────────────
 
 /// The set of instances the coordinator should compute.
@@ -619,7 +729,7 @@ impl<T: Blockable> Selectable for Block<T> {
 #[derive(Debug, Clone, Default)]
 pub struct AppSelection {
     pub precisions: Vec<String>,
-    pub series: Vec<SeriesInstance>,
+    pub series: Vec<(SeriesInstance, Option<Arc<Vec<String>>>)>,
     pub noises: Vec<Option<NoiseInstance>>,
     pub accels: Vec<AccelInstance>,
     pub filters: Vec<FilterInstance>,
@@ -628,7 +738,7 @@ pub struct AppSelection {
 // ─── AppSelect (UI owning tree) ──────────────────────────────────────────────
 
 pub struct AppSelect {
-    series: Block<Vec<Block<SeriesSelect>>>,
+    series: Block<Vec<SeriesEntrySelect>>,
     noise: Block<NoiseVecSelect>,
     filter: Block<Vec<Block<FilterSelect>>>,
     accel: Block<Vec<Block<AccelSelect>>>,
@@ -637,11 +747,20 @@ pub struct AppSelect {
 
 impl AppSelect {
     /// Build from an `ExperimentConfig`. All values start deselected.
-    pub fn from_config(exp: &ExperimentConfig) -> Self {
+    pub fn from_config(exp: &ExperimentConfig<SeriesEntry>) -> Self {
         let series = Block::new(
             exp.series
                 .iter()
-                .map(|def| Block::new(series_def_to_select(def)))
+                .map(|entry| match entry {
+                    SeriesEntry::Registry(d) => SeriesEntrySelect::Registry {
+                        block: Block::new(series_def_to_select(d)),
+                    },
+                    SeriesEntry::File { name, sn } => SeriesEntrySelect::File {
+                        name: name.clone(),
+                        sn: sn.clone(),
+                        checked: false,
+                    },
+                })
                 .collect(),
         );
         let noises: Vec<Block<NoiseSelect>> = exp
@@ -709,11 +828,11 @@ impl AppSelect {
 
     /// Extract the current checked state as typed instances for the coordinator.
     pub fn extract(&self) -> AppSelection {
-        let series: Vec<SeriesInstance> = self
+        let series: Vec<(SeriesInstance, Option<Arc<Vec<String>>>)> = self
             .series
             .val
             .iter()
-            .flat_map(|b| b.selected_instances())
+            .flat_map(|e| e.selected_instances())
             .collect();
 
         let mut noises: Vec<Option<NoiseInstance>> = self

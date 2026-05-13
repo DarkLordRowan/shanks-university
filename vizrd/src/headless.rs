@@ -3,7 +3,8 @@
 use crate::cache::Cache;
 use crate::compute::{self, ComputeEvent, ComputeTask, SeriesDesc};
 use crate::experiment::{
-    AccelInstance, ExperimentConfig, FilterInstance, NoiseInstance, SeriesInstance,
+    AccelInstance, ExperimentConfig, FilterInstance, NoiseInstance,
+    SeriesEntry, SeriesInstance,
 };
 use crate::export::parquet::{
     AccelExportRow, AccelFilteredData, ExportData, ParquetExporter, SeriesExportRow,
@@ -11,6 +12,7 @@ use crate::export::parquet::{
 use anyhow::Result;
 use std::collections::{BTreeSet, HashMap};
 use std::path::PathBuf;
+use std::sync::Arc;
 use tokio::sync::mpsc;
 
 /// Status reported during headless computation.
@@ -45,14 +47,18 @@ pub struct RunSummary {
 
 /// Headless batch runner.
 pub struct HeadlessRunner {
-    pub config: ExperimentConfig,
+    pub config: ExperimentConfig<SeriesEntry>,
     pub cache: Cache,
     pub export: Option<PathBuf>,
     pub progress: Option<Box<dyn FnMut(ProgressInfo) + Send>>,
 }
 
 impl HeadlessRunner {
-    pub fn new(config: ExperimentConfig, cache: Cache, export: Option<PathBuf>) -> Result<Self> {
+    pub fn new(
+        config: ExperimentConfig<SeriesEntry>,
+        cache: Cache,
+        export: Option<PathBuf>,
+    ) -> Result<Self> {
         let export = export.map(|p| {
             let now = chrono::Local::now();
             let suffix = now.format("%Y-%m-%d_%H-%M-%S").to_string();
@@ -319,7 +325,7 @@ impl HeadlessRunner {
             .unwrap_or_else(|| vec!["F64".to_string()]);
 
         // Expand all components into vectors first
-        let series_instances: Vec<SeriesInstance> =
+        let series_instances: Vec<(SeriesInstance, Option<Arc<Vec<String>>>)> =
             self.config.series.iter().flat_map(|s| s.expand()).collect();
 
         let noise_instances: Vec<NoiseInstance> =
@@ -338,18 +344,18 @@ impl HeadlessRunner {
         // Cross-product expansion
         let mut task_id = 0;
         for precision in &precisions {
-            for series in &series_instances {
+            for (series, file_sn) in &series_instances {
                 // Option 1: No noise
                 let desc = SeriesDesc {
                     precision: precision.clone(),
                     series: series.clone(),
                     noise: None,
+                    file_sn: file_sn.clone(),
                 };
                 tasks.push(ComputeTask {
                     id: (task_id, desc.clone()),
                     series: desc,
                     n_points,
-                    events: self.config.events.clone(),
                     algorithms: accel_instances.clone(),
                     filters: filter_instances.clone(),
                 });
@@ -361,12 +367,12 @@ impl HeadlessRunner {
                         precision: precision.clone(),
                         series: series.clone(),
                         noise: Some(noise.clone()),
+                        file_sn: file_sn.clone(),
                     };
                     tasks.push(ComputeTask {
                         id: (task_id, desc.clone()),
                         series: desc,
                         n_points,
-                        events: self.config.events.clone(),
                         algorithms: accel_instances.clone(),
                         filters: filter_instances.clone(),
                     });

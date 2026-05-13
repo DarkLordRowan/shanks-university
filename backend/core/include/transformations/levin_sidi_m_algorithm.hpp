@@ -39,7 +39,7 @@ namespace algos {
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class levin_sidi_m_algorithm final : public series_acceleration<T, K> {
-protected:
+public:
     using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /// Positive real parameter gamma. For theoretical stability, it often satisfies gamma >= order - 1.
@@ -50,7 +50,6 @@ protected:
     /// The specific Levin variant variant (u, t, v, etc.) used for remainder estimation.
     shanks::remainders::remainder_type remainder_type_in_use;
 
-public:
     /**
      * @brief Parameterized constructor to initialize the Levin-Sidi M-transformation.
      *
@@ -59,7 +58,7 @@ public:
      *        Valid values: u_type, t_type, v_type, t_wave_type, v_wave_type
      *        Determines the remainder estimate R_n used in the transformation
      * @param gamma_ Positive real positive parameter such that gamma >= order - 1, see p. 64
-     * [https://arxiv.org/pdf/math/0306302.pdf] Default value: 10.0. Affects the factorial terms in the transformation.
+     * [https://arxiv.org/pdf/math/0306302.pdf] Default value: 100.5. Affects the factorial terms in the transformation.
      *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 64
      */
     explicit levin_sidi_m_algorithm(
@@ -108,12 +107,22 @@ public:
      */
     void update_type(const shanks::remainders::remainder_type remainder_type_to_use);
 
+    void validate_gamma(const float_type& _gamma) const {
+        // Validate that gamma is not a natural number
+        if (_gamma < static_cast<float_type>(0.0)) throw std::domain_error("gamma cannot be negative number");
+        if (utils::helpers<float_type>::ceil(_gamma) == _gamma)
+            throw std::domain_error("gamma cannot be a natural number");
+    }
+
     /**
      * @brief Updates the gamma parameter.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param new_gamma The new gamma value.
      */
-    void update_gamma(const float_type& new_gamma) { gamma_in_use = new_gamma; }
+    void update_gamma(const float_type& new_gamma) {
+        validate_gamma(new_gamma);
+        gamma_in_use = new_gamma;
+    }
 
     /**
      * @brief Returns the descriptive name of the currently active Levin-Sidi M variant.
@@ -149,12 +158,11 @@ public:
         return series_acceleration<T, K>::acceleration_name;
     }
 
-    static inline std::size_t how_much(const std::size_t n, const std::size_t order,
-                                       const shanks::remainders::remainder_type type) {
+    inline std::size_t how_much(const std::size_t n, const std::size_t order) const {
         return n + order + std::size_t(1) +
-               std::size_t(type == shanks::remainders::remainder_type::t_wave_type ||
-                           type == shanks::remainders::remainder_type::v_type) +
-               std::size_t(2) * std::size_t(type == shanks::remainders::remainder_type::v_wave_type);
+               std::size_t(remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
+                           remainder_type_in_use == shanks::remainders::remainder_type::v_type) +
+               std::size_t(2) * std::size_t(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
     }
 };
 
@@ -194,7 +202,7 @@ void levin_sidi_m_algorithm<T, K>::update_type(const shanks::remainders::remaind
 template <AcceptedLike T, UnsignedIntLike K>
 T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Determine the total number of terms required for both Sn and an vectors
-    const std::size_t required_size = levin_sidi_m_algorithm<T, K>::how_much(n, order, remainder_type_in_use);
+    const std::size_t required_size = levin_sidi_m_algorithm<T, K>::how_much(n, order);
     const size_t precision =
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
@@ -208,8 +216,7 @@ T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const serie
     // Trivial case: order 0 returns the current partial sum
     if (order == static_cast<K>(0)) return data.Sn.at(n);
 
-    // Validate that gamma satisfies the theoretical constraint for stability: gamma >= n - 1
-    if (gamma_in_use - utils::cast<float_type, K>()(n) - utils::cast<float_type, int>()(1) <
+    if (gamma_in_use - utils::cast<float_type, K>()(order) - utils::cast<float_type, int>()(1) <
         utils::cast<float_type, int>()(0)) {
         throw std::domain_error("gamma cannot be lesser than n - 1");
     }

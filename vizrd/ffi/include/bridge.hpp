@@ -50,6 +50,7 @@ rust::Vec<rust::String> list_noise_methods();
 
 // Factory functions
 std::unique_ptr<CSeries> mk_series(rust::Str name, rust::Str precision, rust::Str params_json, size_t n, rust::Str x);
+std::unique_ptr<CSeries> mk_series_from_sn(rust::Str precision, rust::Vec<rust::String> sn, size_t n);
 std::unique_ptr<CSeries> apply_noise(const CSeries& series, rust::Str name, rust::Str params_json, uint64_t start_n);
 std::unique_ptr<CSeries> run_algo(const CSeries& series, rust::Str name, rust::Str params_json, size_t m, size_t n);
 

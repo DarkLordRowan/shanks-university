@@ -1,5 +1,5 @@
 echo "BUILDING PYSHANKS..."
-CMAKE_ARGS="-S ../bindings -B build -DSHANKS_ENABLE_PROFILING=ON"
+CMAKE_ARGS="-S ../bindings -B build -DSHANKS_ENABLE_PROFILING=OFF"
 
 echo "PREPARING FOLDER FOR PYTHON..."
 mkdir -p pyshanks

@@ -74,16 +74,32 @@ pub struct ComputeTask<T> {
     pub algorithms: Vec<AccelInstance>,
     /// Filters applied independently to every accel that triggers a stop event.
     pub filters: Vec<FilterInstance>,
-    /// Global event configuration (stop limits).
-    pub events: BTreeMap<SeriesEventKind, crate::experiment::EventConfig>,
 }
 
 /// Identifies a computed series (what was computed).
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone)]
 pub struct SeriesDesc {
     pub precision: String,
     pub series: SeriesInstance,
     pub noise: Option<NoiseInstance>,
+    /// File-based series data (number-as-string values). `None` for registry series.
+    pub file_sn: Option<Arc<Vec<String>>>,
+}
+
+impl PartialEq for SeriesDesc {
+    fn eq(&self, other: &Self) -> bool {
+        self.precision == other.precision
+            && self.series == other.series
+            && self.noise == other.noise
+    }
+}
+impl Eq for SeriesDesc {}
+impl std::hash::Hash for SeriesDesc {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.precision.hash(state);
+        self.series.hash(state);
+        self.noise.hash(state);
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -106,8 +122,6 @@ pub struct AccelDesc {
     pub accel: AccelInstance,
     /// `None` = no filter was applied (no stop event, or no filters requested).
     pub filter: Option<FilterInstance>,
-    /// The event configuration used for this computation.
-    pub events: BTreeMap<SeriesEventKind, crate::experiment::EventConfig>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Hash)]
@@ -292,7 +306,7 @@ where
                     accel.name.clone(),
                     Some(accel.m),
                     aargs.clone(),
-                    serde_json::to_string(&task.events).unwrap_or_default(),
+                    None,
                     None,
                     None,
                 )
@@ -332,7 +346,6 @@ where
                         &arr_from_blobs(&ad.result.an),
                         &arr_from_blobs(&ad.result.deviations),
                         cached_cpp_events,
-                        &task.events,
                     )
                 } else {
                     SeriesEvents::from_cached(
@@ -341,7 +354,6 @@ where
                         &arr_from_blobs(&ad.result.an),
                         &arr_from_blobs(&ad.result.deviations),
                         cached_cpp_events,
-                        &task.events,
                     )
                 };
 
@@ -353,7 +365,6 @@ where
                         desc: AccelDesc {
                             accel: accel.clone(),
                             filter: None,
-                            events: task.events.clone(),
                         },
                         data: adata,
                     })
@@ -364,6 +375,7 @@ where
         let mut filters_to_do = vec![];
         for filter in &task.filters {
             let fargs = sorted_args_json(&filter.args)?;
+            let trigger_json = serde_json::to_string(&filter.trigger_after).unwrap_or_default();
             let cached_filt = if let Some(sid) = cached_id {
                 cache
                     .accel_exists(
@@ -371,9 +383,9 @@ where
                         accel.name.clone(),
                         Some(accel.m),
                         aargs.clone(),
-                        serde_json::to_string(&task.events).unwrap_or_default(),
                         Some(filter.filter_type.clone()),
                         Some(fargs),
+                        Some(trigger_json),
                     )
                     .await
                     .unwrap_or(None)
@@ -411,7 +423,6 @@ where
                             &arr_from_blobs(&ad.result.an),
                             &arr_from_blobs(&ad.result.deviations),
                             cached_cpp_events,
-                            &task.events,
                         )
                     } else {
                         SeriesEvents::from_cached(
@@ -420,7 +431,6 @@ where
                             &arr_from_blobs(&ad.result.an),
                             &arr_from_blobs(&ad.result.deviations),
                             cached_cpp_events,
-                            &task.events,
                         )
                     };
 
@@ -432,7 +442,6 @@ where
                             desc: AccelDesc {
                                 accel: accel.clone(),
                                 filter: Some(filter.clone()),
-                                events: task.events.clone(),
                             },
                             data: adata,
                         })
@@ -460,6 +469,13 @@ where
     let s_noise_json_raw = noise_json.clone();
     let s_n_needed = task.n_points;
 
+    // Cap n_needed for file-based series (can't exceed the data length)
+    let s_n_effective = if let Some(ref sn) = task.series.file_sn {
+        s_n_needed.min(sn.len() as u64)
+    } else {
+        s_n_needed
+    };
+
     // Ensure series exists in DB for ID mapping
     let series_db_id = cache
         .upsert_series(
@@ -468,7 +484,7 @@ where
             s_x_raw.clone(),
             s_args_raw.clone(),
             s_noise_json_raw.clone(),
-            s_n_needed,
+            s_n_effective,
             None,
         )
         .await
@@ -487,11 +503,23 @@ where
         // Ensure series is computed if needed for anything in this block
         if series_short || !todo.is_empty() {
             debug!("Computing {s_name}");
-            let mut ptr =
-                match bridge::mk_series(&s_name, &s_prec, &s_args, s_n_needed as usize, &s_x) {
+
+            // Check if this is a file-based series
+            let file_sn = task.series.file_sn.clone();
+
+            let mut ptr = if let Some(ref sn_strings) = file_sn {
+                // File-based series: create from loaded values
+                match bridge::mk_series_from_sn(&s_prec, (**sn_strings).to_vec(), s_n_effective as usize) {
+                    Ok(p) => p,
+                    Err(e) => return Err(anyhow::anyhow!("mk_series_from_sn failed: {}", e)),
+                }
+            } else {
+                // Registry series: look up by name
+                match bridge::mk_series(&s_name, &s_prec, &s_args, s_n_effective as usize, &s_x) {
                     Ok(p) => p,
                     Err(e) => return Err(anyhow::anyhow!("mk_series failed: {}", e)),
-                };
+                }
+            };
             if let Some(ref ni) = s_noise {
                 let njson = match serde_json::to_string(ni) {
                     Ok(j) => j,
@@ -524,8 +552,7 @@ where
             usize,
             (
                 cxx::UniquePtr<bridge::CSeries>,
-                Option<u64>,
-                Vec<SeriesEvent>,
+                SeriesEvents,
             ),
         > = BTreeMap::new();
 
@@ -552,7 +579,7 @@ where
                     &a_inst.name,
                     &aargs_json,
                     a_inst.m as usize,
-                    s_n_needed as usize,
+                    s_n_effective as usize,
                 ) {
                     Ok(p) => p,
                     Err(e) => {
@@ -575,7 +602,6 @@ where
                             desc: AccelDesc {
                                 accel: a_inst.clone(),
                                 filter: None,
-                                events: task.events.clone(),
                             },
                             data: adata,
                         });
@@ -596,14 +622,11 @@ where
 
                 // Use SeriesEvents to calculate all events (C++ errors + derived)
                 let series_events =
-                    SeriesEvents::new(&s_dev, &sn, &an, &dev, cpp_errors, &task.events);
+                    SeriesEvents::new(&s_dev, &sn, &an, &dev, cpp_errors);
 
-                let stop_n = series_events.stop_n();
-                let processed_events = series_events.into_vec();
-
-                lazy_accels.insert(a_idx, (ptr, stop_n, processed_events));
+                lazy_accels.insert(a_idx, (ptr, series_events));
             }
-            let (ref a_ptr, stop_n, ref events) = lazy_accels[&a_idx];
+            let (ref a_ptr, ref series_events) = lazy_accels[&a_idx];
 
             if need_unfiltered {
                 let adata = AccelData {
@@ -613,14 +636,13 @@ where
                         an: arr_from_raw(bridge::get_an(&**a_ptr)),
                         deviations: arr_from_raw(bridge::get_deviation(&**a_ptr)),
                     },
-                    events: events.clone(),
+                    events: series_events.all_events().to_vec(),
                 };
                 let _ = internal_tx.blocking_send(ComputeEvent::AccelDone {
                     id: s_id.clone(),
                     desc: AccelDesc {
                         accel: a_inst.clone(),
                         filter: None,
-                        events: task.events.clone(),
                     },
                     data: adata,
                 });
@@ -628,17 +650,21 @@ where
 
             for f_inst in filters {
                 debug!("Filtering with {}", f_inst.filter_type);
+                let Some(start_n) = series_events.stop_n_for(f_inst.trigger_after) else {
+                    // Trigger threshold not reached — skip this filter
+                    continue;
+                };
                 let fargs = sorted_args_json(&f_inst.args)?;
                 let filt = match bridge::filter(
                     &**a_ptr,
                     &f_inst.filter_type,
                     &fargs,
-                    stop_n.unwrap_or(0),
+                    start_n,
                 ) {
                     Ok(arr) => arr,
                     Err(e) => {
                         let adata = AccelData {
-                            start_offset: stop_n.unwrap_or(0),
+                            start_offset: start_n,
                             result: ResultData {
                                 sn: Arr::Real(Vec::new()),
                                 an: Arr::Real(Vec::new()),
@@ -655,7 +681,6 @@ where
                             desc: AccelDesc {
                                 accel: a_inst.clone(),
                                 filter: Some(f_inst.clone()),
-                                events: task.events.clone(),
                             },
                             data: adata,
                         });
@@ -668,7 +693,7 @@ where
                 };
 
                 let adata = AccelData {
-                    start_offset: stop_n.unwrap_or(0),
+                    start_offset: start_n,
                     result: ResultData {
                         sn: arr_from_raw(filt.sn),
                         an: Arr::Real(Vec::new()),
@@ -681,7 +706,6 @@ where
                     desc: AccelDesc {
                         accel: a_inst.clone(),
                         filter: Some(f_inst.clone()),
-                        events: task.events.clone(),
                     },
                     data: adata,
                 });
@@ -714,7 +738,7 @@ where
                     let x = s_x_raw.clone();
                     let args = s_args_raw.clone();
                     let noise = s_noise_json_raw.clone();
-                    let npts = s_n_needed;
+                    let npts = s_n_effective;
                     let sum_opt = data.sum.clone();
 
                     tokio::spawn(async move {
@@ -731,7 +755,7 @@ where
                 ComputeEvent::AccelDone { desc, data, .. } => {
                     let c = cache.clone();
                     let sid = series_db_id;
-                    let npts = n_needed;
+                    let npts = s_n_effective;
                     let aname = desc.accel.name.clone();
                     let m = desc.accel.m;
                     let aargs = sorted_args_json(&desc.accel.args).unwrap_or_default();
@@ -740,6 +764,10 @@ where
                         .filter
                         .as_ref()
                         .map(|f| sorted_args_json(&f.args).unwrap_or_default());
+                    let trigger_json = desc
+                        .filter
+                        .as_ref()
+                        .map(|f| serde_json::to_string(&f.trigger_after).unwrap_or_default());
 
                     // Serialize C++ events only (derived events are recalculated on load)
                     let cached_cpp = SeriesEvents::from_events(data.events.clone()).cached_events();
@@ -761,9 +789,9 @@ where
                                 aname,
                                 Some(m),
                                 aargs,
-                                serde_json::to_string(&desc.events).unwrap_or_default(),
                                 ftype,
                                 fargs,
+                                trigger_json,
                                 npts,
                             )
                             .await

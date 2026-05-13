@@ -1069,14 +1069,12 @@ impl eframe::App for ShanksApp {
                     ui.horizontal(|ui| {
                         let cache_lock = self.plot_cache.load();
                         let (grid, last_bounds) = match self.selected_tab {
-                            PlotTab::Main | PlotTab::Data => (
-                                cache_lock.grid_main,
-                                self.main_tab_state.last_bounds,
-                            ),
-                            PlotTab::Deviation => (
-                                cache_lock.grid_deviation,
-                                self.main_tab_state.last_bounds,
-                            ),
+                            PlotTab::Main | PlotTab::Data => {
+                                (cache_lock.grid_main, self.main_tab_state.last_bounds)
+                            }
+                            PlotTab::Deviation => {
+                                (cache_lock.grid_deviation, self.main_tab_state.last_bounds)
+                            }
                         };
 
                         let exportable = grid == Grid::Normal;
@@ -1284,7 +1282,6 @@ impl eframe::App for ShanksApp {
                         self.show_an,
                         self.show_limit_lines,
                     ) {
-
                         if self.show_events {
                             for ev_group in &baked.events {
                                 let points = egui_plot::Points::new(
@@ -1452,6 +1449,7 @@ struct LineInfo {
     accel_m: Option<i64>,
     accel_args: BTreeMap<String, String>,
     filter: Option<(String, BTreeMap<String, String>)>,
+    trigger_after: Option<(String, i64)>,
     line_type: String,         // "Sn", "Accel", "Sn Dev", "Accel Dev"
     component: Option<String>, // "Mag", "Re", "Im", "Inf", "Sup"
 }
@@ -1501,6 +1499,11 @@ impl LineInfo {
                 )
             })
         });
+        let trigger_after = key
+            .accel
+            .as_ref()
+            .and_then(|a| a.filter.as_ref())
+            .and_then(|f| f.trigger_after.map(|(k, v)| (k.to_string(), v)));
 
         Self {
             precision: key.series.precision.clone(),
@@ -1512,6 +1515,7 @@ impl LineInfo {
             accel_m,
             accel_args,
             filter,
+            trigger_after,
             line_type: line_type.to_string(),
             component: component.map(|s| s.to_string()),
         }
@@ -1568,6 +1572,8 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
     let show_accel_name = varies(infos, |i| i.accel_name.clone());
     let show_accel_m = varies(infos, |i| i.accel_m);
     let show_filter_type = varies(infos, |i| i.filter.as_ref().map(|(t, _)| t.clone()));
+    let show_trigger_after = infos.iter().any(|i| i.trigger_after.is_some())
+        && varies(infos, |i| i.trigger_after.clone());
     let mut show_line_type = varies(infos, |i| i.line_type.clone());
     let mut show_component = varies(infos, |i| i.component.clone());
 
@@ -1589,6 +1595,7 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
         && diff_accel_args.is_empty()
         && !show_filter_type
         && diff_filter_args.is_empty()
+        && !show_trigger_after
         && !show_line_type
         && !show_component
     {
@@ -1672,13 +1679,18 @@ fn shorten_line_infos(infos: &[LineInfo]) -> Vec<String> {
             // Filter
             if let Some((ft, fa)) = &info.filter {
                 let a = fmt_args(fa, &diff_filter_args);
-                if show_filter_type || a.is_some() {
+                if show_filter_type || a.is_some() || show_trigger_after {
                     let mut s = "Filter".to_string();
                     if show_filter_type {
                         s += &format!(": {}", ft);
                     }
                     if let Some(a) = a {
                         s += &format!(" {}", a);
+                    }
+                    if show_trigger_after {
+                        if let Some((kind, limit)) = &info.trigger_after {
+                            s += &format!(" after {}\u{2265}{}", kind, limit);
+                        }
                     }
                     parts.push(s);
                 }

@@ -50,9 +50,7 @@ public:
      */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
 
-    static inline std::size_t how_much(const K n, const K order = utils::cast<K, int>()(0)) {
-        return n + std::size_t{2} * order + std::size_t{1};
-    }
+    inline std::size_t how_much(const K n, const K order) const { return n + std::size_t{2} * order + std::size_t{1}; }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>

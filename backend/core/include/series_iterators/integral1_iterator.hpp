@@ -6,7 +6,7 @@
 
 /**
  * @file integral1_iterator.hpp
- * @brief Iterator for the integral int_{0}^{1}ln{x}/(1-x)dx = pi^2/12
+ * @brief Iterator for the integral int_{0}^{1}ln{x}/(1-x)dx = -pi^2/12
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
@@ -14,7 +14,7 @@ namespace shanks {
 namespace series {
 
 /**
- * @brief Integral int_{0}^{1}ln{x}/(1-x)dx = pi^2/12 by trapezoid method
+ * @brief Integral int_{0}^{1}ln{x}/(1-x)dx = -pi^2/12 by trapezoid method
  *
  *
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
@@ -66,12 +66,12 @@ public:
         const T step = utils::cast<T, int>()(1, precision) / utils::cast<T, K>()(steps);
 
         constexpr auto f = [](const T& x) {
-            if (x == utils::cast<T, int>()(0)) return utils::cast<T, int>()(0);
+            //if (x == utils::cast<T, int>()(0)) return utils::cast<T, int>()(0);
             return utils::math<T>::log(x) / (utils::cast<T, int>()(1) + x);
         };
 
-        const T a = step * utils::cast<T, int>()(n);
-        const T b = a + step;
+        const T a = utils::cast<T, int>()(1) - step * utils::cast<T, int>()(n);
+        const T b = a - step;
 
         return step * (f(a) + f(b)) * utils::cast<T, double>()(0.5);
     }

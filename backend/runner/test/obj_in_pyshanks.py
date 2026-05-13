@@ -8,8 +8,27 @@ sys.path.append("../pyshanks")
 
 import pyshanks as ps
 
+suffixes : list[str] = [
+    "CF32",
+    "CF64",
+    "CFLong",
+    "CArb",
+    "CFPrec",
+    "F32",
+    "F64",
+    "FLong",
+    "Arb",
+    "FPrec",
+]
+
+def exclude(x : str) -> str:
+    for suf in suffixes:
+        x = x.replace(suf, "")
+    return x
+
+
 methods : list[str] = sorted(list(set([
-    re.search(r"(.*Algorithm[U,T,V]?~?)", x).group(1)
+    exclude(x)
     for x in dir(ps)
     if not re.search(r"(.*Algorithm[U,T,V]?~?)", x) is None
 ])))
@@ -25,11 +44,6 @@ filters : list[str] = sorted(list(set([
     for x in dir(ps)
     if not re.search(r"(.*Filter)", x) is None
 ])))
-
-suffixes : list[str] = [
-    "F32",
-    "F64"
-]
 
 if __name__ == "__main__":
 
