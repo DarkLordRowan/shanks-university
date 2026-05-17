@@ -299,6 +299,8 @@ export const ALGO_RANKING_TABLE_DOCS: DocsTableSection<AlgoRankingDocsColumnKey>
 - текущая сортировка.
 
 \`rank precision\`, \`rank speed\` и \`rank stability\` считаются не по исходным числам напрямую, а как **суммы плотных рангов** по нескольким столбцам. Поэтому маленький итоговый ранг означает, что алгоритм стабильно держится вверху сразу по нескольким критериям.
+ 
+\`rank cost\` uses the same dense-rank principle and is included in \`total rank\`.
 `,
     xlsxMarkdown: String.raw`
 Экспорт xlsx повторяет текущий срез таблицы. Если на экране применены фильтры, в файл уйдут только строки, оставшиеся после фильтрации.
@@ -787,28 +789,28 @@ $$
             "avgMinDeviationNComplexity",
             "avg min dev complexity",
             "lower",
-            "`how_much(avg min dev n) + O(k,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
+            "`how_much(avg min dev n) + O(k,n)` evaluated for the row's algorithm. This diagnostic participates through `rank cost`."
         ),
         createColumn(
             "algo-ranking",
             "medianMinDeviationNComplexity",
             "med min dev complexity",
             "lower",
-            "`how_much(med min dev n) + O(k,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
+            "`how_much(med min dev n) + O(k,n)` evaluated for the row's algorithm. This diagnostic participates through `rank cost`."
         ),
         createColumn(
             "algo-ranking",
             "avgStepsToTolComplexity",
             "avg eps complexity",
             "lower",
-            "`how_much(avg steps to eps) + O(k,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
+            "`how_much(avg steps to eps) + O(k,n)` evaluated for the row's algorithm. This diagnostic participates through `rank cost`."
         ),
         createColumn(
             "algo-ranking",
             "medianStepsToTolComplexity",
             "med eps complexity",
             "lower",
-            "`how_much(med steps to eps) + O(k,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
+            "`how_much(med steps to eps) + O(k,n)` evaluated for the row's algorithm. This diagnostic participates through `rank cost`."
         ),
         createColumn(
             "algo-ranking",
@@ -942,7 +944,7 @@ $$
             "rankCost",
             "rank cost",
             "lower",
-            "Standalone cost/complexity rank. It sums dense ranks of `avg min dev complexity`, `med min dev complexity`, `avg eps complexity`, and `med eps complexity`, then dense-ranks that sum. Lower is better. This rank does not participate in `total rank`."
+            "Cost/complexity rank. It sums dense ranks of `avg min dev complexity`, `med min dev complexity`, `avg eps complexity`, and `med eps complexity`, then dense-ranks that sum. Lower is better and this rank participates in `total rank`."
         ),
         createColumn(
             "algo-ranking",
@@ -1077,6 +1079,8 @@ $$
 $$
 \operatorname{totalRank}
 =
+\operatorname{rankCost}
+\!+\!
 \operatorname{rankPrecision}
 \!+\!
 \operatorname{rankSpeed}
@@ -1928,7 +1932,7 @@ $$
                     "algo-ranking",
                     "rankCost",
                     "rank cost",
-                    "Standalone cost/complexity rank from the four complexity score columns. Lower is better; it is not included in `total rank`.",
+                    "Cost/complexity rank from the four complexity score columns. Lower is better and it is included in `total rank`.",
                     {
                         preference: "lower",
                         refAnchorId: buildColumnAnchorId("algo-ranking", "rankCost"),
@@ -1972,7 +1976,7 @@ $$
                     "algo-ranking",
                     "totalRankScore",
                     "total rank",
-                    "Общий итоговый ранг алгоритма. Это сумма `rank precision`, `rank speed` и `rank stability`.",
+                    "Общий итоговый ранг алгоритма. Это сумма `rank cost`, `rank precision`, `rank speed` и `rank stability`.",
                     {
                         preference: "lower",
                         refAnchorId: buildColumnAnchorId("algo-ranking", "totalRankScore"),

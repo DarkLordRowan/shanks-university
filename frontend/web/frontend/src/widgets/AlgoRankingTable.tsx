@@ -519,7 +519,7 @@ const BASE_COLUMNS: ColMeta[] = [
         id: "rankCost",
         title: "rank cost",
         description:
-            "Standalone cost rank built from dense ranks of the four complexity columns. Lower is better and it is not included in total rank.",
+            "Cost rank built from dense ranks of the four complexity columns. Lower is better and it is included in total rank.",
         sortKey: "rankCost",
         defaultDir: "asc",
     },
@@ -551,7 +551,7 @@ const BASE_COLUMNS: ColMeta[] = [
         id: "totalRankScore",
         title: "total rank",
         description:
-            "Сумма rank precision + rank speed + rank stability. Это общий ранг алгоритма, меньше лучше.",
+            "Сумма rank cost + rank precision + rank speed + rank stability. Это общий ранг алгоритма, меньше лучше.",
         sortKey: "totalRankScore",
         defaultDir: "asc",
     },

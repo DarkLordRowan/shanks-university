@@ -1080,7 +1080,13 @@ describe("AlgoRankingTable.model", () => {
         expect(andersonConst?.rankCost).toBeLessThan(andersonVar?.rankCost ?? Infinity);
         expect(pj2?.rankCost).toBe(recLevin?.rankCost);
         expect(pj2?.rankCost).toBeLessThan(pj3?.rankCost ?? Infinity);
-        expect(pj2?.totalRankScore).toBe(pj3?.totalRankScore);
+        expect(pj2?.totalRankScore).toBe(
+            (pj2?.rankCost ?? 0) +
+                (pj2?.rankPrecision ?? 0) +
+                (pj2?.rankSpeed ?? 0) +
+                (pj2?.rankStability ?? 0)
+        );
+        expect(pj2?.totalRankScore).toBeLessThan(pj3?.totalRankScore ?? Infinity);
     });
 
     it("extracts Levin endings into a separate column and strips them from names", () => {

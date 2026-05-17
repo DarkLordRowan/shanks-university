@@ -2021,7 +2021,8 @@ function finalizeAlgoStats(
     );
 
     for (const stats of statsList) {
-        stats.totalRankScore = stats.rankPrecision + stats.rankSpeed + stats.rankStability;
+        stats.totalRankScore =
+            stats.rankCost + stats.rankPrecision + stats.rankSpeed + stats.rankStability;
     }
 
     statsList.sort((a, b) => {
