@@ -1,6 +1,7 @@
 import type {
     Accel,
     AccelArgs,
+    Complex,
     Experiment,
     Series,
     SeriesAccel,
@@ -13,12 +14,15 @@ export type AlgoKey = string;
 
 export interface AlgoStats {
     algoKey: AlgoKey;
+    sourceAlgorithmName: string;
     algorithmName: string;
     baseAlgorithmName: string;
+    levinEnding: "" | "U" | "T" | "T~" | "V" | "V~";
     variant: "raw" | "filtered";
     filteredMethodName: string | null;
     m: number | null;
     howMuchFormula: string;
+    complexityFormula: string;
     argsSummary: string;
     args: AccelArgs | null;
     arg1: string;
@@ -27,6 +31,7 @@ export interface AlgoStats {
 
     precision: string | null;
 
+    runCount: number;
     seriesCount: number;
     bestDeviations: number[];
     stepsToTol: number[];
@@ -36,9 +41,18 @@ export interface AlgoStats {
     relativeErrors: number[];
     ordersGains: number[];
     ampAtMinNGains: number[];
+    avgStepSeriesAmpGains: number[];
+    medianStepSeriesAmpGains: number[];
+    worstStepSeriesAmpGains: number[];
     filterTriggerNs: number[];
     filterTriggerDeltaFromMinNs: number[];
+    filterTriggerLossAmps: number[];
+    filterTriggerLossDiffs: number[];
+    divZeroFirstNs: number[];
     lastMinusMinGaps: number[];
+    divZeroRunCount: number;
+    divZeroFiniteNRunCount: number;
+    divZeroRecoveredCount: number;
     comparableSeriesMinCount: number;
     notBetterThanSeriesCount: number;
     oneSidedCount: number;
@@ -67,18 +81,36 @@ export interface AlgoStats {
     avgAmpAtMinN: number;
     medianAmpAtMinN: number;
     worstAmpAtMinN: number;
+    avgStepSeriesAmp: number;
+    medianStepSeriesAmp: number;
+    worstStepSeriesAmp: number;
     avgFilterTriggerN: number;
     medianFilterTriggerN: number;
     worstFilterTriggerN: number;
     avgFilterTriggerDeltaFromMinN: number;
     medianFilterTriggerDeltaFromMinN: number;
     worstFilterTriggerDeltaFromMinN: number;
+    avgFilterTriggerLossAmp: number;
+    medianFilterTriggerLossAmp: number;
+    worstFilterTriggerLossAmp: number;
+    avgFilterTriggerLossDiff: number;
+    medianFilterTriggerLossDiff: number;
+    worstFilterTriggerLossDiff: number;
     avgLastMinusMin: number;
     medianLastMinusMin: number;
     worstLastMinusMin: number;
     avgEpsSavedSteps: number;
     medianEpsSavedSteps: number;
     worstEpsSavedSteps: number;
+    divZeroShare: number;
+    avgDivZeroFirstN: number;
+    medianDivZeroFirstN: number;
+    worstDivZeroFirstN: number;
+    divZeroRecoveredShare: number;
+    avgMinDeviationNComplexity: number;
+    medianMinDeviationNComplexity: number;
+    avgStepsToTolComplexity: number;
+    medianStepsToTolComplexity: number;
     notBetterThanSeriesShare: number;
     oneSidedShare: number;
     bestMinShare: number;
@@ -94,8 +126,10 @@ export interface AlgoStats {
 
 export type AlgoRankingSortKey =
     | "algorithmName"
+    | "levinEnding"
     | "m"
     | "howMuchFormula"
+    | "complexityFormula"
     | "arg1"
     | "arg2"
     | "arg3"
@@ -113,12 +147,21 @@ export type AlgoRankingSortKey =
     | "avgAmpAtMinN"
     | "medianAmpAtMinN"
     | "worstAmpAtMinN"
+    | "avgStepSeriesAmp"
+    | "medianStepSeriesAmp"
+    | "worstStepSeriesAmp"
     | "avgFilterTriggerN"
     | "medianFilterTriggerN"
     | "worstFilterTriggerN"
     | "avgFilterTriggerDeltaFromMinN"
     | "medianFilterTriggerDeltaFromMinN"
     | "worstFilterTriggerDeltaFromMinN"
+    | "avgFilterTriggerLossAmp"
+    | "medianFilterTriggerLossAmp"
+    | "worstFilterTriggerLossAmp"
+    | "avgFilterTriggerLossDiff"
+    | "medianFilterTriggerLossDiff"
+    | "worstFilterTriggerLossDiff"
     | "notBetterThanSeriesShare"
     | "avgMinDeviationN"
     | "medianMinDeviationN"
@@ -134,6 +177,15 @@ export type AlgoRankingSortKey =
     | "avgEpsSavedSteps"
     | "medianEpsSavedSteps"
     | "worstEpsSavedSteps"
+    | "divZeroShare"
+    | "avgDivZeroFirstN"
+    | "medianDivZeroFirstN"
+    | "worstDivZeroFirstN"
+    | "divZeroRecoveredShare"
+    | "avgMinDeviationNComplexity"
+    | "medianMinDeviationNComplexity"
+    | "avgStepsToTolComplexity"
+    | "medianStepsToTolComplexity"
     | "bestMinShare"
     | "worstMinShare"
     | "bestLastShare"
@@ -328,6 +380,23 @@ function computeOrdersGain(algoMinDeviation: number, seriesMinDeviation: number)
     return Math.log10(seriesMinDeviation) - Math.log10(algoMinDeviation);
 }
 
+function normalizeImaginaryPart(value: number | null | undefined): number {
+    return isFiniteNumber(value) ? value : 0;
+}
+
+function computeComplexDistance(
+    a: Pick<Complex, "re" | "im"> | null | undefined,
+    b: Pick<Complex, "re" | "im"> | null | undefined
+): number {
+    if (!a || !b) return Number.POSITIVE_INFINITY;
+    if (!isFiniteNumber(a.re) || !isFiniteNumber(b.re)) return Number.POSITIVE_INFINITY;
+
+    const re = a.re - b.re;
+    const im = normalizeImaginaryPart(a.im) - normalizeImaginaryPart(b.im);
+    const distance = Math.hypot(re, im);
+    return Number.isFinite(distance) ? distance : Number.POSITIVE_INFINITY;
+}
+
 function computeLastMinusMinGap(lastDeviation: number, minDeviation: number): number {
     if (!Number.isFinite(lastDeviation) || !Number.isFinite(minDeviation)) {
         return Number.POSITIVE_INFINITY;
@@ -338,6 +407,255 @@ function computeLastMinusMinGap(lastDeviation: number, minDeviation: number): nu
     }
 
     return lastDeviation - minDeviation;
+}
+
+function computeFilterTriggerLossAmp(filterDeviation: number, minDeviation: number): number {
+    if (!Number.isFinite(filterDeviation) || !Number.isFinite(minDeviation)) {
+        return Number.POSITIVE_INFINITY;
+    }
+
+    if (almostEqual(filterDeviation, minDeviation)) return 0;
+    if (minDeviation === 0) return filterDeviation === 0 ? 0 : Number.POSITIVE_INFINITY;
+    if (filterDeviation === 0) return 0;
+
+    const loss = Math.log10(filterDeviation) - Math.log10(minDeviation);
+    return Number.isFinite(loss) ? Math.max(0, loss) : Number.POSITIVE_INFINITY;
+}
+
+function computeFilterTriggerLossDiff(filterDeviation: number, minDeviation: number): number {
+    if (!Number.isFinite(filterDeviation) || !Number.isFinite(minDeviation)) {
+        return Number.POSITIVE_INFINITY;
+    }
+
+    if (almostEqual(filterDeviation, minDeviation)) return 0;
+    return Math.max(0, filterDeviation - minDeviation);
+}
+
+type LevinEnding = "" | "U" | "T" | "T~" | "V" | "V~";
+
+function parseLevinEndingValue(value: unknown): LevinEnding {
+    const rawValue = String(value ?? "").trim().toLowerCase();
+    const token = normalizeToken(value);
+
+    if (!rawValue && !token) return "";
+
+    if (
+        ["v~", "v_tilde", "v-tilde"].includes(rawValue) ||
+        rawValue.endsWith("v~") ||
+        ["vwavetype", "vwave", "tildev", "vtilde"].includes(token) ||
+        token.endsWith("vwavetype") ||
+        token.endsWith("vwave") ||
+        token.endsWith("vtilde") ||
+        token.endsWith("tildev")
+    ) return "V~";
+
+    if (
+        ["t~", "t_tilde", "t-tilde"].includes(rawValue) ||
+        rawValue.endsWith("t~") ||
+        ["twavetype", "twave", "tildet", "ttilde"].includes(token) ||
+        token.endsWith("twavetype") ||
+        token.endsWith("twave") ||
+        token.endsWith("ttilde") ||
+        token.endsWith("tildet")
+    ) return "T~";
+
+    if (
+        ["vtype", "v"].includes(token) ||
+        token.endsWith("vtype") ||
+        token.endsWith("algorithmv") ||
+        rawValue.endsWith(" v")
+    ) {
+        return "V";
+    }
+
+    if (
+        ["ttype", "t"].includes(token) ||
+        token.endsWith("ttype") ||
+        token.endsWith("algorithmt") ||
+        rawValue.endsWith(" t")
+    ) {
+        return "T";
+    }
+
+    if (
+        ["utype", "u"].includes(token) ||
+        token.endsWith("utype") ||
+        token.endsWith("algorithmu") ||
+        rawValue.endsWith(" u")
+    ) {
+        return "U";
+    }
+
+    return "";
+}
+
+function isLevinLikeName(name: string): boolean {
+    return normalizeToken(name).includes("levin");
+}
+
+function stripLevinEndingSuffix(name: string, ending: LevinEnding): string {
+    if (!ending) return name;
+
+    const stripped = name
+        .replace(/(?:[\s_-]*(?:v[_\s-]*(?:wave|tilde)|v~|vwavetype|vwave|vtilde|vtype|v))$/i, "")
+        .replace(/(?:[\s_-]*(?:t[_\s-]*(?:wave|tilde)|t~|twavetype|twave|ttilde|ttype|t))$/i, "")
+        .replace(/(?:[\s_-]*(?:utype|u))$/i, "")
+        .trim();
+
+    return stripped || name;
+}
+
+function getLevinNameParts(
+    sourceName: string,
+    args: AccelArgs | null | undefined
+): { displayName: string; ending: LevinEnding } {
+    const isLevin = isLevinLikeName(sourceName);
+    const argEnding = parseLevinEndingValue(getArgValue(args, ["type", "remainder", "remainder_type"]));
+    const nameEnding = parseLevinEndingValue(sourceName);
+    const ending = isLevin ? (argEnding || nameEnding) : "";
+
+    return {
+        displayName: ending ? stripLevinEndingSuffix(sourceName, ending) : sourceName,
+        ending,
+    };
+}
+
+interface DivZeroRunMetrics {
+    hasDivZero: boolean;
+    firstN: number | null;
+    recovered: boolean;
+}
+
+function isDivZeroErrorMessage(message: string): boolean {
+    const compact = message.toLowerCase().replace(/[^a-z0-9\u0430-\u044f]+/g, "");
+
+    return (
+        compact.includes("divisionbyzero") ||
+        compact.includes("dividebyzero") ||
+        compact.includes("divbyzero") ||
+        compact.includes("zerodivision") ||
+        compact.includes("\u0434\u0435\u043b\u0435\u043d\u0438\u0435\u043d\u0430\u043d\u043e\u043b\u044c") ||
+        compact.includes("\u0434\u0435\u043b\u0435\u043d\u0438\u044f\u043d\u0430\u043d\u043e\u043b\u044c") ||
+        compact.includes("\u0434\u0435\u043b\u0435\u043d\u0438\u0435\u043d\u04300") ||
+        compact.includes("\u0434\u0435\u043b\u0435\u043d\u0438\u044f\u043d\u04300") ||
+        compact.includes("\u0434\u0435\u043b\u0438\u0442\u044c\u043d\u0430\u043d\u043e\u043b\u044c")
+    );
+}
+
+function isSuccessfulComputedPoint(point: SeriesAccelComputedPoint): boolean {
+    if (isFiniteNumber(point.deviation)) return true;
+    if (!point.value) return false;
+    return isFiniteNumber(point.value.re) || isFiniteNumber(point.value.im);
+}
+
+function collectDivZeroRunMetrics(seriesAccel: SeriesAccel): DivZeroRunMetrics {
+    const ns: number[] = [];
+    let hasDivZero = false;
+
+    for (const error of seriesAccel.errors ?? []) {
+        const message = typeof error.message === "string" ? error.message : String(error.message ?? "");
+        if (!isDivZeroErrorMessage(message)) continue;
+
+        hasDivZero = true;
+        if (isFiniteNumber(error.n)) ns.push(error.n);
+    }
+
+    if (ns.length === 0) {
+        return { hasDivZero, firstN: null, recovered: false };
+    }
+
+    const firstN = Math.min(...ns);
+    const lastN = Math.max(...ns);
+    const recovered = (seriesAccel.computed ?? []).some(
+        (point) => point.n > lastN && isSuccessfulComputedPoint(point)
+    );
+
+    return { hasDivZero, firstN, recovered };
+}
+
+function getComplexityFormula(
+    accel: Pick<Accel, "name" | "m" | "args"> | null | undefined
+): string {
+    return `how_much(n) + ${getComplexityOFormula(accel)}`;
+}
+
+function getArgNumber(args: AccelArgs | null | undefined, aliases: string[]): number | null {
+    const value = getArgValue(args, aliases);
+    if (typeof value === "number") return Number.isFinite(value) ? value : null;
+    if (typeof value === "string") {
+        const parsed = Number(value.trim());
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+}
+
+function getComplexityOFormula(
+    accel: Pick<Accel, "name" | "m" | "args"> | null | undefined
+): string {
+    const name = normalizeToken(accel?.name);
+
+    if (name.includes("pjalgorithm") || name.includes("pjtransformation") || name === "pj") {
+        return getArgNumber(accel?.args, ["p"]) === 2 ? "O(m^2)" : "O(m^3)";
+    }
+    if (name.includes("recdrummondd")) return "O(m)";
+    if (name.includes("reclevin")) return "O(m^2)";
+    if (name.includes("brezinskitheta")) return "O(n)";
+    if (name.includes("drummondd")) return "O(m)";
+    if (name.includes("fordsidi2") || name.includes("fordsidialgorithm2")) return "O(n)";
+    if (name.includes("levinsidim")) return "O(m*n)";
+    if (name.includes("levinsidis")) return "O(m^2)";
+    if (name.includes("levin")) return "O(m)";
+    if (name.includes("lubkinw") || name.includes("lubkin")) return "O(m*n+m^2)";
+    if (name.includes("overholt")) return "O(m^2)";
+    if (name.includes("shanks") && !name.includes("alternating")) return "O(m^3)";
+    if (name.includes("weniger")) return "O(m)";
+    if (name.includes("wynnepsilon") || name.includes("wynnrho") || name.includes("whynnrho")) {
+        return "O(m+n+m^2)";
+    }
+
+    return "O(n)";
+}
+
+function evaluateComplexityO(
+    accel: Pick<Accel, "name" | "m" | "args"> | null | undefined,
+    n: number
+): number {
+    if (!Number.isFinite(n)) return Number.POSITIVE_INFINITY;
+
+    const m = getOrder(accel);
+    const name = normalizeToken(accel?.name);
+
+    if (name.includes("pjalgorithm") || name.includes("pjtransformation") || name === "pj") {
+        return getArgNumber(accel?.args, ["p"]) === 2 ? m ** 2 : m ** 3;
+    }
+    if (name.includes("recdrummondd")) return m;
+    if (name.includes("reclevin")) return m ** 2;
+    if (name.includes("brezinskitheta")) return n;
+    if (name.includes("drummondd")) return m;
+    if (name.includes("fordsidi2") || name.includes("fordsidialgorithm2")) return n;
+    if (name.includes("levinsidim")) return m * n;
+    if (name.includes("levinsidis")) return m ** 2;
+    if (name.includes("levin")) return m;
+    if (name.includes("lubkinw") || name.includes("lubkin")) return m * n + m ** 2;
+    if (name.includes("overholt")) return m ** 2;
+    if (name.includes("shanks") && !name.includes("alternating")) return m ** 3;
+    if (name.includes("weniger")) return m;
+    if (name.includes("wynnepsilon") || name.includes("wynnrho") || name.includes("whynnrho")) {
+        return m + n + m ** 2;
+    }
+
+    return n;
+}
+
+function computeComplexityScore(
+    accel: Pick<Accel, "name" | "m" | "args"> | null | undefined,
+    n: number
+): number {
+    if (!Number.isFinite(n)) return Number.POSITIVE_INFINITY;
+
+    const requiredTerms = computeHowMuch(accel, n);
+    const operationScore = evaluateComplexityO(accel, n);
+    return requiredTerms + operationScore;
 }
 
 const FILTER_TRIGGER_NEEDLE = "filters triggered due to";
@@ -353,6 +671,24 @@ function getFirstFilterTriggerN(seriesAccel: SeriesAccel): number | null {
     }
 
     return firstN;
+}
+
+function getComputedDeviationAtN(
+    points: SeriesAccelComputedPoint[] | undefined,
+    n: number
+): number | null {
+    let result: number | null = null;
+
+    for (const point of points ?? []) {
+        if (point.n !== n) continue;
+        const deviation = point.deviation;
+        if (!isFiniteNumber(deviation)) continue;
+
+        const absDeviation = Math.abs(deviation);
+        if (result === null || absDeviation < result) result = absDeviation;
+    }
+
+    return result;
 }
 
 function normalizeToken(value: unknown): string {
@@ -704,18 +1040,23 @@ function getSeriesMinDeviationMap(
     return result;
 }
 
-function getSeriesDeviationByNMaps(
+interface SeriesPointByNMetric {
+    absDeviation: number;
+    value: Complex | null;
+}
+
+function getSeriesPointByNMaps(
     seriesList: Series[] | undefined,
     precisionFilter: string | null,
     allowedSeriesIds?: Set<string> | null
-): Map<string, Map<number, number>> {
-    const result = new Map<string, Map<number, number>>();
+): Map<string, Map<number, SeriesPointByNMetric>> {
+    const result = new Map<string, Map<number, SeriesPointByNMetric>>();
 
     for (const series of seriesList ?? []) {
         if (allowedSeriesIds && !allowedSeriesIds.has(series.id)) continue;
         if (precisionFilter && series.precision !== precisionFilter) continue;
 
-        const byN = new Map<number, number>();
+        const byN = new Map<number, SeriesPointByNMetric>();
 
         for (const point of series.computed ?? []) {
             const deviation = point.deviation;
@@ -723,8 +1064,11 @@ function getSeriesDeviationByNMaps(
 
             const absDeviation = Math.abs(deviation);
             const prev = byN.get(point.n);
-            if (prev == null || absDeviation < prev) {
-                byN.set(point.n, absDeviation);
+            if (prev == null || absDeviation < prev.absDeviation) {
+                byN.set(point.n, {
+                    absDeviation,
+                    value: point.value ?? null,
+                });
             }
         }
 
@@ -732,6 +1076,29 @@ function getSeriesDeviationByNMaps(
     }
 
     return result;
+}
+
+function collectStepSeriesAmpGains(
+    computed: SeriesAccelComputedPoint[] | undefined,
+    seriesPointByN: Map<number, SeriesPointByNMetric> | undefined,
+    accel: Pick<Accel, "name" | "m" | "args"> | null | undefined
+): number[] {
+    if (!seriesPointByN || seriesPointByN.size === 0) return [];
+
+    const gains: number[] = [];
+    for (const point of computed ?? []) {
+        const effectiveN = computeHowMuch(accel, point.n);
+        const seriesPoint = seriesPointByN.get(effectiveN);
+        if (!seriesPoint || !Number.isFinite(seriesPoint.absDeviation)) continue;
+
+        const algoMinusSeries = computeComplexDistance(point.value, seriesPoint.value);
+        if (!Number.isFinite(algoMinusSeries)) continue;
+
+        const gain = computeOrdersGain(algoMinusSeries, seriesPoint.absDeviation);
+        if (Number.isFinite(gain)) gains.push(gain);
+    }
+
+    return gains;
 }
 
 export function getVisibleArgColumnCount(stats: AlgoStats[]): number {
@@ -768,8 +1135,10 @@ function createEmptyAccumulator(): AlgoRankingStatsAccumulator {
 
 function createInitialAlgoStats(params: {
     algoKey: AlgoKey;
+    sourceAlgorithmName: string;
     algorithmName: string;
     baseAlgorithmName: string;
+    levinEnding: LevinEnding;
     variant: "raw" | "filtered";
     filteredMethodName: string | null;
     m: number | null;
@@ -780,13 +1149,20 @@ function createInitialAlgoStats(params: {
 }): AlgoStats {
     return {
         algoKey: params.algoKey,
+        sourceAlgorithmName: params.sourceAlgorithmName,
         algorithmName: params.algorithmName,
         baseAlgorithmName: params.baseAlgorithmName,
+        levinEnding: params.levinEnding,
         variant: params.variant,
         filteredMethodName: params.filteredMethodName,
         m: params.m,
         howMuchFormula: computeHowMuchFormula({
-            name: params.algorithmName,
+            name: params.sourceAlgorithmName,
+            m: params.m,
+            args: params.args,
+        }),
+        complexityFormula: getComplexityFormula({
+            name: params.sourceAlgorithmName,
             m: params.m,
             args: params.args,
         }),
@@ -798,6 +1174,7 @@ function createInitialAlgoStats(params: {
 
         precision: params.precision,
 
+        runCount: 0,
         seriesCount: 0,
         bestDeviations: [],
         stepsToTol: [],
@@ -807,9 +1184,18 @@ function createInitialAlgoStats(params: {
         relativeErrors: [],
         ordersGains: [],
         ampAtMinNGains: [],
+        avgStepSeriesAmpGains: [],
+        medianStepSeriesAmpGains: [],
+        worstStepSeriesAmpGains: [],
         filterTriggerNs: [],
         filterTriggerDeltaFromMinNs: [],
+        filterTriggerLossAmps: [],
+        filterTriggerLossDiffs: [],
+        divZeroFirstNs: [],
         lastMinusMinGaps: [],
+        divZeroRunCount: 0,
+        divZeroFiniteNRunCount: 0,
+        divZeroRecoveredCount: 0,
         comparableSeriesMinCount: 0,
         notBetterThanSeriesCount: 0,
         oneSidedCount: 0,
@@ -838,18 +1224,36 @@ function createInitialAlgoStats(params: {
         avgAmpAtMinN: Number.NEGATIVE_INFINITY,
         medianAmpAtMinN: Number.NEGATIVE_INFINITY,
         worstAmpAtMinN: Number.NEGATIVE_INFINITY,
+        avgStepSeriesAmp: Number.NEGATIVE_INFINITY,
+        medianStepSeriesAmp: Number.NEGATIVE_INFINITY,
+        worstStepSeriesAmp: Number.NEGATIVE_INFINITY,
         avgFilterTriggerN: Number.POSITIVE_INFINITY,
         medianFilterTriggerN: Number.POSITIVE_INFINITY,
         worstFilterTriggerN: Number.POSITIVE_INFINITY,
         avgFilterTriggerDeltaFromMinN: Number.POSITIVE_INFINITY,
         medianFilterTriggerDeltaFromMinN: Number.POSITIVE_INFINITY,
         worstFilterTriggerDeltaFromMinN: Number.POSITIVE_INFINITY,
+        avgFilterTriggerLossAmp: Number.POSITIVE_INFINITY,
+        medianFilterTriggerLossAmp: Number.POSITIVE_INFINITY,
+        worstFilterTriggerLossAmp: Number.POSITIVE_INFINITY,
+        avgFilterTriggerLossDiff: Number.POSITIVE_INFINITY,
+        medianFilterTriggerLossDiff: Number.POSITIVE_INFINITY,
+        worstFilterTriggerLossDiff: Number.POSITIVE_INFINITY,
         avgLastMinusMin: Number.POSITIVE_INFINITY,
         medianLastMinusMin: Number.POSITIVE_INFINITY,
         worstLastMinusMin: Number.POSITIVE_INFINITY,
         avgEpsSavedSteps: Number.NEGATIVE_INFINITY,
         medianEpsSavedSteps: Number.NEGATIVE_INFINITY,
         worstEpsSavedSteps: Number.NEGATIVE_INFINITY,
+        divZeroShare: 0,
+        avgDivZeroFirstN: Number.POSITIVE_INFINITY,
+        medianDivZeroFirstN: Number.POSITIVE_INFINITY,
+        worstDivZeroFirstN: Number.POSITIVE_INFINITY,
+        divZeroRecoveredShare: 0,
+        avgMinDeviationNComplexity: Number.POSITIVE_INFINITY,
+        medianMinDeviationNComplexity: Number.POSITIVE_INFINITY,
+        avgStepsToTolComplexity: Number.POSITIVE_INFINITY,
+        medianStepsToTolComplexity: Number.POSITIVE_INFINITY,
         notBetterThanSeriesShare: 0,
         oneSidedShare: 0,
         bestMinShare: 0,
@@ -880,7 +1284,7 @@ export function createAlgoRankingStatsAccumulator(
         precisionFilter,
         allowedSeriesIds
     );
-    const seriesDeviationByNById = getSeriesDeviationByNMaps(
+    const seriesPointByNById = getSeriesPointByNMaps(
         experiment.seriesList,
         precisionFilter,
         allowedSeriesIds
@@ -903,23 +1307,33 @@ export function createAlgoRankingStatsAccumulator(
             if (precisionFilter && seriesPrecision !== precisionFilter) return;
 
             const accel = accelById.get(seriesAccel.accel_id);
-            const algorithmName = accel?.name ?? seriesAccel.accel_id;
+            const sourceAlgorithmName = accel?.name ?? seriesAccel.accel_id;
             const baseAccel = accel?.baseAccelId ? accelById.get(accel.baseAccelId) : null;
-            const baseAlgorithmName = baseAccel?.name ?? algorithmName;
+            const sourceBaseAlgorithmName = baseAccel?.name ?? sourceAlgorithmName;
             const variant = accel?.variant ?? "raw";
             const filteredMethodName = accel?.filteredMethodName ?? null;
             const m = accel?.m ?? null;
             const args = accel?.args ?? null;
             const { summary: argsSummary, slots } = buildArgSlots(args);
+            const { displayName: algorithmName, ending: levinEnding } = getLevinNameParts(
+                sourceAlgorithmName,
+                args
+            );
+            const { displayName: baseAlgorithmName } = getLevinNameParts(
+                sourceBaseAlgorithmName,
+                baseAccel?.args ?? args
+            );
 
-            const algoKey = makeAlgoKey(algorithmName, m, args);
+            const algoKey = makeAlgoKey(sourceAlgorithmName, m, args);
 
             let stats = byAlgo.get(algoKey);
             if (!stats) {
                 stats = createInitialAlgoStats({
                     algoKey,
+                    sourceAlgorithmName,
                     algorithmName,
                     baseAlgorithmName,
+                    levinEnding,
                     variant,
                     filteredMethodName,
                     m,
@@ -931,6 +1345,19 @@ export function createAlgoRankingStatsAccumulator(
                 byAlgo.set(algoKey, stats);
             } else if (stats.precision !== seriesPrecision) {
                 stats.precision = null;
+            }
+
+            stats.runCount += 1;
+            const divZeroMetrics = collectDivZeroRunMetrics(seriesAccel);
+            if (divZeroMetrics.hasDivZero) {
+                stats.divZeroRunCount += 1;
+                if (divZeroMetrics.firstN !== null) {
+                    stats.divZeroFiniteNRunCount += 1;
+                    stats.divZeroFirstNs.push(divZeroMetrics.firstN);
+                    if (divZeroMetrics.recovered) {
+                        stats.divZeroRecoveredCount += 1;
+                    }
+                }
             }
 
             const metrics = collectDeviationMetrics(seriesAccel.computed ?? [], epsilon);
@@ -948,6 +1375,18 @@ export function createAlgoRankingStatsAccumulator(
             if (isFiniteNumber(filterTriggerN)) {
                 stats.filterTriggerNs.push(filterTriggerN);
                 stats.filterTriggerDeltaFromMinNs.push(filterTriggerN - metrics.minDeviationN);
+                const filterTriggerDeviation = getComputedDeviationAtN(
+                    seriesAccel.computed,
+                    filterTriggerN
+                );
+                if (filterTriggerDeviation !== null) {
+                    stats.filterTriggerLossAmps.push(
+                        computeFilterTriggerLossAmp(filterTriggerDeviation, metrics.minDeviation)
+                    );
+                    stats.filterTriggerLossDiffs.push(
+                        computeFilterTriggerLossDiff(filterTriggerDeviation, metrics.minDeviation)
+                    );
+                }
             }
             if (convergenceAnalysis.side === "one_sided") {
                 stats.oneSidedCount += 1;
@@ -990,11 +1429,29 @@ export function createAlgoRankingStatsAccumulator(
             }
             const effectiveMinDeviationN = computeHowMuch(accel ?? null, metrics.minDeviationN);
             const seriesDeviationAtAlgoMinN =
-                seriesDeviationByNById.get(series.id)?.get(effectiveMinDeviationN) ??
+                seriesPointByNById.get(series.id)?.get(effectiveMinDeviationN)?.absDeviation ??
                 Number.POSITIVE_INFINITY;
             if (Number.isFinite(seriesDeviationAtAlgoMinN)) {
                 stats.ampAtMinNGains.push(
                     computeOrdersGain(metrics.minDeviation, seriesDeviationAtAlgoMinN)
+                );
+            }
+            const stepSeriesAmpGains = collectStepSeriesAmpGains(
+                seriesAccel.computed,
+                seriesPointByNById.get(series.id),
+                accel ?? null
+            );
+            if (stepSeriesAmpGains.length > 0) {
+                stats.avgStepSeriesAmpGains.push(meanOrNegativeInfinity(stepSeriesAmpGains));
+                stats.medianStepSeriesAmpGains.push(
+                    medianOrValue(stepSeriesAmpGains, Number.NEGATIVE_INFINITY)
+                );
+                stats.worstStepSeriesAmpGains.push(
+                    worstOrValue(
+                        stepSeriesAmpGains,
+                        "higher-is-better",
+                        Number.NEGATIVE_INFINITY
+                    )
                 );
             }
             stats.lastMinusMinGaps.push(
@@ -1024,12 +1481,17 @@ function finalizeAlgoStats(
 ): AlgoStats[] {
     const statsList: AlgoStats[] = [];
     for (const stats of byAlgo.values()) {
-        if (stats.seriesCount === 0) continue;
+        if (stats.seriesCount === 0 && stats.divZeroRunCount === 0) continue;
 
         const finiteSteps = stats.stepsToTol.filter((value) => Number.isFinite(value));
         const finiteEpsSavedSteps = stats.epsSavedSteps.filter((value) =>
             Number.isFinite(value)
         );
+        const accelForStats = {
+            name: stats.sourceAlgorithmName,
+            m: stats.m,
+            args: stats.args,
+        };
 
         stats.avgBestDeviation = meanOrInfinity(stats.bestDeviations);
         stats.medianBestDeviation = medianOrValue(
@@ -1084,6 +1546,16 @@ function finalizeAlgoStats(
             "higher-is-better",
             Number.NEGATIVE_INFINITY
         );
+        stats.avgStepSeriesAmp = meanOrNegativeInfinity(stats.avgStepSeriesAmpGains);
+        stats.medianStepSeriesAmp = medianOrValue(
+            stats.medianStepSeriesAmpGains,
+            Number.NEGATIVE_INFINITY
+        );
+        stats.worstStepSeriesAmp = worstOrValue(
+            stats.worstStepSeriesAmpGains,
+            "higher-is-better",
+            Number.NEGATIVE_INFINITY
+        );
         stats.avgFilterTriggerN = meanOrInfinity(stats.filterTriggerNs);
         stats.medianFilterTriggerN = medianOrValue(
             stats.filterTriggerNs,
@@ -1106,6 +1578,26 @@ function finalizeAlgoStats(
             "lower-is-better",
             Number.POSITIVE_INFINITY
         );
+        stats.avgFilterTriggerLossAmp = meanOrInfinity(stats.filterTriggerLossAmps);
+        stats.medianFilterTriggerLossAmp = medianOrValue(
+            stats.filterTriggerLossAmps,
+            Number.POSITIVE_INFINITY
+        );
+        stats.worstFilterTriggerLossAmp = worstOrValue(
+            stats.filterTriggerLossAmps,
+            "lower-is-better",
+            Number.POSITIVE_INFINITY
+        );
+        stats.avgFilterTriggerLossDiff = meanOrInfinity(stats.filterTriggerLossDiffs);
+        stats.medianFilterTriggerLossDiff = medianOrValue(
+            stats.filterTriggerLossDiffs,
+            Number.POSITIVE_INFINITY
+        );
+        stats.worstFilterTriggerLossDiff = worstOrValue(
+            stats.filterTriggerLossDiffs,
+            "lower-is-better",
+            Number.POSITIVE_INFINITY
+        );
         stats.avgLastMinusMin = meanOrInfinity(stats.lastMinusMinGaps);
         stats.medianLastMinusMin = medianOrValue(
             stats.lastMinusMinGaps,
@@ -1125,6 +1617,38 @@ function finalizeAlgoStats(
             finiteEpsSavedSteps,
             "higher-is-better",
             Number.NEGATIVE_INFINITY
+        );
+        stats.divZeroShare =
+            stats.runCount > 0 ? stats.divZeroRunCount / stats.runCount : 0;
+        stats.avgDivZeroFirstN = meanOrInfinity(stats.divZeroFirstNs);
+        stats.medianDivZeroFirstN = medianOrValue(
+            stats.divZeroFirstNs,
+            Number.POSITIVE_INFINITY
+        );
+        stats.worstDivZeroFirstN = worstOrValue(
+            stats.divZeroFirstNs,
+            "lower-is-better",
+            Number.POSITIVE_INFINITY
+        );
+        stats.divZeroRecoveredShare =
+            stats.divZeroFiniteNRunCount > 0
+                ? stats.divZeroRecoveredCount / stats.divZeroFiniteNRunCount
+                : 0;
+        stats.avgMinDeviationNComplexity = computeComplexityScore(
+            accelForStats,
+            stats.avgMinDeviationN
+        );
+        stats.medianMinDeviationNComplexity = computeComplexityScore(
+            accelForStats,
+            stats.medianMinDeviationN
+        );
+        stats.avgStepsToTolComplexity = computeComplexityScore(
+            accelForStats,
+            stats.avgStepsToTol
+        );
+        stats.medianStepsToTolComplexity = computeComplexityScore(
+            accelForStats,
+            stats.medianStepsToTol
         );
         stats.notBetterThanSeriesShare =
             stats.comparableSeriesMinCount > 0
@@ -1272,6 +1796,16 @@ function finalizeAlgoStats(
         (stats) => stats.worstAmpAtMinN,
         "desc"
     );
+    const medianStepSeriesAmpRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianStepSeriesAmp,
+        "desc"
+    );
+    const worstStepSeriesAmpRanks = buildRankMap(
+        statsList,
+        (stats) => stats.worstStepSeriesAmp,
+        "desc"
+    );
     const medianFilterTriggerNRanks = buildRankMap(
         statsList,
         (stats) => stats.medianFilterTriggerN,
@@ -1290,6 +1824,16 @@ function finalizeAlgoStats(
     const worstFilterTriggerDeltaFromMinNRanks = buildRankMap(
         statsList,
         (stats) => stats.worstFilterTriggerDeltaFromMinN,
+        "asc"
+    );
+    const medianFilterTriggerLossAmpRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianFilterTriggerLossAmp,
+        "asc"
+    );
+    const worstFilterTriggerLossAmpRanks = buildRankMap(
+        statsList,
+        (stats) => stats.worstFilterTriggerLossAmp,
         "asc"
     );
     const medianLastMinusMinRanks = buildRankMap(
@@ -1320,6 +1864,8 @@ function finalizeAlgoStats(
                 (worstRelativeErrorRanks.get(stats.algoKey) ?? 0) +
                 (medianOrdersGainRanks.get(stats.algoKey) ?? 0) +
                 (worstOrdersGainRanks.get(stats.algoKey) ?? 0) +
+                (medianStepSeriesAmpRanks.get(stats.algoKey) ?? 0) +
+                (worstStepSeriesAmpRanks.get(stats.algoKey) ?? 0) +
                 (notBetterThanSeriesRanks.get(stats.algoKey) ?? 0) +
                 (bestMinShareRanks.get(stats.algoKey) ?? 0) +
                 (worstMinShareRanks.get(stats.algoKey) ?? 0)
@@ -1338,7 +1884,9 @@ function finalizeAlgoStats(
                 (medianFilterTriggerNRanks.get(stats.algoKey) ?? 0) +
                 (worstFilterTriggerNRanks.get(stats.algoKey) ?? 0) +
                 (medianFilterTriggerDeltaFromMinNRanks.get(stats.algoKey) ?? 0) +
-                (worstFilterTriggerDeltaFromMinNRanks.get(stats.algoKey) ?? 0)
+                (worstFilterTriggerDeltaFromMinNRanks.get(stats.algoKey) ?? 0) +
+                (medianFilterTriggerLossAmpRanks.get(stats.algoKey) ?? 0) +
+                (worstFilterTriggerLossAmpRanks.get(stats.algoKey) ?? 0)
         );
 
         stabilityScores.set(
@@ -1404,6 +1952,34 @@ function finalizeAlgoStats(
 
         const worstGainAtMinNDiff = compareNumbers(a.worstAmpAtMinN, b.worstAmpAtMinN, "desc");
         if (worstGainAtMinNDiff !== 0) return worstGainAtMinNDiff;
+
+        const stepSeriesAmpDiff = compareNumbers(
+            a.medianStepSeriesAmp,
+            b.medianStepSeriesAmp,
+            "desc"
+        );
+        if (stepSeriesAmpDiff !== 0) return stepSeriesAmpDiff;
+
+        const worstStepSeriesAmpDiff = compareNumbers(
+            a.worstStepSeriesAmp,
+            b.worstStepSeriesAmp,
+            "desc"
+        );
+        if (worstStepSeriesAmpDiff !== 0) return worstStepSeriesAmpDiff;
+
+        const filterLossDiff = compareNumbers(
+            a.medianFilterTriggerLossAmp,
+            b.medianFilterTriggerLossAmp,
+            "asc"
+        );
+        if (filterLossDiff !== 0) return filterLossDiff;
+
+        const worstFilterLossDiff = compareNumbers(
+            a.worstFilterTriggerLossAmp,
+            b.worstFilterTriggerLossAmp,
+            "asc"
+        );
+        if (worstFilterLossDiff !== 0) return worstFilterLossDiff;
 
         const relativeDiff = compareNumbers(a.medianRelativeError, b.medianRelativeError, "asc");
         if (relativeDiff !== 0) return relativeDiff;

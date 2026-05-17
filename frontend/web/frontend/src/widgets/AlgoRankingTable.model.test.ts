@@ -389,6 +389,7 @@ describe("AlgoRankingTable.model", () => {
             accelList: [
                 { id: "a-1", name: "OneSided", m: 2, args: { alpha: 1 } },
                 { id: "a-2", name: "TwoSided", m: 2, args: { alpha: 2 } },
+                { id: "a-3", name: "Static", m: 2, args: { alpha: 3 } },
             ],
             seriesAccelList: [
                 {
@@ -411,6 +412,16 @@ describe("AlgoRankingTable.model", () => {
                     errors: [],
                     events: [],
                 },
+                {
+                    series_id: "s-1",
+                    accel_id: "a-3",
+                    computed: [
+                        { n: 1, value: { re: 0.9, im: 0 }, deviation: -1e-1 },
+                        { n: 2, value: { re: 0.9, im: 0 }, deviation: -1e-1 },
+                    ],
+                    errors: [],
+                    events: [],
+                },
             ],
         };
 
@@ -418,6 +429,7 @@ describe("AlgoRankingTable.model", () => {
 
         expect(stats.find((item) => item.algorithmName === "OneSided")?.oneSidedShare).toBe(1);
         expect(stats.find((item) => item.algorithmName === "TwoSided")?.oneSidedShare).toBe(0);
+        expect(stats.find((item) => item.algorithmName === "Static")?.oneSidedShare).toBe(1);
     });
 
     it("computes amp at the first n where the algorithm reaches its minimum", () => {
@@ -514,6 +526,66 @@ describe("AlgoRankingTable.model", () => {
         expect(better?.rankSpeed).toBeLessThan(worse?.rankSpeed ?? Infinity);
     });
 
+    it("computes per-step series-vs-algo amp and uses median/worst in rank precision", () => {
+        const experiment: Experiment = {
+            id: "exp-step-series-amp",
+            seriesList: [
+                {
+                    id: "s-1",
+                    name: "S1",
+                    precision: "double",
+                    args: { x: 1 },
+                    limit: { re: 1, im: 0 },
+                    computed: [
+                        { n: 1, value: { re: 0.9, im: 0 }, deviation: -1e-1 },
+                        { n: 2, value: { re: 0.99, im: 0 }, deviation: -1e-2 },
+                        { n: 3, value: { re: 0.999, im: 0 }, deviation: -1e-3 },
+                    ],
+                },
+            ],
+            accelList: [
+                { id: "a-close", name: "CloseToSeries", m: 0, args: null },
+                { id: "a-far", name: "FarFromSeries", m: 0, args: null },
+            ],
+            seriesAccelList: [
+                {
+                    series_id: "s-1",
+                    accel_id: "a-close",
+                    computed: [
+                        { n: 1, value: { re: 0.901, im: 0 }, deviation: 1e-4 },
+                        { n: 2, value: { re: 0.9901, im: 0 }, deviation: 1e-4 },
+                        { n: 3, value: { re: 0.99901, im: 0 }, deviation: 1e-4 },
+                    ],
+                    errors: [],
+                    events: [],
+                },
+                {
+                    series_id: "s-1",
+                    accel_id: "a-far",
+                    computed: [
+                        { n: 1, value: { re: 0.91, im: 0 }, deviation: 1e-4 },
+                        { n: 2, value: { re: 1, im: 0 }, deviation: 1e-4 },
+                        { n: 3, value: { re: 1.009, im: 0 }, deviation: 1e-4 },
+                    ],
+                    errors: [],
+                    events: [],
+                },
+            ],
+        };
+
+        const stats = buildAlgoStatsFromExperiment(experiment, 1e-5, null);
+        const close = stats.find((item) => item.algorithmName === "CloseToSeries");
+        const far = stats.find((item) => item.algorithmName === "FarFromSeries");
+
+        expect(close?.avgStepSeriesAmp).toBeCloseTo(2);
+        expect(close?.medianStepSeriesAmp).toBeCloseTo(2);
+        expect(close?.worstStepSeriesAmp).toBeCloseTo(2);
+        expect(far?.avgStepSeriesAmp).toBeCloseTo(0);
+        expect(far?.medianStepSeriesAmp).toBeCloseTo(0);
+        expect(far?.worstStepSeriesAmp).toBeCloseTo(-1);
+        expect(close?.rankPrecision).toBeLessThan(far?.rankPrecision ?? Infinity);
+    });
+
     it("uses filter-trigger n and delta in rank speed", () => {
         const experiment: Experiment = {
             id: "exp-filter-trigger-speed",
@@ -542,7 +614,7 @@ describe("AlgoRankingTable.model", () => {
                     computed: [
                         { n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 },
                         { n: 2, value: { re: 0, im: 0 }, deviation: 1e-6 },
-                        { n: 4, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                        { n: 4, value: { re: 0, im: 0 }, deviation: 1e-4 },
                     ],
                     errors: [],
                     events: [
@@ -573,9 +645,83 @@ describe("AlgoRankingTable.model", () => {
 
         expect(triggered?.medianFilterTriggerN).toBe(4);
         expect(triggered?.medianFilterTriggerDeltaFromMinN).toBe(2);
+        expect(triggered?.medianFilterTriggerLossAmp).toBeCloseTo(2);
+        expect(triggered?.medianFilterTriggerLossDiff).toBeCloseTo(9.9e-5);
         expect(missing?.medianFilterTriggerN).toBe(Number.POSITIVE_INFINITY);
         expect(missing?.medianFilterTriggerDeltaFromMinN).toBe(Number.POSITIVE_INFINITY);
+        expect(missing?.medianFilterTriggerLossAmp).toBe(Number.POSITIVE_INFINITY);
+        expect(missing?.medianFilterTriggerLossDiff).toBe(Number.POSITIVE_INFINITY);
         expect(triggered?.rankSpeed).toBeLessThan(missing?.rankSpeed ?? Infinity);
+    });
+
+    it("uses filter-trigger loss amp in rank speed", () => {
+        const experiment: Experiment = {
+            id: "exp-filter-loss-amp-speed",
+            seriesList: [
+                {
+                    id: "s-1",
+                    name: "S1",
+                    precision: "double",
+                    args: { x: 1 },
+                    limit: { re: 1, im: 0 },
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-3 },
+                        { n: 3, value: { re: 0, im: 0 }, deviation: 1e-4 },
+                    ],
+                },
+            ],
+            accelList: [
+                { id: "a-good-stop", name: "GoodStop", m: 0, args: null },
+                { id: "a-bad-stop", name: "BadStop", m: 0, args: null },
+            ],
+            seriesAccelList: [
+                {
+                    series_id: "s-1",
+                    accel_id: "a-good-stop",
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                        { n: 3, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                    ],
+                    errors: [],
+                    events: [
+                        {
+                            n: 3,
+                            name: "Filters triggered due to plateau",
+                            description: "",
+                        },
+                    ],
+                },
+                {
+                    series_id: "s-1",
+                    accel_id: "a-bad-stop",
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 2, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                        { n: 3, value: { re: 0, im: 0 }, deviation: 1e-3 },
+                    ],
+                    errors: [],
+                    events: [
+                        {
+                            n: 3,
+                            name: "",
+                            description: "Filters triggered due to growth",
+                        },
+                    ],
+                },
+            ],
+        };
+
+        const stats = buildAlgoStatsFromExperiment(experiment, 1e-7, null);
+        const good = stats.find((item) => item.algorithmName === "GoodStop");
+        const bad = stats.find((item) => item.algorithmName === "BadStop");
+
+        expect(good?.medianFilterTriggerLossAmp).toBe(0);
+        expect(bad?.medianFilterTriggerLossAmp).toBeCloseTo(3);
+        expect(good?.medianFilterTriggerLossDiff).toBe(0);
+        expect(bad?.medianFilterTriggerLossDiff).toBeCloseTo(9.99e-4);
+        expect(good?.rankSpeed).toBeLessThan(bad?.rankSpeed ?? Infinity);
     });
 
     it("uses how_much(n_min) when comparing series deviation at algorithm minimum", () => {
@@ -707,5 +853,208 @@ describe("AlgoRankingTable.model", () => {
         expect(noReach?.avgEpsSavedSteps).toBe(Number.NEGATIVE_INFINITY);
         expect(noReach?.medianEpsSavedSteps).toBe(Number.NEGATIVE_INFINITY);
         expect(noReach?.worstEpsSavedSteps).toBe(Number.NEGATIVE_INFINITY);
+    });
+
+    it("computes div-by-zero first n, share, and recovered share", () => {
+        const experiment: Experiment = {
+            id: "exp-div-zero",
+            seriesList: [
+                {
+                    id: "s-1",
+                    name: "S1",
+                    precision: "double",
+                    args: null,
+                    limit: { re: 1, im: 0 },
+                    computed: [{ n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 }],
+                },
+                {
+                    id: "s-2",
+                    name: "S2",
+                    precision: "double",
+                    args: null,
+                    limit: { re: 1, im: 0 },
+                    computed: [{ n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 }],
+                },
+                {
+                    id: "s-3",
+                    name: "S3",
+                    precision: "double",
+                    args: null,
+                    limit: { re: 1, im: 0 },
+                    computed: [{ n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 }],
+                },
+            ],
+            accelList: [{ id: "a-div0", name: "DivZeroAlgo", m: 0, args: null }],
+            seriesAccelList: [
+                {
+                    series_id: "s-1",
+                    accel_id: "a-div0",
+                    computed: [
+                        { n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 },
+                        { n: 8, value: { re: 0, im: 0 }, deviation: 1e-3 },
+                    ],
+                    errors: [
+                        { n: 5, message: "division by zero" },
+                        { n: 7, message: "ZeroDivisionError: division by zero" },
+                    ],
+                    events: [],
+                },
+                {
+                    series_id: "s-2",
+                    accel_id: "a-div0",
+                    computed: [{ n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 }],
+                    errors: [
+                        { n: 3, message: "деление на 0" },
+                        { n: 4, message: "overflow" },
+                    ],
+                    events: [],
+                },
+                {
+                    series_id: "s-3",
+                    accel_id: "a-div0",
+                    computed: [{ n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 }],
+                    errors: [],
+                    events: [],
+                },
+            ],
+        };
+
+        const stats = buildAlgoStatsFromExperiment(experiment, 1e-4, null);
+        const div0 = stats.find((item) => item.algorithmName === "DivZeroAlgo");
+
+        expect(div0?.runCount).toBe(3);
+        expect(div0?.divZeroShare).toBeCloseTo(2 / 3);
+        expect(div0?.avgDivZeroFirstN).toBe(4);
+        expect(div0?.medianDivZeroFirstN).toBe(4);
+        expect(div0?.worstDivZeroFirstN).toBe(5);
+        expect(div0?.divZeroRecoveredShare).toBeCloseTo(1 / 2);
+    });
+
+    it("computes complexity scores from required terms plus the algorithm O formula", () => {
+        const seriesList = [
+            {
+                id: "s-1",
+                name: "S1",
+                precision: "double",
+                args: null,
+                limit: { re: 1, im: 0 },
+                computed: [{ n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 }],
+            },
+            {
+                id: "s-2",
+                name: "S2",
+                precision: "double",
+                args: null,
+                limit: { re: 1, im: 0 },
+                computed: [{ n: 2, value: { re: 0, im: 0 }, deviation: 1e-2 }],
+            },
+        ];
+        const accelList = [
+            { id: "a-brezinski", name: "BrezinskiThetaAlgorithm", m: 3, args: null },
+            { id: "a-lubkin", name: "LubkinWAlgorithm", m: 3, args: null },
+            { id: "a-wynn", name: "WynnEpsilon1Algorithm", m: 3, args: null },
+            { id: "a-pj2", name: "pJAlgorithm", m: 3, args: { p: 2 } },
+            { id: "a-pj3", name: "pJAlgorithm", m: 3, args: { p: 3 } },
+        ];
+        const seriesAccelList = accelList.flatMap((accel) => [
+            {
+                series_id: "s-1",
+                accel_id: accel.id,
+                computed: [
+                    { n: 1, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                    { n: 2, value: { re: 0, im: 0 }, deviation: 1e-5 },
+                ],
+                errors: [],
+                events: [],
+            },
+            {
+                series_id: "s-2",
+                accel_id: accel.id,
+                computed: [
+                    { n: 1, value: { re: 0, im: 0 }, deviation: 1e-5 },
+                    { n: 2, value: { re: 0, im: 0 }, deviation: 1e-6 },
+                ],
+                errors: [],
+                events: [],
+            },
+        ]);
+        const experiment: Experiment = {
+            id: "exp-complexity",
+            seriesList,
+            accelList,
+            seriesAccelList,
+        };
+
+        const stats = buildAlgoStatsFromExperiment(experiment, 1e-6, null);
+        const byKey = new Map(stats.map((item) => [item.algoKey, item]));
+        const brezinski = stats.find((item) => item.algorithmName === "BrezinskiThetaAlgorithm");
+        const lubkin = stats.find((item) => item.algorithmName === "LubkinWAlgorithm");
+        const wynn = stats.find((item) => item.algorithmName === "WynnEpsilon1Algorithm");
+        const pj2 = byKey.get("pJAlgorithm|m=3|p=2");
+        const pj3 = byKey.get("pJAlgorithm|m=3|p=3");
+
+        expect(brezinski?.complexityFormula).toBe("how_much(n) + O(n)");
+        expect(lubkin?.complexityFormula).toBe("how_much(n) + O(m*n+m^2)");
+        expect(wynn?.complexityFormula).toBe("how_much(n) + O(m+n+m^2)");
+        expect(pj2?.complexityFormula).toBe("how_much(n) + O(m^2)");
+        expect(pj3?.complexityFormula).toBe("how_much(n) + O(m^3)");
+
+        expect(brezinski?.avgMinDeviationN).toBe(1.5);
+        expect(brezinski?.avgMinDeviationNComplexity).toBeCloseTo(7.5);
+        expect(lubkin?.avgMinDeviationNComplexity).toBeCloseTo(24.5);
+        expect(wynn?.avgMinDeviationNComplexity).toBeCloseTo(21.5);
+        expect(pj2?.avgMinDeviationNComplexity).toBeCloseTo(14);
+        expect(pj3?.avgMinDeviationNComplexity).toBeCloseTo(32);
+        expect(pj2?.totalRankScore).toBe(pj3?.totalRankScore);
+    });
+
+    it("extracts Levin endings into a separate column and strips them from names", () => {
+        const accelList = [
+            { id: "a-u", name: "LevinAlgorithmU", m: 2, args: null },
+            { id: "a-t", name: "Levin-Sidi S Algorithm", m: 2, args: { type: "t" } },
+            { id: "a-t-wave", name: "LevinSidiSAlgorithmT~", m: 2, args: null },
+            { id: "a-v", name: "LevinSidiMAlgorithmVType", m: 2, args: null },
+            { id: "a-v-wave", name: "recLevinSidiSAlgorithmVWaveType", m: 2, args: null },
+            { id: "a-other", name: "DrummondDAlgorithmV", m: 2, args: null },
+        ];
+        const experiment: Experiment = {
+            id: "exp-levin-ending",
+            seriesList: [
+                {
+                    id: "s-1",
+                    name: "S1",
+                    precision: "double",
+                    args: null,
+                    limit: { re: 1, im: 0 },
+                    computed: [{ n: 1, value: { re: 0, im: 0 }, deviation: 1e-2 }],
+                },
+            ],
+            accelList,
+            seriesAccelList: accelList.map((accel) => ({
+                series_id: "s-1",
+                accel_id: accel.id,
+                computed: [{ n: 1, value: { re: 0, im: 0 }, deviation: 1e-3 }],
+                errors: [],
+                events: [],
+            })),
+        };
+
+        const stats = buildAlgoStatsFromExperiment(experiment, 1e-4, null);
+        const bySourceName = new Map(stats.map((item) => [item.sourceAlgorithmName, item]));
+
+        expect(bySourceName.get("LevinAlgorithmU")?.levinEnding).toBe("U");
+        expect(bySourceName.get("LevinAlgorithmU")?.algorithmName).toBe("LevinAlgorithm");
+        expect(bySourceName.get("Levin-Sidi S Algorithm")?.levinEnding).toBe("T");
+        expect(bySourceName.get("Levin-Sidi S Algorithm")?.algorithmName).toBe("Levin-Sidi S Algorithm");
+        expect(bySourceName.get("LevinSidiSAlgorithmT~")?.levinEnding).toBe("T~");
+        expect(bySourceName.get("LevinSidiSAlgorithmT~")?.algorithmName).toBe("LevinSidiSAlgorithm");
+        expect(bySourceName.get("LevinSidiMAlgorithmVType")?.levinEnding).toBe("V");
+        expect(bySourceName.get("LevinSidiMAlgorithmVType")?.algorithmName).toBe("LevinSidiMAlgorithm");
+        expect(bySourceName.get("recLevinSidiSAlgorithmVWaveType")?.levinEnding).toBe("V~");
+        expect(bySourceName.get("recLevinSidiSAlgorithmVWaveType")?.algorithmName).toBe(
+            "recLevinSidiSAlgorithm"
+        );
+        expect(bySourceName.get("DrummondDAlgorithmV")?.levinEnding).toBe("");
+        expect(bySourceName.get("DrummondDAlgorithmV")?.algorithmName).toBe("DrummondDAlgorithmV");
     });
 });

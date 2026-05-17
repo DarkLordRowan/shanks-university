@@ -10,8 +10,10 @@ export type DocsColumnPreference = "lower" | "higher" | "neutral";
 export type AlgoRankingDocsColumnKey =
     | "precision"
     | "m"
+    | "levinEnding"
     | "args"
     | "howMuchFormula"
+    | "complexityFormula"
     | "seriesCount"
     | "avgBestDeviation"
     | "medianBestDeviation"
@@ -25,12 +27,21 @@ export type AlgoRankingDocsColumnKey =
     | "avgAmpAtMinN"
     | "medianAmpAtMinN"
     | "worstAmpAtMinN"
+    | "avgStepSeriesAmp"
+    | "medianStepSeriesAmp"
+    | "worstStepSeriesAmp"
     | "avgFilterTriggerN"
     | "medianFilterTriggerN"
     | "worstFilterTriggerN"
     | "avgFilterTriggerDeltaFromMinN"
     | "medianFilterTriggerDeltaFromMinN"
     | "worstFilterTriggerDeltaFromMinN"
+    | "avgFilterTriggerLossAmp"
+    | "medianFilterTriggerLossAmp"
+    | "worstFilterTriggerLossAmp"
+    | "avgFilterTriggerLossDiff"
+    | "medianFilterTriggerLossDiff"
+    | "worstFilterTriggerLossDiff"
     | "notBetterThanSeriesShare"
     | "avgMinDeviationN"
     | "medianMinDeviationN"
@@ -42,10 +53,18 @@ export type AlgoRankingDocsColumnKey =
     | "medianStepsToTol"
     | "worstStepsToTol"
     | "avgEpsSavedSteps"
-    | "avgDiffInStepsToEps"
     | "medianEpsSavedSteps"
     | "worstEpsSavedSteps"
+    | "avgMinDeviationNComplexity"
+    | "medianMinDeviationNComplexity"
+    | "avgStepsToTolComplexity"
+    | "medianStepsToTolComplexity"
     | "fracReachedTol"
+    | "divZeroShare"
+    | "avgDivZeroFirstN"
+    | "medianDivZeroFirstN"
+    | "worstDivZeroFirstN"
+    | "divZeroRecoveredShare"
     | "oneSidedShare"
     | "bestMinShare"
     | "worstMinShare"
@@ -315,6 +334,13 @@ export const ALGO_RANKING_TABLE_DOCS: DocsTableSection<AlgoRankingDocsColumnKey>
                 "**XLSX:** числовое значение `m`, если оно задано.",
             ].join("\n")
         ),
+        createColumn(
+            "algo-ranking",
+            "levinEnding",
+            "Levin end",
+            "neutral",
+            "Levin-family ending extracted into a separate column: `U`, `T`, `T~`, `V`, or `V~`. The displayed algorithm name is stripped of that suffix."
+        ),
         createColumn("algo-ranking", "args", "args.<key>", "neutral", buildArgMarkdown()),
         createColumn(
             "algo-ranking",
@@ -322,6 +348,13 @@ export const ALGO_RANKING_TABLE_DOCS: DocsTableSection<AlgoRankingDocsColumnKey>
             "how_much formula",
             "neutral",
             "Formula used to map algorithm step `n` to source sequence index `S(how_much(n, order, args))` for this algorithm row."
+        ),
+        createColumn(
+            "algo-ranking",
+            "complexityFormula",
+            "complexity formula",
+            "neutral",
+            "Formula used for complexity score: `how_much(n)` plus the algorithm `O(...)` expression evaluated at the row's `m` and the metric's `n`."
         ),
         createColumn(
             "algo-ranking",
@@ -500,6 +533,27 @@ $$
         ),
         createColumn(
             "algo-ranking",
+            "avgStepSeriesAmp",
+            "avg step S*/A-S amp",
+            "higher",
+            "For each accelerated step n, compute `log10(|S_how_much(n)-S|) - log10(|A_n - S_how_much(n)|)`, average inside each series, then average across series. Higher is better."
+        ),
+        createColumn(
+            "algo-ranking",
+            "medianStepSeriesAmp",
+            "med step S*/A-S amp",
+            "higher",
+            "For each series, take the median step gain `log10(|S_how_much(n)-S|) - log10(|A_n - S_how_much(n)|)`, then take the median across series. Higher is better and participates in `rank precision`."
+        ),
+        createColumn(
+            "algo-ranking",
+            "worstStepSeriesAmp",
+            "worst step S*/A-S amp",
+            "higher",
+            "For each series, take the worst step gain against `|A_n - S_how_much(n)|`, then take the worst across series. Higher is better and participates in `rank precision`."
+        ),
+        createColumn(
+            "algo-ranking",
             "avgFilterTriggerN",
             "avg filter n",
             "lower",
@@ -539,6 +593,48 @@ $$
             "worst filter-min n",
             "lower",
             "Worst difference `filterTriggerN - minDeviationN` across series. Lower is better."
+        ),
+        createColumn(
+            "algo-ranking",
+            "avgFilterTriggerLossAmp",
+            "avg filter loss amp",
+            "lower",
+            "Average `log10(|A_filter_n-S|) - log10(min |A_n-S|)`. Shows how many orders were lost when filters triggered."
+        ),
+        createColumn(
+            "algo-ranking",
+            "medianFilterTriggerLossAmp",
+            "med filter loss amp",
+            "lower",
+            "Median `log10(|A_filter_n-S|) - log10(min |A_n-S|)`. Lower is better."
+        ),
+        createColumn(
+            "algo-ranking",
+            "worstFilterTriggerLossAmp",
+            "worst filter loss amp",
+            "lower",
+            "Worst `log10(|A_filter_n-S|) - log10(min |A_n-S|)` across series. Lower is better."
+        ),
+        createColumn(
+            "algo-ranking",
+            "avgFilterTriggerLossDiff",
+            "avg filter loss diff",
+            "lower",
+            "Average ordinary loss at the first filter trigger: `|A_filter_n-S| - min |A_n-S|`. Lower is better and avoids log infinities."
+        ),
+        createColumn(
+            "algo-ranking",
+            "medianFilterTriggerLossDiff",
+            "med filter loss diff",
+            "lower",
+            "Median `|A_filter_n-S| - min |A_n-S|` at the first filter trigger. Lower is better."
+        ),
+        createColumn(
+            "algo-ranking",
+            "worstFilterTriggerLossDiff",
+            "worst filter loss diff",
+            "lower",
+            "Worst `|A_filter_n-S| - min |A_n-S|` at the first filter trigger across series. Lower is better."
         ),
         createColumn(
             "algo-ranking",
@@ -673,13 +769,6 @@ $$
         ),
         createColumn(
             "algo-ranking",
-            "avgDiffInStepsToEps",
-            "AvgDiffInStepsToEps",
-            "higher",
-            "Alias for `avg eps saved steps`: `mean(n_series_eps - how_much(n_algo_eps, order, args))`. Больше лучше."
-        ),
-        createColumn(
-            "algo-ranking",
             "medianEpsSavedSteps",
             "med eps saved steps",
             "higher",
@@ -691,6 +780,34 @@ $$
             "worst eps saved steps",
             "higher",
             "Худший случай для `n_series_eps - how_much(n_algo_eps, order, args)`. Больше лучше."
+        ),
+        createColumn(
+            "algo-ranking",
+            "avgMinDeviationNComplexity",
+            "avg min dev complexity",
+            "lower",
+            "`how_much(avg min dev n) + O(m,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
+        ),
+        createColumn(
+            "algo-ranking",
+            "medianMinDeviationNComplexity",
+            "med min dev complexity",
+            "lower",
+            "`how_much(med min dev n) + O(m,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
+        ),
+        createColumn(
+            "algo-ranking",
+            "avgStepsToTolComplexity",
+            "avg eps complexity",
+            "lower",
+            "`how_much(avg steps to eps) + O(m,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
+        ),
+        createColumn(
+            "algo-ranking",
+            "medianStepsToTolComplexity",
+            "med eps complexity",
+            "lower",
+            "`how_much(med steps to eps) + O(m,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
         ),
         createColumn(
             "algo-ranking",
@@ -708,6 +825,41 @@ $$
 
 **Как читать:** чем больше процент, тем чаще алгоритм вообще добирается до заданной точности.
 `
+        ),
+        createColumn(
+            "algo-ranking",
+            "divZeroShare",
+            "div0, %",
+            "lower",
+            "Share of algorithm runs with a division-by-zero error message. Only explicit div-by-zero messages are counted."
+        ),
+        createColumn(
+            "algo-ranking",
+            "avgDivZeroFirstN",
+            "avg div0 first n",
+            "lower",
+            "Average first finite `n` where a div-by-zero error appears for each affected series."
+        ),
+        createColumn(
+            "algo-ranking",
+            "medianDivZeroFirstN",
+            "med div0 first n",
+            "lower",
+            "Median first finite `n` where a div-by-zero error appears for each affected series."
+        ),
+        createColumn(
+            "algo-ranking",
+            "worstDivZeroFirstN",
+            "worst div0 first n",
+            "lower",
+            "Maximum first finite div-zero `n` across affected series; this is not the last div-zero event."
+        ),
+        createColumn(
+            "algo-ranking",
+            "divZeroRecoveredShare",
+            "div0 recovered, %",
+            "higher",
+            "Among runs with finite div-zero `n`, share that later had a successful computed point after the last div-zero `n`."
         ),
         createColumn(
             "algo-ranking",
@@ -790,11 +942,12 @@ $$
             "rank precision",
             "lower",
             String.raw`
-Сводный ранг по точности. Для каждого алгоритма сначала считаются плотные ранги по столбцам:
+Сводный ранг по точности. \`avg*\`-столбцы остаются диагностикой, а итоговый ранг использует более устойчивые median/worst-метрики:
 
-- \`avg min |dev|\`,
-- \`avg rel error\`,
-- \`avg series/algo amp\`,
+- \`med min |dev|\` и \`worst min |dev|\`,
+- \`med rel error\` и \`worst rel error\`,
+- \`med series/algo amp\` и \`worst series/algo amp\`,
+- \`med step S*/A-S amp\` и \`worst step S*/A-S amp\`,
 - \`min algo >= min series, %\`,
 - \`best min div, %\`,
 - \`worst min div, %\`.
@@ -804,11 +957,21 @@ $$
 $$
 \operatorname{rankPrecision}
 =
-\rho(\text{avgMinDev})
+\rho(\text{medianMinDev})
 \!+\!
-\rho(\text{avgRelError})
+\rho(\text{worstMinDev})
 \!+\!
-\rho(\text{avgSeriesAlgoAmp})
+\rho(\text{medianRelError})
+\!+\!
+\rho(\text{worstRelError})
+\!+\!
+\rho(\text{medianSeriesAlgoAmp})
+\!+\!
+\rho(\text{worstSeriesAlgoAmp})
+\!+\!
+\rho(\text{medianStepSeriesAmp})
+\!+\!
+\rho(\text{worstStepSeriesAmp})
 \!+\!
 \rho(\text{notBetterThanSeriesShare})
 \!+\!
@@ -826,23 +989,43 @@ $$
             "rank speed",
             "lower",
             String.raw`
-Сводный ранг по скорости достижения хороших значений.
-
-Суммируются плотные ранги двух метрик:
+Сводный ранг по скорости достижения хороших значений. \`avg*\`-столбцы остаются диагностикой, а итоговый ранг использует median/worst-метрики:
 
 $$
 \operatorname{rankSpeed}
 =
-\rho(\text{avgMinDevN})
+\rho(\text{medianStepsToEps})
 \!+\!
-\rho(\text{avgStepsToEps})
+\rho(\text{worstStepsToEps})
 \!+\!
-\rho(\text{avgEpsSavedSteps}).
+\rho(\text{medianMinDevN})
+\!+\!
+\rho(\text{worstMinDevN})
+\!+\!
+\rho(\text{medianEpsSavedSteps})
+\!+\!
+\rho(\text{worstEpsSavedSteps})
+\!+\!
+\rho(\text{medianAmpAtMinN})
+\!+\!
+\rho(\text{worstAmpAtMinN})
+\!+\!
+\rho(\text{medianFilterTriggerN})
+\!+\!
+\rho(\text{worstFilterTriggerN})
+\!+\!
+\rho(\text{medianFilterTriggerDeltaFromMinN})
+\!+\!
+\rho(\text{worstFilterTriggerDeltaFromMinN})
+\!+\!
+\rho(\text{medianFilterTriggerLossAmp})
+\!+\!
+\rho(\text{worstFilterTriggerLossAmp}).
 $$
 
-\`avgEpsSavedSteps\` ranks \`n_series_eps - how_much(n_algo_eps, order, args)\`: higher saved steps gets a better dense rank before the sum.
+\`median/worst eps saved steps\` rank \`n_series_eps - how_much(n_algo_eps, order, args)\`: higher saved steps gets a better dense rank before the sum.
 
-Чем меньше значение, тем раньше алгоритм выходит на минимум и тем быстрее достигает порога \`epsilon\`.
+Чем меньше значение, тем раньше алгоритм выходит на минимум, быстрее достигает \`epsilon\`, дает лучший \`series@min n/algo amp\` и раньше/ближе к минимуму показывает filter trigger.
 `
         ),
         createColumn(
@@ -1028,6 +1211,16 @@ $$
                 createXlsxField(
                     "algo-ranking",
                     "algo-ranking",
+                    "levinEnding",
+                    "Levin end",
+                    "Levin-family ending extracted from the algorithm name or args: `U`, `T`, `T~`, `V`, or `V~`.",
+                    {
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "levinEnding"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
                     "args",
                     "args.<key>",
                     "Динамические колонки аргументов алгоритма. Вместо `<key>` в xlsx будет реальное имя аргумента, например `args.filter_method` или `args.alpha`.",
@@ -1043,6 +1236,16 @@ $$
                     "Formula used to map algorithm step `n` to source sequence index `S(how_much(n, order, args))`.",
                     {
                         refAnchorId: buildColumnAnchorId("algo-ranking", "howMuchFormula"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "complexityFormula",
+                    "complexity formula",
+                    "`how_much(n) + O(...)` formula used by the complexity score columns.",
+                    {
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "complexityFormula"),
                     }
                 ),
                 createXlsxField(
@@ -1203,6 +1406,39 @@ $$
                 createXlsxField(
                     "algo-ranking",
                     "algo-ranking",
+                    "avgStepSeriesAmp",
+                    "avg step S*/A-S amp",
+                    "Average per-series step gain against `|A_n - S_how_much(n)|`.",
+                    {
+                        preference: "higher",
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "avgStepSeriesAmp"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "medianStepSeriesAmp",
+                    "med step S*/A-S amp",
+                    "Median per-series step gain against `|A_n - S_how_much(n)|`.",
+                    {
+                        preference: "higher",
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "medianStepSeriesAmp"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "worstStepSeriesAmp",
+                    "worst step S*/A-S amp",
+                    "Worst per-series step gain against `|A_n - S_how_much(n)|`.",
+                    {
+                        preference: "higher",
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "worstStepSeriesAmp"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
                     "avgFilterTriggerN",
                     "avg filter n",
                     "Average first event n whose name or description contains `Filters triggered due to`.",
@@ -1272,6 +1508,90 @@ $$
                         refAnchorId: buildColumnAnchorId(
                             "algo-ranking",
                             "worstFilterTriggerDeltaFromMinN"
+                        ),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "avgFilterTriggerLossAmp",
+                    "avg filter loss amp",
+                    "Average `log10(|A_filter_n-S|) - log10(min |A_n-S|)`.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "avgFilterTriggerLossAmp"
+                        ),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "medianFilterTriggerLossAmp",
+                    "med filter loss amp",
+                    "Median `log10(|A_filter_n-S|) - log10(min |A_n-S|)`.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "medianFilterTriggerLossAmp"
+                        ),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "worstFilterTriggerLossAmp",
+                    "worst filter loss amp",
+                    "Worst `log10(|A_filter_n-S|) - log10(min |A_n-S|)` across series.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "worstFilterTriggerLossAmp"
+                        ),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "avgFilterTriggerLossDiff",
+                    "avg filter loss diff",
+                    "Average `|A_filter_n-S| - min |A_n-S|` at the first filter trigger.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "avgFilterTriggerLossDiff"
+                        ),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "medianFilterTriggerLossDiff",
+                    "med filter loss diff",
+                    "Median `|A_filter_n-S| - min |A_n-S|` at the first filter trigger.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "medianFilterTriggerLossDiff"
+                        ),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "worstFilterTriggerLossDiff",
+                    "worst filter loss diff",
+                    "Worst `|A_filter_n-S| - min |A_n-S|` at the first filter trigger.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "worstFilterTriggerLossDiff"
                         ),
                     }
                 ),
@@ -1399,17 +1719,6 @@ $$
                 createXlsxField(
                     "algo-ranking",
                     "algo-ranking",
-                    "avgDiffInStepsToEps",
-                    "AvgDiffInStepsToEps",
-                    "Alias for `avg eps saved steps`: `mean(n_series_eps - how_much(n_algo_eps, order, args))`.",
-                    {
-                        preference: "higher",
-                        refAnchorId: buildColumnAnchorId("algo-ranking", "avgDiffInStepsToEps"),
-                    }
-                ),
-                createXlsxField(
-                    "algo-ranking",
-                    "algo-ranking",
                     "medianEpsSavedSteps",
                     "med eps saved steps",
                     "`median(n_series_eps - how_much(n_algo_eps, order, args))`.",
@@ -1432,12 +1741,123 @@ $$
                 createXlsxField(
                     "algo-ranking",
                     "algo-ranking",
+                    "avgMinDeviationNComplexity",
+                    "avg min dev complexity",
+                    "`how_much(avg min dev n) + O(m,n)` for this algorithm row.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "avgMinDeviationNComplexity"
+                        ),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "medianMinDeviationNComplexity",
+                    "med min dev complexity",
+                    "`how_much(med min dev n) + O(m,n)` for this algorithm row.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "medianMinDeviationNComplexity"
+                        ),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "avgStepsToTolComplexity",
+                    "avg eps complexity",
+                    "`how_much(avg steps to eps) + O(m,n)` for this algorithm row.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "avgStepsToTolComplexity"
+                        ),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "medianStepsToTolComplexity",
+                    "med eps complexity",
+                    "`how_much(med steps to eps) + O(m,n)` for this algorithm row.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId(
+                            "algo-ranking",
+                            "medianStepsToTolComplexity"
+                        ),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
                     "fracReachedTol",
                     "reached eps, %",
                     "Доля рядов, на которых алгоритм вообще достиг заданного `epsilon`.",
                     {
                         preference: "higher",
                         refAnchorId: buildColumnAnchorId("algo-ranking", "fracReachedTol"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "divZeroShare",
+                    "div0, %",
+                    "Share of runs with an explicit division-by-zero error message.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "divZeroShare"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "avgDivZeroFirstN",
+                    "avg div0 first n",
+                    "Average first finite `n` where div-zero appears in affected runs.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "avgDivZeroFirstN"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "medianDivZeroFirstN",
+                    "med div0 first n",
+                    "Median first finite `n` where div-zero appears in affected runs.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "medianDivZeroFirstN"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "worstDivZeroFirstN",
+                    "worst div0 first n",
+                    "Maximum first finite div-zero `n` across affected runs.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "worstDivZeroFirstN"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "divZeroRecoveredShare",
+                    "div0 recovered, %",
+                    "Among runs with finite div-zero `n`, share with a later successful computed point after the last div-zero `n`.",
+                    {
+                        preference: "higher",
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "divZeroRecoveredShare"),
                     }
                 ),
                 createXlsxField(
