@@ -950,11 +950,29 @@ describe("AlgoRankingTable.model", () => {
             },
         ];
         const accelList = [
+            { id: "a-anderson-const", name: "AndersonAccelerationAlgorithm", m: 3, args: null },
+            { id: "a-anderson-var", name: "AndersonMNAlgorithm", m: 3, args: null },
             { id: "a-brezinski", name: "BrezinskiThetaAlgorithm", m: 3, args: null },
+            { id: "a-chang-wynn", name: "ChangWynnAlgorithm", m: 3, args: null },
+            { id: "a-drummond", name: "DrummondDAlgorithm", m: 3, args: null },
+            { id: "a-rec-drummond", name: "recDrummondDAlgorithm", m: 3, args: null },
+            { id: "a-f", name: "FAlgorithm", m: 3, args: { T_aux: 4 } },
+            { id: "a-ford-sidi-2", name: "FordSidi2Algorithm", m: 3, args: null },
+            { id: "a-ford-sidi-3", name: "FordSidi3Algorithm", m: 3, args: null },
+            { id: "a-h", name: "HAlgorithm", m: 3, args: null },
+            { id: "a-j", name: "JTransformationAlgorithm", m: 3, args: null },
+            { id: "a-levin-sidi-m", name: "LevinSidiMAlgorithm", m: 3, args: null },
+            { id: "a-levin-sidi-s", name: "LevinSidiSAlgorithm", m: 3, args: null },
             { id: "a-lubkin", name: "LubkinWAlgorithm", m: 3, args: null },
             { id: "a-wynn", name: "WynnEpsilon1Algorithm", m: 3, args: null },
             { id: "a-pj2", name: "pJAlgorithm", m: 3, args: { p: 2 } },
             { id: "a-pj3", name: "pJAlgorithm", m: 3, args: { p: 3 } },
+            { id: "a-rec-levin", name: "recLevinAlgorithm", m: 3, args: null },
+            { id: "a-richardson", name: "RichardsonAlgorithm", m: 3, args: null },
+            { id: "a-shanks", name: "ShanksAlgorithm", m: 3, args: null },
+            { id: "a-shanks-alt", name: "ShanksAlternatingAlgorithm", m: 3, args: null },
+            { id: "a-weniger", name: "WenigerAlgorithm", m: 3, args: null },
+            { id: "a-wynn-rho", name: "WynnRhoAlgorithmRhoGamma", m: 3, args: null },
         ];
         const seriesAccelList = accelList.flatMap((accel) => [
             {
@@ -987,24 +1005,81 @@ describe("AlgoRankingTable.model", () => {
 
         const stats = buildAlgoStatsFromExperiment(experiment, 1e-6, null);
         const byKey = new Map(stats.map((item) => [item.algoKey, item]));
+        const andersonConst = stats.find((item) => item.algorithmName === "AndersonAccelerationAlgorithm");
+        const andersonVar = stats.find((item) => item.algorithmName === "AndersonMNAlgorithm");
         const brezinski = stats.find((item) => item.algorithmName === "BrezinskiThetaAlgorithm");
+        const changWynn = stats.find((item) => item.algorithmName === "ChangWynnAlgorithm");
+        const drummond = stats.find((item) => item.algorithmName === "DrummondDAlgorithm");
+        const recDrummond = stats.find((item) => item.algorithmName === "recDrummondDAlgorithm");
+        const f = stats.find((item) => item.algorithmName === "FAlgorithm");
+        const fordSidi2 = stats.find((item) => item.algorithmName === "FordSidi2Algorithm");
+        const fordSidi3 = stats.find((item) => item.algorithmName === "FordSidi3Algorithm");
+        const h = stats.find((item) => item.algorithmName === "HAlgorithm");
+        const j = stats.find((item) => item.algorithmName === "JTransformationAlgorithm");
+        const levinSidiM = stats.find((item) => item.algorithmName === "LevinSidiMAlgorithm");
+        const levinSidiS = stats.find((item) => item.algorithmName === "LevinSidiSAlgorithm");
         const lubkin = stats.find((item) => item.algorithmName === "LubkinWAlgorithm");
         const wynn = stats.find((item) => item.algorithmName === "WynnEpsilon1Algorithm");
         const pj2 = byKey.get("pJAlgorithm|m=3|p=2");
         const pj3 = byKey.get("pJAlgorithm|m=3|p=3");
+        const recLevin = stats.find((item) => item.algorithmName === "recLevinAlgorithm");
+        const richardson = stats.find((item) => item.algorithmName === "RichardsonAlgorithm");
+        const shanks = stats.find((item) => item.algorithmName === "ShanksAlgorithm");
+        const shanksAlt = stats.find((item) => item.algorithmName === "ShanksAlternatingAlgorithm");
+        const weniger = stats.find((item) => item.algorithmName === "WenigerAlgorithm");
+        const wynnRho = stats.find((item) => item.algorithmName === "WynnRhoAlgorithmRhoGamma");
 
-        expect(brezinski?.complexityFormula).toBe("how_much(n) + O(n)");
-        expect(lubkin?.complexityFormula).toBe("how_much(n) + O(m*n+m^2)");
-        expect(wynn?.complexityFormula).toBe("how_much(n) + O(m+n+m^2)");
-        expect(pj2?.complexityFormula).toBe("how_much(n) + O(m^2)");
-        expect(pj3?.complexityFormula).toBe("how_much(n) + O(m^3)");
+        expect(andersonConst?.complexityFormula).toBe("how_much(n) + O(1)");
+        expect(andersonVar?.complexityFormula).toBe("how_much(n) + O(n^3)");
+        expect(brezinski?.complexityFormula).toBe("how_much(n) + O(k*n+k^2)");
+        expect(changWynn?.complexityFormula).toBe("how_much(n) + O(n^2)");
+        expect(drummond?.complexityFormula).toBe("how_much(n) + O(k)");
+        expect(recDrummond?.complexityFormula).toBe("how_much(n) + O(k^2)");
+        expect(f?.complexityFormula).toBe("how_much(n) + O(k^2+k*T_aux)");
+        expect(fordSidi2?.complexityFormula).toBe("how_much(n) + O(n)");
+        expect(fordSidi3?.complexityFormula).toBe("how_much(n) + O(n^3)");
+        expect(h?.complexityFormula).toBe("how_much(n) + O(k^2)");
+        expect(j?.complexityFormula).toBe("how_much(n) + O(k*n+k^2)");
+        expect(levinSidiM?.complexityFormula).toBe("how_much(n) + O(k*n)");
+        expect(levinSidiS?.complexityFormula).toBe("how_much(n) + O(k^2)");
+        expect(lubkin?.complexityFormula).toBe("how_much(n) + O(k*n+k^2)");
+        expect(wynn?.complexityFormula).toBe("how_much(n) + O(k*n+k^2)");
+        expect(pj2?.complexityFormula).toBe("how_much(n) + O(k^2)");
+        expect(pj3?.complexityFormula).toBe("how_much(n) + O(k^3)");
+        expect(recLevin?.complexityFormula).toBe("how_much(n) + O(k^2)");
+        expect(richardson?.complexityFormula).toBe("how_much(n) + O(n^2)");
+        expect(shanks?.complexityFormula).toBe("how_much(n) + O(k^3)");
+        expect(shanksAlt?.complexityFormula).toBe("how_much(n) + O(k*n+k^2)");
+        expect(weniger?.complexityFormula).toBe("how_much(n) + O(k)");
+        expect(wynnRho?.complexityFormula).toBe("how_much(n) + O(k*n+k^2)");
 
         expect(brezinski?.avgMinDeviationN).toBe(1.5);
-        expect(brezinski?.avgMinDeviationNComplexity).toBeCloseTo(7.5);
+        expect(andersonConst?.avgMinDeviationNComplexity).toBeCloseTo(3);
+        expect(andersonVar?.avgMinDeviationNComplexity).toBeCloseTo(5.375);
+        expect(brezinski?.avgMinDeviationNComplexity).toBeCloseTo(19.5);
+        expect(changWynn?.avgMinDeviationNComplexity).toBeCloseTo(4.25);
+        expect(drummond?.avgMinDeviationNComplexity).toBeCloseTo(8);
+        expect(recDrummond?.avgMinDeviationNComplexity).toBeCloseTo(14);
+        expect(f?.avgMinDeviationNComplexity).toBeCloseTo(26);
+        expect(fordSidi2?.avgMinDeviationNComplexity).toBeCloseTo(4.5);
+        expect(fordSidi3?.avgMinDeviationNComplexity).toBeCloseTo(4.375);
+        expect(h?.avgMinDeviationNComplexity).toBeCloseTo(14);
+        expect(j?.avgMinDeviationNComplexity).toBeCloseTo(18.5);
+        expect(levinSidiM?.avgMinDeviationNComplexity).toBeCloseTo(9.5);
+        expect(levinSidiS?.avgMinDeviationNComplexity).toBeCloseTo(14);
         expect(lubkin?.avgMinDeviationNComplexity).toBeCloseTo(24.5);
         expect(wynn?.avgMinDeviationNComplexity).toBeCloseTo(21.5);
         expect(pj2?.avgMinDeviationNComplexity).toBeCloseTo(14);
         expect(pj3?.avgMinDeviationNComplexity).toBeCloseTo(32);
+        expect(recLevin?.avgMinDeviationNComplexity).toBeCloseTo(14);
+        expect(richardson?.avgMinDeviationNComplexity).toBeCloseTo(4.25);
+        expect(shanks?.avgMinDeviationNComplexity).toBeCloseTo(35);
+        expect(shanksAlt?.avgMinDeviationNComplexity).toBeCloseTo(18.5);
+        expect(weniger?.avgMinDeviationNComplexity).toBeCloseTo(8);
+        expect(wynnRho?.avgMinDeviationNComplexity).toBeCloseTo(18.5);
+        expect(andersonConst?.rankCost).toBeLessThan(andersonVar?.rankCost ?? Infinity);
+        expect(pj2?.rankCost).toBe(recLevin?.rankCost);
+        expect(pj2?.rankCost).toBeLessThan(pj3?.rankCost ?? Infinity);
         expect(pj2?.totalRankScore).toBe(pj3?.totalRankScore);
     });
 

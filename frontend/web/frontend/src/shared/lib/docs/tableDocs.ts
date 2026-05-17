@@ -70,6 +70,7 @@ export type AlgoRankingDocsColumnKey =
     | "worstMinShare"
     | "bestLastShare"
     | "worstLastShare"
+    | "rankCost"
     | "rankPrecision"
     | "rankSpeed"
     | "rankStability"
@@ -786,28 +787,28 @@ $$
             "avgMinDeviationNComplexity",
             "avg min dev complexity",
             "lower",
-            "`how_much(avg min dev n) + O(m,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
+            "`how_much(avg min dev n) + O(k,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
         ),
         createColumn(
             "algo-ranking",
             "medianMinDeviationNComplexity",
             "med min dev complexity",
             "lower",
-            "`how_much(med min dev n) + O(m,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
+            "`how_much(med min dev n) + O(k,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
         ),
         createColumn(
             "algo-ranking",
             "avgStepsToTolComplexity",
             "avg eps complexity",
             "lower",
-            "`how_much(avg steps to eps) + O(m,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
+            "`how_much(avg steps to eps) + O(k,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
         ),
         createColumn(
             "algo-ranking",
             "medianStepsToTolComplexity",
             "med eps complexity",
             "lower",
-            "`how_much(med steps to eps) + O(m,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
+            "`how_much(med steps to eps) + O(k,n)` evaluated for the row's algorithm. This diagnostic does not participate in ranks."
         ),
         createColumn(
             "algo-ranking",
@@ -935,6 +936,13 @@ $$
 
 Если метрика высокая, это означает, что алгоритм часто заканчивает в неудачной точке даже тогда, когда раньше мог показывать неплохой минимум.
 `
+        ),
+        createColumn(
+            "algo-ranking",
+            "rankCost",
+            "rank cost",
+            "lower",
+            "Standalone cost/complexity rank. It sums dense ranks of `avg min dev complexity`, `med min dev complexity`, `avg eps complexity`, and `med eps complexity`, then dense-ranks that sum. Lower is better. This rank does not participate in `total rank`."
         ),
         createColumn(
             "algo-ranking",
@@ -1743,7 +1751,7 @@ $$
                     "algo-ranking",
                     "avgMinDeviationNComplexity",
                     "avg min dev complexity",
-                    "`how_much(avg min dev n) + O(m,n)` for this algorithm row.",
+                    "`how_much(avg min dev n) + O(k,n)` for this algorithm row.",
                     {
                         preference: "lower",
                         refAnchorId: buildColumnAnchorId(
@@ -1757,7 +1765,7 @@ $$
                     "algo-ranking",
                     "medianMinDeviationNComplexity",
                     "med min dev complexity",
-                    "`how_much(med min dev n) + O(m,n)` for this algorithm row.",
+                    "`how_much(med min dev n) + O(k,n)` for this algorithm row.",
                     {
                         preference: "lower",
                         refAnchorId: buildColumnAnchorId(
@@ -1771,7 +1779,7 @@ $$
                     "algo-ranking",
                     "avgStepsToTolComplexity",
                     "avg eps complexity",
-                    "`how_much(avg steps to eps) + O(m,n)` for this algorithm row.",
+                    "`how_much(avg steps to eps) + O(k,n)` for this algorithm row.",
                     {
                         preference: "lower",
                         refAnchorId: buildColumnAnchorId(
@@ -1785,7 +1793,7 @@ $$
                     "algo-ranking",
                     "medianStepsToTolComplexity",
                     "med eps complexity",
-                    "`how_much(med steps to eps) + O(m,n)` for this algorithm row.",
+                    "`how_much(med steps to eps) + O(k,n)` for this algorithm row.",
                     {
                         preference: "lower",
                         refAnchorId: buildColumnAnchorId(
@@ -1913,6 +1921,17 @@ $$
                     {
                         preference: "lower",
                         refAnchorId: buildColumnAnchorId("algo-ranking", "worstLastShare"),
+                    }
+                ),
+                createXlsxField(
+                    "algo-ranking",
+                    "algo-ranking",
+                    "rankCost",
+                    "rank cost",
+                    "Standalone cost/complexity rank from the four complexity score columns. Lower is better; it is not included in `total rank`.",
+                    {
+                        preference: "lower",
+                        refAnchorId: buildColumnAnchorId("algo-ranking", "rankCost"),
                     }
                 ),
                 createXlsxField(

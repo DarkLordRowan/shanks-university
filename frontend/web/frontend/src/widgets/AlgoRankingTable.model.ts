@@ -118,6 +118,7 @@ export interface AlgoStats {
     bestLastShare: number;
     worstLastShare: number;
 
+    rankCost: number;
     rankPrecision: number;
     rankSpeed: number;
     rankStability: number;
@@ -190,6 +191,7 @@ export type AlgoRankingSortKey =
     | "worstMinShare"
     | "bestLastShare"
     | "worstLastShare"
+    | "rankCost"
     | "rankPrecision"
     | "rankSpeed"
     | "rankStability"
@@ -589,29 +591,69 @@ function getArgNumber(args: AccelArgs | null | undefined, aliases: string[]): nu
     return null;
 }
 
+function isAndersonVariableOrderName(name: string): boolean {
+    return (
+        name.includes("andersonmn") ||
+        name.includes("andersonmton") ||
+        name.includes("andersonmvar") ||
+        name.includes("andersonvariable") ||
+        name.includes("andersonnonconstant")
+    );
+}
+
+function getFAuxiliaryTerm(
+    accel: Pick<Accel, "args"> | null | undefined,
+    n: number
+): number {
+    return (
+        getArgNumber(accel?.args, [
+            "T_aux",
+            "t_aux",
+            "tAux",
+            "taux",
+            "aux",
+            "t_auxiliary",
+            "auxiliary_terms",
+            "auxiliaryTerms",
+        ]) ?? n
+    );
+}
+
 function getComplexityOFormula(
     accel: Pick<Accel, "name" | "m" | "args"> | null | undefined
 ): string {
     const name = normalizeToken(accel?.name);
 
     if (name.includes("pjalgorithm") || name.includes("pjtransformation") || name === "pj") {
-        return getArgNumber(accel?.args, ["p"]) === 2 ? "O(m^2)" : "O(m^3)";
+        return getArgNumber(accel?.args, ["p"]) === 2 ? "O(k^2)" : "O(k^3)";
     }
-    if (name.includes("recdrummondd")) return "O(m)";
-    if (name.includes("reclevin")) return "O(m^2)";
-    if (name.includes("brezinskitheta")) return "O(n)";
-    if (name.includes("drummondd")) return "O(m)";
+    if (name.includes("anderson")) return isAndersonVariableOrderName(name) ? "O(n^3)" : "O(1)";
+    if (name.includes("changwynn")) return "O(n^2)";
+    if (name.includes("richardson")) return "O(n^2)";
+    if (name.includes("fordsidi3") || name.includes("fordsidialgorithm3")) return "O(n^3)";
     if (name.includes("fordsidi2") || name.includes("fordsidialgorithm2")) return "O(n)";
-    if (name.includes("levinsidim")) return "O(m*n)";
-    if (name.includes("levinsidis")) return "O(m^2)";
-    if (name.includes("levin")) return "O(m)";
-    if (name.includes("lubkinw") || name.includes("lubkin")) return "O(m*n+m^2)";
-    if (name.includes("overholt")) return "O(m^2)";
-    if (name.includes("shanks") && !name.includes("alternating")) return "O(m^3)";
-    if (name.includes("weniger")) return "O(m)";
-    if (name.includes("wynnepsilon") || name.includes("wynnrho") || name.includes("whynnrho")) {
-        return "O(m+n+m^2)";
+    if (name.includes("brezinskitheta") || name.includes("brezinski")) return "O(k*n+k^2)";
+    if (name.includes("wynnrho") || name.includes("whynnrho") || name.includes("wynnepsilon")) {
+        return "O(k*n+k^2)";
     }
+    if (name.includes("alternatingshanks") || name.includes("shanksalternating")) {
+        return "O(k*n+k^2)";
+    }
+    if (name.includes("jtransformation") || name === "jalgorithm") return "O(k*n+k^2)";
+    if (name === "f" || name === "falgorithm" || name.includes("falgorithm")) {
+        return "O(k^2+k*T_aux)";
+    }
+    if (name === "h" || name === "halgorithm" || name.includes("halgorithm")) return "O(k^2)";
+    if (name.includes("recdrummondd")) return "O(k^2)";
+    if (name.includes("levinsidim")) return "O(k*n)";
+    if (name.includes("levinsidis")) return "O(k^2)";
+    if (name.includes("reclevin")) return "O(k^2)";
+    if (name.includes("drummondd")) return "O(k)";
+    if (name.includes("levin")) return "O(k)";
+    if (name.includes("lubkinw") || name.includes("lubkin")) return "O(k*n+k^2)";
+    if (name.includes("overholt")) return "O(k^2)";
+    if (name.includes("shanks") && !name.includes("alternating")) return "O(k^3)";
+    if (name.includes("weniger")) return "O(k)";
 
     return "O(n)";
 }
@@ -628,21 +670,33 @@ function evaluateComplexityO(
     if (name.includes("pjalgorithm") || name.includes("pjtransformation") || name === "pj") {
         return getArgNumber(accel?.args, ["p"]) === 2 ? m ** 2 : m ** 3;
     }
-    if (name.includes("recdrummondd")) return m;
-    if (name.includes("reclevin")) return m ** 2;
-    if (name.includes("brezinskitheta")) return n;
-    if (name.includes("drummondd")) return m;
+    if (name.includes("anderson")) return isAndersonVariableOrderName(name) ? n ** 3 : 1;
+    if (name.includes("changwynn")) return n ** 2;
+    if (name.includes("richardson")) return n ** 2;
+    if (name.includes("fordsidi3") || name.includes("fordsidialgorithm3")) return n ** 3;
     if (name.includes("fordsidi2") || name.includes("fordsidialgorithm2")) return n;
+    if (name.includes("brezinskitheta") || name.includes("brezinski")) return m * n + m ** 2;
+    if (name.includes("wynnrho") || name.includes("whynnrho") || name.includes("wynnepsilon")) {
+        return m * n + m ** 2;
+    }
+    if (name.includes("alternatingshanks") || name.includes("shanksalternating")) {
+        return m * n + m ** 2;
+    }
+    if (name.includes("jtransformation") || name === "jalgorithm") return m * n + m ** 2;
+    if (name === "f" || name === "falgorithm" || name.includes("falgorithm")) {
+        return m ** 2 + m * getFAuxiliaryTerm(accel, n);
+    }
+    if (name === "h" || name === "halgorithm" || name.includes("halgorithm")) return m ** 2;
+    if (name.includes("recdrummondd")) return m ** 2;
     if (name.includes("levinsidim")) return m * n;
     if (name.includes("levinsidis")) return m ** 2;
+    if (name.includes("reclevin")) return m ** 2;
+    if (name.includes("drummondd")) return m;
     if (name.includes("levin")) return m;
     if (name.includes("lubkinw") || name.includes("lubkin")) return m * n + m ** 2;
     if (name.includes("overholt")) return m ** 2;
     if (name.includes("shanks") && !name.includes("alternating")) return m ** 3;
     if (name.includes("weniger")) return m;
-    if (name.includes("wynnepsilon") || name.includes("wynnrho") || name.includes("whynnrho")) {
-        return m + n + m ** 2;
-    }
 
     return n;
 }
@@ -1261,6 +1315,7 @@ function createInitialAlgoStats(params: {
         bestLastShare: 0,
         worstLastShare: 0,
 
+        rankCost: 0,
         rankPrecision: 0,
         rankSpeed: 0,
         rankStability: 0,
@@ -1850,10 +1905,31 @@ function finalizeAlgoStats(
     const oneSidedShareRanks = buildRankMap(statsList, (stats) => stats.oneSidedShare, "desc");
     const bestLastShareRanks = buildRankMap(statsList, (stats) => stats.bestLastShare, "desc");
     const worstLastShareRanks = buildRankMap(statsList, (stats) => stats.worstLastShare, "asc");
+    const avgMinDeviationNComplexityRanks = buildRankMap(
+        statsList,
+        (stats) => stats.avgMinDeviationNComplexity,
+        "asc"
+    );
+    const medianMinDeviationNComplexityRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianMinDeviationNComplexity,
+        "asc"
+    );
+    const avgStepsToTolComplexityRanks = buildRankMap(
+        statsList,
+        (stats) => stats.avgStepsToTolComplexity,
+        "asc"
+    );
+    const medianStepsToTolComplexityRanks = buildRankMap(
+        statsList,
+        (stats) => stats.medianStepsToTolComplexity,
+        "asc"
+    );
 
     const precisionScores = new Map<string, number>();
     const speedScores = new Map<string, number>();
     const stabilityScores = new Map<string, number>();
+    const costScores = new Map<string, number>();
 
     for (const stats of statsList) {
         precisionScores.set(
@@ -1898,6 +1974,14 @@ function finalizeAlgoStats(
                 (bestLastShareRanks.get(stats.algoKey) ?? 0) +
                 (worstLastShareRanks.get(stats.algoKey) ?? 0)
         );
+
+        costScores.set(
+            stats.algoKey,
+            (avgMinDeviationNComplexityRanks.get(stats.algoKey) ?? 0) +
+                (medianMinDeviationNComplexityRanks.get(stats.algoKey) ?? 0) +
+                (avgStepsToTolComplexityRanks.get(stats.algoKey) ?? 0) +
+                (medianStepsToTolComplexityRanks.get(stats.algoKey) ?? 0)
+        );
     }
 
     assignDenseRanks(
@@ -1924,6 +2008,15 @@ function finalizeAlgoStats(
         "asc",
         (stats, rank) => {
             stats.rankStability = rank;
+        }
+    );
+
+    assignDenseRanks(
+        statsList,
+        (stats) => costScores.get(stats.algoKey) ?? Number.POSITIVE_INFINITY,
+        "asc",
+        (stats, rank) => {
+            stats.rankCost = rank;
         }
     );
 

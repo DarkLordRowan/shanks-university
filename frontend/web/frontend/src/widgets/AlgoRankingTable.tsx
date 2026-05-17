@@ -408,28 +408,28 @@ const BASE_COLUMNS: ColMeta[] = [
     {
         id: "avgMinDeviationNComplexity",
         title: "avg min dev complexity",
-        description: "complexity(avg min dev n) = how_much(n) + evaluated O(m,n). Lower is better.",
+        description: "complexity(avg min dev n) = how_much(n) + evaluated O(k,n). Lower is better.",
         sortKey: "avgMinDeviationNComplexity",
         defaultDir: "asc",
     },
     {
         id: "medianMinDeviationNComplexity",
         title: "med min dev complexity",
-        description: "complexity(med min dev n) = how_much(n) + evaluated O(m,n). Lower is better.",
+        description: "complexity(med min dev n) = how_much(n) + evaluated O(k,n). Lower is better.",
         sortKey: "medianMinDeviationNComplexity",
         defaultDir: "asc",
     },
     {
         id: "avgStepsToTolComplexity",
         title: "avg eps complexity",
-        description: "complexity(avg steps to eps) = how_much(n) + evaluated O(m,n). Lower is better.",
+        description: "complexity(avg steps to eps) = how_much(n) + evaluated O(k,n). Lower is better.",
         sortKey: "avgStepsToTolComplexity",
         defaultDir: "asc",
     },
     {
         id: "medianStepsToTolComplexity",
         title: "med eps complexity",
-        description: "complexity(med steps to eps) = how_much(n) + evaluated O(m,n). Lower is better.",
+        description: "complexity(med steps to eps) = how_much(n) + evaluated O(k,n). Lower is better.",
         sortKey: "medianStepsToTolComplexity",
         defaultDir: "asc",
     },
@@ -513,6 +513,14 @@ const BASE_COLUMNS: ColMeta[] = [
         description:
             "Доля сравнимых рядов, где на последнем n ошибка алгоритма была худшей среди всех алгоритмов. Меньше лучше.",
         sortKey: "worstLastShare",
+        defaultDir: "asc",
+    },
+    {
+        id: "rankCost",
+        title: "rank cost",
+        description:
+            "Standalone cost rank built from dense ranks of the four complexity columns. Lower is better and it is not included in total rank.",
+        sortKey: "rankCost",
         defaultDir: "asc",
     },
     {
@@ -800,6 +808,8 @@ function getCellText(row: RowMeta, colId: ColId): string {
             return formatPercent(row.bestLastShare);
         case "worstLastShare":
             return formatPercent(row.worstLastShare);
+        case "rankCost":
+            return String(row.rankCost);
         case "rankPrecision":
             return String(row.rankPrecision);
         case "rankSpeed":
@@ -1030,6 +1040,8 @@ function getExportValue(row: RowMeta, colId: ColId): string | number | null {
             return Number.isFinite(row.bestLastShare) ? row.bestLastShare : null;
         case "worstLastShare":
             return Number.isFinite(row.worstLastShare) ? row.worstLastShare : null;
+        case "rankCost":
+            return row.rankCost;
         case "rankPrecision":
             return row.rankPrecision;
         case "rankSpeed":
@@ -1118,6 +1130,7 @@ function getExportColumnWidth(colId: ColId): number {
         case "worstLastShare":
             return 16;
         case "rankPrecision":
+        case "rankCost":
         case "rankSpeed":
         case "rankStability":
         case "totalRankScore":
@@ -1191,6 +1204,7 @@ function getExportColumnFormat(colId: ColId): string | null {
         case "worstFilterTriggerDeltaFromMinN":
         case "seriesCount":
         case "rankPrecision":
+        case "rankCost":
         case "rankSpeed":
         case "rankStability":
         case "totalRankScore":
