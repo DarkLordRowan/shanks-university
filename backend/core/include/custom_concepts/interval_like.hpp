@@ -28,4 +28,14 @@ struct is_complex_interval<std::complex<intprec::interval<T>>> : public std::tru
 template <typename T>
 inline constexpr bool is_complex_interval_v = is_complex_interval<T>::value;
 
+template <typename T>
+struct interval_subtype {
+    using value = T;
+};
+
+template <typename T>
+struct interval_subtype<intprec::interval<T>> {
+    using value = T;
+};
+
 #endif

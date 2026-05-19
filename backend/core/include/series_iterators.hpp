@@ -45,6 +45,7 @@ enum class series_iterator_id_t {
 #include "series_iterators/arctan_x_iterator.hpp"
 #include "series_iterators/arctanh_x2_iterator.hpp"
 #include "series_iterators/arctanh_x_iterator.hpp"
+#include "series_iterators/bessel_first_kind.hpp"
 #include "series_iterators/bin_iterator.hpp"
 #include "series_iterators/ci_x_iterator.hpp"
 #include "series_iterators/cos3xmin1_div_xsquare_iterator.hpp"

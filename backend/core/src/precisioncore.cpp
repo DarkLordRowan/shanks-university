@@ -127,6 +127,7 @@ static char _VIP_[] = "@(#)precisioncore.cpp 03.80 -- Copyright (C) Henrik Veste
 #include <algorithm>
 #include <array>
 #include <bitset>
+#include <climits>
 #include <complex>
 #include <cstdint>
 #include <cstring>

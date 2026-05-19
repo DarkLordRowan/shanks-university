@@ -66,7 +66,7 @@ public:
         const T step = utils::cast<T, int>()(1, precision) / utils::cast<T, K>()(steps);
 
         constexpr auto f = [](const T& x) {
-            //if (x == utils::cast<T, int>()(0)) return utils::cast<T, int>()(0);
+            // if (x == utils::cast<T, int>()(0)) return utils::cast<T, int>()(0);
             return utils::math<T>::log(x) / (utils::cast<T, int>()(1) + x);
         };
 

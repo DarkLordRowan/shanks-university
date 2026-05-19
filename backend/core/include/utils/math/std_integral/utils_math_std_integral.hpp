@@ -23,6 +23,7 @@ struct utils::math<T> {
     using has_k_x = std::false_type;
     using has_inc_gamma = std::false_type;
     using has_lambertW0 = std::false_type;
+    using has_bessel_first_kind = std::false_type;
 };
 
 template <std::integral T>

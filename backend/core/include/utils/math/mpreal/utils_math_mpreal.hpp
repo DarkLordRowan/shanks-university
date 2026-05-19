@@ -17,6 +17,7 @@ struct utils::math<mpfr::mpreal> {
     static mpfr::mpreal log10(const mpfr::mpreal& x);
     static mpfr::mpreal hypot(const mpfr::mpreal& a, const mpfr::mpreal& b);
     static mpfr::mpreal erf(const mpfr::mpreal& x);
+    static mpfr::mpreal bessel_first_kind(const mpfr::mpreal& x, const mpfr::mpreal& alpha);
     static mpfr::mpreal zeta(const mpfr::mpreal& x);
 #ifdef __GSL_SF_EXPINT_H__
     static mpfr::mpreal ci_x(const mpfr::mpreal& x);
@@ -27,6 +28,7 @@ struct utils::math<mpfr::mpreal> {
 #endif
     static mpfr::mpreal e_x(const mpfr::mpreal& x);
     static mpfr::mpreal k_x(const mpfr::mpreal& x);
+    static mpfr::mpreal tgamma(const mpfr::mpreal& x);
     static mpfr::mpreal inc_gamma(const mpfr::mpreal& x, const mpfr::mpreal& alpha);
     static mpfr::mpreal sin(const mpfr::mpreal& x);
     static mpfr::mpreal asin(const mpfr::mpreal& x);
@@ -60,6 +62,7 @@ struct utils::math<mpfr::mpreal> {
 #endif
     using has_e_x = std::true_type;
     using has_k_x = std::true_type;
+    using has_bessel_first_kind = std::true_type;
 };
 
 template <std::integral K>
@@ -97,6 +100,13 @@ inline mpfr::mpreal utils::math<mpfr::mpreal>::hypot(const mpfr::mpreal& a, cons
 
 inline mpfr::mpreal utils::math<mpfr::mpreal>::erf(const mpfr::mpreal& x) { return mpfr::erf(x); }
 
+inline mpfr::mpreal utils::math<mpfr::mpreal>::bessel_first_kind(const mpfr::mpreal& x, const mpfr::mpreal& alpha) {
+    if (mpfr::floor(alpha) == alpha) {
+        return mpfr::besseljn(utils::cast<long, mpfr::mpreal>()(alpha), x);
+    }
+    return mpfr::mpreal(std::cyl_bessel_j(static_cast<double>(alpha), static_cast<double>(x)), x.get_prec());
+}
+
 inline mpfr::mpreal utils::math<mpfr::mpreal>::zeta(const mpfr::mpreal& x) { return mpfr::zeta(x); }
 #ifdef __GSL_SF_EXPINT_H__
 inline mpfr::mpreal utils::math<mpfr::mpreal>::ci_x(const mpfr::mpreal& x) {
@@ -127,6 +137,8 @@ inline mpfr::mpreal utils::math<mpfr::mpreal>::e_x(const mpfr::mpreal& x) {
 inline mpfr::mpreal utils::math<mpfr::mpreal>::k_x(const mpfr::mpreal& x) {
     return mpfr::mpreal(std::comp_ellint_1(static_cast<long double>(x)), x.get_prec());
 }
+
+inline mpfr::mpreal utils::math<mpfr::mpreal>::tgamma(const mpfr::mpreal& x) { return mpfr::tgamma(x); }
 
 inline mpfr::mpreal utils::math<mpfr::mpreal>::inc_gamma(const mpfr::mpreal& x, const mpfr::mpreal& alpha) {
     return mpfr::tgamma(alpha) - mpfr::gammainc(alpha, x);

@@ -54,6 +54,7 @@ struct utils::math<OpsWrapperMacro(T)> {
     using has_lambertW0 = utils::math<T>::has_lambertW0;
     using has_airy_ai = utils::math<T>::has_airy_ai;
     using has_clausen = utils::math<T>::has_clausen;
+    using has_bessel_first_kind = utils::math<T>::has_bessel_first_kind;
 };
 
 template <typename T>

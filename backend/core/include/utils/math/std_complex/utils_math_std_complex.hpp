@@ -26,6 +26,8 @@ struct utils::math<std::complex<T>> {
     static std::complex<T> acosh(const std::complex<T>& x);
     static std::complex<T> tanh(const std::complex<T>& x);
     static std::complex<T> atanh(const std::complex<T>& x);
+    static T real(const std::complex<T>& x);
+    static T imag(const std::complex<T>& x);
     static T abs(const std::complex<T>& x);
 
     // availability of special function
@@ -39,6 +41,7 @@ struct utils::math<std::complex<T>> {
     using has_lambertW0 = std::false_type;
     using has_airy_ai = std::false_type;
     using has_clausen = std::false_type;
+    using has_bessel_first_kind = std::false_type;
 };
 
 template <typename T>
@@ -130,6 +133,15 @@ template <typename T>
 std::complex<T> utils::math<std::complex<T>>::atanh(const std::complex<T>& x) {
     return std::atanh(x);
 }
+template <typename T>
+T utils::math<std::complex<T>>::real(const std::complex<T>& x) {
+    return x.real();
+}
+template <typename T>
+T utils::math<std::complex<T>>::imag(const std::complex<T>& x) {
+    return x.imag();
+}
+
 template <typename T>
 T utils::math<std::complex<T>>::abs(const std::complex<T>& x) {
     if constexpr (is_profiling<T>::value)

@@ -18,6 +18,8 @@ struct utils::math<T> {
     static T zeta(const T& x);
     static T e_x(const T& x);
     static T k_x(const T& x);
+    static T tgamma(const T& x);
+    static T bessel_first_kind(const T& x, const T& alpha);
 #ifdef __GSL_SF_EXPINT_H__
     static T ci_x(const T& x);
     static T si_x(const T& x);
@@ -60,6 +62,7 @@ struct utils::math<T> {
 #endif
     using has_e_x = std::true_type;
     using has_k_x = std::true_type;
+    using has_bessel_first_kind = std::true_type;
 };
 
 template <std::floating_point T>
@@ -105,6 +108,10 @@ T utils::math<T>::hypot(const T& a, const T& b) {
 template <std::floating_point T>
 T utils::math<T>::erf(const T& x) {
     return std::erf(x);
+}
+template <std::floating_point T>
+T utils::math<T>::bessel_first_kind(const T& x, const T& alpha) {
+    return std::cyl_bessel_j(alpha, x);
 }
 template <std::floating_point T>
 T utils::math<T>::zeta(const T& x) {
@@ -177,6 +184,11 @@ T utils::math<T>::e_x(const T& x) {
 template <std::floating_point T>
 T utils::math<T>::k_x(const T& x) {
     return std::comp_ellint_1(x);
+}
+
+template <std::floating_point T>
+T utils::math<T>::tgamma(const T& x) {
+    return std::tgamma(x);
 }
 
 template <std::floating_point T>

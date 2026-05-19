@@ -18,6 +18,7 @@ struct utils::math<arb::float_precision> {
     static arb::float_precision log10(const arb::float_precision& x);
     static arb::float_precision hypot(const arb::float_precision& a, const arb::float_precision& b);
     static arb::float_precision erf(const arb::float_precision& x);
+    static arb::float_precision bessel_first_kind(const arb::float_precision& x, const arb::float_precision& alpha);
     static arb::float_precision zeta(const arb::float_precision& x);
 #ifdef __GSL_SF_EXPINT_H__
     static arb::float_precision ci_x(const arb::float_precision& x);
@@ -28,6 +29,7 @@ struct utils::math<arb::float_precision> {
 #endif
     static arb::float_precision e_x(const arb::float_precision& x);
     static arb::float_precision k_x(const arb::float_precision& x);
+    static arb::float_precision tgamma(const arb::float_precision& x);
     static arb::float_precision sin(const arb::float_precision& x);
     static arb::float_precision asin(const arb::float_precision& x);
     static arb::float_precision cos(const arb::float_precision& x);
@@ -59,6 +61,7 @@ struct utils::math<arb::float_precision> {
 #endif
     using has_e_x = std::true_type;
     using has_k_x = std::true_type;
+    using has_bessel_first_kind = std::true_type;
 };
 
 template <std::integral K>
@@ -110,6 +113,11 @@ inline arb::float_precision utils::math<arb::float_precision>::erf(const arb::fl
     return arb::erf(x);
 }
 
+inline arb::float_precision utils::math<arb::float_precision>::bessel_first_kind(const arb::float_precision& x,
+                                                                                 const arb::float_precision& alpha) {
+    return arb::float_precision(std::cyl_bessel_j(static_cast<double>(alpha), static_cast<double>(x)), x.precision());
+}
+
 inline arb::float_precision utils::math<arb::float_precision>::zeta(const arb::float_precision& x) {
     return arb::zeta(x);
 }
@@ -142,6 +150,10 @@ inline arb::float_precision utils::math<arb::float_precision>::e_x(const arb::fl
 
 inline arb::float_precision utils::math<arb::float_precision>::k_x(const arb::float_precision& x) {
     return arb::float_precision(std::comp_ellint_1(static_cast<double>(x)), x.precision());
+}
+
+inline arb::float_precision utils::math<arb::float_precision>::tgamma(const arb::float_precision& x) {
+    return arb::tgamma(x);
 }
 
 inline arb::float_precision utils::math<arb::float_precision>::sin(const arb::float_precision& x) {

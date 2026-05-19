@@ -10,11 +10,11 @@
 template <typename T>
 struct is_complex_t : public std::false_type {};
 
-template <std::floating_point T>
+template <FloatLike T>
 struct is_complex_t<std::complex<T>> : public std::true_type {};
 
 #ifdef SHANKS_ENABLE_PROFILING
-template <std::floating_point T>
+template <FloatLike T>
 struct is_complex_t<std::complex<shanks::profiling::OperationCounting<T>>> : public std::true_type {};
 #endif
 
