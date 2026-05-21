@@ -274,9 +274,127 @@ public:
     }
 };
 
+// ---------------------------------------------------------------------------
+// parse_value<T> — type-aware value parser
+//
+// Real types:       delegate to parse_istream<T>
+// Complex<T>:       parse "(re,im)" or bare real number
+// Interval<T>:       parse "[inf,sup]" or bare real number  (future)
+// ComplexInterval<T>: parse full 4-field object               (future)
+// ---------------------------------------------------------------------------
+
+/// Trim leading/trailing whitespace from a string.
+static inline std::string trim_str(const std::string& s) {
+    auto start = s.find_first_not_of(" \t\n\r");
+    if (start == std::string::npos) return "";
+    auto end = s.find_last_not_of(" \t\n\r");
+    return s.substr(start, end - start + 1);
+}
+
+/// Parse a real (non-complex, non-interval) value. Delegates to parse_istream<T>.
+template <typename T>
+    requires(!::shanks::ffi::is_complex_v<T> && !::shanks::ffi::is_interval_v<T> && !::shanks::ffi::is_complex_interval_v<T>)
+T parse_value(const std::string& s) {
+    return ::shanks::utils_json::parse_istream<T>(s);
+}
+
+/// Parse a complex value from "(real,imag)" format, or a bare real number.
+/// Works with any T that supports parse_value<T> (including mpfr::mpreal).
+/// Excludes complex<interval<T>> which is handled separately below.
+template <typename T>
+    requires(::shanks::ffi::is_complex_v<T> && !::shanks::ffi::is_complex_interval_v<T>)
+T parse_value(const std::string& s) {
+    using V = typename T::value_type;
+    std::string trimmed = trim_str(s);
+
+    if (!trimmed.empty() && trimmed.front() == '(' && trimmed.back() == ')') {
+        // Find comma separating real and imag
+        size_t comma = trimmed.find(',');
+        if (comma == std::string::npos) {
+            throw std::runtime_error("parse_value<complex>: missing comma in '" + s + "'");
+        }
+        std::string re_str = trim_str(trimmed.substr(1, comma - 1));
+        std::string im_str = trim_str(trimmed.substr(comma + 1, trimmed.size() - comma - 2));
+        V re = parse_value<V>(re_str);
+        V im = parse_value<V>(im_str);
+        return T(re, im);
+    }
+
+    // Bare real number: imag = 0
+    V re = parse_value<V>(trimmed);
+    return T(re, V(0));
+}
+
+/// Parse an interval value from "[inf,sup]" format, or a bare real number.
+template <typename T>
+    requires(::shanks::ffi::is_interval_v<T> && !::shanks::ffi::is_complex_interval_v<T>)
+T parse_value(const std::string& s) {
+    using V = typename T::value_type;
+    std::string trimmed = trim_str(s);
+
+    if (!trimmed.empty() && trimmed.front() == '[' && trimmed.back() == ']') {
+        size_t comma = trimmed.find(',');
+        if (comma == std::string::npos) {
+            throw std::runtime_error("parse_value<interval>: missing comma in '" + s + "'");
+        }
+        std::string inf_str = trim_str(trimmed.substr(1, comma - 1));
+        std::string sup_str = trim_str(trimmed.substr(comma + 1, trimmed.size() - comma - 2));
+        V inf = parse_value<V>(inf_str);
+        V sup = parse_value<V>(sup_str);
+        return T(inf, sup);
+    }
+
+    // Bare real number: inf = sup = value
+    V v = parse_value<V>(trimmed);
+    return T(v, v);
+}
+
+/// Parse a complex-interval value from "([ri,rs],[ii,is])" or "(re,im)" format.
+/// Depends on parse_value<complex<V>> and parse_value<interval<V>> above.
+template <typename T>
+    requires(::shanks::ffi::is_complex_interval_v<T>)
+T parse_value(const std::string& s) {
+    using IV = typename T::value_type;  // intprec::interval<V>
+    using V = typename IV::value_type;
+    std::string trimmed = trim_str(s);
+
+    if (!trimmed.empty() && trimmed.front() == '(' && trimmed.back() == ')') {
+        // Try to find the comma separating real-interval from imag-interval.
+        // This is tricky because intervals contain commas: ([a,b],[c,d])
+        // Strategy: find matching brackets.
+        auto find_top_comma = [](const std::string& t) -> size_t {
+            int depth = 0;
+            for (size_t i = 1; i + 1 < t.size(); ++i) {
+                if (t[i] == '[') ++depth;
+                else if (t[i] == ']') --depth;
+                else if (t[i] == ',' && depth == 0) return i;
+            }
+            return std::string::npos;
+        };
+
+        size_t comma = find_top_comma(trimmed);
+        if (comma == std::string::npos) {
+            // Might be (re,im) with plain reals → degenerate intervals
+            // Parse as complex<V> first, then wrap in intervals
+            std::complex<V> cv = parse_value<std::complex<V>>(s);
+            return T(IV(cv.real(), cv.real()), IV(cv.imag(), cv.imag()));
+        }
+
+        std::string re_str = trim_str(trimmed.substr(1, comma - 1));
+        std::string im_str = trim_str(trimmed.substr(comma + 1, trimmed.size() - comma - 2));
+        IV re_iv = parse_value<IV>(re_str);
+        IV im_iv = parse_value<IV>(im_str);
+        return T(re_iv, im_iv);
+    }
+
+    // Bare real number: degenerate interval
+    V v = parse_value<V>(trimmed);
+    return T(IV(v, v), IV(V(0), V(0)));
+}
+
 template <typename T, PrecisionType P>
 std::unique_ptr<CSeries> mk_typed_series(size_t idx, const std::string& params_json, size_t n, const std::string& x_str) {
-    T x = ::shanks::utils_json::parse_istream<T>(x_str);
+    T x = parse_value<T>(x_str);
 
     // Parse optional T-parameter (alpha) and K-parameter (m) from params_json.
     // These map to the addTParameter / addKParameter accepted by series_registry::create,
