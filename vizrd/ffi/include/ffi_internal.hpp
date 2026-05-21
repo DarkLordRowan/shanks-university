@@ -16,6 +16,7 @@
 #include <complex>
 // Ensure mpreal is available before using it in specialization
 #include "../../../backend/core/include/lib.hpp"
+#include "../../../backend/core/include/utils/json.hpp"
 
 namespace shanks {
 namespace ffi {
@@ -174,21 +175,12 @@ inline ScientificValue to_scientific(mpfr::mpreal value) {
     // Parse scientific notation from mpreal string (format: 1.23e+45)
     size_t e_pos = s.find('e');
     if (e_pos != std::string::npos) {
-        try {
-            double mantissa = std::stod(s.substr(0, e_pos));
-            int64_t exp = std::stoll(s.substr(e_pos + 1));
-            return ScientificValue(mantissa, exp);
-        } catch (...) {
-            // Fallback for weirdly formatted strings
-            return ScientificValue(0.0, 0);
-        }
+        double mantissa = ::shanks::utils_json::parse_double(s.substr(0, e_pos));
+        int64_t exp = std::stoll(s.substr(e_pos + 1)); // exponent is always integer, stoll is fine
+        return ScientificValue(mantissa, exp);
     }
 
-    try {
-        return ScientificValue(std::stod(s), 0);
-    } catch (...) {
-        return ScientificValue(0.0, 0);
-    }
+    return ScientificValue(::shanks::utils_json::parse_double(s), 0);
 }
 
 // ============================================================================

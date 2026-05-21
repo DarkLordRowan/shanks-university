@@ -261,7 +261,7 @@ where
         .series_exists(
             task.series.series.name.clone(),
             task.series.precision.clone(),
-            task.series.series.x.to_string(),
+            value_to_x_string(&task.series.series.x)?,
             args_json.clone(),
             noise_json.clone(),
         )
@@ -465,7 +465,7 @@ where
     let s_name_raw = task.series.series.name.clone();
     let s_prec_raw = task.series.precision.clone();
     let s_args_raw = args_json.clone();
-    let s_x_raw = task.series.series.x.to_string();
+    let s_x_raw = value_to_x_string(&task.series.series.x)?;
     let s_noise_json_raw = noise_json.clone();
     let s_n_needed = task.n_points;
 
@@ -975,4 +975,21 @@ fn accel_data_from_cache(ad: &CachedAccelData, events: Vec<SeriesEvent>) -> Acce
 
 fn sorted_args_json(params: &BTreeMap<String, serde_json::Value>) -> Result<String> {
     Ok(serde_json::to_string(params)?)
+}
+
+/// Convert a serde_json::Value to a string suitable for C++ `parse_istream<T>`.
+///
+/// JSON numbers render as bare numbers (`1.0`).
+/// JSON strings render **without** surrounding quotes (`"1.0"` → `1.0`),
+/// so that C++ `istringstream >> T` can parse them.
+/// Other types (bool, null, array, object) are rejected.
+fn value_to_x_string(v: &serde_json::Value) -> Result<String> {
+    match v {
+        serde_json::Value::String(s) => Ok(s.clone()),
+        serde_json::Value::Number(_) => Ok(v.to_string()),
+        _ => anyhow::bail!(
+            "value_to_x_string: unsupported JSON type for x/arg: {}",
+            v
+        ),
+    }
 }

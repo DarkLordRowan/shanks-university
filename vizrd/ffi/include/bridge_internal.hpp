@@ -274,17 +274,9 @@ public:
     }
 };
 
-template <typename T>
-T parse_x(const std::string& x) {
-    std::istringstream iss(x);
-    T value;
-    iss >> value;
-    return value;
-}
-
 template <typename T, PrecisionType P>
 std::unique_ptr<CSeries> mk_typed_series(size_t idx, const std::string& params_json, size_t n, const std::string& x_str) {
-    T x = parse_x<T>(x_str);
+    T x = ::shanks::utils_json::parse_istream<T>(x_str);
 
     // Parse optional T-parameter (alpha) and K-parameter (m) from params_json.
     // These map to the addTParameter / addKParameter accepted by series_registry::create,
@@ -295,10 +287,10 @@ std::unique_ptr<CSeries> mk_typed_series(size_t idx, const std::string& params_j
     size_t k_param = 1;
 
     if (entry.needsT) {
-        t_param = ::utils::cast<T, double>()(std::stod(::shanks::utils_json::get_json_val_required(params_json, "alpha")));
+        t_param = ::utils::cast<T, double>()(::shanks::utils_json::parse_double(::shanks::utils_json::get_json_val_required(params_json, "alpha")));
     }
     if (entry.needsK) {
-        k_param = std::stoul(::shanks::utils_json::get_json_val_required(params_json, "m"));
+        k_param = ::shanks::utils_json::parse_ulong(::shanks::utils_json::get_json_val_required(params_json, "m"));
     }
 
     auto series = ::shanks::series::series_registry<T, size_t>::create(idx, x, t_param, k_param);

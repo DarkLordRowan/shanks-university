@@ -8,7 +8,7 @@ mod selection;
 use crate::cache::Cache;
 use crate::compute::{self, AccelData, IsCancelled, SeriesData, SeriesEventKind};
 use crate::experiment::ExperimentConfig;
-use crate::ffi::{Arr, ArrF64, ArrLine, ComplexOf, IntervalOf, Value};
+use crate::ffi::{Arr, ArrF64, ArrLine, ComplexOf, IntervalOf, Value, value_to_x_string_display};
 use arc_swap::ArcSwap;
 use egui::Id;
 use egui_plot::{Line, LineStyle, PlotBounds, PlotPoint, PlotPoints};
@@ -1456,7 +1456,7 @@ struct LineInfo {
 
 impl LineInfo {
     fn from_key(key: &ResultKey, line_type: &str, component: Option<&str>) -> Self {
-        let series_x = key.series.series.x.to_string();
+        let series_x = value_to_x_string_display(&key.series.series.x);
         let series_args = key
             .series
             .series

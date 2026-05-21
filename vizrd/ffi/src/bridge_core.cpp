@@ -47,7 +47,7 @@ std::unique_ptr<CSeries> mk_series_from_sn(rust::Str precision, rust::Vec<rust::
     raw_sn.reserve(count);
     for (size_t i = 0; i < count; ++i) {
         try {
-            raw_sn.push_back(std::stod(std::string(sn[i])));
+            raw_sn.push_back(::shanks::utils_json::parse_double(std::string(sn[i])));
         } catch (...) {
             throw std::runtime_error("mk_series_from_sn: failed to parse '" + std::string(sn[i]) + "' as number");
         }

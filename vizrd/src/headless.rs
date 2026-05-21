@@ -1,6 +1,7 @@
 //! Headless runner — executes batch computations using the async compute pipeline.
 
 use crate::cache::Cache;
+use crate::ffi::value_to_x_string_display;
 use crate::compute::{self, ComputeEvent, ComputeTask, SeriesDesc};
 use crate::experiment::{
     AccelInstance, ExperimentConfig, FilterInstance, NoiseInstance,
@@ -116,7 +117,7 @@ impl HeadlessRunner {
                 ComputeEvent::SeriesDone { id, data } => {
                     let mut arguments = HashMap::new();
                     // Explicitly add 'x' because Python previously expected it inside args
-                    arguments.insert("x".to_string(), id.1.series.x.to_string());
+                    arguments.insert("x".to_string(), value_to_x_string_display(&id.1.series.x));
                     for (k, v) in &id.1.series.args {
                         let vs = match v {
                             serde_json::Value::String(s) => s.clone(),

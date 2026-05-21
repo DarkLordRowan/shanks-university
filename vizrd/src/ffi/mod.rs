@@ -2,6 +2,21 @@ pub mod bridge;
 
 pub use bridge::ffi::RealValue;
 
+/// Convert a `serde_json::Value` to a string suitable for C++ `parse_istream<T>`.
+///
+/// - JSON number  → bare number string (`1.0`)
+/// - JSON string  → unwrapped string (`"1.0"` → `1.0`, `"(0.1,0.2)"` → `(0.1,0.2)`)
+/// - Other types  → fall through to `Display::to_string` (for display/UI only)
+///
+/// This exists because `Value::String("1.0").to_string()` produces `"1.0"`
+/// (with quotes), which C++ `istringstream >> double` cannot parse.
+pub fn value_to_x_string_display(v: &serde_json::Value) -> String {
+    match v {
+        serde_json::Value::String(s) => s.clone(),
+        other => other.to_string(),
+    }
+}
+
 impl RealValue {
     pub fn to_f64(&self) -> f64 {
         self.mantissa * 10f64.powi(self.exponent as i32)
