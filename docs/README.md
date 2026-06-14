@@ -17,6 +17,20 @@
 3) Установить `vizr`: `pip install -e ./frontend/vizr`
 4) Визуализировать данные: `python3 -m vizr.main backend/runner/output/results_json`
 
+Запуск Fronend:
+1. Перейти в папку с кодом сайта: 'cd frontend/web/frontend'
+2. Установить зависимости: 'npm install'
+3. Запустить проект: 'npm run dev'
+4.После запуска в консоли появится ссылка на локальный сайт, обычно что-то вроде: 'http://localhost:5173'. Открой эту ссылку в браузере.
+
+ИЛИ
+
+Открой папку frontend/web/frontend в IDE и запусти проект как обычное React TypeScript приложение.
+
+Для анализа необходимо:
+1) Запустить анализ и экспорт '.\vizrd.exe --no-cache headless (Адрес json-файла) --export (Название папки)'
+2) Папку с parquet отправить на сайт
+
 # Подробнее
 
 - [Архитектура](architecture.md)
