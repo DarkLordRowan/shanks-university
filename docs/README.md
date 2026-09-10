@@ -31,6 +31,14 @@
 1) Запустить анализ и экспорт '.\vizrd.exe --no-cache headless (Адрес json-файла) --export (Название папки)'
 2) Папку с parquet отправить на сайт
 
+Запуск backend api:
+```
+docker build -t shanks-api:latest .
+docker run -d --name shanks-api -p 8000:8000 --restart unless-stopped shanks-api:latest
+```
+
+
+
 # Подробнее
 
 - [Архитектура](architecture.md)
