@@ -1,4 +1,4 @@
-# Установка на Linux
+# Установка на Linux / WSL
 
 ## Обзор
 
@@ -140,3 +140,10 @@ pip install fastapi uvicorn pymongo
 ```bash
 pip install PyQt6 pyqtgraph polars
 ```
+
+### Запуск C++
+```bash
+backend/core
+cmake -B build
+cmake --build build
+./shanks
