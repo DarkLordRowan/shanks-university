@@ -38,13 +38,26 @@ Doxygen документация доступна [по ссылке](https://da
  
 ## Команда разработки (Осень 2025 - Весна 2026)
 + **Крейнин Роман** — Тимлид [kreynin.rg@mail.ru](mailto:kreynin.rg@mail.ru)
-+ **Наумов Александр** — Программист (C++) [alex2004naumov@gmail.com](mailto:alex2004naumov@gmail.com)
-+ **Соболев Юрий** — Программист (C++, Python, Rust)
++ **Наумов Александр** — Главный программист (C++) [alex2004naumov@gmail.com](mailto:alex2004naumov@gmail.com)
++ **Соболев Юрий** — Главный программист (C++, Python, Rust) 
 + **Ядренцев Илья** — Программист (Python, Docker)
 + **Шевыров Аркадий** — Программист (Python, Web)
 + **Мхитарян Арам** — Программист (C++)
 + **Герасимов Александр** — Программист (C++)
-+ **Чижик Мария** — Теоретик (C++) [masha.tchizhik@yandex.ru](mailto:masha.tchizhik@yandex.ru)
++ **Чижик Мария** — Теоретик [masha.tchizhik@yandex.ru](mailto:masha.tchizhik@yandex.ru)
++ **Карбовская Анна**  — Главный Теоретик annkva06@gmail.com
++ **Сиразетдинов Рустем** — Теоретик avesirazetdinov@gmail.com
++ **Погорелов Михаил** — Теоретик mishelpogorelov@yandex.ru
++ **Измалкова Полина** — Теоретик daadys.00@mail.ru
++ **Хлебникова Виктория** — Теоретик vxrus03@yandex.ru
++ **Жемчужная Юлия** — Теоретик zhemchz@yandex.ru
++ **Бесленей Арабелла** — Теоретик arabella.besleney@gmail.com
++ **Филатова Мария** — Теоретик mashaschelk@mail.ru
++ **Кехлеров Тимур ** — Теоретик 1298007@gmail.com
++ **Шарифулин Тимур** — Аналитик tsharifulin353@gmail.com
++ **Утушкин Евгений ** — Аналитик john-utush@mail.ru
++ **Богданова Елизавета** — Аналитик Lisska35361@yandex.ru
++ **Топеха Юлия** — Аналитик
 
 ## Команда разработки (Осень 2024 - Весна 2025) 
 + **Крейнин Роман** — Тимлид [kreynin.rg@mail.ru](mailto:kreynin.rg@mail.ru)
@@ -57,7 +70,7 @@ Doxygen документация доступна [по ссылке](https://da
 + **Бутенко Михаил** — Теоретик [atya200909@yandex.ru](mailto:atya200909@yandex.ru)
 + **Шаронов Кирилл** — Программист (C++) [kiri4sharonov@mail.ru](mailto:kiri4sharonov@mail.ru)
 + **Ююкин Андрей** — Программист (C++) [andryuka05@yandex.ru](mailto:andryuka05@yandex.ru)
-+ **Чижик Мария** — Теоретик (C++) [masha.tchizhik@yandex.ru](mailto:masha.tchizhik@yandex.ru)
++ **Чижик Мария** — Теоретик [masha.tchizhik@yandex.ru](mailto:masha.tchizhik@yandex.ru)
 
 ## Команда разработки (Весна 2024)
 + **Крейнин Роман** — Тимлид [kreynin.rg@mail.ru](mailto:kreynin.rg@mail.ru)
