@@ -4,7 +4,7 @@ import re
 from scipy.signal import savgol_filter
 import sys
 
-sys.path.append("../pyshanks")
+sys.path.append("../src")
 
 import pyshanks as ps
 

@@ -17,7 +17,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 packages = [
-    { include = "src", from = "." }
+    { include = "shanks", from = "src" },
+    { include = "runner", from = "src" },
+    { include = "pyshanks", from = "src" }
 ]
 
 [tool.poetry.group.dev.dependencies]

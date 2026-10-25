@@ -24,6 +24,7 @@ RUN cp build/*.so pyshanks
 FROM python:3.13-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app/src
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgslcblas0 \
@@ -36,9 +37,8 @@ WORKDIR /app
 
 COPY runner/config/               ./config
 COPY runner/src/                  ./src
-COPY runner/main.py               ./
 COPY runner/verify_parquet_fix.py ./
 
-COPY --from=shanks-builder /pyshanks/ ./pyshanks/
+COPY --from=shanks-builder /pyshanks/ ./src/pyshanks/
 
 CMD ["/bin/bash"]

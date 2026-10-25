@@ -6,16 +6,21 @@ authors = [
     {name = "Your Name",email = "you@example.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 dependencies = [
-    "fastapi (>=0.123.9,<0.124.0)",
-    "motor (>=3.7.1,<4.0.0)",
-    "uvicorn (>=0.38.0,<0.39.0)",
-    "python-multipart (>=0.0.20,<0.0.21)",
-    "pydantic-mongo (>=3.1.0,<4.0.0)"
+    "fastapi",
+    "motor",
+    "uvicorn",
+    "python-multipart",
+    "pydantic-mongo"
 ]
 
-
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [
+    { include = "shanks", from = "src" },
+    { include = "client", from = "src" }
+]

@@ -17,7 +17,7 @@ pip install .
 To run the visualizer, provide the path to the directory containing the `series` and `accelerations` parquet folders:
 
 ```bash
-python -m vizr.main PATH_TO_PARQUET_DATA
+python -m vizr PATH_TO_PARQUET_DATA
 ```
 
 ## Project Structure

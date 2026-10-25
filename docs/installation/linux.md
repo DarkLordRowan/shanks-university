@@ -69,7 +69,7 @@ cd backend/runner
 
 **Скрипт выполняет:**
 1. Компиляцию pyshanks через CMake
-2. Создание директории `pyshanks/`
+2. Создание пакета `src/pyshanks/`
 3. Копирование скомпилированного `.so` файла
 
 **Ожидаемый вывод:**
@@ -88,11 +88,11 @@ cmake ..
 make -j$(nproc)
 ```
 
-Скопируйте `*.so` в `backend/runner/pyshanks/`:
+Скопируйте `*.so` в `backend/runner/src/pyshanks/`:
 
 ```bash
-mkdir -p ../../runner/pyshanks
-cp *.so ../../runner/pyshanks/
+mkdir -p ../../runner/src/pyshanks
+cp *.so ../../runner/src/pyshanks/
 ```
 
 ---

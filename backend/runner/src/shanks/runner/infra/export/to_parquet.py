@@ -1,0 +1,287 @@
+"""
+Parquet export service implementation.
+"""
+
+import json
+import logging
+from pathlib import Path
+from typing import Any, Sequence
+
+from shanks.runner.config.model import TrialConfig
+from shanks.runner.domain.export_service import ExportService
+from shanks.runner.domain.params import BaseSeriesParam
+
+logger = logging.getLogger(__name__)
+
+try:
+    import pyarrow as pa
+    import pyarrow.dataset as ds
+
+    class ParquetExportService(ExportService):
+        def __init__(self, location: Path):
+            self.location = location
+
+        def _sanitize_complex_value(self, value: Any) -> dict[str, str] | None:
+            """Convert value to {real: str, imag: str} format."""
+            if value is None:
+                return None
+            
+            if isinstance(value, dict) and "real" in value and "imag" in value:
+                 return {"real": str(value["real"]), "imag": str(value["imag"])}
+            
+            return {"real": str(value), "imag": "0.0"}
+
+        def _get_accel_record(self, result: dict, series_id: int) -> dict[str, Any]:
+            accel = result["accel"]
+            computed = result["computed"]
+            error = result.get("error")
+            filtered = result.get("filtered")
+            noise = result.get("noise")
+            
+            comp_list = []
+            events_list = []
+            for step in computed:
+                 n = step["n"]
+                 val = self._sanitize_complex_value(step.get("accel_value"))
+                 dev = str(step.get("accel_value_deviation", ""))
+                 
+                 prof = step.get("profiling")
+                 if prof:
+                     prof = {
+                         "add": int(prof.get("add", 0)),
+                         "mul": int(prof.get("mul", 0)),
+                         "div": int(prof.get("div", 0)),
+                         "special": int(prof.get("special", 0))
+                     }
+
+                 comp_list.append({
+                     "value": val,
+                     "deviation": dev,
+                     "profiling": prof
+                 })
+                 
+                 if "events" in step and step["events"]:
+                     for evt in step["events"]:
+                         events_list.append({
+                             "n": n,
+                             "name": str(evt.get("name")),
+                             "description": str(evt.get("description"))
+                         })
+
+            errors_list = []
+            if error:
+                 desc = error.get("description", "Unknown error")
+                 errors_list.append({"n": 0, "message": str(desc)})
+
+            filtered_data = None
+            if filtered:
+                 # filtered is a dict: {start_n, segment_length, methods: {name: {values: [], average: ...}}}
+                 methods_data = {}
+                 methods_dict = filtered.get("methods", {})
+                 for m_name, m_res in methods_dict.items():
+                     # Process values list
+                     raw_vals = m_res.get("values", [])
+                     sanitized_vals = [self._sanitize_complex_value(v) for v in raw_vals]
+                     
+                     # Process average
+                     raw_avg = m_res.get("average")
+                     sanitized_avg = self._sanitize_complex_value(raw_avg)
+                     
+                     methods_data[m_name] = {
+                         "values": sanitized_vals,
+                         "average": sanitized_avg
+                     }
+                 
+                 filtered_data = {
+                     "start_n": filtered.get("start_n", 0),
+                     "segment_length": filtered.get("segment_length", 0),
+                     "methods": methods_data
+                 }
+
+            return {
+                "series_id": series_id,
+                "accel_name": str(accel.get("name")),
+                "m_value": int(accel.get("m_value")),
+                "additional_args": accel.get("additional_args", {}),
+                "computed": comp_list,
+                "errors": errors_list,
+                "events": events_list,
+                "filtered": filtered_data
+            }
+
+        def export(self, dicts: Sequence[dict], config: TrialConfig, series: list[BaseSeriesParam], **kwargs):
+            self.location.mkdir(parents=True, exist_ok=True)
+            file_options = ds.ParquetFileFormat().make_write_options(compression="zstd")
+
+            series_records = {}
+            accel_records = []
+            
+            for result in dicts:
+                s_res = result["series"]
+                s_id = s_res["id"]
+                
+                if s_id not in series_records:
+                     prec_str = "f64"
+                     found_param = next((p for p in series if getattr(p, "id", -1) == s_id), None)
+                     if found_param:
+                         prec_str = str(found_param.precision.value)
+                    
+                     args = {k: str(v) for k, v in s_res["arguments"].items()}
+                     noise = result.get("noise")
+                     if noise:
+                         args["noise_type"] = str(noise.get("type", ""))
+                         args["noise_method"] = str(noise.get("method", ""))
+                         args["noise_seed"] = str(noise.get("seed", 0))
+                         for nk in noise.keys():
+                             if nk not in ("type", "method", "seed") and noise[nk] is not None:
+                                 args[f"noise_{nk}"] = str(noise[nk])
+
+                     series_records[s_id] = {
+                         "series_name": s_res["name"],
+                         "series_id": s_id,
+                         "precision": prec_str,
+                         "arguments": args,
+                         "series_limit": self._sanitize_complex_value(s_res["lim"]),
+                         "computed_map": {} # temp map for merging
+                     }
+                
+                # Merge computed steps
+                record = series_records[s_id]
+                for step in result["computed"]:
+                    n = step["n"]
+                    if n not in record["computed_map"]:
+                        val = self._sanitize_complex_value(step.get("partial_sum"))
+                        dev = str(step.get("partial_sum_deviation", ""))
+                        prof = step.get("profiling")
+                        if prof:
+                            prof = {
+                                "add": int(prof.get("add", 0)),
+                                "mul": int(prof.get("mul", 0)),
+                                "div": int(prof.get("div", 0)),
+                                "special": int(prof.get("special", 0))
+                            }
+                        
+                        record["computed_map"][n] = {
+                            "n": n,
+                            "value": val,
+                            "deviation": dev,
+                            "profiling": prof
+                        }
+                
+                accel_records.append(self._get_accel_record(result, s_id))
+
+            if series_records:
+                # Convert maps to sorted lists
+                series_data = []
+                for r in series_records.values():
+                    sorted_computed = [r["computed_map"][n] for n in sorted(r["computed_map"].keys())]
+                    series_data.append({
+                        "series_name": r["series_name"],
+                        "series_id": r["series_id"],
+                        "precision": r["precision"],
+                        "arguments": r["arguments"],
+                        "series_limit": r["series_limit"],
+                        "computed": sorted_computed
+                    })
+
+                all_arg_keys = set()
+                for r in series_data:
+                    all_arg_keys.update(r["arguments"].keys())
+                sorted_arg_keys = sorted(list(all_arg_keys))
+                
+                arg_fields = [(k, pa.string()) for k in sorted_arg_keys]
+                if not arg_fields:
+                    arg_fields = [("__dummy__", pa.string())]
+
+                series_schema = pa.schema([
+                    ("series_name", pa.string()),
+                    ("series_id", pa.int64()),
+                    ("precision", pa.string()),
+                    ("arguments", pa.struct(arg_fields)),
+                    ("series_limit", pa.struct([("real", pa.string()), ("imag", pa.string())])),
+                    ("computed", pa.list_(pa.struct([
+                        ("n", pa.int64()),
+                        ("value", pa.struct([("real", pa.string()), ("imag", pa.string())])),
+                        ("deviation", pa.string()),
+                        ("profiling", pa.struct([
+                            ("add", pa.int64()),
+                            ("mul", pa.int64()),
+                            ("div", pa.int64()),
+                            ("special", pa.int64())
+                        ]))
+                    ])))
+                ])
+                
+                series_table = pa.Table.from_pylist(series_data, schema=series_schema)
+                
+                ds.write_dataset(
+                    series_table,
+                    base_dir=self.location / "series",
+                    format="parquet",
+                    partitioning=ds.partitioning(pa.schema([("precision", pa.string()), ("series_name", pa.string())]), flavor="hive"),
+                    file_options=file_options,
+                    existing_data_behavior="overwrite_or_ignore"
+                )
+
+            if accel_records:
+                all_add_keys = set()
+                all_methods_keys = set()
+                for r in accel_records:
+                    all_add_keys.update(r["additional_args"].keys())
+                    if r["filtered"]:
+                        all_methods_keys.update(r["filtered"]["methods"].keys())
+                
+                sorted_add_keys = sorted(list(all_add_keys))
+                add_arg_fields = [(k, pa.string()) for k in sorted_add_keys]
+                if not add_arg_fields:
+                    add_arg_fields = [("__dummy__", pa.string())]
+                
+                sorted_methods_keys = sorted(list(all_methods_keys))
+                method_res_type = pa.struct([
+                    ("values", pa.list_(pa.struct([("real", pa.string()), ("imag", pa.string())]))),
+                    ("average", pa.struct([("real", pa.string()), ("imag", pa.string())]))
+                ])
+                methods_fields = [(k, method_res_type) for k in sorted_methods_keys]
+                if not methods_fields:
+                    methods_fields = [("__dummy__", method_res_type)]
+
+                accel_schema = pa.schema([
+                    ("series_id", pa.int64()),
+                    ("accel_name", pa.string()),
+                    ("m_value", pa.int64()),
+                    ("additional_args", pa.struct(add_arg_fields)),
+                    ("computed", pa.list_(
+                        pa.struct([
+                            ("value", pa.struct([("real", pa.string()), ("imag", pa.string())])),
+                            ("deviation", pa.string()),
+                            ("profiling", pa.struct([
+                                ("add", pa.int64()),
+                                ("mul", pa.int64()),
+                                ("div", pa.int64()),
+                                ("special", pa.int64())
+                            ]))
+                        ])
+                    )),
+                    ("errors", pa.list_(pa.struct([("n", pa.int64()), ("message", pa.string())]))),
+                    ("events", pa.list_(pa.struct([("n", pa.int64()), ("name", pa.string()), ("description", pa.string())]))),
+                    ("filtered", pa.struct([
+                        ("start_n", pa.int64()),
+                        ("segment_length", pa.int64()),
+                        ("methods", pa.struct(methods_fields))
+                    ]))
+                ])
+
+                accel_table = pa.Table.from_pylist(accel_records, schema=accel_schema)
+                
+                ds.write_dataset(
+                    accel_table,
+                    base_dir=self.location / "accelerations",
+                    format="parquet",
+                    partitioning=ds.partitioning(pa.schema([("series_id", pa.int64())]), flavor="hive"),
+                    file_options=file_options,
+                    existing_data_behavior="overwrite_or_ignore"
+                )
+
+except ImportError:
+    logger.warning("pyarrow not found. Parquet export will be disabled.")
+    ParquetExportService = None

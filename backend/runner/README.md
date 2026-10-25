@@ -20,7 +20,7 @@ pip install -r requirements.txt
 ### Базовое использование
 
 ```bash
-python main.py run
+python -m runner run
 ```
 
 Запускает со стандартными расположениями файлов:
@@ -36,7 +36,7 @@ python main.py run
 ### Файл конфигурации испытания
 
 ```bash
-python main.py run --options-json options.json
+python -m runner run --options-json options.json
 ```
 
 Запускает испытание с настройками в файле `options.json`. Подробнее о настройках ниже.
@@ -44,7 +44,7 @@ python main.py run --options-json options.json
 ### Пользовательские входные файлы
 
 ```bash
-python main.py run \
+python -m runner run \
     --series-json data/custom_series.json \
     --series-csv data/custom_data.csv \
     --accel-json data/accel_config.json
@@ -54,23 +54,23 @@ python main.py run \
 
 ```bash
 # Пропустить детектирование событий
-python main.py run --no-events
+python -m runner run --no-events
 
 # Пропустить генерацию графиков
-python main.py run --no-plots
+python -m runner run --no-plots
 
 # Пропустить и события и графики
-python main.py run --no-events --no-plots
+python -m runner run --no-events --no-plots
 ```
 
 ### Подробный вывод
 
 ```bash
 # Базовый подробный вывод
-python main.py run -v
+python -m runner run -v
 
 # Детальный вывод с трейсбэком при ошибках
-python main.py run -vv
+python -m runner run -vv
 ```
 
 ## Аргументы
@@ -130,13 +130,13 @@ python main.py run -vv
 Примеры использования:
 ```bash
 # Только JSON с именем по умолчанию (results.json)
-python main.py run --output-formats json
+python -m runner run --output-formats json
 
 # CSV и Parquet с кастомным именем
-python main.py run --output-formats csv parquet --results-filename my_experiment
+python -m runner run --output-formats csv parquet --results-filename my_experiment
 
 # Все три формата с именем experiment_2024
-python main.py run --output-formats json csv parquet --results-filename experiment_2024
+python -m runner run --output-formats json csv parquet --results-filename experiment_2024
 ```
 
 Результат:
@@ -182,13 +182,13 @@ Parquet файлы сохраняются в той же директории `o
 ### Быстрый анализ с пользовательскими данными
 
 ```bash
-python main.py --series-json my_data.json --output-dir quick_results -v
+python -m runner run --series-json my_data.json --output-dir quick_results -v
 ```
 
 ### Продуктивный запуск со всеми выводами
 
 ```bash
-python main.py run \
+python -m runner run \
     --series-json production/series_config.json \
     --series-csv production/series_data.csv \
     --accel-json production/accel_config.json \
@@ -201,7 +201,7 @@ python main.py run \
 ### Минимальный вывод для тестирования
 
 ```bash
-python main.py --no-events --no-plots --output-dir test_run
+python -m runner run --no-events --no-plots --output-dir test_run
 ```
 
 ## Конфигурация испытания
@@ -335,7 +335,7 @@ poetry run pre-commit install
 ### 4. Запуск скрипта без входа в окружение:
 
 ```sh
-poetry run python main.py run
+poetry run python -m runner run
 ```
 ...
 
@@ -370,7 +370,7 @@ docker compose ps
 ```sh
 docker compose exec -it shanks-runner аналогичная_python_команда
 # Например:
-docker compose exec -it shanks-runner python main.py run --options-json config/options.json
+docker compose exec -it shanks-runner python -m runner run --options-json config/options.json
 ```
 
 ### 4. Ограничения

@@ -1,0 +1,24 @@
+"""
+Parameter sources registry and builders.
+Author: Yadrentsev I. M.
+"""
+
+from shanks.runner.infra.param_sources.csv_series_loader import CSVSeriesParamSource
+from shanks.runner.infra.param_sources.json_accel_loader import JSONAccelParamSource
+from shanks.runner.infra.param_sources.json_series_loader import JSONSeriesParamSource
+
+PARAM_SERIES_SOURCE_BUILDERS = [
+    lambda cfg: (
+        JSONSeriesParamSource(cfg.series_json)
+        if cfg.series_json and cfg.series_json.exists()
+        else None
+    ),
+]
+
+PARAM_ACCELS_SOURCE_BUILDERS = [
+    lambda cfg: (
+        JSONAccelParamSource(cfg.accel_json)
+        if cfg.accel_json and cfg.accel_json.exists()
+        else None
+    ),
+]

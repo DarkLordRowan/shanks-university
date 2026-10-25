@@ -209,4 +209,6 @@ __marimo__/
 # pyshanks specific
 output/
 plots/
-pyshanks/
+/pyshanks/
+/src/pyshanks/*.so
+/src/pyshanks/*.pyd

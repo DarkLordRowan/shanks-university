@@ -6,16 +6,20 @@
 
 Требуются установленные Python 3.13, компилятор GCC 11+ или CLang 13+, CMake 3.11+. Также требуются установленные библиотеки GMP, MPFR, Eigen3.
 
+Подготовьте окружение Python:
+1) Создать виртуальную среду: `python3 -m venv .venv`
+2) Войти в виртуальную среду: `source .venv/bin/activate` или `.venv/Scripts/Activate.ps1`
+
+Для вычислительных экспериментов используйте
 1) Перейдите в директорию backend/runner.
 2) Запустите `install_pyshanks.sh` (или `install_pyshanks.bat`) для компиляции C++ составляющей проекта в Python-модуль.
-3) Запустите `python3 main run --config ./config/options.json` для запуска эксперимента.
-4) Результаты всех экспериментов будут записаны в `backend/runner/output/results.json`
+3) Установить `runner`: `pip install -e ./backend/runner`
+4) Запустите `python3 -m runner run --config ./config/options.json` для запуска эксперимента.
+5) Результаты всех экспериментов будут записаны в `backend/runner/output/results.json`
 
 Для визуализации полученных данных можно применить `frontend/vizr`:
-1) Создать виртуальную среду: `python -m venv .venv`
-2) Войти в виртуальную среду: `source .venv/bin/activate`
-3) Установить `vizr`: `pip install -e ./frontend/vizr`
-4) Визуализировать данные: `python3 -m vizr.main backend/runner/output/results_json`
+1) Установить `vizr`: `pip install -e ./frontend/vizr`
+2) Визуализировать данные: `python3 -m vizr backend/runner/output/results_json`
 
 Запуск Fronend:
 1. Перейти в папку с кодом сайта: 'cd frontend/web/frontend'

@@ -5,7 +5,7 @@ import sys
 import argparse
 import pandas as pd
 
-sys.path.append("../pyshanks")
+sys.path.append("../src")
 
 import pyshanks as ps
 

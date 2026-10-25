@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app/src
 
 WORKDIR /app
 
@@ -34,4 +35,4 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 COPY frontend/client/ ./
 
-CMD ["python3", "main.py"]
+CMD ["python3", "-m", "client"]

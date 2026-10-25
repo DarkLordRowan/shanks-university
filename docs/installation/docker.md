@@ -97,7 +97,7 @@ docker compose up -d shanks-runner-mongodb shanks-client
 ## Шаг 4. Запуск эксперимента в контейнере
 
 ```bash
-docker compose exec shanks-runner python main.py run \
+docker compose exec shanks-runner python -m runner run \
     --config /app/config/options.json
 ```
 
@@ -114,7 +114,7 @@ docker compose exec shanks-runner python main.py run \
 
 ```bash
 # Запуск
-docker compose exec shanks-runner python main.py run \
+docker compose exec shanks-runner python -m runner run \
     --config /app/config/example.json
 
 # Просмотр результатов

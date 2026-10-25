@@ -9,6 +9,12 @@ if(CCACHE_PROGRAM)
 endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# MSVC otherwise reports an obsolete value for __cplusplus even when a modern
+# language standard is selected. The core headers use that macro to select
+# their C++14/C++17 implementations.
+if(MSVC)
+    add_compile_options(/Zc:__cplusplus /permissive-)
+endif()
 # Disable LTO for development speed. Enable for production if absolute performance is needed.
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 
