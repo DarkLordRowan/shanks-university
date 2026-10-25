@@ -1,15 +1,8 @@
 #ifndef PJ_ALGORITHM_HPP
 #define PJ_ALGORITHM_HPP
 #pragma once
-
-/**
- * @file pj_algorithm.hpp
- * @brief Contains implementation of pJ-transformation for sequence acceleration.
- *
- * For theory, see:
- * Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS
- * @authors Naumov A.U.
- */
+// Homeier (2000), https://arxiv.org/pdf/math/0005209, (98), (105), (107).
+// Original author: Naumov A.U. Checks precede any vector access.
 
 namespace shanks {
 namespace algos {
@@ -28,18 +21,6 @@ public:
     /// real parameter
     const float_type beta;
 
-    /**
-     * @brief Parameterized constructor to initialize pJ-transformation
-     * @param variant Type of remainder estimator to use
-     *        Determines the specific variant of pJ's transformation:
-     *        - u_type: Standard remainder estimator
-     *        - t_type: Alternative remainder estimator
-     *        - v_type: Alternative remainder estimator
-     *        - t_wave_type: Modified remainder estimator
-     *        - v_wave_type: Modified remainder estimator
-     * @param auxilary_series std::function<T(K)> lambda function to get auxilary series a_{n}
-     * @authors Naumov A.U.
-     */
     explicit pj_algorithm(
         const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
         const int p = 2, const float_type beta = float_type(1))
@@ -47,36 +28,8 @@ public:
         update_type(remainder_type_to_use);
     };
 
-    /**
-     * @brief Executes pJ-transformation to accelerate series convergence.
-     *
-     * This method acts as the entry point for the transformation, delegating the work
-     * to either the direct or recursive implementation based on the configuration.
-     *
-     * For theory, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS, p. 18
-     *
-     * @param n The starting index for partial sums (S_n)
-     *        Valid values: n >= 0, determines the starting point of transformation
-     *        Higher values use more stable terms but may converge slower
-     * @param order The order of transformation
-     *        Valid values: order >= 0, higher orders use more terms but may provide better acceleration
-     *        Typically order <= 10 for numerical stability
-     * @param data series_result<T> struct containing necessary information for algorithm
-     * @return The accelerated partial sum after Drummond transformation
-     * @throws std::overflow_error if division by zero or numerical instability occurs
-     * @throws std::out_of_range if the input data vectors are too small.
-     * @throws std::overflow_error if numerical instability or division by zero occurs.
-     */
     T operator()(const K n, const K order, const series_result<T>& data) const override;
 
-    /**
-     * @brief Updates the remainder estimator type used by the algorithm.
-     *
-     * Re-initializes the internal remainder estimator pointer with the specified variant.
-     *
-     * @authors Naumov A.U.
-     * @param remainder_type_to_use The new remainder variant to employ.
-     */
     void update_type(const remainders::remainder_type remainder_type_to_use) {
         remainder_type_in_use = remainder_type_to_use;
 
@@ -109,11 +62,6 @@ public:
         }
     }
 
-    /**
-     * @brief Returns the descriptive name of the specific Drummond variant currently in use.
-     * @authors Naumov A.U.
-     * @return std::string A string containing the variant name and configuration details.
-     */
     std::string get_name() override {
         series_acceleration<T, K>::acceleration_name = std::to_string(p) + std::string("j_algorithm ");
         switch (remainder_type_in_use) {
@@ -148,6 +96,7 @@ public:
     }
 
     inline std::size_t how_much(const std::size_t n, const std::size_t order) const {
+        if(order==0)return n+1;
         return n + order + std::size_t(1) +
                std::size_t(remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
                            remainder_type_in_use == shanks::remainders::remainder_type::v_type) +
@@ -157,67 +106,39 @@ public:
 
 template <AcceptedLike T, UnsignedIntLike K>
 T pj_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
-    // Calculate minimum required size based on the chosen remainder variant
-    const std::size_t required_size = pj_algorithm<T, K>::how_much(n, order);
-
-    if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for D_{" + utils::helpers<K>::to_string(order) +
-                                "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
-                                "the size of Sn and an must be at least " +
-                                utils::helpers<size_t>::to_string(required_size));
+    const auto required=how_much(n,order);
+    if(data.Sn.size()<required || (order>0 && data.an.size()<required))
+        throw std::out_of_range("Insufficient Homeier transform data");
+    const auto precision=utils::helpers<T>::get_precision(data.Sn.at(n));
+    const T zero=utils::cast<T,int>()(0,precision),one=utils::cast<T,int>()(1,precision);
+    if(!utils::helpers<float_type>::isfinite(beta) || beta<=utils::cast<float_type,int>()(0,precision))
+        throw std::domain_error("beta must be finite and positive");
+    if(p<1)throw std::domain_error("p must be a positive integer");
+    if(order==0)return data.Sn.at(n);
+    const std::size_t span=static_cast<std::size_t>(order);
+    const T beta_t=utils::cast<T,float_type>()(beta,precision);
+    std::vector<T> num(span+1),den(span+1);
+    for(std::size_t j=0;j<=span;++j) {
+        const K index=n+static_cast<K>(j);
+        den[j]=remainder->operator()(index,index,data.an,beta_t);
+        num[j]=data.Sn.at(index)*den[j];
     }
-
-    const size_t precision =
-        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
-
-    std::vector<T> Num = std::vector<T>(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
-    std::vector<T> Denom = std::vector<T>(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
-
-    // Initialize base values
-    for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
-        Denom[i] += remainder->operator()(n + i, n + i, data.an);
-        Num[i] += data.Sn.at(n + i) * Denom[i];
-    }
-
-    // see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS [107, p. 18]
-    std::function<float_type(K, K)> psi;
-    if (p == static_cast<K>(2)) {
-        psi = [&precision, this](K n, K k) {
-            if (k == static_cast<K>(0)) return utils::cast<float_type, int>()(1, precision);
-            const float_type num =
-                utils::cast<float_type, K>()(n + k, precision) + beta - utils::cast<float_type, int>()(-1, precision);
-            const float_type denom = num + utils::cast<float_type, int>()(2, precision);
-            return utils::math<float_type>::pow(num / denom, utils::cast<float_type, K>()(k, precision));
-        };  //
-    } else {
-        psi = [&precision, this](K n, K k) {
-            if (k == static_cast<K>(0)) return utils::cast<float_type, int>()(1, precision);
-            const float_type num = (utils::cast<float_type, K>()(n + k, precision) + beta -
-                                    utils::cast<float_type, int>()(-1, precision)) /
-                                   utils::cast<float_type, int>()(p - 2, precision);
-            const float_type denom =
-                (utils::cast<float_type, K>()(n + k, precision) + beta - utils::cast<float_type, int>()(1, precision)) /
-                utils::cast<float_type, int>()(p - 2, precision);
-            float_type res = num / denom;
-            for (K i{1}; i <= k; ++i)
-                res *= (num + utils::cast<float_type, K>()(i, precision)) /
-                       (denom + utils::cast<float_type, K>()(i, precision));
-            return res;
-        };
-    }
-
-    // Implement recursive scheme, see: Herbert, H. H. Homeier(2018) SCALAR LEVIN-TYPE SEQUENCE TRANSFORMATIONS [98, p.
-    // 17]
-    for (K i = static_cast<K>(1); i <= order; ++i)
-        for (K j = static_cast<K>(0); j <= order - i; ++j) {
-            const T right = utils::cast<T, float_type>()(psi(n + j, i));
-            Denom[j] = utils::math<T>::fma(-right, Denom[j], Denom[j + 1]);
-            Num[j] = utils::math<T>::fma(-right, Num[j], Num[j + 1]);
+    for(std::size_t level=1;level<=span;++level)for(std::size_t j=0;j<=span-level;++j) {
+        const std::size_t k=level-1; // Eq. (98) uses Psi^(k-1), not Psi^k.
+        T psi=one;
+        const T start=utils::cast<T,std::size_t>()(n+j+k,precision)+beta_t-one;
+        for(std::size_t m=0;m<k;++m) {
+            // Product form of (107), also valid at p=1 and p=2.
+            const T top=start+utils::cast<T,int>()(p-2,precision)*utils::cast<T,std::size_t>()(m,precision);
+            psi*=top/(top+utils::cast<T,int>()(2,precision));
         }
-
-    Num[0] /= Denom[0];
-    if (!utils::helpers<T>::isfinite(Num[0])) throw std::overflow_error("division by zero");
-    return Num[0];
+        num[j]=num[j+1]-psi*num[j];
+        den[j]=den[j+1]-psi*den[j];
+    }
+    if(den[0]==zero)throw std::overflow_error("Singular Homeier transform denominator");
+    const T result=num[0]/den[0];
+    if(!utils::helpers<T>::isfinite(result))throw std::overflow_error("Non-finite Homeier transform");
+    return result;
 }
 
 }  // namespace algos

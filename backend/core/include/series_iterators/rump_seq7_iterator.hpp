@@ -37,10 +37,11 @@ public:
      * @return T The limit of the sequence.
      */
     T get_sum() const override {
-        const std::size_t precision = utils::helpers<T>::get_precision(this->x);
-        return (utils::cast<T, double>()(-61.0, precision) -
-                utils::math<T>::sqrt(utils::cast<T, int>()(3657, precision))) *
-               utils::cast<T, double>()(0.25, precision);
+        // Reference is for exact unperturbed initial data, not a rounded fixed point.
+        // Rump, ETNA 52 (2020): https://doi.org/10.1553/etna_vol52s358
+        if(this->x!=utils::cast<T,int>()(0)) throw std::domain_error("Reference unavailable for perturbed initial data");
+        const auto p=utils::helpers<T>::get_precision(this->x);
+        return (utils::cast<T,int>()(-61,p)-utils::math<T>::sqrt(utils::cast<T,int>()(3657,p)))/utils::cast<T,int>()(4,p);
     }
 
     /**
@@ -48,7 +49,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return always valid
      */
-    bool is_invalid() const override { return false; }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     std::pair<T, T> initial_state() const override {
         return std::make_pair(utils::cast<T, int>()(0, utils::helpers<T>::get_precision(this->x)),

@@ -52,6 +52,8 @@ enum remainder_type {
 template <AcceptedLike T, UnsignedIntLike K>
 class transform_base {
 public:
+    // Remainder strategies are owned through this polymorphic base.
+    virtual ~transform_base() = default;
     /**
      * @brief Virtual operator() for computing remainder estimates
      *

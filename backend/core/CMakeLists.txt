@@ -30,7 +30,7 @@ include_directories(
 )
 
 # -------------------------
-# Бинарник (основная программа)
+# Main interactive executable
 # -------------------------
 
 add_executable(shanks
@@ -40,3 +40,15 @@ add_executable(shanks
 )
 
 target_link_libraries(shanks PRIVATE MPFR::MPFR GMP::GMP Eigen3::Eigen GSL::gsl GSL::gslcblas)
+
+# Deterministic regressions suitable for CI (the historical main is interactive).
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(mathematical_regressions test/src/mathematical_regressions.cpp)
+    target_link_libraries(mathematical_regressions PRIVATE
+        MPFR::MPFR GMP::GMP Eigen3::Eigen GSL::gsl GSL::gslcblas)
+    add_test(NAME mathematical_regressions COMMAND mathematical_regressions)
+    add_executable(catalogue_probe test/src/catalogue_probe.cpp)
+    target_link_libraries(catalogue_probe PRIVATE
+        MPFR::MPFR GMP::GMP Eigen3::Eigen GSL::gsl GSL::gslcblas)
+endif()

@@ -60,17 +60,15 @@ public:
      * @return T The next term of the series.
      */
     T next(K n, T& state) const override {
-        // Recurrence relation derived from the arcsin expansion with substitution x -> 2x and scaling factor 0.5
+        // DLMF 4.24.1 under x -> 2x, followed by division by two.
+        // https://dlmf.nist.gov/4.24#E1: ratio contains (2n-1)^2.
         if (n == 0)
             state = this->x;
-        else
-            state *=
-                this->x * this->x *
-                utils::cast<T, size_t>()(2 * utils::math<size_t>::fma(static_cast<size_t>(2),
-                                                                      static_cast<size_t>(n - 1),
-                                                                      static_cast<size_t>(1))) /
-                utils::cast<T, size_t>()(n * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                                      static_cast<size_t>(1)));
+        else {
+            const T odd = utils::cast<T, K>()(n) * utils::cast<T, int>()(2) - utils::cast<T, int>()(1);
+            state *= utils::cast<T, int>()(2) * this->x * this->x * odd * odd /
+                     (utils::cast<T, K>()(n) * (odd + utils::cast<T, int>()(2)));
+        }
         return state;
     }
 };

@@ -57,10 +57,11 @@ public:
      * @return T The next term of the series ((-1)^n * x / (2n+1)).
      */
     T next(K n, T& state) const override {
-        // Standard alternating series term for the atan(1) expansion scaled by x
-        state = utils::math<T>::template minus_one_raised_to_power_n<K>(n) * this->x /
-                utils::cast<T, size_t>()(
-                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)));
+        // Exact rational coefficients; promote before products to avoid index overflow.
+        // Partial fractions and harmonic sums: https://dlmf.nist.gov/5.9
+        const auto precision=utils::helpers<T>::get_precision(this->x);
+        const T k=utils::cast<T,K>()(n,precision)+utils::cast<T,int>()(1,precision);
+        state=this->x * utils::math<T>::template minus_one_raised_to_power_n<K>(n) * (utils::cast<T,int>()(1,precision)) / (utils::cast<T,int>()(2,precision)*k-utils::cast<T,int>()(1,precision));
         return state;
     }
 };

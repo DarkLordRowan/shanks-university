@@ -82,13 +82,14 @@ template <AcceptedLike T, UnsignedIntLike K>
 T lubkin_w_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Ensure there is sufficient data in the Sn vector for the requested order and starting index
     const std::size_t required_size = lubkin_w_algorithm<T, K>::how_much(n, order);
-    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
         throw std::out_of_range("The Sn smaller then required for W_{" + utils::helpers<K>::to_string(order) + "}^{" +
                                 utils::helpers<K>::to_string(n) + "}\n" + "the size of Sn must be at least " +
                                 utils::helpers<std::size_t>::to_string(required_size));
     }
+
+    const auto precision=utils::helpers<T>::get_precision(data.Sn[0]);
 
     // Trivial case: order 0 returns the original partial sum at index n
     if (order == static_cast<K>(0)) return data.Sn.at(n);

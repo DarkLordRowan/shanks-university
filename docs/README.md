@@ -51,3 +51,7 @@ docker run -d --name shanks-api -p 8000:8000 --restart unless-stopped shanks-api
 - [Установка Linux](installation/linux.md)
 - [Добавление методов/рядов](extending/overview.md)
 - [Конфигурация экспериментов](runner-config/overview.md)
+
+## Mathematical audit
+
+See [regressions and reproduction](mathematical-audit.md) and [catalogue coverage](catalogue-coverage.md).

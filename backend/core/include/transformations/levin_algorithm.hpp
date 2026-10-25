@@ -1,6 +1,7 @@
 #ifndef LEVIN_ALGORITHM_HPP
 #define LEVIN_ALGORITHM_HPP
 #pragma once
+#include "levin_weights.hpp"
 /**
  * @file levin_algorithm.hpp
  * @brief This file contains the declaration of the Levin algorithm class.
@@ -232,99 +233,24 @@ levin_algorithm<T, K>::levin_algorithm(const shanks::remainders::remainder_type 
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result(const K n, const K order, const series_result<T>& data) const {
-    const size_t precision =
-        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
-
-    T numerator, denominator, rest;
-    float_type C_njk;
-    numerator = denominator = rest = utils::cast<T, int>()(0, precision);
-    C_njk = utils::cast<float_type, int>()(0, precision);
-
-    // Compute (-1)^j * C(k,j)
-    // For theory, see: Levin (1973), Eq. (2.3)
-    // T_{k,n} = [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} S_{n+j}/R_{n+j}] /
-    //           [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} 1/R_{n+j}]
-    // Main loop for the direct Levin transformation formula
-    for (K j = static_cast<K>(0); j <= order; ++j) {
-        // Compute (-1)^j * C(k,j) - the sign and binomial coefficient part
-        rest += -rest + utils::math<T>::template minus_one_raised_to_power_n<K>(j);
-        rest *= utils::cast<T, K>()(utils::math<K>::binomial_coefficient(order, j), precision);
-
-        // Compute (n+j+1)^{k-1}/(n+k+1)^{k-1} - the weighting factors C_njk
-        C_njk = utils::math<float_type>::pow(
-            beta_in_use + utils::cast<float_type, K>()(n + j + static_cast<K>(1), precision),
-            utils::cast<float_type, K>()(order - static_cast<K>(1), precision));
-        C_njk /= utils::math<float_type>::pow(
-            beta_in_use + utils::cast<float_type, K>()(n + order + static_cast<K>(1), precision),
-            utils::cast<float_type, K>()(order - static_cast<K>(1), precision));
-
-        // Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
-        rest *= remainder->operator()(
-            n + j, n + j, data.an,
-            utils::cast<T, float_type>()((remainder_type_in_use == shanks::remainders::remainder_type::u_type
-                                              ? beta_in_use
-                                              : utils::cast<float_type, int>()(1, precision))));
-
-        rest *= C_njk;
-
-        // Accumulate weighted partial sums and total weights
-        denominator += rest;
-        numerator += rest * data.Sn.at(n + j);
-    }
-
-    // Normalization yields the accelerated sum estimate
-    numerator /= denominator;
-
-    return numerator;
+    const auto precision=utils::helpers<T>::get_precision(data.Sn.at(n));
+    auto inverse=[&](K index) {
+        return remainder->operator()(index,index,data.an,
+            utils::cast<T,float_type>()(remainder_type_in_use==shanks::remainders::remainder_type::u_type
+                ? beta_in_use : utils::cast<float_type,int>()(1,precision),precision));
+    };
+    return detail::levin_weighted_ratio(n,order,data,beta_in_use,inverse,false,false);
 }
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result_rec(const K n, const K order, const series_result<T>& data) const {
-    const size_t precision =
-        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
-
-    // For theory, see: Sidi (1979), Section 3 - Recursive implementation using E-algorithm
-    // Initialize auxiliary vectors for the recursive scheme
-    std::vector<T> Num(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
-    std::vector<T> Denom(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
-    float_type scale = utils::cast<float_type, int>()(0, precision);
-
-    // Initialize base values: E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
-    // Order 0 transformations correspond to weighted terms
-    for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
-        Denom[i] += remainder->operator()(
-            n + i, n + i, data.an,
-            utils::cast<T, float_type>()(remainder_type_in_use == shanks::remainders::remainder_type::u_type
-                                             ? beta_in_use
-                                             : utils::cast<float_type, int>()(1, precision),
-                                         precision));
-
-        Num[i] += data.Sn.at(n + i) * Denom[i];
-    }
-
-    // Recursive refinement using a scheme similar to the E-algorithm
-    for (K i = static_cast<K>(1); i <= order; ++i)
-        for (K j = static_cast<K>(0); j <= order - i; ++j) {
-            // For theory, see: Brezinski's E-algorithm recurrence
-            // E_k^{(n)} = E_{k-1}^{(n)} - g_{k-1,k}^{(n)} * ΔE_{k-1}^{(n)} / Δg_{k-1,k}^{(n)}
-            // Scaling factor for the recursive update
-            scale = (beta_in_use + utils::cast<float_type, K>()(n + j, precision));
-            scale *= utils::math<float_type>::pow(
-                utils::cast<float_type, int>()(1, precision) -
-                    utils::cast<float_type, int>()(1, precision) /
-                        (beta_in_use + utils::cast<float_type, K>()(n + j + i + 1, precision)),
-                utils::cast<float_type, K>()(i));
-            scale /= (beta_in_use + utils::cast<float_type, K>()(n + j + i, precision));
-
-            Denom[j] =
-                utils::math<T>::fma(utils::cast<T, float_type>()(-scale), Denom[j], Denom[j + static_cast<K>(1)]);
-            Num[j] = utils::math<T>::fma(utils::cast<T, float_type>()(-scale), Num[j], Num[j + static_cast<K>(1)]);
-        }
-
-    // Final normalization
-    Num[0] /= Denom[0];
-
-    return Num[0];
+    const auto precision=utils::helpers<T>::get_precision(data.Sn.at(n));
+    auto inverse=[&](K index) {
+        return remainder->operator()(index,index,data.an,
+            utils::cast<T,float_type>()(remainder_type_in_use==shanks::remainders::remainder_type::u_type
+                ? beta_in_use : utils::cast<float_type,int>()(1,precision),precision));
+    };
+    return detail::levin_weighted_ratio(n,order,data,beta_in_use,inverse,false,true);
 }
 
 template <AcceptedLike T, UnsignedIntLike K>

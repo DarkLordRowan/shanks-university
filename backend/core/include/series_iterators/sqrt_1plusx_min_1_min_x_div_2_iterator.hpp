@@ -60,6 +60,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
+    // Binomial coefficients after removing degrees 0 and 1: https://dlmf.nist.gov/4.6
     T next(K n, T& state) const override {
         if (n == 0)
             state = this->x * this->x * utils::cast<T, double>()(-0.125);
@@ -68,7 +69,7 @@ public:
                      utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
                                                                        static_cast<size_t>(1))) /
                      utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                                       static_cast<size_t>(2)));
+                                                                       static_cast<size_t>(4)));
         return state;
     }
 };

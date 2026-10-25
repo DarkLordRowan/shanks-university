@@ -58,14 +58,16 @@ public:
      * @return T The next term of the series.
      */
     T next(K n, T& state) const override {
-        // Initialize with the first term x or calculate subsequent terms recursively
+        // asinh(x) = sum (-1)^n binom(2n,n) x^(2n+1)/(4^n(2n+1)).
+        // https://dlmf.nist.gov/4.38 (power series).
+        // The extra (2n-1)/(2n+1) distinguishes asinh from x/sqrt(1+x^2).
         if (n == 0)
             state = this->x;
-        else
-            state *= utils::cast<T, int>()(-1) * this->x * this->x *
-                     utils::cast<T, size_t>()(utils::math<size_t>::fma(
-                         static_cast<size_t>(2), static_cast<size_t>(n - 1), static_cast<size_t>(1))) /
-                     utils::cast<T, size_t>()(size_t{2} * n);
+        else {
+            const auto odd = utils::cast<T, K>()(2 * n - 1);
+            state *= -this->x * this->x * odd * odd /
+                     (utils::cast<T, K>()(2 * n) * utils::cast<T, K>()(2 * n + 1));
+        }
         return state;
     }
 };

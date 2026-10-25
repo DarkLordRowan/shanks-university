@@ -42,7 +42,8 @@ public:
      * @return T The value of ln(sin(x)/x).
      */
     T get_sum() const override {
-        return utils::math<T>::log(utils::math<T>::sin(this->x)) - utils::math<T>::log(this->x);
+        if(this->x==utils::cast<T,int>()(0)) return utils::cast<T,int>()(0);
+        return utils::math<T>::log(utils::math<T>::sin(this->x)/this->x);
     }
 
     /**
@@ -51,14 +52,10 @@ public:
      * @return true if x is outside [0, pi) or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        if constexpr (isComplexLike<T>::value) {
-            return !utils::helpers<T>::isfinite(this->x) ||
-                   this->x.real() > utils::cast<typename real_of<T>::value, double>()(std::numbers::pi) ||
-                   this->x.real() < utils::cast<typename real_of<T>::value, int>()(0);
-        } else {
-            return !utils::helpers<T>::isfinite(this->x) || this->x > utils::cast<T, double>()(std::numbers::pi) ||
-                   this->x < utils::cast<T, int>()(0);
-        }
+        const auto precision=utils::helpers<T>::get_precision(this->x);
+        using R=typename real_of<T>::value;
+        const R pi=utils::cast<R,int>()(4,precision)*utils::math<R>::atan(utils::cast<R,int>()(1,precision));
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x)>=pi;
     }
 
     /**
@@ -66,12 +63,14 @@ public:
      * @authors Bolshakov M.P.
      * @return T The next term of the series.
      */
-    T next(K n, T& state) const override {
-        // Infinite product based expansion term for ln(sin(x)/x)
-        state = utils::math<T>::log(utils::cast<T, int>()(1) - this->x * this->x /
-                                                                   (utils::cast<T, K>()((n + 1) * (n + 1)) *
-                                                                    utils::cast<T, double>()(std::numbers::pi) *
-                                                                    utils::cast<T, double>()(std::numbers::pi)));
+    T next(K n,T& state) const override {
+        // Euler sine product, including its removable x=0 limit: DLMF 4.22.
+        const auto precision=utils::helpers<T>::get_precision(this->x);
+        const T one=utils::cast<T,int>()(1,precision);
+        const T pi=utils::cast<T,int>()(4,precision)*utils::math<T>::atan(one);
+        const T k=utils::cast<T,K>()(n,precision)+one;
+        const T ratio=this->x/(k*pi);
+        state=utils::math<T>::log(one-ratio*ratio);
         return state;
     }
 };

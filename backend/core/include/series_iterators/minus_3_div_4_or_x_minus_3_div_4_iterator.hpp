@@ -68,6 +68,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
+    // Fourier coefficients of max(x,0)-3/4 on (-3,3): https://dlmf.nist.gov/1.8
     T next(K n, T& state) const override {
         const T piDiv3 = utils::cast<T, double>()(std::numbers::pi, utils::helpers<T>::get_precision(this->x)) /
                          utils::cast<T, int>()(3);
@@ -81,7 +82,7 @@ public:
                                                                        static_cast<size_t>(1)) *
                                               utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
                                                                        static_cast<size_t>(1)))) *
-                    utils::math<T>::cos(shifted_x) +
+                    utils::math<T>::cos((utils::cast<T,K>()(n) * utils::cast<T,int>()(2) + utils::cast<T,int>()(1)) * piDiv3 * this->x) +
                 utils::math<T>::template minus_one_raised_to_power_n<K>(n) / (piDiv3 * utils::cast<T, K>()(n + 1)) *
                     utils::math<T>::sin(shifted_x);
         return state;

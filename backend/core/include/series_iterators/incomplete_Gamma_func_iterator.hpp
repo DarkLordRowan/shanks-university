@@ -55,7 +55,13 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
+    bool is_invalid() const override {
+        // The real lower-gamma integral requires alpha>0 and x>=0: DLMF 8.2.
+        if constexpr(isComplexLike<T>::value)
+            return !utils::helpers<T>::isfinite(this->x) || !utils::helpers<T>::isfinite(alpha);
+        else return !utils::helpers<T>::isfinite(this->x) || !utils::helpers<T>::isfinite(alpha) ||
+                    alpha<=utils::cast<T,int>()(0) || this->x<utils::cast<T,int>()(0);
+    }
 
     /**
      * @brief Computes the next term in the incomplete Gamma function expansion.

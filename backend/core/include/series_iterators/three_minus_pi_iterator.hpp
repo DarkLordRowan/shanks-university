@@ -42,7 +42,10 @@ public:
      * @return T The value of x * (3 - pi).
      */
     T get_sum() const override {
-        return this->x * (utils::cast<T, int>()(3) - utils::cast<T, int>()(std::numbers::pi));
+        const auto precision=utils::helpers<T>::get_precision(this->x);
+        const T one=utils::cast<T,int>()(1,precision);
+        const T pi=utils::cast<T,int>()(4,precision)*utils::math<T>::atan(one);
+        return this->x*(utils::cast<T,int>()(3,precision)-pi);
     }
 
     /**
@@ -60,11 +63,11 @@ public:
      * @return T The next term of the series.
      */
     T next(K n, T& state) const override {
-        // Alternating term formula: (-1)^(n+1) * x / ((n+1)*(n+2)*(2n+3))
-        state = utils::math<T>::template minus_one_raised_to_power_n<K>(n + 1) * this->x /
-                utils::cast<T, K>()(
-                    (n + 1) * (n + 2) *
-                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3)));
+        // Exact rational coefficients; promote before products to avoid index overflow.
+        // Partial fractions and harmonic sums: https://dlmf.nist.gov/5.9
+        const auto precision=utils::helpers<T>::get_precision(this->x);
+        const T k=utils::cast<T,K>()(n,precision)+utils::cast<T,int>()(1,precision);
+        state=this->x * utils::math<T>::template minus_one_raised_to_power_n<K>(n) * (-utils::cast<T,int>()(1,precision)) / (k*(k+utils::cast<T,int>()(1,precision))*(utils::cast<T,int>()(2,precision)*k+utils::cast<T,int>()(1,precision)));
         return state;
     }
 };

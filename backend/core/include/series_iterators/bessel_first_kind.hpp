@@ -13,10 +13,10 @@ namespace shanks {
 namespace series {
 
 /**
- * @brief Taylor series iterator for the inverse hyperbolic tangent function arctanh(x^2).
+ * @brief Power series iterator for the Bessel function J_alpha(x).
  *
- * This class implements the Maclaurin expansion of arctanh(x^2), which converges
- * for values of x such that |x| < 1.
+ * Real implementation uses x>=0 and alpha>=0; the power series converges for all finite x.
+ * Reference: https://dlmf.nist.gov/10.2#E2.
  *
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
@@ -48,14 +48,16 @@ public:
                 m_alpha = alpha;
             }
         }
+        if(!utils::helpers<float_type>::isfinite(m_alpha) || m_alpha<utils::cast<float_type,int>()(0))
+            throw std::invalid_argument("Real Bessel series requires finite alpha>=0");
     }
 
     explicit bessel_first_kind_iterator(T x, K alpha) = delete;
 
     /**
-     * @brief Retrieves the analytic sum of the series (arctanh(x^2)).
+     * @brief Retrieves the analytic value J_alpha(x).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @return T The value of arctanh(x^2).
+     * @return T The value of J_alpha(x).
      */
     T get_sum() const override {
         if constexpr (typename utils::math<T>::has_bessel_first_kind{})
@@ -70,7 +72,10 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
+    bool is_invalid() const override {
+        if constexpr(isComplexLike<T>::value) return !utils::helpers<T>::isfinite(this->x);
+        else return !utils::helpers<T>::isfinite(this->x) || this->x<utils::cast<T,int>()(0);
+    }
 
     /**
      * @brief Computes the next term in bessel_first_kind_iterator Taylor expansion.

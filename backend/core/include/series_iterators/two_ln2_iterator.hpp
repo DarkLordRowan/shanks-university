@@ -58,10 +58,15 @@ public:
      * @return T The next term of the series.
      */
     T next(K n, T& state) const override {
-        const K n1 = n + 1;
-        // Formula for the n-th term of the specific series expansion
-        state = utils::cast<T, K>()(12 * n1 * n1 - 1) * this->x /
-                utils::cast<T, K>()(n1 * (4 * n1 * n1 - 1) * (4 * n1 * n1 - 1));
+        // Promote before multiplying: n^5 overflows a 32-bit index even
+        // for moderate n. Partial fractions telescope to 2*log(2):
+        // -1/k + 1/(2k-1) + 1/(2k+1) + 1/(2k-1)^2 - 1/(2k+1)^2.
+        // Harmonic/log limit: https://dlmf.nist.gov/5.2#E3
+        const T k = utils::cast<T, K>()(n) + utils::cast<T, int>()(1);
+        const T square = k * k;
+        const T factor = utils::cast<T, int>()(4) * square - utils::cast<T, int>()(1);
+        state = (utils::cast<T, int>()(12) * square - utils::cast<T, int>()(1)) * this->x /
+                (k * factor * factor);
         return state;
     }
 };

@@ -61,9 +61,11 @@ public:
      * @return T The next term of the series ((-1)^n * x / (n+1)^2).
      */
     T next(K n, T& state) const override {
-        // Alternating term with quadratic denominator
-        state = this->x * utils::math<T>::template minus_one_raised_to_power_n<K>(n) /
-                utils::cast<T, K>()((n + 1) * (n + 1));
+        // Exact rational coefficients; promote before products to avoid index overflow.
+        // Partial fractions and harmonic sums: https://dlmf.nist.gov/5.9
+        const auto precision=utils::helpers<T>::get_precision(this->x);
+        const T k=utils::cast<T,K>()(n,precision)+utils::cast<T,int>()(1,precision);
+        state=this->x * utils::math<T>::template minus_one_raised_to_power_n<K>(n) * (utils::cast<T,int>()(1,precision)) / (k*k);
         return state;
     }
 };

@@ -19,7 +19,7 @@ namespace series {
  * @brief Fourier series iterator for the linear function f(x) = 10 - x.
  *
  * This class implements a specific Fourier expansion for the function 10 - x,
- * which is valid for values of x such that |x - 10| <= 5.
+ * which is valid for values of x such that 5 < x < 15 (real x).
  *
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
@@ -48,7 +48,19 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
+    bool is_invalid() const override {
+        // The Fourier series is periodic. Its branch equals 10-x only for
+        // 5<x<15; at the endpoints it converges to the jump midpoint.
+        // Fourier convergence: https://dlmf.nist.gov/1.8
+        if constexpr (isComplexLike<T>::value) {
+            using R = real_of<T>::value;
+            return !utils::helpers<T>::isfinite(this->x) || this->x.imag() != utils::cast<R,int>()(0) ||
+                   this->x.real() <= utils::cast<R,int>()(5) || this->x.real() >= utils::cast<R,int>()(15);
+        } else {
+            return !utils::helpers<T>::isfinite(this->x) ||
+                   this->x <= utils::cast<T,int>()(5) || this->x >= utils::cast<T,int>()(15);
+        }
+    }
 
     /**
      * @brief Computes the next term in the Fourier expansion of 10 - x.

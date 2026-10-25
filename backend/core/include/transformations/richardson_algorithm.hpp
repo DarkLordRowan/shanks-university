@@ -87,13 +87,14 @@ T richardson_algorithm<T, K>::operator()(const K n, [[maybe_unused]] const K /*o
                                          const series_result<T>& data) const {
     // Ensure we have enough partial sums to perform the extrapolation
     const std::size_t required_size = richardson_algorithm<T, K>::how_much(n, 0);
-    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
         throw std::out_of_range("The Sn smaller then required for richardson(" + utils::helpers<K>::to_string(n) +
                                 ")\n" + "the size of Sn must be at least " +
                                 utils::helpers<std::size_t>::to_string(required_size));
     }
+
+    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     // in the method we don't use order, it's only a stub
     if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");
@@ -129,12 +130,13 @@ T richardson_algorithm<T, K>::operator()(const K n, [[maybe_unused]] const K /*o
         std::swap(e[0], e[1]);  // Swap rows for next iteration
     }
 
-    // Final check for validity. The result selection logic depends on the number of swaps.
-    if (!utils::helpers<T>::isfinite(e[n & static_cast<K>(1)][n])) {
+    // Each swap puts the newest row in e[0], independently of parity.
+    // Richardson extrapolation: https://dlmf.nist.gov/3.9
+    if (!utils::helpers<T>::isfinite(e[0][n])) {
         throw std::overflow_error("division by zero");
     }
 
-    return e[n & static_cast<K>(1)][n];
+    return e[0][n];
 }
 
 }  // namespace algos

@@ -63,7 +63,7 @@ public:
     T operator()(const K n, const K order, const series_result<T>& data) const override;
 
     inline std::size_t how_much(const std::size_t n, const std::size_t order) const {
-        return n + order + std::size_t{1};
+        return n + order + std::size_t{1} + std::size_t(order != 0);
     }
 };
 
@@ -71,8 +71,6 @@ template <AcceptedLike T, UnsignedIntLike K>
 T weniger_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Validation: ensure input vectors contain enough data for the specified order and base index
     const std::size_t required_size = weniger_algorithm<T, K>::how_much(n, order);
-    const std::size_t precision =
-        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for Weniger_{" +
@@ -80,6 +78,8 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order, const series_res
                                 "the size of Sn and an must be at least " +
                                 utils::helpers<std::size_t>::to_string(required_size));
     }
+
+    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     // Trivial case: order 0 returns the original partial sum
     if (order == static_cast<K>(0)) return data.Sn.at(n);

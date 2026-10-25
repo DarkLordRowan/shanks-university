@@ -43,8 +43,16 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of m! / (1 - x)^(m + 1).
      */
+    // Compute factorial in the value type, not the bounded index type.
+    // https://dlmf.nist.gov/4.6 (differentiated geometric series).
+    T factorial_m() const {
+        T result = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(this->x));
+        for (K j = 0; j < m; ++j) result *= utils::cast<T, K>()(j) + utils::cast<T, int>()(1);
+        return result;
+    }
+
     T get_sum() const override {
-        return utils::cast<T, K>()(utils::math<K>::fact(m)) /
+        return factorial_m() /
                utils::math<T>::pow(utils::cast<T, int>()(1) - this->x, utils::cast<T, K>()(m + 1));
     }
 
@@ -67,9 +75,9 @@ public:
     T next(K n, T& state) const override {
         // Recurrence relation based on the binomial coefficients for the m-th derivative of 1/(1-x)
         if (n == 0)
-            state = utils::cast<T, K>()(utils::math<K>::fact(m), utils::helpers<T>::get_precision(state));
+            state = factorial_m();
         else
-            state *= this->x * utils::cast<T, K>()(m + static_cast<K>(n)) / utils::cast<T, K>()(n);
+            state *= this->x * (utils::cast<T, K>()(m) + utils::cast<T, K>()(n)) / utils::cast<T, K>()(n);
         return state;
     }
 };

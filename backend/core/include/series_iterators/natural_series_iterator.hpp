@@ -4,30 +4,17 @@
 
 #include "../series_base.hpp"
 
-/**
- * @file one_iterator.hpp
- * @brief Iterator for a specific series expansion summing to x.
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- */
-
+// Ordinary terms a_n=n. The partial sums diverge; zeta(-1)=-1/12 is
+// available only through get_regularized_sum(), never as an ordinary sum.
+// Reference: https://dlmf.nist.gov/25.6
 namespace shanks {
 namespace series {
 
-/**
- * @brief Series iterator for the identity function f(x) = x.
- *
- * This class implements a specific series expansion whose analytic sum is
- * simply the value x.
- *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- * @tparam T Floating-point type for series elements (AcceptedLike).
- * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
- */
 template <AcceptedLike T, UnsignedIntLike K>
 class natural_series_iterator final : public series_base_succ<T, K> {
 public:
     /**
-     * @brief Default constructor for one_iterator.
+     * @brief Construct the natural-number series (legacy x is unused).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
     explicit natural_series_iterator(T x) : series_base_succ<T, K>(x) {
@@ -35,13 +22,17 @@ public:
     }
 
     /**
-     * @brief Retrieves the analytic sum of the series (x).
+     * @brief Reject an ordinary sum for this divergent series.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @return T The value of x.
+     * @throws std::domain_error Always.
      */
     T get_sum() const override {
-        return utils::cast<T, int>()(-1, utils::helpers<T>::get_precision(this->x)) /
-               utils::cast<T, int>()(12, utils::helpers<T>::get_precision(this->x));
+        throw std::domain_error("Ordinary natural series diverges; -1/12 is a regularized value");
+    }
+
+    T get_regularized_sum() const {
+        const auto p=utils::helpers<T>::get_precision(this->x);
+        return utils::cast<T,int>()(-1,p)/utils::cast<T,int>()(12,p);
     }
 
     /**
@@ -50,7 +41,7 @@ public:
      * @return true if x is non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T, int>()(0);
+        return !utils::helpers<T>::isfinite(this->x);
     }
 
     /**
@@ -59,7 +50,7 @@ public:
      * @return T The next term of the series.
      */
     T next(K n, T& state) const override {
-        // Formula for the n-th term of the expansion: x / ((n+1) * (n+2))
+        // a_n = n, independent of the legacy argument x.
         state = utils::cast<T, K>()(n, utils::helpers<T>::get_precision(this->x));
         return state;
     }

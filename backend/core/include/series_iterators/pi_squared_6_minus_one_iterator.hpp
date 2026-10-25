@@ -63,8 +63,11 @@ public:
      * @return T The next term of the series (x / ((n+1)^2 * (n+2))).
      */
     T next(K n, T& state) const override {
-        // Term formula derived from the expansion of (zeta(2) - 1) * x
-        state = this->x / utils::cast<T, K>()((n + 1) * (n + 1) * (n + 2));
+        // Exact rational coefficients; promote before products to avoid index overflow.
+        // Partial fractions and harmonic sums: https://dlmf.nist.gov/5.9
+        const auto precision=utils::helpers<T>::get_precision(this->x);
+        const T k=utils::cast<T,K>()(n,precision)+utils::cast<T,int>()(1,precision);
+        state=this->x * (utils::cast<T,int>()(1,precision)) / (k*k*(k+utils::cast<T,int>()(1,precision)));
         return state;
     }
 };

@@ -1,6 +1,7 @@
 #ifndef LEVIN_SIDI_S_ALGORITHM_HPP
 #define LEVIN_SIDI_S_ALGORITHM_HPP
 #pragma once
+#include "levin_weights.hpp"
 /**
  * @file levin_sidi_s_algorithm.hpp
  * @brief Contains implementation of the Levin-Sidi S-transformation (related to Drummond's D-transformation).
@@ -222,117 +223,24 @@ public:
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T levin_sidi_s_algorithm<T, K>::calc_result(const K n, const K order, const series_result<T>& data) const {
-    const size_t precision =
-        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
-
-    T numerator, denominator, rest;
-    float_type up_pochamer, down_pochamer;
-    numerator = denominator = rest = utils::cast<T, int>()(0, precision);
-    up_pochamer = down_pochamer = utils::cast<float_type, int>()(0, precision);
-
-    // For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (8.2)
-    // General form: S_{k,n} = [∑_{j=0}^k (-1)^j C(k,j) (β+n+j)_{k-1}/(β+n+k)_{k-1} S_{n+j}/R_{n+j}] /
-    //           [∑_{j=0}^k (-1)^j C(k,j) (β+n+j)_{k-1}/(β+n+k)_{k-1} 1/R_{n+j}]
-    // Main loop for the direct S-transformation summation formula
-    for (K j = static_cast<K>(0); j <= order; ++j) {
-        // Compute (-1)^j * C(k,j) - the sign and binomial coefficient part of the weight
-        rest = utils::cast<T, int>()(1, precision);
-        rest *= utils::math<T>::template minus_one_raised_to_power_n<K>(j);
-        rest *= utils::cast<T, K>()(utils::math<K>::binomial_coefficient(order, j), precision);
-
-        // Compute Pochhammer symbols: (β+n+j)_{k-1} and (β+n+k)_{k-1}
-        up_pochamer = down_pochamer = utils::cast<float_type, int>()(1);
-
-        // up_pochamer   (beta + n + j)_(order - 1)     = (beta + n + j)(beta + n + j + 1)...(beta + n + j + order - 2)
-        // down_pochamer (beta + n + order)_(order - 1) = (beta + n + order)(beta + n + order + 1)...(beta + n + order +
-        // oreder - 2)
-
-        // (β+n+j)_{k-1} = ∏_{i=0}^{k-2} (β+n+j+i)
-        // (β+n+k)_{k-1} = ∏_{i=0}^{k-2} (β+n+k+i)
-        for (K i = static_cast<K>(0); i < order - static_cast<K>(1); ++i) {
-            up_pochamer *= (beta_in_use + utils::cast<float_type, K>()(n + j + i, precision));
-            down_pochamer *= (beta_in_use + utils::cast<float_type, K>()(n + order + i, precision));
-        }
-
-        rest *= (up_pochamer / down_pochamer);  // Multiply by Pochhammer ratio
-        // Incorporate the remainder estimator 1/R_{n+j}
-        rest *= remainder->operator()(
-            n + j,  // Multiply by remainder term 1/R_{n+j}
-            n + j, data.an,
-            utils::cast<T, float_type>()(remainder_type_in_use == shanks::remainders::remainder_type::u_type
-                                             ? beta_in_use
-                                             : utils::cast<float_type, int>()(1, precision),
-                                         precision));
-
-        // Accumulate numerator and denominator
-        numerator += rest * data.Sn.at(n + j);
-        denominator += rest;
-    }
-
-    // Final normalization
-    numerator /= denominator;
-
-    return numerator;
+    const auto precision=utils::helpers<T>::get_precision(data.Sn.at(n));
+    auto inverse=[&](K index) {
+        return remainder->operator()(index,index,data.an,
+            utils::cast<T,float_type>()(remainder_type_in_use==shanks::remainders::remainder_type::u_type
+                ? beta_in_use : utils::cast<float_type,int>()(1,precision),precision));
+    };
+    return detail::levin_weighted_ratio(n,order,data,beta_in_use,inverse,true,false);
 }
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(const K n, const K order, const series_result<T>& data) const {
-    const size_t precision =
-        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
-
-    // For theory, see: Sidi (2003, arXiv:math/0306302), Eqs. (8.3)-(8.5)
-    // Recursive implementation using the E-algorithm scheme
-    // Vectors for the recursive transformation scheme
-    std::vector<T> Num(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
-    std::vector<T> Denom(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
-
-    float_type scale1, scale2;
-    scale1 = scale2 = utils::cast<float_type, int>()(0, precision);
-
-    // For theory, see: Sidi (2003, arXiv:math/0306302), pp. 57-58, Eqs. (8.3)-(8.5)
-    // ([https://arxiv.org/pdf/math/0306302.pdf]) Recursive implementation for better numerical stability in some cases.
-    // Initialization: Weighted terms for order 0
-    // E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
-    for (K i = static_cast<K>(0); i <= order; ++i) {
-        Denom[i] += remainder->operator()(
-            n + i, n + i, data.an,
-            utils::cast<T, float_type>()(remainder_type_in_use == shanks::remainders::remainder_type::u_type
-                                             ? beta_in_use
-                                             : utils::cast<float_type, int>()(1),
-                                         precision));
-
-        Num[i] += data.Sn.at(n + i) * Denom[i];
-    }
-
-    // Outer loop for the transformation order i
-    for (K i = static_cast<K>(1); i <= order; ++i)
-        // Inner loop over sequence indices j
-        for (K j = static_cast<K>(0); j <= order - i; ++j) {
-            // i ~ k from formula
-            // j ~ n from formula
-
-            // For theory, see: Sidi (2003), Eqs. (8.4)-(8.5)
-            // Compute scaling factors based on Pochhammer symbol ratios
-
-            scale1 = beta_in_use + utils::cast<float_type, K>()(n + i + j, precision);
-            scale1 *= (scale1 + utils::cast<float_type, int>()(1, precision));
-
-            scale2 = scale1 + utils::cast<float_type, K>()(n + i, precision);
-            scale2 *= (scale2 + utils::cast<float_type, int>()(1, precision));
-
-            // Apply recurrence: E_k^{(n)} = E_{k-1}^{(n)} - g_{k-1,k}^{(n)} * ΔE_{k-1}^{(n)} / Δg_{k-1,k}^{(n)}
-            Denom[j] = utils::math<T>::fma(utils::cast<T, float_type>()(-scale1, precision),
-                                           Denom[j] / utils::cast<T, float_type>()(scale2, precision),
-                                           Denom[j + static_cast<K>(1)]);
-            Num[j] = utils::math<T>::fma(utils::cast<T, float_type>()(-scale1, precision),
-                                         Num[j] / utils::cast<T, float_type>()(scale2, precision),
-                                         Num[j + static_cast<K>(1)]);
-        }
-
-    // Final result ratio
-    Num[0] /= Denom[0];
-
-    return Num[0];
+    const auto precision=utils::helpers<T>::get_precision(data.Sn.at(n));
+    auto inverse=[&](K index) {
+        return remainder->operator()(index,index,data.an,
+            utils::cast<T,float_type>()(remainder_type_in_use==shanks::remainders::remainder_type::u_type
+                ? beta_in_use : utils::cast<float_type,int>()(1,precision),precision));
+    };
+    return detail::levin_weighted_ratio(n,order,data,beta_in_use,inverse,true,true);
 }
 
 template <AcceptedLike T, UnsignedIntLike K>

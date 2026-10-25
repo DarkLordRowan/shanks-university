@@ -56,9 +56,11 @@ public:
      * @return T The next term of the series.
      */
     T next(K n, T& state) const override {
-        // Specific term formula for this variant of the x/2 expansion
-        state = utils::cast<T, K>()(2 * (n + 1) * (n + 1) - 1) * this->x /
-                utils::cast<T, K>()(4 * utils::math<size_t>::pow(static_cast<size_t>(n + 1), size_t{4}) + 1);
+        // Exact rational coefficients; promote before products to avoid index overflow.
+        // Partial fractions and harmonic sums: https://dlmf.nist.gov/5.9
+        const auto precision=utils::helpers<T>::get_precision(this->x);
+        const T k=utils::cast<T,K>()(n,precision)+utils::cast<T,int>()(1,precision);
+        state=this->x * (utils::cast<T,int>()(2,precision)*k*k-utils::cast<T,int>()(1,precision)) / (utils::cast<T,int>()(4,precision)*k*k*k*k+utils::cast<T,int>()(1,precision));
         return state;
     }
 };

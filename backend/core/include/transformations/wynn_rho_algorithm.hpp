@@ -177,71 +177,39 @@ public:
     }
 
     inline std::size_t how_much(const std::size_t n, const std::size_t order) const {
-        return n + order + std::size_t{1} +
-               order * std::size_t(numerator_type_in_use == shanks::numerators::numerator_type::rho_type);
+        return n + order + std::size_t{1};
     }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T wynn_rho_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
-    // Ensure we have enough data points to compute the transformation
-    const std::size_t required_size = wynn_rho_algorithm<T, K>::how_much(n, order);
-    const std::size_t precision =
-        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
-
-    if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for wynn_rho(" +
-                                utils::helpers<K>::to_string(order) + ", " + utils::helpers<K>::to_string(n) + ")\n" +
-                                "the size of Sn and an must be at least " +
-                                utils::helpers<std::size_t>::to_string(required_size));
-    }
-    // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
-    // Base cases: return partial sum for n=0 or order=0
+    // order is a table column: only even columns approximate the limit.
+    if (order % static_cast<K>(2)) throw std::domain_error("rho order must be even");
+    const std::size_t required_size = how_much(n, order);
+    if (data.Sn.size() < required_size)
+        throw std::out_of_range("Insufficient partial sums for Wynn rho");
     if (order == static_cast<K>(0)) return data.Sn.at(n);
-
-    const K base_size = order + static_cast<K>(1);
-
-    std::vector<T> rho_odd(base_size, utils::cast<T, int>()(0, precision));  // vector for theta_(2n + 1)
-    std::vector<T> rho_even(
-        base_size, utils::cast<T, int>()(
-                       0,
-                       precision));  // vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
-
-    T delta;  // temporary varaible
-    delta = utils::cast<T, int>()(0, precision);
-
-    // init theta_(0)
-    for (K j = static_cast<K>(0); j < base_size; ++j) rho_even[j] = data.Sn.at(n + j);
-
-    K j1;
-
-    for (K level = static_cast<K>(1); level <= order / static_cast<K>(2); ++level) {
-        // transform odd vector
-        for (K j = static_cast<K>(0); j < base_size - level; ++j) {
-            j1 = j + static_cast<K>(1);
-
-            delta = rho_even[j1] - rho_even[j];
-
-            rho_odd[j] = rho_odd[j1] + numerator->operator()(n + j, level * static_cast<K>(2) - static_cast<K>(1),
-                                                             data.an, gamma_in_use, rho_in_use) /
-                                           delta;
+    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
+    const std::size_t count = static_cast<std::size_t>(order) + 1;
+    std::vector<T> previous(count+1,utils::cast<T,int>()(0,precision));
+    std::vector<T> current(data.Sn.begin()+n,data.Sn.begin()+required_size);
+    // Weniger (1989), Eq. (6.2-2), https://arxiv.org/pdf/math/0306302.
+    // Shrink each column by one; stale entries must not enter later levels.
+    for(K column=1;column<=order;++column) {
+        std::vector<T> next(current.size()-1);
+        for(std::size_t j=0;j<next.size();++j) {
+            const T difference=current[j+1]-current[j];
+            if(difference==utils::cast<T,int>()(0,precision))
+                throw std::overflow_error("Singular Wynn rho table");
+            next[j]=previous[j+1]+numerator->operator()(n+static_cast<K>(j),column,
+                            data.an,gamma_in_use,rho_in_use)/difference;
+            if(!utils::helpers<T>::isfinite(next[j]))
+                throw std::overflow_error("Non-finite Wynn rho cell");
         }
-
-        // transform even vector
-        for (K j = static_cast<K>(0); j < base_size - level; ++j) {
-            j1 = j + static_cast<K>(1);
-
-            delta = rho_odd[j1] - rho_odd[j];
-
-            rho_even[j] =
-                rho_even[j1] +
-                numerator->operator()(n + j, level * static_cast<K>(2), data.an, gamma_in_use, rho_in_use) / delta;
-        }
+        previous=std::move(current);
+        current=std::move(next);
     }
-
-    if (!utils::helpers<T>::isfinite(rho_even[0])) throw std::overflow_error("division by zero");
-
-    return rho_even[0];
+    return current[0];
 }
 
 }  // namespace algos

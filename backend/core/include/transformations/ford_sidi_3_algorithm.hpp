@@ -1,194 +1,57 @@
 #ifndef FORD_SIDI_3_HPP
 #define FORD_SIDI_3_HPP
 #pragma once
-/**
- * @file ford_sidi_3_algorithm.hpp
- * @brief This file contains the declaration of the Ford-Sidi Algorithm class.
- *        This implementation is based on the efficient Ford-Sidi algorithm
- *        that requires fewer arithmetic operations than the E-algorithm.
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+#include "levin_algorithm.hpp"
+namespace shanks::algos {
+/** Ford-Sidi elimination for the error basis omega_i*(beta+i)^(-r), r=0..k-1.
+ * https://doi.org/10.1137/0724080. Evaluates the same model as Levin by a
+ * different elimination algorithm; no claim to implement every W^(m) variant.
+ * Interface correction: n is the start, order is k (formerly ignored).
+ * Original authors: Naumov A.U., Lykov D.S., Kreynin R.G.
  */
-
-// For theory, see:
-// Ford, W.F., Sidi, A. (1987). An algorithm for a generalization of the Richardson extrapolation process.
-// Osada, N. (2000). The E-algorithm and the Ford-Sidi algorithm.
-
-namespace shanks {
-namespace algos {
-
-/**
- * @brief Ford-Sidi algorithm class template implementing an efficient extrapolation method.
- *
- * This algorithm provides a more economical implementation compared to the standard E-algorithm
- * while maintaining mathematical equivalence. It utilizes auxiliary sequences and finite
- * difference operations to accelerate convergence. Variant 3 is characterized by its
- * specific initialization and recursive update scheme for the transformation coefficients.
- *
- * References:
- * - Ford, W.F., Sidi, A. (1987). An algorithm for a generalization of the Richardson extrapolation process.
- *   SIAM Journal on Numerical Analysis, 24(5), 1212-1232.
- * - Osada, N. (2000). The E-algorithm and the Ford-Sidi algorithm.
- *   Journal of Computational and Applied Mathematics, 122(1), 223-230.
- *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- *
- * @tparam T Floating-point type for series elements (must satisfy Accepted)
- *           Represents numerical precision (float, double, long double).
- *           Used for all numerical computations and storage.
- * @tparam K Unsigned integral type for indices and order (must satisfy UnsignedIntLike)
- *           Used for counting terms, indexing operations, and loop control.
- *           Valid values: K >= 0, typically size_t or unsigned int.
- */
-template <AcceptedLike T, UnsignedIntLike K>
-class ford_sidi_3_algorithm final : public series_acceleration<T, K> {
+template<AcceptedLike T,UnsignedIntLike K>
+class ford_sidi_3_algorithm final:public series_acceleration<T,K> {
 public:
-    /**
-     * @brief Parameterized constructor to initialize the Ford-Sidi V-3 Algorithm.
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     */
-    explicit ford_sidi_3_algorithm() : series_acceleration<T, K>("ford sidi 3") {};
-
-    /**
-     * @brief Fast implementation of Ford-Sidi algorithm for series acceleration.
-     *
-     * Computes the accelerated sum using the efficient Ford-Sidi implementation.
-     * The algorithm builds several auxiliary sequences (G, FSA, FSI) and an
-     * intermediate matrix (FSG) to perform the extrapolation.
-     *
-     * For theory, see: Osada (2000), Section 4, Eq. (20)
-     * T_k^{(n)} = [ψ_{k-1}^{(n+1)}(s) - ψ_{k-1}^{(n)}(s)] / [ψ_{k-1}^{(n+1)}(1) - ψ_{k-1}^{(n)}(1)]
-     *
-     * @param n The number of terms to use in the transformation (starting index).
-     *        Valid values: n > 0 (algorithm requires at least 1 term).
-     *        Represents the starting index for the transformation process.
-     * @param order The order of transformation (unused in this implementation,
-     *        maintained for interface consistency with base class).
-     *        Valid values: order >= 0 (typically set to 0 or ignored).
-     * @param data series_result<T> struct containing necessary information for algorithm
-     * @return The accelerated partial sum after Ford-Sidi transformation.
-     * @throws std::out_of_range if the Sn or an vectors are too small for index n.
-     * @throws std::domain_error if n=0 is provided as input.
-     * @throws std::overflow_error if division by zero or numerical instability occurs.
-     */
-    T operator()(const K n, const K order, const series_result<T>& data) const override;
-
-    inline std::size_t how_much(const std::size_t n, const std::size_t /*order*/) const { return n; }
-};
-
-template <AcceptedLike T, UnsignedIntLike K>
-T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
-    // Ensure we have enough data points to compute the transformation at index n
-    const std::size_t required_size = n;
-    const std::size_t precision =
-        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
-
-    if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for ford_sidi_3_{" +
-                                utils::helpers<K>::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
-                                utils::helpers<std::size_t>::to_string(required_size));
+    using float_type=typename real_of<T>::value;
+    explicit ford_sidi_3_algorithm(shanks::remainders::remainder_type variant=shanks::remainders::remainder_type::u_type,
+        const float_type& beta=utils::cast<float_type,int>()(1))
+        :series_acceleration<T,K>("Ford-Sidi elimination (Levin basis)"),strategy_(variant,false,beta){
+        if(!utils::helpers<float_type>::isfinite(beta) || beta<=utils::cast<float_type,int>()(0))
+            throw std::domain_error("Ford-Sidi beta must be finite and positive");
     }
-
-    // For theory, see: Ford & Sidi (1987), Section 1 - Input validation
-    // The algorithm requires at least one term for meaningful computation
-    if (n == static_cast<K>(0)) {
-        throw std::domain_error("n = 0 in the input");
+    std::size_t how_much(std::size_t n,std::size_t order)const override {
+        return order==0?n+1:strategy_.how_much(n,order);
     }
-
-    // For theory, see: Osada (2000), Section 4 - Efficient implementation
-    // Algorithm uses auxiliary sequences for improved computational efficiency
-    const K n1 = n - static_cast<K>(1);
-    const K m = n + static_cast<K>(1);
-
-    // For theory, see: Ford & Sidi (1987), Section 2 - Auxiliary sequence initialization
-    // G sequence: Used for storing transformation coefficients
-    std::vector<T> G(m + static_cast<K>(1), utils::cast<T, int>()(0, precision));
-    // FSA sequence: Stores accelerated partial sums
-    std::vector<T> FSA(m + static_cast<K>(1), utils::cast<T, int>()(0, precision));
-    // FSI sequence: Stores normalization factors
-    std::vector<T> FSI(m + static_cast<K>(1), utils::cast<T, int>()(0, precision));
-    // FSG matrix: Stores intermediate transformation values
-    std::vector<std::vector<T>> FSG(m + static_cast<K>(2),
-                                    std::vector<T>(m + static_cast<K>(1), utils::cast<T, int>()(0, precision)));
-    // For theory, see: Ford & Sidi (1987), Eq. (2.3) - Recursive coefficient scaling
-    // Te = 1/n used for recursive computation of G sequence
-    T D, Te;
-    D = utils::cast<T, int>()(0, precision);
-    Te = utils::cast<T, int>()(1, precision);
-    // Set precision if the type T requires it
-
-    Te /= utils::cast<T, K>()(n, precision);
-
-    // For theory, see: Osada (2000), Eq. (9) - Initial coefficient computation
-    // G[0] = a_{n-1} * n, where a_{n-1} is the (n-1)-th series term
-    G[0] = data.an.at(n1) * utils::cast<T, K>()(n, precision);
-
-    // For theory, see: Osada (2000), Section 2.2 - Recursive G sequence computation
-    // G[k] = (1/n) * G[k-1] for k = 1, 2, ..., m
-    for (K k = static_cast<K>(1); k <= m; ++k) G[k] = Te * G[k - static_cast<K>(1)];
-
-    // For theory, see: Osada (2000), Section 4 - Initialization of transformation sequences
-    // FSA[n1] = S_{n-1} (partial sum up to term n-1)
-    FSA[n1] = data.Sn.at(n1);
-
-    // FSI[n1] = 1 (initial normalization factor)
-    FSI[n1] += utils::cast<T, int>()(1, precision);
-
-    if (G[0] != utils::cast<T, int>()(0)) {
-        // For theory, see: Ford & Sidi (1987), Eq. (2.4) - Normalization when G[0] ≠ 0
-        // Normalize sequences by dividing by G[0]
-        FSA[n1] /= G[0];
-        FSI[n1] /= G[0];
-        for (K i = static_cast<K>(1); i <= m; ++i) FSG[i][n1] = G[i] / G[0];
-    } else {
-        // For theory, see: Ford & Sidi (1987), Section 3 - Alternative initialization
-        // When G[0] = 0, use direct values without normalization
-        for (K i = static_cast<K>(1); i <= m; ++i) FSG[i][n1] = G[i];
-    }
-
-    // For theory, see: Osada (2000), Section 4 - Main algorithm loop
-    // Main Ford-Sidi transformation computation
-    K MM, MM1, k2;
-
-    // Основной цикл алгоритма Ford-Sidi
-    for (K k = static_cast<K>(0); k <= n1; ++k) {
-        MM = n1 - k;
-        MM1 = MM + static_cast<K>(1);
-        k2 = k + static_cast<K>(2);
-
-        // For theory, see: Ford & Sidi (1987), Eq. (2.8) - Denominator computation
-        // D = FSG[k2][MM1] - FSG[k2][MM] (difference for normalization)
-        D = FSG[k2][MM1] - FSG[k2][MM];
-
-        // For theory, see: Osada (2000), Section 4 - FSG sequence update
-        // Update FSG values using difference operations: FSG[i][MM] = (FSG[i][MM1] - FSG[i][MM]) / D
-        for (K i = k + static_cast<K>(3); i <= m; ++i) {
-            FSG[i][MM] = FSG[i][MM1] - FSG[i][MM];
-            FSG[i][MM] /= D;
+    T operator()(K n,K order,const series_result<T>& data)const override {
+        const auto required=how_much(n,order);
+        if(data.Sn.size()<required || (order>0 && data.an.size()<required))throw std::out_of_range("Insufficient Ford-Sidi data");
+        if(order==0)return data.Sn.at(n);
+        const auto p=utils::helpers<T>::get_precision(data.Sn.at(n));
+        const T zero=utils::cast<T,int>()(0,p),one=utils::cast<T,int>()(1,p);
+        const T beta=utils::cast<T,float_type>()(strategy_.beta_in_use,p);
+        std::vector<T> num(order+1),den(order+1);
+        std::vector<std::vector<T>> auxiliary(order,std::vector<T>(order+1));
+        for(K j=0;j<=order;++j) {
+            const K index=n+j;
+            den[j]=strategy_.remainder->operator()(index,index,data.an,beta);
+            num[j]=data.Sn.at(index)*den[j];
+            const T inverse=one/(beta+utils::cast<T,K>()(index,p));
+            T power=one;
+            for(K r=1;r<order;++r) {power*=inverse;auxiliary[r][j]=power;}
         }
-
-        // For theory, see: Osada (2000), Eq. (20) - FSA sequence update
-        // FSA[MM] = (FSA[MM1] - FSA[MM]) / D (accelerated sum update)
-        FSA[MM] = FSA[MM1] - FSA[MM];
-        FSA[MM] /= D;
-
-        // For theory, see: Osada (2000), Section 4 - FSI sequence update
-        // FSI[MM] = (FSI[MM1] - FSI[MM]) / D (normalization factor update)
-        FSI[MM] = FSI[MM1] - FSI[MM];
-        FSI[MM] /= D;
+        for(K level=1;level<=order;++level)for(K j=0;j<=order-level;++j) {
+            const T divisor=level==order?one:auxiliary[level][j+1]-auxiliary[level][j];
+            if(divisor==zero)throw std::overflow_error("Singular Ford-Sidi elimination pivot");
+            num[j]=(num[j+1]-num[j])/divisor;den[j]=(den[j+1]-den[j])/divisor;
+            for(K r=level+1;r<order;++r)auxiliary[r][j]=(auxiliary[r][j+1]-auxiliary[r][j])/divisor;
+        }
+        if(den[0]==zero)throw std::overflow_error("Singular Ford-Sidi denominator");
+        const T result=num[0]/den[0];
+        if(!utils::helpers<T>::isfinite(result))throw std::overflow_error("Non-finite Ford-Sidi estimate");
+        return result;
     }
-
-    // For theory, see: Osada (2000), Eq. (11) - Final result computation
-    // T = FSA[0] / FSI[0] (final accelerated sum)
-
-    FSA[0] /= FSI[0];
-    // For theory, see: Ford & Sidi (1987), Section 3 - Numerical stability check
-    // Ensure the result is a finite floating-point value
-    if (!utils::helpers<T>::isfinite(FSA[0])) throw std::overflow_error("division by zero");
-
-    return FSA[0];
+private:
+    levin_algorithm<T,K> strategy_;
+};
 }
-
-}  // namespace algos
-}  // namespace shanks
-
 #endif

@@ -62,11 +62,11 @@ public:
      * @return T The next term of the series.
      */
     T next(K n, T& state) const override {
-        // Alternating term formula: (-1)^n * x / ((6n+5)(6n+7))
-        state = utils::math<T>::template minus_one_raised_to_power_n<K>(n) * this->x /
-                utils::cast<T, size_t>()(
-                    utils::math<size_t>::fma(static_cast<size_t>(6), static_cast<size_t>(n), static_cast<size_t>(5)) *
-                    utils::math<size_t>::fma(static_cast<size_t>(6), static_cast<size_t>(n), static_cast<size_t>(7)));
+        // Exact rational coefficients; promote before products to avoid index overflow.
+        // Partial fractions and harmonic sums: https://dlmf.nist.gov/5.9
+        const auto precision=utils::helpers<T>::get_precision(this->x);
+        const T k=utils::cast<T,K>()(n,precision)+utils::cast<T,int>()(1,precision);
+        state=this->x * utils::math<T>::template minus_one_raised_to_power_n<K>(n) * (utils::cast<T,int>()(1,precision)) / ((utils::cast<T,int>()(6,precision)*k-utils::cast<T,int>()(1,precision))*(utils::cast<T,int>()(6,precision)*k+utils::cast<T,int>()(1,precision)));
         return state;
     }
 };

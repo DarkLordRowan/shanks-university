@@ -59,8 +59,11 @@ public:
      * @return T The next term of the series.
      */
     T next(K n, T& state) const override {
-        // Specific term formula for the expansion: x / ((n+1) * (36*(n+1)^2 - 1))
-        state = this->x / utils::cast<T, K>()((n + 1) * (36 * (n + 1) * (n + 1) - 1));
+        // Exact rational coefficients; promote before products to avoid index overflow.
+        // Partial fractions and harmonic sums: https://dlmf.nist.gov/5.9
+        const auto precision=utils::helpers<T>::get_precision(this->x);
+        const T k=utils::cast<T,K>()(n,precision)+utils::cast<T,int>()(1,precision);
+        state=this->x * (utils::cast<T,int>()(1,precision)) / (k*(utils::cast<T,int>()(36,precision)*k*k-utils::cast<T,int>()(1,precision)));
         return state;
     }
 };

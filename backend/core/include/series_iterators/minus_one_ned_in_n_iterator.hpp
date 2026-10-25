@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../series_base.hpp"
+#include "../rapid_reference_sums.hpp"
 
 /**
  * @file minus_one_ned_in_n_iterator.hpp
@@ -39,7 +40,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The analytic sum.
      */
-    T get_sum() const override { return this->x * utils::cast<T, double>()(-0.78343051); }
+    T get_sum() const override { return detail::rapid_reference(this->x,false); }
 
     /**
      * @brief Validates the current evaluation point x.

@@ -37,14 +37,19 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The limit of the sequence.
      */
-    T get_sum() const override { return utils::cast<T, int>()(5); }
+    T get_sum() const override {
+        // Reference is for exact unperturbed initial data, not a rounded fixed point.
+        // Rump, ETNA 52 (2020): https://doi.org/10.1553/etna_vol52s358
+        if(this->x!=utils::cast<T,int>()(0)) throw std::domain_error("Reference unavailable for perturbed initial data");
+        return utils::cast<T,int>()(5,utils::helpers<T>::get_precision(this->x));
+    }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return always valid
      */
-    bool is_invalid() const override { return false; }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     std::pair<T, T> initial_state() const override {
         return std::make_pair(utils::cast<T, int>()(0, utils::helpers<T>::get_precision(this->x)),

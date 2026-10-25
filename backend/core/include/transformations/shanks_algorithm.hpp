@@ -71,7 +71,6 @@ template <AcceptedLike T, UnsignedIntLike K>
 T shanks_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Validation: required size is 2*order + n + 1
     const std::size_t required_size = shanks_algorithm<T, K>::how_much(n, order);
-    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for shanks()" +
@@ -79,6 +78,8 @@ T shanks_algorithm<T, K>::operator()(const K n, const K order, const series_resu
                                 "the size of Sn and an must be at least " +
                                 utils::helpers<std::size_t>::to_string(required_size));
     }
+
+    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     // create matrix for further determinant calculation
     const std::size_t matrix_size = order + static_cast<K>(1);

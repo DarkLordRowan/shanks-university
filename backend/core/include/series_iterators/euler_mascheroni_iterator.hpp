@@ -62,7 +62,8 @@ public:
 
         const T n_plus_one_inv = utils::cast<T, int>()(1, precision) / utils::cast<T, K>()(n + 1);
 
-        state = n_plus_one_inv - utils::math<T>::log(utils::cast<T, int>()(1, precision) + n_plus_one_inv);
+        // Scaled harmonic-minus-log series; https://dlmf.nist.gov/5.2
+        state = this->x * (n_plus_one_inv - utils::math<T>::log(utils::cast<T, int>()(1, precision) + n_plus_one_inv));
 
         return state;
     }

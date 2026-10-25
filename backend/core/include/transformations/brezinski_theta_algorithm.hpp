@@ -79,7 +79,6 @@ template <AcceptedLike T, UnsignedIntLike K>
 T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Calculate the number of terms required from the Sn vector
     const std::size_t required_size = brezinski_theta_algorithm<T, K>::how_much(n, order);
-    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     // Check if enough data is available in the partial sums vector
     if (data.Sn.size() < required_size) {
@@ -87,6 +86,8 @@ T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, const se
                                 "}^{" + utils::helpers<K>::to_string(n) + "}\n" + "the size of Sn must be at least " +
                                 utils::helpers<std::size_t>::to_string(required_size));
     }
+
+    const std::size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1
     // Only even orders have mathematical meaning in the final result

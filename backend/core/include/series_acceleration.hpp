@@ -41,6 +41,9 @@ public:
      */
     explicit series_acceleration(std::string name = "unknown") : acceleration_name(name) {};
 
+    // Factories own derived algorithms through unique_ptr<series_acceleration>.
+    virtual ~series_acceleration() = default;
+
     /**
      * @brief Virtual function operator for computing the accelerated partial sum
      *

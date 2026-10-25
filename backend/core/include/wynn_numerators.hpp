@@ -78,43 +78,22 @@ public:
 };
 
 /**
- * @brief Rho-variant numerator class (difference-based).
+ * @brief Classic rho numerator for interpolation nodes x_n=n+1.
  *
- * Implements the standard numerator based on term differences:
- * Numerator = a_{n+order} - a_n
- *
- * For theory, see: Wynn (1956), Eq. (2.6b) and related difference formulations.
- *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- * @tparam T Floating-point type for series elements.
- * @tparam K Unsigned integral type for indices.
+ * rho_(k+1)^(n) = rho_(k-1)^(n+1) +
+ *                 (x_(n+k+1)-x_n)/(rho_k^(n+1)-rho_k^(n)).
+ * The node difference is k+1, not a difference of series terms.
+ * Weniger (1989), Eq. (6.2-2), https://arxiv.org/pdf/math/0306302.
+ * Other node sequences require an explicit node API, not the an argument.
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class rho_transform : public numerator_base<T, K> {
 public:
-    /**
-     * @brief Compute the classic rho-variant numerator.
-     *
-     * Implements: numerator = term(n + order + 1) - term(n), see p. 34 6.2-2b [https://arxiv.org/pdf/math/0306302]
-     * This represents the forward difference of order 'order' at index n.
-     *
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @param n Starting index in the series.
-     *        Valid values: n >= 0, n + order within series bounds.
-     * @param order Order of the difference.
-     *        Valid values: order >= 0.
-     * @param an Constant pointer to the an vector providing term access.
-     *        Must provide operator()(K) for term retrieval.
-     * @param gamma Unused parameter (maintained for interface consistency).
-     * @param rho Unused parameter (maintained for interface consistency).
-     * @return The computed difference: series(n+order) - series(n).
-     */
-
-    T operator()(const K n, const K order, const std::vector<T>& an,
+    T operator()([[maybe_unused]] const K n, const K order,
+                 [[maybe_unused]] const std::vector<T>& an,
                  [[maybe_unused]] const T gamma = utils::cast<T, int>()(-1),
-                 [[maybe_unused]] const T rho = utils::cast<T, int>()(1)) const {
-        // For theory, see: Wynn (1956), Eq. (2.6b): ΔS_n = S_{n+1} - S_n
-        return an.at(n + order) - an.at(n);  // p.34 6.2-2b [https://arxiv.org/pdf/math/0306302]
+                 [[maybe_unused]] const T rho = utils::cast<T, int>()(1)) const override {
+        return utils::cast<T, K>()(order);
     }
 };
 

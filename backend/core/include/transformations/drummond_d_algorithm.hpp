@@ -225,8 +225,10 @@ inline T drummond_d_algorithm<T, K>::calc_result(const K n, const K order, const
         // Compute weight term: (-1)^j * C(n, j) * w_{n,j}
         rest = utils::math<T>::template minus_one_raised_to_power_n<K>(j);
         rest *= utils::cast<T, K>()(utils::math<K>::binomial_coefficient(order, j), precision);
+        // beta=1: u remainder is (n+1)*a_n, valid also at n=0.
+        // Weniger (1989), Sec. 7.3 and 9.5: https://arxiv.org/pdf/math/0306302
         // Call the remainder strategy object
-        rest *= remainder->operator()(n + j, n + j, data.an);
+        rest *= remainder->operator()(n + j, n + j, data.an, utils::cast<T,int>()(1,precision));
 
         // Accumulate weighted partial sums and total weight
         numerator += rest * data.Sn.at(n + j);
@@ -251,7 +253,7 @@ inline T drummond_d_algorithm<T, K>::calc_result_rec(const K n, const K order, c
 
     // Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
     for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
-        Denom[i] += remainder->operator()(n + i, n + i, data.an);
+        Denom[i] += remainder->operator()(n + i, n + i, data.an, utils::cast<T,int>()(1,precision));
         Num[i] += data.Sn.at(n + i) * Denom[i];
     }
 
