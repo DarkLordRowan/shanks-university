@@ -2,7 +2,7 @@ name: Build vizrd
 
 on:
   push:
-    branches: ["main", "vizrd"]
+    branches: ["main", "vizrd", "Magister"]
   pull_request:
     branches: ["main"]
   workflow_dispatch:
