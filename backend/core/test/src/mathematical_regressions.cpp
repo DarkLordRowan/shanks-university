@@ -573,7 +573,36 @@ void eighth_algorithms(bool emit) {
     M::set_default_prec(saved);
 }
 
+// Parameterized rho modes: production implementation, independent first column.
+void rho_variants(bool emit) {
+    using namespace shanks;
+    numerators::generilized_transform<double,unsigned> generalized;
+    near(generalized(0,0,{},-.5),-.5,"generalized zero column must not wrap");
+    numerators::gamma_rho_transform<double,unsigned> legacy;
+    raises<std::invalid_argument>([&] { legacy(0,1,{},-1.,0.); });
+    series_result<double> data;
+    for(unsigned n=0;n<14;++n) data.Sn.push_back(1.0/(n+1)+(n%2?-1.:1.)/((n+2.)*(n+2.)));
+    for(auto mode : {numerators::generalized_type,numerators::gamma_rho_type})
+        for(double gamma : {-.5,-1.,-2.5}) for(double rho : {.5,2.}) {
+            algos::wynn_rho_algorithm<double,unsigned> algorithm(mode,gamma,rho);
+            for(unsigned order=0;order<4;++order) for(unsigned n=0;n<3;++n) {
+                const auto value=algorithm(n,2*order,data);
+                if(!order) near(value,data.Sn[n],"rho zero order");
+                if(order==1 && mode==numerators::generalized_type) {
+                    const double a=-gamma, left=data.Sn[n+1]-data.Sn[n],right=data.Sn[n+2]-data.Sn[n+1];
+                    near(value,data.Sn[n+1]-(a+1)/a*left*right/(right-left),"Osada explicit formula");
+                }
+                if(emit) std::cout << (mode==numerators::generalized_type?"generalized":"gamma_rho")
+                    << ' ' << gamma << ' ' << rho << ' ' << order << ' ' << n << ' ' << value << '\n';
+            }
+        }
+    raises<std::invalid_argument>([] { algos::wynn_rho_algorithm<double,unsigned> a(numerators::gamma_rho_type,-1.,0.); });
+    raises<std::invalid_argument>([] { algos::wynn_rho_algorithm<double,unsigned> a(numerators::generalized_type,std::numeric_limits<double>::infinity()); });
+}
+
 int main(int argc, char** argv) {
+    if(argc>1 && std::string(argv[1])=="--rho-variant-values") { std::cout << std::setprecision(17); rho_variants(true); return 0; }
+    rho_variants(false);
     const bool emit = argc > 1;
     std::cout << std::setprecision(17);
     if(argc>1 && std::string(argv[1])=="--extension-terms") { extensions(true); return 0; }

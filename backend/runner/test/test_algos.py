@@ -8,6 +8,7 @@ import pandas as pd
 sys.path.append("../src")
 
 import pyshanks as ps
+from shanks.runner.domain.precision import PrecisionType, cast_precision_value
 
 def get_info_from_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("test_algos")
@@ -23,9 +24,9 @@ def test_plot(suf : str, ser : str, x : str, n : int, m : int):
     figure, ax = plt.subplots(figsize = (21, 19))
 
     series_ = getattr(ps, ser + suf)
-    type_   = getattr(ps, suf)
+    type_ = lambda value: cast_precision_value(PrecisionType(suf), value)
 
-    data, s_sum = series_(n + 4 * m, type_(float(x)))
+    data, s_sum = series_(n + 4 * m, cast_precision_value(PrecisionType(suf), x))
     
     ax.hlines(float(s_sum.__repr__()), 1, n+1, color = "red", linestyle = "--")
 

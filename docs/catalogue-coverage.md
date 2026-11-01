@@ -127,7 +127,9 @@ Full C++ variants (remainder estimates, recursive forms, numerators) are not int
 Python Levin/Weniger/Drummond support next, t, u, v, v_shift remainders and beta>0. C++ Levin and Sidi-S direct/recursive forms are checked against those Python formulas.
 
 23/23 header families have audited Python counterparts for the documented variants.
-Additional parameterized modes and specialized W variants are not all covered.
+The implemented rho numerator modes are now covered too (see the final audit).
+The full theoretical W^(m) family is not implemented by the legacy C++ headers;
+this is a possible extension, not an unported implementation.
 
 | C++ header | Python status |
 |---|---|
@@ -153,4 +155,4 @@ Additional parameterized modes and specialized W variants are not all covered.
 | `wynn_epsilon_1_algorithm.hpp` | wynn_epsilon |
 | `wynn_epsilon_2_algorithm.hpp` | wynn_epsilon_fixed (canonical epsilon with moving start) |
 | `wynn_epsilon_3_algorithm.hpp` | wynn_epsilon_adaptive (QELG-based; 50-cell compaction; restart/refill policy) |
-| `wynn_rho_algorithm.hpp` | wynn_rho (classic nodes x_n=n+1; C++ parameterized numerators pending) |
+| `wynn_rho_algorithm.hpp` | wynn_rho (classic grid, generalized/Osada and legacy gamma_rho numerators; exact Fraction and cross-language tests) |

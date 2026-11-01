@@ -98,7 +98,8 @@ public:
 };
 
 /**
- * @brief Generalized-variant numerator class (order-dependent constant).
+ * @brief Osada generalized rho numerator, alpha=-gamma.
+ * https://arxiv.org/pdf/1903.10198, Eq. (2.14); alpha>0 for its theorem.
  *
  * Implements a numerator that is a function of the transformation order:
  * Numerator = order - gamma - 1
@@ -123,14 +124,17 @@ public:
      *        Valid values: order >= 0.
      * @param an Unused parameter (maintained for interface consistency).
      * @param gamma Gamma parameter .
-     *        Valid values: any finite T value. Typical range: 0.0 to 2.0. (gamma != 0, 1, 2, ...)
+     *        Valid values: finite T. For the Osada convergence theorem use gamma < 0.
      * @param rho Unused parameter (maintained for interface consistency).
      * @return The computed constant: order - gamma - 1.
      */
     T operator()([[maybe_unused]] const K n, const K order, [[maybe_unused]] const std::vector<T>& an,
                  const T gamma = utils::cast<T, int>()(-1),
                  [[maybe_unused]] const T rho = utils::cast<T, int>()(1)) const {
-        return utils::cast<T, K>()(order - static_cast<K>(1)) -
+        if (!utils::helpers<T>::isfinite(gamma)) throw std::invalid_argument("gamma must be finite");
+        // Convert before subtracting: K is unsigned, so order=0 must not wrap.
+        const auto precision = utils::helpers<T>::get_precision(gamma);
+        return utils::cast<T, K>()(order, precision) - utils::cast<T,int>()(1, precision) -
                gamma;  // p.377 rhi(gamma)-algorithm [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
     }
 };
@@ -139,8 +143,8 @@ public:
  * @brief Gamma-Rho-variant numerator class (parameter-dependent).
  *
  * Implements a numerator that depends on both order and parameters gamma and rho:
- * For even orders: numerator = -gamma + (order/2)/rho
- * For odd orders:  numerator = -gamma + (order/2)/rho + 1
+ * For even orders: numerator = -gamma + order/(2*rho)
+ * For odd orders:  numerator = -gamma + order/(2*rho) + 1
  *
  * This variant provides a flexible parameterized numerator for specialized transformations.
  *
@@ -156,8 +160,8 @@ public:
      * @brief Compute the gamma-rho-variant numerator.
      *
      * Implements a piecewise definition based on order parity:
-     * If order is even: numerator = -gamma + (order/2)/rho
-     * If order is odd:  numerator = -gamma + (order/2)/rho + 1
+     * If order is even: numerator = -gamma + order/(2*rho)
+     * If order is odd:  numerator = -gamma + order/(2*rho) + 1
      *
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param n Unused parameter (maintained for interface consistency).
@@ -165,7 +169,7 @@ public:
      *        Valid values: order >= 0.
      * @param an Unused parameter (maintained for interface consistency).
      * @param gamma Gamma parameter (additive ).
-     *        Valid values: any finite T value. Typical range: -10.0 to 10.0. (gamma != i/rho, i= 0, 1, ...)
+     *        Valid values: finite T; singular tables are rejected by the caller.
      * @param rho Rho parameter (divisor scaling).
      *        Valid values: rho ≠ 0.0 to avoid division by zero.
      * @return The computed parameter-dependent numerator.
@@ -174,12 +178,16 @@ public:
 
     T operator()([[maybe_unused]] const K n, const K order, [[maybe_unused]] const std::vector<T>& an,
                  const T gamma = utils::cast<T, int>()(-1), const T rho = utils::cast<T, int>()(1)) const {
-        // p.377 Automatic rho(gamma)-algorithm [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
+        // Legacy parameterized algebraic recurrence. This is not an automatic
+        // estimator of the decay exponent. The former citation did not establish
+        // that identification; retain the formula for compatibility.
+        if (!utils::helpers<T>::isfinite(rho) || rho == utils::cast<T,int>()(0))
+            throw std::invalid_argument("rho must be finite and nonzero");
+        if (!utils::helpers<T>::isfinite(gamma)) throw std::invalid_argument("gamma must be finite");
 
-        // For theory, see: Wynn (1962), Section 2: Parameterized transformations
         // Add 1 for odd orders (order & 1 checks parity)
-        return -gamma + utils::cast<T, K>()(order) / (utils::cast<T, int>()(2) * rho) +
-               utils::cast<T, K>()(order & static_cast<K>(1));
+        return -gamma + utils::cast<T, K>()(order, utils::helpers<T>::get_precision(gamma)) / (utils::cast<T, int>()(2, utils::helpers<T>::get_precision(gamma)) * rho) +
+               utils::cast<T, K>()(order & static_cast<K>(1), utils::helpers<T>::get_precision(gamma));
     }
 };
 

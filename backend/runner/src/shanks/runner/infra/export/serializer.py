@@ -19,6 +19,12 @@ from shanks.runner.domain.trial_result import (
 )
 
 
+# Non-profiling builds expose F32/F64/FLong as Python floats rather than
+# wrapper classes. Do not eagerly access attributes which may not exist.
+_COMPLEX_TYPES = (complex,) + tuple(getattr(ps, name) for name in ("CArb", "CF32", "CF64", "CFLong") if hasattr(ps, name))
+_REAL_TYPES = (float, int) + tuple(getattr(ps, name) for name in ("Arb", "FLong", "F32", "F64") if hasattr(ps, name))
+
+
 class TrialResultSerializer(DataSerializer):
     def __init__(self):
         pass
@@ -30,34 +36,11 @@ class TrialResultSerializer(DataSerializer):
 
         s = str(value)
 
-        # Heuristic to detect floating point noise (e.g., ...000000000001 or ...999999999998)
-        # We look for at least 10 identical digits followed by any digits at the end.
-        # This typically happens when a decimal like 0.1 is represented in binary.
-        match_s = s
-        if "e" in s.lower():
-            parts = re.split(pattern="[eE]", string=s, maxsplit=1)
-            match_s = parts[0]
-
-        if re.search(r"([0-9])\1{10,}\d*$", match_s):
-            try:
-                # If we detect noise, Python's str(float(...)) is excellent at finding
-                # the shortest equivalent decimal representation for 64-bit floats.
-                f = float(s)
-                s_f = str(f)
-
-                # Only use it if it's actually shorter (don't mess with already short strings)
-                if len(s_f) < len(s):
-                    return s_f
-            except (ValueError, TypeError, OverflowError):
-                pass
-
-        # Normalize simple float strings: remove trailing zeros and dot
-        if "e" not in s.lower() and "." in s:
-            try:
-                s = s.rstrip("0").rstrip(".")
-            except Exception:
-                pass
-
+        # Formatting must not round through binary64: repeated digits may be
+        # the actual measured error, e.g. 1.000...001 or a value below 1e-324.
+        # Trim only insignificant fractional zeros in plain decimal notation.
+        if re.fullmatch(r"[+-]?\d+\.\d+", s):
+            s = s.rstrip("0").rstrip(".")
         return s
 
     def _sanitize_numeric(self, value: Any, as_struct: bool = False) -> Any:
@@ -65,7 +48,7 @@ class TrialResultSerializer(DataSerializer):
             return None
 
         # Standard pyshanks and python complex types
-        if isinstance(value, (ps.CArb, ps.CF32, ps.CF64, ps.CFLong, complex)):
+        if isinstance(value, _COMPLEX_TYPES):
             if as_struct:
                 return {
                     "real": self._beautify_numeric(value.real),
@@ -95,17 +78,7 @@ class TrialResultSerializer(DataSerializer):
             except Exception:
                 pass
 
-        # For "mere args", we are much more aggressive with truncation.
-        # We prefer a clean float representation if it's shorter than the high-precision one.
-        s = str(value)
-        try:
-            f = float(s)
-            s_f = str(f)
-            if len(s_f) < len(s):
-                return s_f
-        except (ValueError, TypeError, OverflowError):
-            pass
-
+        # Arguments identify experiments. Rounding them merges distinct runs.
         return self._beautify_numeric(value)
 
     def _sanitize_arguments(self, args: dict[str, Any]) -> dict[str, str]:
@@ -196,9 +169,9 @@ class TrialResultSerializer(DataSerializer):
                 "average": self._sanitize_numeric(value.average, as_struct=True),
             }
 
-        if isinstance(value, (ps.CArb, ps.CF32, ps.CF64, ps.CFLong, complex)):
+        if isinstance(value, _COMPLEX_TYPES):
             return {"real": str(value.real), "imag": str(value.imag)}
-        if isinstance(value, (ps.Arb, ps.FLong, ps.F32, ps.F64, float, int)):
+        if isinstance(value, _REAL_TYPES):
             return str(value)
         if isinstance(value, (ps.RemainderType, ps.NumeratorType)):
             return value.name

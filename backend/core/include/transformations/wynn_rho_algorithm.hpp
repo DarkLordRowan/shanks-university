@@ -107,14 +107,21 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param new_gamma The new value for gamma.
      */
-    void update_gamma(const float_type& new_gamma) { gamma_in_use = new_gamma; }
+    void update_gamma(const float_type& new_gamma) {
+        if (!utils::helpers<float_type>::isfinite(new_gamma)) throw std::invalid_argument("gamma must be finite");
+        gamma_in_use = new_gamma;
+    }
 
     /**
      * @brief Updates the rho parameter.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param new_rho The new value for rho.
      */
-    void update_rho(const float_type& new_rho) { rho_in_use = new_rho; }
+    void update_rho(const float_type& new_rho) {
+        if (!utils::helpers<float_type>::isfinite(new_rho) || new_rho == utils::cast<float_type,int>()(0))
+            throw std::invalid_argument("rho must be finite and nonzero");
+        rho_in_use = new_rho;
+    }
 
     /**
      * @brief Changes the numerator computation variant.

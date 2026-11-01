@@ -371,7 +371,15 @@ class BaseAccelParam[T]:
     @property
     def size_floor(self) -> int:
         """Calculate the minimum required size for the series."""
-        return max(10, max(self.n_values) + max(self.m_values) + 5)
+        n_values, m_values = list(self.n_values), list(self.m_values)
+        if not n_values or not m_values:
+            raise ValueError("n and m grids must not be empty")
+        if any(isinstance(v, bool) or not isinstance(v, int) or v < 0 for v in n_values+m_values):
+            raise ValueError("n and m must be nonnegative integers")
+        # Lubkin W needs n+3*m+1 samples; Chang needs n+2*m+2,
+        # remainder variants may look ahead by two. n+m+5 underallocated
+        # high-order windows and turned valid experiments into IndexErrors.
+        return max(10, max(n_values) + 3*max(m_values) + 3)
 
     def create_instance(self, args: Mapping[str, Any]) -> AccelProto[NumericLike]:
         """Create an instance of the acceleration method with the given arguments."""
